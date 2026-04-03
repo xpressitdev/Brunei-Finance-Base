@@ -3,20 +3,46 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: DuitPlan API specification
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Authentication operations
+  - name: profile
+    description: User profile operations
+  - name: onboarding
+    description: Onboarding operations
+  - name: accounts
+    description: Bank account operations
+  - name: categories
+    description: Category operations
+  - name: commitments
+    description: Monthly commitment operations
+  - name: transactions
+    description: Transaction operations
+  - name: budgets
+    description: Monthly budget operations
+  - name: debts
+    description: Debt management operations
+  - name: insights
+    description: Financial insights operations
+  - name: dashboard
+    description: Dashboard summary operations
+  - name: uploads
+    description: Statement upload operations
+  - name: subscription
+    description: Subscription operations
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +50,804 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  # Auth
+  /auth/register:
+    post:
+      operationId: register
+      tags: [auth]
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterBody"
+      responses:
+        "201":
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Email already registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Login with email and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginBody"
+      responses:
+        "200":
+          description: Logged in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Logout current user
+      responses:
+        "204":
+          description: Logged out
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current authenticated user
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthUser"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  # Profile
+  /profile:
+    get:
+      operationId: getProfile
+      tags: [profile]
+      summary: Get current user profile
+      responses:
+        "200":
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Profile"
+        "404":
+          description: Profile not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    put:
+      operationId: updateProfile
+      tags: [profile]
+      summary: Update user profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProfileBody"
+      responses:
+        "200":
+          description: Updated profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Profile"
+
+  # Onboarding
+  /onboarding/status:
+    get:
+      operationId: getOnboardingStatus
+      tags: [onboarding]
+      summary: Get user onboarding completion status
+      responses:
+        "200":
+          description: Onboarding status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OnboardingStatus"
+
+  /onboarding/complete:
+    post:
+      operationId: completeOnboarding
+      tags: [onboarding]
+      summary: Mark onboarding as complete
+      responses:
+        "200":
+          description: Onboarding marked complete
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OnboardingStatus"
+
+  # Accounts
+  /accounts:
+    get:
+      operationId: listAccounts
+      tags: [accounts]
+      summary: List user bank accounts
+      responses:
+        "200":
+          description: List of accounts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Account"
+
+    post:
+      operationId: createAccount
+      tags: [accounts]
+      summary: Create a bank account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAccountBody"
+      responses:
+        "201":
+          description: Account created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Account"
+
+  /accounts/{id}:
+    patch:
+      operationId: updateAccount
+      tags: [accounts]
+      summary: Update a bank account
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateAccountBody"
+      responses:
+        "200":
+          description: Updated account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Account"
+
+    delete:
+      operationId: deleteAccount
+      tags: [accounts]
+      summary: Delete a bank account
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
+
+  # Categories
+  /categories:
+    get:
+      operationId: listCategories
+      tags: [categories]
+      summary: List all categories
+      responses:
+        "200":
+          description: List of categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Category"
+
+    post:
+      operationId: createCategory
+      tags: [categories]
+      summary: Create a custom category
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCategoryBody"
+      responses:
+        "201":
+          description: Category created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Category"
+
+  # Commitments
+  /commitments:
+    get:
+      operationId: listCommitments
+      tags: [commitments]
+      summary: List user monthly commitments
+      responses:
+        "200":
+          description: List of commitments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Commitment"
+
+    post:
+      operationId: createCommitment
+      tags: [commitments]
+      summary: Create a commitment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCommitmentBody"
+      responses:
+        "201":
+          description: Commitment created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Commitment"
+
+  /commitments/{id}:
+    patch:
+      operationId: updateCommitment
+      tags: [commitments]
+      summary: Update a commitment
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateCommitmentBody"
+      responses:
+        "200":
+          description: Updated commitment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Commitment"
+
+    delete:
+      operationId: deleteCommitment
+      tags: [commitments]
+      summary: Delete a commitment
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
+
+  # Transactions
+  /transactions:
+    get:
+      operationId: listTransactions
+      tags: [transactions]
+      summary: List transactions with filters
+      parameters:
+        - name: month
+          in: query
+          schema:
+            type: ["string", "null"]
+          description: "Filter by month (YYYY-MM format)"
+        - name: categoryId
+          in: query
+          schema:
+            type: ["string", "null"]
+        - name: accountId
+          in: query
+          schema:
+            type: ["string", "null"]
+        - name: type
+          in: query
+          schema:
+            type: ["string", "null"]
+          description: "debit or credit"
+        - name: search
+          in: query
+          schema:
+            type: ["string", "null"]
+      responses:
+        "200":
+          description: List of transactions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Transaction"
+
+    post:
+      operationId: createTransaction
+      tags: [transactions]
+      summary: Create a manual transaction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTransactionBody"
+      responses:
+        "201":
+          description: Transaction created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Transaction"
+
+  /transactions/{id}:
+    get:
+      operationId: getTransaction
+      tags: [transactions]
+      summary: Get a transaction by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Transaction
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Transaction"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    patch:
+      operationId: updateTransaction
+      tags: [transactions]
+      summary: Update a transaction
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTransactionBody"
+      responses:
+        "200":
+          description: Updated transaction
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Transaction"
+
+    delete:
+      operationId: deleteTransaction
+      tags: [transactions]
+      summary: Delete a transaction
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
+
+  # Budgets
+  /budgets:
+    get:
+      operationId: listBudgets
+      tags: [budgets]
+      summary: List monthly budget allocations
+      parameters:
+        - name: month
+          in: query
+          required: true
+          schema:
+            type: string
+          description: "Month in YYYY-MM format"
+      responses:
+        "200":
+          description: List of budget allocations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MonthlyBudget"
+
+    post:
+      operationId: upsertBudget
+      tags: [budgets]
+      summary: Create or update a budget allocation for a category/month
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpsertBudgetBody"
+      responses:
+        "200":
+          description: Budget saved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MonthlyBudget"
+
+  # Debts
+  /debts:
+    get:
+      operationId: listDebts
+      tags: [debts]
+      summary: List user debts
+      responses:
+        "200":
+          description: List of debts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Debt"
+
+    post:
+      operationId: createDebt
+      tags: [debts]
+      summary: Create a debt
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateDebtBody"
+      responses:
+        "201":
+          description: Debt created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Debt"
+
+  /debts/{id}:
+    patch:
+      operationId: updateDebt
+      tags: [debts]
+      summary: Update a debt
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateDebtBody"
+      responses:
+        "200":
+          description: Updated debt
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Debt"
+
+    delete:
+      operationId: deleteDebt
+      tags: [debts]
+      summary: Delete a debt
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
+
+  /debts/{id}/simulate:
+    post:
+      operationId: simulateDebtPayoff
+      tags: [debts]
+      summary: Simulate debt payoff with extra monthly payment
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DebtSimulateBody"
+      responses:
+        "200":
+          description: Simulation result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DebtScenario"
+
+  # Insights
+  /insights:
+    get:
+      operationId: listInsights
+      tags: [insights]
+      summary: Get financial insights for a month
+      parameters:
+        - name: month
+          in: query
+          required: true
+          schema:
+            type: string
+          description: "Month in YYYY-MM format"
+      responses:
+        "200":
+          description: List of insights
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Insight"
+
+  /insights/generate:
+    post:
+      operationId: generateInsights
+      tags: [insights]
+      summary: Generate/refresh insights for a month
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenerateInsightsBody"
+      responses:
+        "200":
+          description: Generated insights
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Insight"
+
+  # Dashboard
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [dashboard]
+      summary: Get monthly dashboard summary
+      parameters:
+        - name: month
+          in: query
+          required: true
+          schema:
+            type: string
+          description: "Month in YYYY-MM format"
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+
+  /dashboard/spending-by-category:
+    get:
+      operationId: getSpendingByCategory
+      tags: [dashboard]
+      summary: Get spending breakdown by category for a month
+      parameters:
+        - name: month
+          in: query
+          required: true
+          schema:
+            type: string
+          description: "Month in YYYY-MM format"
+      responses:
+        "200":
+          description: Spending by category
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CategorySpend"
+
+  /dashboard/recent-transactions:
+    get:
+      operationId: getRecentTransactions
+      tags: [dashboard]
+      summary: Get recent transactions for dashboard
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: ["integer", "null"]
+      responses:
+        "200":
+          description: Recent transactions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Transaction"
+
+  # Uploads
+  /uploads:
+    post:
+      operationId: uploadStatement
+      tags: [uploads]
+      summary: Upload a bank statement PDF
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/UploadStatementBody"
+      responses:
+        "201":
+          description: Document uploaded and parsed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UploadedDocument"
+
+  /uploads/{id}/rows:
+    get:
+      operationId: getImportedRows
+      tags: [uploads]
+      summary: Get parsed transaction rows for review
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Parsed rows for review
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ImportedTransactionRow"
+
+  /uploads/{id}/confirm:
+    post:
+      operationId: confirmImport
+      tags: [uploads]
+      summary: Confirm import of reviewed transaction rows
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConfirmImportBody"
+      responses:
+        "200":
+          description: Import confirmed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImportConfirmResult"
+
+  # Subscription
+  /subscription/plans:
+    get:
+      operationId: listSubscriptionPlans
+      tags: [subscription]
+      summary: List available subscription plans
+      responses:
+        "200":
+          description: List of plans
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SubscriptionPlan"
+
+  /subscription/current:
+    get:
+      operationId: getCurrentSubscription
+      tags: [subscription]
+      summary: Get current user subscription
+      responses:
+        "200":
+          description: Current subscription or null
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserSubscription"
+        "404":
+          description: No active subscription
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +858,744 @@ components:
       required:
         - status
 
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+
+    # Auth schemas
+    RegisterBody:
+      type: object
+      properties:
+        fullName:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+      required:
+        - fullName
+        - email
+        - password
+
+    LoginBody:
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+      required:
+        - email
+        - password
+
+    AuthUser:
+      type: object
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+        onboardingCompleted:
+          type: boolean
+        profile:
+          $ref: "#/components/schemas/Profile"
+      required:
+        - id
+        - email
+        - onboardingCompleted
+
+    AuthResponse:
+      type: object
+      properties:
+        user:
+          $ref: "#/components/schemas/AuthUser"
+      required:
+        - user
+
+    # Profile
+    Profile:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        fullName:
+          type: string
+        currency:
+          type: string
+        payday:
+          type: integer
+        monthlyIncome:
+          type: string
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - userId
+        - fullName
+        - currency
+        - payday
+        - monthlyIncome
+        - createdAt
+        - updatedAt
+
+    UpdateProfileBody:
+      type: object
+      properties:
+        fullName:
+          type: ["string", "null"]
+        payday:
+          type: ["integer", "null"]
+        monthlyIncome:
+          type: ["string", "null"]
+        currency:
+          type: ["string", "null"]
+
+    # Onboarding
+    OnboardingStatus:
+      type: object
+      properties:
+        completed:
+          type: boolean
+        currentStep:
+          type: ["integer", "null"]
+      required:
+        - completed
+
+    # Account
+    Account:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+        bankName:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - userId
+        - name
+        - type
+        - createdAt
+        - updatedAt
+
+    CreateAccountBody:
+      type: object
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+        bankName:
+          type: ["string", "null"]
+      required:
+        - name
+        - type
+
+    UpdateAccountBody:
+      type: object
+      properties:
+        name:
+          type: ["string", "null"]
+        type:
+          type: ["string", "null"]
+        bankName:
+          type: ["string", "null"]
+
+    # Category
+    Category:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        kind:
+          type: string
+        isDefault:
+          type: boolean
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - name
+        - kind
+        - isDefault
+        - createdAt
+        - updatedAt
+
+    CreateCategoryBody:
+      type: object
+      properties:
+        name:
+          type: string
+        kind:
+          type: string
+      required:
+        - name
+        - kind
+
+    # Commitment
+    Commitment:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        label:
+          type: string
+        amount:
+          type: string
+        dueDay:
+          type: ["integer", "null"]
+        recurrence:
+          type: string
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - userId
+        - label
+        - amount
+        - recurrence
+        - createdAt
+        - updatedAt
+
+    CreateCommitmentBody:
+      type: object
+      properties:
+        label:
+          type: string
+        amount:
+          type: string
+        dueDay:
+          type: ["integer", "null"]
+        recurrence:
+          type: string
+      required:
+        - label
+        - amount
+
+    UpdateCommitmentBody:
+      type: object
+      properties:
+        label:
+          type: ["string", "null"]
+        amount:
+          type: ["string", "null"]
+        dueDay:
+          type: ["integer", "null"]
+        recurrence:
+          type: ["string", "null"]
+
+    # Transaction
+    Transaction:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        accountId:
+          type: ["string", "null"]
+        categoryId:
+          type: ["string", "null"]
+        categoryName:
+          type: ["string", "null"]
+        date:
+          type: string
+        amount:
+          type: string
+        type:
+          type: string
+        description:
+          type: string
+        merchant:
+          type: ["string", "null"]
+        source:
+          type: string
+        notes:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - userId
+        - date
+        - amount
+        - type
+        - description
+        - source
+        - createdAt
+        - updatedAt
+
+    CreateTransactionBody:
+      type: object
+      properties:
+        date:
+          type: string
+        amount:
+          type: string
+        type:
+          type: string
+        description:
+          type: string
+        merchant:
+          type: ["string", "null"]
+        categoryId:
+          type: ["string", "null"]
+        accountId:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+      required:
+        - date
+        - amount
+        - type
+        - description
+
+    UpdateTransactionBody:
+      type: object
+      properties:
+        date:
+          type: ["string", "null"]
+        amount:
+          type: ["string", "null"]
+        type:
+          type: ["string", "null"]
+        description:
+          type: ["string", "null"]
+        merchant:
+          type: ["string", "null"]
+        categoryId:
+          type: ["string", "null"]
+        accountId:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+
+    # Budget
+    MonthlyBudget:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        categoryId:
+          type: string
+        categoryName:
+          type: string
+        month:
+          type: string
+        plannedAmount:
+          type: string
+        actualAmount:
+          type: string
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - userId
+        - categoryId
+        - categoryName
+        - month
+        - plannedAmount
+        - actualAmount
+        - createdAt
+        - updatedAt
+
+    UpsertBudgetBody:
+      type: object
+      properties:
+        categoryId:
+          type: string
+        month:
+          type: string
+        plannedAmount:
+          type: string
+      required:
+        - categoryId
+        - month
+        - plannedAmount
+
+    # Debt
+    Debt:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        debtType:
+          type: string
+        lender:
+          type: string
+        outstandingBalance:
+          type: string
+        monthlyPayment:
+          type: string
+        interestRate:
+          type: ["string", "null"]
+        targetExtraPayment:
+          type: ["string", "null"]
+        endDate:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - userId
+        - debtType
+        - lender
+        - outstandingBalance
+        - monthlyPayment
+        - createdAt
+        - updatedAt
+
+    CreateDebtBody:
+      type: object
+      properties:
+        debtType:
+          type: string
+        lender:
+          type: string
+        outstandingBalance:
+          type: string
+        monthlyPayment:
+          type: string
+        interestRate:
+          type: ["string", "null"]
+      required:
+        - debtType
+        - lender
+        - outstandingBalance
+        - monthlyPayment
+
+    UpdateDebtBody:
+      type: object
+      properties:
+        debtType:
+          type: ["string", "null"]
+        lender:
+          type: ["string", "null"]
+        outstandingBalance:
+          type: ["string", "null"]
+        monthlyPayment:
+          type: ["string", "null"]
+        interestRate:
+          type: ["string", "null"]
+        targetExtraPayment:
+          type: ["string", "null"]
+
+    DebtSimulateBody:
+      type: object
+      properties:
+        extraMonthlyPayment:
+          type: string
+      required:
+        - extraMonthlyPayment
+
+    DebtScenario:
+      type: object
+      properties:
+        id:
+          type: string
+        debtId:
+          type: string
+        extraMonthlyPayment:
+          type: string
+        estimatedMonthsSaved:
+          type: ["integer", "null"]
+        estimatedPayoffDate:
+          type: ["string", "null"]
+        basePayoffMonths:
+          type: ["integer", "null"]
+        newPayoffMonths:
+          type: ["integer", "null"]
+        createdAt:
+          type: string
+      required:
+        - id
+        - debtId
+        - extraMonthlyPayment
+        - createdAt
+
+    # Insights
+    Insight:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        month:
+          type: string
+        title:
+          type: string
+        message:
+          type: string
+        severity:
+          type: string
+        createdAt:
+          type: string
+      required:
+        - id
+        - userId
+        - month
+        - title
+        - message
+        - severity
+        - createdAt
+
+    GenerateInsightsBody:
+      type: object
+      properties:
+        month:
+          type: string
+      required:
+        - month
+
+    # Dashboard
+    DashboardSummary:
+      type: object
+      properties:
+        month:
+          type: string
+        monthlyIncome:
+          type: string
+        totalCommitments:
+          type: string
+        totalSpent:
+          type: string
+        remaining:
+          type: string
+        totalDebtMonthlyPayment:
+          type: string
+        debtToIncomeRatio:
+          type: string
+        transactionCount:
+          type: integer
+      required:
+        - month
+        - monthlyIncome
+        - totalCommitments
+        - totalSpent
+        - remaining
+        - totalDebtMonthlyPayment
+        - debtToIncomeRatio
+        - transactionCount
+
+    CategorySpend:
+      type: object
+      properties:
+        categoryId:
+          type: ["string", "null"]
+        categoryName:
+          type: string
+        totalSpent:
+          type: string
+        percentage:
+          type: number
+      required:
+        - categoryName
+        - totalSpent
+        - percentage
+
+    # Upload
+    UploadStatementBody:
+      type: object
+      properties:
+        bankType:
+          type: string
+        file:
+          type: string
+          format: binary
+      required:
+        - bankType
+        - file
+
+    UploadedDocument:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        fileName:
+          type: string
+        storagePath:
+          type: string
+        bankType:
+          type: string
+        parseStatus:
+          type: string
+        uploadedAt:
+          type: string
+        rowCount:
+          type: integer
+      required:
+        - id
+        - userId
+        - fileName
+        - storagePath
+        - bankType
+        - parseStatus
+        - uploadedAt
+        - rowCount
+
+    ImportedTransactionRow:
+      type: object
+      properties:
+        id:
+          type: string
+        uploadedDocumentId:
+          type: string
+        rawDate:
+          type: ["string", "null"]
+        rawDescription:
+          type: ["string", "null"]
+        rawAmount:
+          type: ["string", "null"]
+        normalizedDate:
+          type: ["string", "null"]
+        normalizedDescription:
+          type: ["string", "null"]
+        normalizedAmount:
+          type: ["string", "null"]
+        type:
+          type: ["string", "null"]
+        categorySuggestion:
+          type: ["string", "null"]
+        confidence:
+          type: ["string", "null"]
+        status:
+          type: string
+        createdAt:
+          type: string
+      required:
+        - id
+        - uploadedDocumentId
+        - status
+        - createdAt
+
+    ConfirmImportBody:
+      type: object
+      properties:
+        rows:
+          type: array
+          items:
+            $ref: "#/components/schemas/ConfirmImportRow"
+      required:
+        - rows
+
+    ConfirmImportRow:
+      type: object
+      properties:
+        rowId:
+          type: string
+        categoryId:
+          type: ["string", "null"]
+        skip:
+          type: boolean
+      required:
+        - rowId
+        - skip
+
+    ImportConfirmResult:
+      type: object
+      properties:
+        imported:
+          type: integer
+        skipped:
+          type: integer
+      required:
+        - imported
+        - skipped
+
+    # Subscription
+    SubscriptionPlan:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        price:
+          type: string
+        billingInterval:
+          type: string
+        features:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - name
+        - price
+        - billingInterval
+        - features
+        - createdAt
+        - updatedAt
+
+    UserSubscription:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        planId:
+          type: string
+        planName:
+          type: string
+        status:
+          type: string
+        startDate:
+          type: string
+        endDate:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - userId
+        - planId
+        - planName
+        - status
+        - startDate
+        - createdAt
+        - updatedAt

@@ -1,0 +1,112 @@
+{\rtf1\ansi\deff0
+{\fonttbl{\f0 Consolas;\f1 Calibri;}}
+\fs22
+\b Replit AI Master Prompt for Brunei Finance App MVP\b0\par
+\par
+\f1 Copy the prompt below into Replit AI to begin scaffolding the app.\f0\par
+\par
+Build a full-stack web MVP called \b DuitPlan\b0 , a Brunei-first personal finance app for salaried users. Use \b Next.js with TypeScript\b0 , \b Tailwind CSS\b0 , \b shadcn/ui\b0 , \b Prisma\b0 , and \b PostgreSQL\b0 . Design it as a clean, modern, responsive dashboard app.\par
+\par
+\b Core product purpose\b0 : help Brunei users manage monthly salary, expenses, debt obligations, and bank statement imports from local banks.\par
+\par
+\b Build these MVP modules:\b0\par
+1. Authentication\par
+- email/password sign up and login\par
+- protected app routes\par
+\par
+2. Onboarding\par
+- collect full name\par
+- monthly salary\par
+- payday\par
+- fixed commitments\par
+- debts\par
+- starter budget categories\par
+\par
+3. Dashboard\par
+- total monthly income\par
+- total commitments\par
+- amount spent this month\par
+- amount remaining\par
+- debt summary\par
+- top spending categories\par
+- simple insights cards\par
+\par
+4. Transactions\par
+- transactions list\par
+- add/edit/delete transaction\par
+- fields: date, amount, type, description, merchant, category, account, source, notes\par
+- category filters and date filters\par
+\par
+5. Budgets\par
+- monthly budget allocation by category\par
+- compare planned vs actual\par
+- show remaining budget\par
+\par
+6. Debts\par
+- add/edit multiple debts\par
+- fields: debt type, lender, outstanding balance, monthly payment, interest/profit rate optional\par
+- simple payoff simulation with extra monthly payment input\par
+\par
+7. Statement Import\par
+- upload PDF statement\par
+- support BIBD and Baiduri as initial bank types\par
+- create a modular parser architecture with one parser per bank\par
+- for now, parser can use mock parser logic with structured placeholders if real parsing is not complete\par
+- show review table before saving imported transactions\par
+- allow user to edit categories before confirming import\par
+\par
+8. Insights\par
+- generate rules-based insights such as top spending category, debt-to-income ratio, spending increase from previous month, and remaining amount before payday\par
+\par
+9. Settings\par
+- profile settings\par
+- payday and salary settings\par
+- category management\par
+\par
+10. Premium placeholder\par
+- create a premium page showing future paid features like statement import, debt payoff simulation, and advanced insights\par
+\par
+\b Data model requirements\b0\par
+Create Prisma models for:\par
+- User\par
+- Profile\par
+- Account\par
+- Commitment\par
+- Category\par
+- Transaction\par
+- MonthlyBudget\par
+- Debt\par
+- DebtScenario\par
+- UploadedDocument\par
+- ImportedTransactionRow\par
+- MerchantRule\par
+- Insight\par
+- SubscriptionPlan\par
+- UserSubscription\par
+\par
+\b UX requirements\b0\par
+- make the app simple, calm, and modern\par
+- use cards, summary blocks, tables, and guided forms\par
+- avoid heavy accounting language\par
+- make onboarding easy and step-by-step\par
+- make dashboard the default home page after login\par
+- optimize for trust and clarity\par
+\par
+\b Important constraints\b0\par
+- do not build direct bank login integration\par
+- do not auto-save imported transactions without review\par
+- keep architecture clean and modular\par
+- use mock parser logic if necessary, but structure code so real parser logic can be added later\par
+\par
+\b Deliverables expected from the scaffold\b0\par
+- file/folder structure\par
+- app router pages\par
+- reusable UI components\par
+- Prisma schema\par
+- seed data for sample categories\par
+- basic dashboard data wiring\par
+- placeholder parser services for BIBD and Baiduri\par
+- clean README with setup instructions\par
+\par
+Start by generating the project structure, Prisma schema, app routes, layout, and onboarding flow first. Then proceed module by module.\par
+}

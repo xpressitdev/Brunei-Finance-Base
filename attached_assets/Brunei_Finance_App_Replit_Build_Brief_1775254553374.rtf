@@ -1,0 +1,142 @@
+{\rtf1\ansi\deff0
+{\fonttbl{\f0 Calibri;}}
+\fs24
+\b Brunei Finance App Replit Build Brief\b0\par
+\par
+\b Objective\b0\par
+Build an MVP of a Brunei-first personal finance web app on Replit. The MVP should help users plan monthly salary allocation, track expenses, manage debts, import BIBD and Baiduri PDF statements, and receive simple financial insights.\par
+\par
+\b Product Goal\b0\par
+Deliver a clean, trustworthy, simple web app for Brunei salary earners. The app should feel practical, local, and easy to use. It should not feel like accounting software.\par
+\par
+\b Core MVP Features\b0\par
+1. User authentication\par
+2. Onboarding flow for salary, payday, commitments, debts, and default categories\par
+3. Dashboard with salary, commitments, spending, remaining amount, debt summary, and insights\par
+4. Manual transaction entry and editing\par
+5. Monthly budget allocation by category\par
+6. Debt planner with payoff simulation\par
+7. PDF statement upload for BIBD and Baiduri\par
+8. Review and confirm imported transactions before saving\par
+9. Rules-based financial insights\par
+10. Premium-ready architecture for subscription gating\par
+\par
+\b Recommended Replit Stack\b0\par
+- Next.js (App Router)\par
+- TypeScript\par
+- Tailwind CSS\par
+- shadcn/ui\par
+- PostgreSQL\par
+- Prisma ORM\par
+- Supabase Auth or Auth.js\par
+- Supabase Storage for uploaded PDFs\par
+\par
+\b Suggested Architecture\b0\par
+- Frontend: Next.js pages and components\par
+- Backend: Next.js API routes or server actions\par
+- Database: PostgreSQL accessed via Prisma\par
+- File storage: Supabase Storage\par
+- Parsing layer: modular bank-specific statement parsers\par
+- Insights engine: rules-based service\par
+\par
+\b Key Modules\b0\par
+- Auth module\par
+- User profile module\par
+- Onboarding module\par
+- Transactions module\par
+- Budgets module\par
+- Debts module\par
+- Statement import module\par
+- Insights module\par
+- Settings module\par
+- Subscription module placeholder\par
+\par
+\b UX Requirements\b0\par
+- clean dashboard-first layout\par
+- mobile-responsive but web-first\par
+- plain language, not finance jargon\par
+- clear call-to-action to upload statement\par
+- review screen before any imported transactions are saved\par
+- show current month plan clearly\par
+\par
+\b Statement Import Requirements\b0\par
+Support in MVP:\par
+- BIBD PDF statements\par
+- Baiduri PDF statements\par
+\par
+Flow:\par
+1. Upload PDF\par
+2. Detect bank type\par
+3. Extract text\par
+4. Parse rows into normalized transaction objects\par
+5. Show review table to user\par
+6. Allow category edits\par
+7. Confirm import\par
+8. Save transactions\par
+\par
+\b Important Constraints\b0\par
+- No direct bank login integration in MVP\par
+- No silent import without user review\par
+- No investment or family budgeting features yet\par
+- No receipt OCR in first release\par
+\par
+\b Data Entities Needed\b0\par
+- User\par
+- Profile\par
+- Account\par
+- Commitment\par
+- Category\par
+- Transaction\par
+- MonthlyBudget\par
+- Debt\par
+- DebtScenario\par
+- UploadedDocument\par
+- ImportedTransactionRow\par
+- MerchantRule\par
+- Insight\par
+- SubscriptionPlan\par
+- UserSubscription\par
+\par
+\b Suggested Build Sequence\b0\par
+\b Phase 1: Foundation\b0\par
+- auth\par
+- app shell\par
+- onboarding wizard\par
+- user profile\par
+\par
+\b Phase 2: Core Finance Tracking\b0\par
+- categories\par
+- manual transactions\par
+- budget allocation\par
+- dashboard summaries\par
+\par
+\b Phase 3: Debt Planner\b0\par
+- add/edit debts\par
+- debt summary\par
+- payoff simulation\par
+\par
+\b Phase 4: Statement Import\b0\par
+- upload flow\par
+- BIBD parser\par
+- Baiduri parser\par
+- review UI\par
+- import confirmation\par
+\par
+\b Phase 5: Insights and Premium Readiness\b0\par
+- rules-based insights\par
+- premium gating placeholders\par
+- settings and cleanup\par
+\par
+\b Acceptance Criteria\b0\par
+The MVP is acceptable when a new user can:\par
+1. sign up\par
+2. set salary and payday\par
+3. create budgets and add debts\par
+4. manually add expenses\par
+5. upload a supported bank statement\par
+6. review and import transactions\par
+7. see dashboard summaries and insights\par
+\par
+\b Tone and Product Feel\b0\par
+The app should feel modern, calm, practical, and trustworthy. It should be easy enough for normal users, not just budgeting power users.\par
+}

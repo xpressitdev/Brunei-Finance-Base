@@ -1,0 +1,601 @@
+{\rtf1\ansi\deff0
+{\fonttbl{\f0 Calibri;}}
+\fs24
+\b PRODUCT REQUIREMENTS DOCUMENT (PRD)\b0\par
+\par
+\b Project Title\b0\par
+Brunei Personal Finance App MVP\par
+\par
+\b Working Title\b0\par
+Possible placeholders:\par
+- DuitPlan\par
+- DuitFlow\par
+- PocketBrunei\par
+- BelanjaWise\par
+- BajetBrunei\par
+- DuitMate\par
+\par
+We can refine the name later.\par
+\par
+\b 1. Product Overview\b0\par
+\par
+\b Product Summary\b0\par
+A Brunei-first personal finance app that helps users manage their monthly salary, expenses, debt obligations, and savings using a simple planning workflow, bank statement imports, and actionable insights.\par
+\par
+The product is inspired by the discipline of tools like YNAB, but simplified and localized for the Brunei market.\par
+\par
+\b Core Promise\b0\par
+Help Brunei users understand where their money goes, plan their monthly finances clearly, and reduce financial stress.\par
+\par
+\b MVP Objective\b0\par
+Build a usable subscription-ready MVP that validates:\par
+- demand in the Brunei market\par
+- local bank statement import usefulness\par
+- recurring monthly engagement\par
+- willingness to pay for clarity and planning\par
+\par
+\b 2. Problem Statement\b0\par
+\par
+Many Brunei users:\par
+- receive a monthly salary\par
+- have recurring commitments and debts\par
+- do not track expenses consistently\par
+- struggle to understand where their money goes\par
+- lack a simple system to plan spending between paydays\par
+\par
+Existing budgeting apps are often:\par
+- too generic\par
+- too complicated\par
+- not localized to Brunei banking and spending patterns\par
+- unsupported for local bank statement formats\par
+- not focused on debt planning and salary allocation\par
+\par
+There is an opportunity to create a simple, trusted, locally relevant finance app for Brunei users.\par
+\par
+\b 3. Product Vision\b0\par
+\par
+To become the go-to personal finance app for Brunei users by making money management simple, local, practical, and habit-forming.\par
+\par
+\b 4. Target Users\b0\par
+\par
+\b Primary Segment\b0\par
+Brunei-based salaried professionals aged 23–40 who:\par
+- receive fixed monthly income\par
+- use BIBD and/or Baiduri\par
+- have debts or recurring commitments\par
+- want better control over monthly spending\par
+- are comfortable using mobile/web apps\par
+- are not currently using advanced budgeting software\par
+\par
+\b Secondary Segment\b0\par
+Young married couples and households who want:\par
+- better spending control\par
+- debt visibility\par
+- savings planning\par
+- a clearer monthly money system\par
+\par
+\b User Characteristics\b0\par
+- wants clarity, not complexity\par
+- values convenience\par
+- may currently use spreadsheets, notes, or nothing\par
+- wants practical guidance, not finance jargon\par
+- may feel stress around payday-to-payday cash flow\par
+\par
+\b 5. Jobs To Be Done\b0\par
+\par
+Users hire this app to:\par
+- understand where their salary goes every month\par
+- track spending without too much manual effort\par
+- import transaction history from local bank statements\par
+- manage debt obligations clearly\par
+- decide how much they can spend safely\par
+- plan savings and commitments before overspending happens\par
+- get simple monthly financial insights\par
+\par
+\b 6. Product Positioning\b0\par
+\par
+\b Positioning Statement\b0\par
+For Brunei salary earners who want control over their money, this app is a local-first personal finance planner that turns salary, statements, spending, and debt into a clear monthly plan.\par
+\par
+\b Differentiators\b0\par
+- Brunei-local focus\par
+- BIBD and Baiduri statement support\par
+- salary-to-payday planning\par
+- debt payoff support\par
+- simpler than traditional budgeting tools\par
+- built around practical monthly use, not finance complexity\par
+\par
+\b 7. MVP Scope\b0\par
+\par
+\b In Scope for MVP\b0\par
+\par
+\b 7.1 Account & Authentication\b0\par
+- user registration\par
+- login/logout\par
+- password reset\par
+- profile management\par
+\par
+\b 7.2 Onboarding\b0\par
+- set monthly salary\par
+- set payday\par
+- choose default budgeting categories\par
+- add fixed monthly commitments\par
+- add debts/loans\par
+\par
+\b 7.3 Dashboard\b0\par
+- monthly income\par
+- committed amount\par
+- amount spent\par
+- amount remaining\par
+- debt summary\par
+- top spending categories\par
+- simple financial insights\par
+\par
+\b 7.4 Expense Tracking\b0\par
+- add manual transactions\par
+- edit/delete transactions\par
+- categorize expenses\par
+- filter by date/category/account\par
+- monthly expense summaries\par
+\par
+\b 7.5 Monthly Budget / Plan\b0\par
+- allocate monthly salary into categories\par
+- compare planned vs actual\par
+- track remaining budget by category\par
+- show total unallocated or remaining amount\par
+\par
+\b 7.6 Debt Planner\b0\par
+- add debt items\par
+- set balance, monthly payment, and rate (optional)\par
+- view estimated payoff timeline\par
+- simulate extra monthly payment\par
+- calculate total monthly debt burden\par
+\par
+\b 7.7 Bank Statement Import\b0\par
+Initial support:\par
+- BIBD PDF statement import\par
+- Baiduri PDF statement import\par
+\par
+Flow:\par
+- user uploads statement PDF\par
+- app parses transactions\par
+- user reviews parsed rows\par
+- user confirms import\par
+- app stores transactions in account history\par
+\par
+\b 7.8 Insights\b0\par
+Rules-based financial insights such as:\par
+- top spending category\par
+- debt-to-income ratio\par
+- overspending alerts\par
+- spending trend from prior month\par
+- remaining money before payday\par
+- budget variance by category\par
+\par
+\b 7.9 Subscription Readiness\b0\par
+- free vs premium feature gating\par
+- premium screen/paywall placeholder\par
+- billing integration can be basic in MVP, but architecture should support subscription plans\par
+\par
+\b Out of Scope for MVP\b0\par
+- direct bank account login integration\par
+- open banking connections\par
+- investment tracking\par
+- stock/crypto portfolio features\par
+- family/shared budgeting\par
+- bill payment\par
+- loan applications\par
+- financial marketplace features\par
+- advanced AI assistant/chat\par
+- full receipt OCR\par
+- tax/accounting modules\par
+- multi-country support\par
+\par
+\b 8. Key User Flows\b0\par
+\par
+\b Flow 1: New User Onboarding\b0\par
+1. User signs up\par
+2. User enters monthly salary\par
+3. User sets payday\par
+4. User adds fixed monthly commitments\par
+5. User adds debt items\par
+6. User chooses or confirms categories\par
+7. User lands on dashboard with initial monthly plan\par
+\par
+\b Flow 2: Manual Expense Tracking\b0\par
+1. User clicks add transaction\par
+2. User enters amount, date, merchant, category\par
+3. Transaction is saved\par
+4. Dashboard and budget figures update\par
+\par
+\b Flow 3: Bank Statement Import\b0\par
+1. User opens statement import\par
+2. User selects bank and uploads PDF\par
+3. App parses transactions\par
+4. User reviews extracted rows\par
+5. User edits categories/errors if needed\par
+6. User confirms import\par
+7. Transactions are added to the ledger\par
+\par
+\b Flow 4: Debt Management\b0\par
+1. User adds debt item\par
+2. User sees total debt summary\par
+3. User enters extra payment scenario\par
+4. App recalculates payoff estimate\par
+5. User sees debt improvement outcome\par
+\par
+\b Flow 5: Monthly Review\b0\par
+1. User opens dashboard near payday or month-end\par
+2. User reviews spending vs plan\par
+3. User checks debt status\par
+4. User sees financial insights\par
+5. User adjusts next month’s plan\par
+\par
+\b 9. Functional Requirements\b0\par
+\par
+\b 9.1 Authentication\b0\par
+The system must:\par
+- allow users to register with email/password\par
+- allow secure login/logout\par
+- support password reset\par
+- protect private user data by account ownership\par
+\par
+\b 9.2 User Profile\b0\par
+The system must store:\par
+- full name\par
+- email\par
+- default currency (BND)\par
+- payday\par
+- monthly income\par
+- preferred categories\par
+\par
+\b 9.3 Commitments\b0\par
+The system must allow users to add recurring monthly commitments:\par
+- rent\par
+- utility bills\par
+- family support\par
+- subscriptions\par
+- insurance/takaful\par
+- school fees\par
+- others\par
+\par
+Fields:\par
+- label\par
+- amount\par
+- due date (optional)\par
+- recurrence (monthly by default)\par
+\par
+\b 9.4 Transactions\b0\par
+The system must allow:\par
+- manual transaction creation\par
+- import-based transaction creation\par
+- editing/deleting transactions\par
+- transaction categorization\par
+\par
+Transaction fields:\par
+- date\par
+- amount\par
+- type (debit/credit)\par
+- merchant/description\par
+- category\par
+- account\par
+- source\par
+- notes\par
+\par
+\b 9.5 Categories\b0\par
+The system must:\par
+- provide starter categories\par
+- allow category assignment\par
+- support category-level budget comparison\par
+\par
+Suggested starter categories:\par
+- groceries\par
+- dining\par
+- transport\par
+- fuel\par
+- shopping\par
+- utilities\par
+- phone/internet\par
+- debt repayment\par
+- savings\par
+- family support\par
+- insurance/takaful\par
+- education\par
+- health\par
+- entertainment\par
+- others\par
+\par
+\b 9.6 Monthly Budgeting\b0\par
+The system must:\par
+- allow budget allocation by category for a given month\par
+- compare actual spending against plan\par
+- calculate remaining amount\par
+- display category-level and overall variance\par
+\par
+\b 9.7 Debt Planner\b0\par
+The system must:\par
+- allow multiple debts per user\par
+- store debt type, lender, balance, monthly payment, and interest/profit rate if provided\par
+- calculate debt-to-income burden\par
+- provide simple payoff estimates\par
+- simulate extra monthly payment scenarios\par
+\par
+\b 9.8 Statement Import\b0\par
+The system must:\par
+- accept supported PDF files\par
+- identify bank/source format\par
+- parse rows into normalized transaction records\par
+- flag uncertain rows\par
+- require user review before final import\par
+- prevent duplicate import if possible\par
+\par
+\b 9.9 Insights\b0\par
+The system must generate simple rules-based insights such as:\par
+- top category this month\par
+- increase/decrease by category vs previous month\par
+- debt load ratio\par
+- projected remaining spend before payday\par
+- warning when total commitments exceed configurable thresholds\par
+\par
+\b 9.10 Subscription Gating\b0\par
+The system should support:\par
+- free users with limited access\par
+- premium users with statement import and advanced planning features\par
+- subscription flags at user level\par
+\par
+\b 10. Non-Functional Requirements\b0\par
+\par
+\b Performance\b0\par
+- dashboard should load quickly for normal monthly transaction volumes\par
+- statement upload parsing should complete within a reasonable time\par
+- app should handle several hundred to a few thousand transactions per user\par
+\par
+\b Security\b0\par
+- all user data must be private\par
+- all file uploads must be access-controlled\par
+- passwords must be securely managed by auth provider\par
+- sensitive finance documents must not be publicly exposed\par
+- imported data must be tied only to the uploading user\par
+\par
+\b Reliability\b0\par
+- statement imports should fail gracefully\par
+- invalid files should return clear error messages\par
+- calculations should be deterministic and testable\par
+\par
+\b Usability\b0\par
+- onboarding should be simple and guided\par
+- language should be plain and non-technical\par
+- key numbers should be immediately visible\par
+- app should feel less like accounting software and more like a practical planning tool\par
+\par
+\b 11. UX Principles\b0\par
+- Simple first - do not overwhelm users\par
+- Trust before cleverness - accuracy and clarity matter more than flashy AI\par
+- Monthly planning mindset - design around payday and monthly cycles\par
+- Local relevance - categories, language, and logic should fit Brunei users\par
+- Review before import - user must always be able to verify imported statement data\par
+\par
+\b 12. Screens / Pages\b0\par
+\par
+\b Public\b0\par
+- landing page\par
+- sign up\par
+- log in\par
+- forgot password\par
+\par
+\b Authenticated\b0\par
+- onboarding wizard\par
+- dashboard\par
+- transactions list\par
+- add/edit transaction modal/page\par
+- budgets/monthly plan page\par
+- commitments page\par
+- debts page\par
+- debt detail/payoff simulator\par
+- statement upload page\par
+- statement review page\par
+- insights page\par
+- profile/settings page\par
+- premium/subscription page\par
+\par
+\b 13. Technical Recommendations for Replit MVP\b0\par
+\par
+\b Recommended Stack\b0\par
+- Frontend + Backend: Next.js\par
+- Language: TypeScript\par
+- Styling: Tailwind CSS\par
+- UI Components: shadcn/ui\par
+- Database: PostgreSQL\par
+- ORM: Prisma\par
+- Auth: Supabase Auth or Auth.js\par
+- Storage: Supabase Storage\par
+- Deployment/Hosting: Replit for dev/prototype, with optional external DB/storage\par
+\par
+\b Why this stack\b0\par
+- fast to build\par
+- good for dashboards and full-stack MVPs\par
+- developer-friendly\par
+- works well with Replit\par
+- scalable enough for early-stage product validation\par
+\par
+\b 14. Proposed Data Model\b0\par
+\par
+\b Core Entities\b0\par
+- User\par
+- Profile\par
+- Account\par
+- Commitment\par
+- Transaction\par
+- Category\par
+- MonthlyBudget\par
+- Debt\par
+- DebtScenario\par
+- UploadedDocument\par
+- ImportedTransactionRow\par
+- MerchantRule\par
+- Insight\par
+- SubscriptionPlan\par
+- UserSubscription\par
+\par
+\b Notes\b0\par
+- imported rows should be stored separately before final approval if possible\par
+- merchant rule memory will help improve auto-categorization over time\par
+- uploaded documents should keep metadata such as bank type, upload date, parse status\par
+\par
+\b 15. Statement Parsing Requirements\b0\par
+\par
+\b Supported Sources in MVP\b0\par
+- BIBD PDF statements\par
+- Baiduri PDF statements\par
+\par
+\b Parsing Requirements\b0\par
+- extract transaction rows from text-based PDFs where possible\par
+- normalize dates, descriptions, and amounts\par
+- support debit/credit identification\par
+- support review and correction before import\par
+- store raw source file and parsed result metadata\par
+\par
+\b Parsing Constraints\b0\par
+- bank layouts may change\par
+- parser should be modular per bank\par
+- scanned PDFs may require OCR later, but should not block MVP launch if unsupported initially\par
+- system should clearly tell users what formats are currently supported\par
+\par
+\b 16. Monetization Strategy\b0\par
+\par
+\b Free Tier\b0\par
+- onboarding\par
+- manual expense tracking\par
+- budgeting\par
+- dashboard\par
+- basic debt tracking\par
+\par
+\b Premium Tier\b0\par
+- bank statement import\par
+- debt payoff simulation\par
+- advanced insights\par
+- richer reports and trends\par
+- later: OCR and premium automation\par
+\par
+\b Pricing Hypothesis\b0\par
+Test:\par
+- BND 4.90/month\par
+- BND 7.90/month\par
+\par
+Annual plan can come later.\par
+\par
+\b 17. Success Metrics\b0\par
+\par
+\b Product Metrics\b0\par
+- onboarding completion rate\par
+- percentage of users adding salary and commitments\par
+- percentage of users creating at least one debt item\par
+- percentage of users uploading a statement\par
+- time to first useful insight\par
+- monthly active users\par
+- month-2 retention\par
+\par
+\b Business Metrics\b0\par
+- free-to-paid conversion\par
+- premium feature usage\par
+- churn rate\par
+- average revenue per user\par
+- cost to serve statement parsing users\par
+\par
+\b 18. Risks and Mitigations\b0\par
+\par
+\b Risk: statement parsing errors\b0\par
+\b Mitigation:\b0\par
+- start with only BIBD and Baiduri\par
+- always require review before import\par
+- collect real sample statements for testing\par
+- build parser by bank template, not generic logic\par
+\par
+\b Risk: users lose interest after first use\b0\par
+\b Mitigation:\b0\par
+- build around monthly payday workflow\par
+- focus dashboard on how much is left\par
+- provide practical monthly insights\par
+\par
+\b Risk: product feels too complicated\b0\par
+\b Mitigation:\b0\par
+- guide onboarding\par
+- reduce jargon\par
+- keep screens focused\par
+- avoid too many setup fields initially\par
+\par
+\b Risk: low willingness to pay\b0\par
+\b Mitigation:\b0\par
+- reserve high-value convenience features for premium\par
+- test pricing early with interview users\par
+- keep free tier useful but limited\par
+\par
+\b Risk: trust/security concerns\b0\par
+\b Mitigation:\b0\par
+- no direct bank credentials in MVP\par
+- private file storage\par
+- explicit privacy messaging\par
+- clear user control over imports\par
+\par
+\b 19. Build Phases\b0\par
+\par
+\b Phase 1: Foundation\b0\par
+- auth\par
+- onboarding\par
+- profile\par
+- dashboard shell\par
+- salary and commitments\par
+\par
+\b Phase 2: Core Finance Tracking\b0\par
+- manual transactions\par
+- categories\par
+- monthly budgeting\par
+- dashboard summaries\par
+\par
+\b Phase 3: Debt Module\b0\par
+- debt CRUD\par
+- debt burden calculation\par
+- payoff simulations\par
+\par
+\b Phase 4: Statement Import\b0\par
+- upload flow\par
+- BIBD parser\par
+- Baiduri parser\par
+- review/import confirmation\par
+\par
+\b Phase 5: Premium & Polish\b0\par
+- subscription gating\par
+- insights engine\par
+- UI polish\par
+- edge-case handling\par
+- analytics\par
+\par
+\b 20. Future Roadmap (Post-MVP)\b0\par
+- receipt OCR\par
+- recurring transaction detection\par
+- savings goals / sinking funds\par
+- household/shared budgets\par
+- more Brunei bank support\par
+- mobile app\par
+- AI-generated monthly coaching\par
+- financial health score\par
+- localized reminders and alerts\par
+\par
+\b 21. Launch Recommendation\b0\par
+\par
+\b MVP launch approach\b0\par
+Start with:\par
+- 20–50 test users\par
+- mostly salaried Brunei professionals\par
+- a mix of BIBD and Baiduri users\par
+- collect statement samples and usability feedback\par
+- validate:\par
+  - statement import usefulness\par
+  - debt planning usefulness\par
+  - monthly planning retention\par
+  - pricing acceptance\par
+\par
+\b 22. Final MVP Definition\b0\par
+\par
+A Brunei-first personal finance planning app for salaried users that combines monthly budgeting, expense tracking, debt planning, and local bank statement imports into a simple subscription-ready product.\par
+}

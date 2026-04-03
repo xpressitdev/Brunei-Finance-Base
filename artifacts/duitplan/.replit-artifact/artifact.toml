@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "DuitPlan"
+version = "1.0.0"
+id = "artifacts/duitplan"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 24204
+
+[services.development]
+run = "pnpm --filter @workspace/duitplan run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/duitplan", "run", "build" ]
+publicDir = "artifacts/duitplan/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "24204"
+BASE_PATH = "/"

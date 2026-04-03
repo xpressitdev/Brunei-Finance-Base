@@ -1,0 +1,227 @@
+{\rtf1\ansi\deff0
+{\fonttbl{\f0 Consolas;\f1 Calibri;}}
+\fs22
+\b Brunei Finance App MVP Database Schema\b0\par
+\par
+\f1 This is the recommended MVP database structure.\f0\par
+\par
+\b Prisma-style model outline\b0\par
+\par
+model User \{\par
+  id String @id @default(cuid())\par
+  email String @unique\par
+  passwordHash String\par
+  createdAt DateTime @default(now())\par
+  updatedAt DateTime @updatedAt\par
+  profile Profile?\par
+  accounts Account[]\par
+  commitments Commitment[]\par
+  transactions Transaction[]\par
+  budgets MonthlyBudget[]\par
+  debts Debt[]\par
+  uploadedDocuments UploadedDocument[]\par
+  insights Insight[]\par
+  subscription UserSubscription?\par
+\}\par
+\par
+model Profile \{\par
+  id String @id @default(cuid())\par
+  userId String @unique\par
+  fullName String\par
+  currency String @default(\"BND\")\par
+  payday Int\par
+  monthlyIncome Decimal\par
+  createdAt DateTime @default(now())\par
+  updatedAt DateTime @updatedAt\par
+  user User @relation(fields: [userId], references: [id])\par
+\}\par
+\par
+model Account \{\par
+  id String @id @default(cuid())\par
+  userId String\par
+  name String\par
+  type String\par
+  bankName String?\par
+  createdAt DateTime @default(now())\par
+  updatedAt DateTime @updatedAt\par
+  user User @relation(fields: [userId], references: [id])\par
+  transactions Transaction[]\par
+\}\par
+\par
+model Commitment \{\par
+  id String @id @default(cuid())\par
+  userId String\par
+  label String\par
+  amount Decimal\par
+  dueDay Int?\par
+  recurrence String @default(\"monthly\")\par
+  createdAt DateTime @default(now())\par
+  updatedAt DateTime @updatedAt\par
+  user User @relation(fields: [userId], references: [id])\par
+\}\par
+\par
+model Category \{\par
+  id String @id @default(cuid())\par
+  name String\par
+  kind String\par
+  isDefault Boolean @default(false)\par
+  createdAt DateTime @default(now())\par
+  updatedAt DateTime @updatedAt\par
+  transactions Transaction[]\par
+  budgets MonthlyBudget[]\par
+\}\par
+\par
+model Transaction \{\par
+  id String @id @default(cuid())\par
+  userId String\par
+  accountId String?\par
+  categoryId String?\par
+  date DateTime\par
+  amount Decimal\par
+  type String\par
+  description String\par
+  merchant String?\par
+  source String\par
+  notes String?\par
+  importedRowId String?\par
+  createdAt DateTime @default(now())\par
+  updatedAt DateTime @updatedAt\par
+  user User @relation(fields: [userId], references: [id])\par
+  account Account? @relation(fields: [accountId], references: [id])\par
+  category Category? @relation(fields: [categoryId], references: [id])\par
+\}\par
+\par
+model MonthlyBudget \{\par
+  id String @id @default(cuid())\par
+  userId String\par
+  categoryId String\par
+  month String\par
+  plannedAmount Decimal\par
+  actualAmount Decimal @default(0)\par
+  createdAt DateTime @default(now())\par
+  updatedAt DateTime @updatedAt\par
+  user User @relation(fields: [userId], references: [id])\par
+  category Category @relation(fields: [categoryId], references: [id])\par
+\}\par
+\par
+model Debt \{\par
+  id String @id @default(cuid())\par
+  userId String\par
+  debtType String\par
+  lender String\par
+  outstandingBalance Decimal\par
+  monthlyPayment Decimal\par
+  interestRate Decimal?\par
+  targetExtraPayment Decimal?\par
+  endDate DateTime?\par
+  createdAt DateTime @default(now())\par
+  updatedAt DateTime @updatedAt\par
+  user User @relation(fields: [userId], references: [id])\par
+  scenarios DebtScenario[]\par
+\}\par
+\par
+model DebtScenario \{\par
+  id String @id @default(cuid())\par
+  debtId String\par
+  extraMonthlyPayment Decimal\par
+  estimatedMonthsSaved Int?\par
+  estimatedPayoffDate DateTime?\par
+  createdAt DateTime @default(now())\par
+  debt Debt @relation(fields: [debtId], references: [id])\par
+\}\par
+\par
+model UploadedDocument \{\par
+  id String @id @default(cuid())\par
+  userId String\par
+  fileName String\par
+  storagePath String\par
+  bankType String\par
+  parseStatus String\par
+  uploadedAt DateTime @default(now())\par
+  user User @relation(fields: [userId], references: [id])\par
+  importedRows ImportedTransactionRow[]\par
+\}\par
+\par
+model ImportedTransactionRow \{\par
+  id String @id @default(cuid())\par
+  uploadedDocumentId String\par
+  rawDate String?\par
+  rawDescription String?\par
+  rawAmount String?\par
+  normalizedDate DateTime?\par
+  normalizedDescription String?\par
+  normalizedAmount Decimal?\par
+  type String?\par
+  categorySuggestion String?\par
+  confidence Decimal?\par
+  status String @default(\"pending_review\")\par
+  createdAt DateTime @default(now())\par
+  uploadedDocument UploadedDocument @relation(fields: [uploadedDocumentId], references: [id])\par
+\}\par
+\par
+model MerchantRule \{\par
+  id String @id @default(cuid())\par
+  pattern String\par
+  categoryName String\par
+  priority Int @default(100)\par
+  createdAt DateTime @default(now())\par
+  updatedAt DateTime @updatedAt\par
+\}\par
+\par
+model Insight \{\par
+  id String @id @default(cuid())\par
+  userId String\par
+  month String\par
+  title String\par
+  message String\par
+  severity String @default(\"info\")\par
+  createdAt DateTime @default(now())\par
+  user User @relation(fields: [userId], references: [id])\par
+\}\par
+\par
+model SubscriptionPlan \{\par
+  id String @id @default(cuid())\par
+  name String\par
+  price Decimal\par
+  billingInterval String\par
+  createdAt DateTime @default(now())\par
+  updatedAt DateTime @updatedAt\par
+  subscriptions UserSubscription[]\par
+\}\par
+\par
+model UserSubscription \{\par
+  id String @id @default(cuid())\par
+  userId String @unique\par
+  planId String\par
+  status String\par
+  startDate DateTime\par
+  endDate DateTime?\par
+  createdAt DateTime @default(now())\par
+  updatedAt DateTime @updatedAt\par
+  user User @relation(fields: [userId], references: [id])\par
+  plan SubscriptionPlan @relation(fields: [planId], references: [id])\par
+\}\par
+\par
+\b Recommended starter categories seed\b0\par
+- Groceries\par
+- Dining\par
+- Fuel\par
+- Transport\par
+- Shopping\par
+- Bills and Utilities\par
+- Phone and Internet\par
+- Debt Repayment\par
+- Savings\par
+- Family Support\par
+- Insurance and Takaful\par
+- Education\par
+- Health\par
+- Entertainment\par
+- Other\par
+\par
+\b Notes\b0\par
+- Use Decimal for finance values, not float.\par
+- Keep imported rows separate until user confirms import.\par
+- Store raw statement row values for traceability.\par
+- Keep parser logic modular per bank.\par
+}
