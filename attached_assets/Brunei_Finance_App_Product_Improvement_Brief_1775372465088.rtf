@@ -1,0 +1,250 @@
+{\rtf1\ansi\deff0
+{\fonttbl{\f0 Calibri;}}
+\fs24
+\b Brunei Finance App Product Improvement Brief\b0\par
+\par
+\b Purpose\b0\par
+This document captures founder feedback after reviewing the current Replit-generated MVP of the Brunei personal finance app. It is intended to guide the next iteration of the product so that the app becomes more user-friendly, more locally relevant to Brunei users, and more effective as a real consumer finance product.\par
+\par
+\b Overall Product Direction\b0\par
+The app should feel simple, guided, local, and practical. It should not feel like a generic finance dashboard or a manual spreadsheet app. It should feel like a Brunei-first money management assistant for ordinary salaried users.\par
+\par
+\b Summary of Key Founder Feedback\b0\par
+1. The onboarding flow is too manual.\par
+2. Common monthly expenses and loan types should be pre-structured.\par
+3. Users should not have to type everything from scratch.\par
+4. Bank statement import is not working well enough yet.\par
+5. The app should support screenshots as an input method, not only PDFs.\par
+6. The app should feel more visibly Brunei-local in design, language, and banking behavior.\par
+\par
+\b 1. Onboarding Flow Must Become Guided, Not Manual\b0\par
+\par
+\b Current issue\b0\par
+The current onboarding asks users to manually type monthly expenses, loans, and commitments. This creates too much friction and makes the app feel like data entry work.\par
+\par
+\b Required change\b0\par
+The onboarding flow should become a guided setup experience with presets, suggested categories, and easy selection flows.\par
+\par
+\b New onboarding requirements\b0\par
+- Ask users step by step in a conversational, guided way.\par
+- Use common expense and commitment presets instead of blank forms first.\par
+- Allow users to select common expense categories with toggles or checkboxes.\par
+- After selecting a category, then ask for amount.\par
+- Use add-more flows only when needed.\par
+- Reduce typing wherever possible.\par
+\par
+\b Example onboarding structure\b0\par
+\b Step 1: Salary and payday\b0\par
+- What is your monthly salary?\par
+- What day do you usually get paid?\par
+\par
+\b Step 2: Monthly fixed commitments\b0\par
+Show a checklist of common commitments such as:\par
+- Car loan\par
+- Personal loan\par
+- House loan\par
+- Rent\par
+- Utilities\par
+- Internet / phone\par
+- Insurance / takaful\par
+- Family support\par
+- School fees\par
+- Credit card payment\par
+- Other\par
+\par
+After the user selects each one, ask for the amount.\par
+\par
+\b Step 3: Monthly living expenses\b0\par
+Show a list of common spending categories such as:\par
+- Groceries\par
+- Eating out\par
+- Fuel\par
+- Transport\par
+- Shopping\par
+- Entertainment\par
+- Children / family\par
+- Health\par
+- Savings\par
+- Miscellaneous\par
+\par
+The app should let users estimate these first, then refine later from imported transactions.\par
+\par
+\b Step 4: Loan details\b0\par
+Instead of a generic debt entry screen, use preset debt types:\par
+- Car loan\par
+- Personal financing\par
+- House financing\par
+- Credit card\par
+- Other debt\par
+\par
+Then ask:\par
+- How much do you pay per month?\par
+- What is the outstanding balance if you know it?\par
+- Do you want to clear this faster?\par
+\par
+\b Step 5: Goal or savings preference\b0\par
+Ask simple questions like:\par
+- Do you want to build savings every month?\par
+- Are you trying to pay off debt faster?\par
+- Do you want help controlling spending?\par
+\par
+This will help personalize the app.\par
+\par
+\b UX goal\b0\par
+The onboarding should feel like a guided setup assistant, not like filling in an accounting template.\par
+\par
+\b 2. Build Preset Expense and Loan Libraries\b0\par
+\par
+\b Required change\b0\par
+The product should ship with a built-in library of typical Brunei personal finance categories and obligations.\par
+\par
+\b Expense presets\b0\par
+- Groceries\par
+- Eating out\par
+- Fuel\par
+- Car maintenance\par
+- Utilities\par
+- Phone / internet\par
+- Insurance / takaful\par
+- Family support\par
+- Shopping\par
+- Entertainment\par
+- Health\par
+- Education\par
+- Savings\par
+- Emergency fund\par
+- Miscellaneous\par
+\par
+\b Loan and commitment presets\b0\par
+- Car loan\par
+- Personal loan\par
+- House financing\par
+- Credit card payment\par
+- Rent\par
+- Utilities\par
+- School fees\par
+- Childcare\par
+- Family support\par
+- Insurance / takaful\par
+- Subscription payments\par
+\par
+\b Design requirement\b0\par
+Users should be able to select from presets first, then customize later.\par
+\par
+\b 3. Improve Statement Import and Add Screenshot-Based Inputs\b0\par
+\par
+\b Current issue\b0\par
+The PDF upload flow is not yet working well enough. Also, in real Brunei behavior, many users rely on their mobile banking app and may prefer screenshots over PDF exports or online banking downloads.\par
+\par
+\b Required product direction\b0\par
+The app should support multiple transaction input methods:\par
+- PDF statement upload\par
+- screenshot upload\par
+- manual transaction entry\par
+- later: receipt image upload\par
+\par
+\b Screenshot support requirement\b0\par
+The product should support screenshot parsing, especially from mobile banking transaction views.\par
+\par
+\b Example use case\b0\par
+A user opens the BIBD mobile app, takes screenshots of recent transactions, and uploads them into the app. The app should attempt to extract dates, merchant names, and amounts from those screenshots.\par
+\par
+\b Implementation guidance\b0\par
+- Add an upload option for images in addition to PDF files.\par
+- Support JPG, PNG, and similar formats.\par
+- Route screenshot images through OCR extraction flow.\par
+- Parse extracted text into normalized transaction rows.\par
+- Show a review screen before confirming imports.\par
+- If confidence is low, flag rows for manual confirmation.\par
+\par
+\b Important product note\b0\par
+This is especially important for BIBD because many users may not want to depend on desktop banking or token-based PDF access.\par
+\par
+\b 4. Strengthen PDF Import Reliability\b0\par
+\par
+\b Required change\b0\par
+The statement import feature needs to become a real differentiator, not a fragile placeholder.\par
+\par
+\b Requirements\b0\par
+- Improve support for BIBD statement formats.\par
+- Improve support for Baiduri statement formats.\par
+- Create modular parser logic by bank.\par
+- Store raw extracted rows before final import.\par
+- Always show a review-and-confirm screen.\par
+- Detect unsupported formats clearly and explain what users should upload instead.\par
+\par
+\b Fallback behavior\b0\par
+If PDF parsing fails, the app should encourage:\par
+- image upload\par
+- manual transaction entry\par
+- or a guided fallback flow\par
+\par
+\b 5. Make the Product Feel More Brunei\b0\par
+\par
+\b Current issue\b0\par
+The app currently feels too generic and not localized enough in style, behavior, and finance culture.\par
+\par
+\b Required change\b0\par
+The app should look and feel more like a product designed for Brunei users.\par
+\par
+\b Localization goals\b0\par
+- stronger Brunei financial context\par
+- more relevant presets and examples\par
+- more local tone and categories\par
+- more local trust cues\par
+\par
+\b Visual inspiration direction\b0\par
+Study Brunei bank and finance brand aesthetics, including BIBD and Baiduri social media and digital branding. Draw inspiration from:\par
+- clean and trustworthy layouts\par
+- modern Islamic-finance-friendly visual cues where relevant\par
+- soft but credible color palettes\par
+- polished local bank UX tone\par
+\par
+\b Brunei design recommendations\b0\par
+- Use BND currency consistently and prominently.\par
+- Use examples that feel locally familiar.\par
+- Use category names normal Brunei users would instantly understand.\par
+- Avoid making the product feel too Western or too technical.\par
+- Keep the tone practical, respectful, calm, and trustworthy.\par
+\par
+\b Possible localization touches\b0\par
+- Better empty-state examples using realistic Brunei spending categories\par
+- Familiar phrasing for salary, bills, commitments, and financing\par
+- Stronger trust messaging around privacy and statement uploads\par
+\par
+\b 6. Product Experience Goal\b0\par
+The app should answer this emotional need:\par
+\par
+\i "Help me understand my money in a simple way that feels local, realistic, and not overwhelming."\i0\par
+\par
+It should feel like:\par
+- a Brunei personal finance assistant\par
+not\par
+- a generic dashboard\par
+not\par
+- a spreadsheet clone\par
+\par
+\b 7. Required Product Updates for Next Build Sprint\b0\par
+\par
+\b Priority 1\b0\par
+- redesign onboarding into guided preset-based flow\par
+- add common expense presets\par
+- add common loan / commitment presets\par
+- reduce typing load during onboarding\par
+\par
+\b Priority 2\b0\par
+- support screenshot/image uploads\par
+- add OCR-based parsing path for screenshots\par
+- improve BIBD/Baiduri upload UX and fallback logic\par
+\par
+\b Priority 3\b0\par
+- improve Brunei-local visual identity\par
+- tune copy, category names, and examples for Brunei users\par
+- draw inspiration from local bank branding and trust signals\par
+\par
+\b 8. Replit Build Instruction\b0\par
+Please treat this document as a product refinement brief for the next iteration of the app. Update the current MVP accordingly without throwing away the existing structure unless necessary. Improve the current product so it becomes more guided, more local, and more practical for Brunei users. Prioritize usability and local relevance over generic feature expansion.\par
+\par
+\b Final Goal\b0\par
+The next version of the app should feel significantly more useful to a normal Brunei salaried user during onboarding and transaction setup, and should support real-world transaction input behavior including screenshots from local banking apps.\par
+}

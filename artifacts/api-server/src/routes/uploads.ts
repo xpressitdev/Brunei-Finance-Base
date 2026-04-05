@@ -41,13 +41,15 @@ function mockParseStatement(bankType: string, fileName: string): Array<{
 }
 
 router.post("/uploads", requireAuth, async (req: AuthenticatedRequest, res): Promise<void> => {
-  const { bankType } = req.body as { bankType?: string };
+  const { bankType, inputMethod } = req.body as { bankType?: string; inputMethod?: string };
   if (!bankType || !["bibd", "baiduri"].includes(bankType)) {
     res.status(400).json({ error: "bankType must be 'bibd' or 'baiduri'" });
     return;
   }
 
-  const fileName = `statement_${bankType}_${Date.now()}.pdf`;
+  const isScreenshot = inputMethod === "screenshot";
+  const ext = isScreenshot ? "jpg" : "pdf";
+  const fileName = `statement_${bankType}_${Date.now()}.${ext}`;
   const docId = uuidv4();
 
   const [doc] = await db.insert(uploadedDocumentsTable).values({

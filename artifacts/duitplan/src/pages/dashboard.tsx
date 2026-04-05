@@ -3,95 +3,113 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { Link } from "wouter";
-import { Wallet, ArrowUpRight, ArrowDownRight, CreditCard, Activity } from "lucide-react";
+import { Wallet, ArrowDownRight, CreditCard, Activity, ArrowRight, Upload } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
+
+const COLORS = ["#15a06e", "#0ea5e9", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4", "#84cc16", "#f97316"];
+
+const fmt = (val?: string | number) =>
+  `BND ${Number(val || 0).toLocaleString("en-BN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 export default function Dashboard() {
   const currentMonth = format(new Date(), "yyyy-MM");
-  
-  const { data: summary, isLoading: summaryLoading } = useGetDashboardSummary({
-    month: currentMonth
-  });
-  
-  const { data: spending, isLoading: spendingLoading } = useGetSpendingByCategory({
-    month: currentMonth
-  });
-  
-  const { data: recentTransactions } = useGetRecentTransactions({ limit: 5 });
 
-  if (summaryLoading || spendingLoading) {
-    return <div className="p-8 animate-pulse flex space-x-4">Loading...</div>;
+  const { data: summary, isLoading: summaryLoading } = useGetDashboardSummary({ month: currentMonth });
+  const { data: spending, isLoading: spendingLoading } = useGetSpendingByCategory({ month: currentMonth });
+  const { data: recentTransactions } = useGetRecentTransactions({ limit: 6 });
+
+  const isLoading = summaryLoading || spendingLoading;
+
+  if (isLoading) {
+    return (
+      <div className="space-y-8 animate-pulse">
+        <div className="h-10 w-56 bg-muted rounded-xl" />
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {[...Array(4)].map((_, i) => <div key={i} className="h-28 bg-muted rounded-2xl" />)}
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="col-span-2 h-80 bg-muted rounded-2xl" />
+          <div className="h-80 bg-muted rounded-2xl" />
+        </div>
+      </div>
+    );
   }
 
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
+  const hasTransactions = recentTransactions && recentTransactions.length > 0;
+  const hasSpending = spending && spending.length > 0;
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-foreground tracking-tight">Overview</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Overview</h1>
           <p className="text-muted-foreground">{format(new Date(), "MMMM yyyy")}</p>
         </div>
         <div className="flex gap-2">
           <Link href="/upload">
-            <Button variant="outline" className="bg-white">Upload Statement</Button>
+            <Button variant="outline" className="bg-white gap-2">
+              <Upload className="w-4 h-4" /> Import Statement
+            </Button>
           </Link>
           <Link href="/transactions">
-            <Button>Add Transaction</Button>
+            <Button className="gap-2">Add Transaction</Button>
           </Link>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Summary cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="shadow-sm border-muted">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Monthly Income</CardTitle>
-            <Wallet className="w-4 h-4 text-primary/70" />
+          <CardHeader className="flex flex-row items-center justify-between pb-2 pt-4 px-5">
+            <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Monthly Salary</CardTitle>
+            <Wallet className="w-4 h-4 text-primary/60" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">${summary?.monthlyIncome || "0.00"}</div>
-          </CardContent>
-        </Card>
-        
-        <Card className="shadow-sm border-muted">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total Spent</CardTitle>
-            <ArrowDownRight className="w-4 h-4 text-destructive/70" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">${summary?.totalSpent || "0.00"}</div>
+          <CardContent className="px-5 pb-5">
+            <div className="text-2xl font-bold">{fmt(summary?.monthlyIncome)}</div>
           </CardContent>
         </Card>
 
         <Card className="shadow-sm border-muted">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Fixed Commitments</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between pb-2 pt-4 px-5">
+            <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Fixed Commitments</CardTitle>
             <CreditCard className="w-4 h-4 text-orange-500/70" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">${summary?.totalCommitments || "0.00"}</div>
+          <CardContent className="px-5 pb-5">
+            <div className="text-2xl font-bold">{fmt(summary?.totalCommitments)}</div>
           </CardContent>
         </Card>
 
-        <Card className="shadow-sm border-muted bg-primary/5 border-primary/20">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-primary">Remaining</CardTitle>
+        <Card className="shadow-sm border-muted">
+          <CardHeader className="flex flex-row items-center justify-between pb-2 pt-4 px-5">
+            <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Total Spent</CardTitle>
+            <ArrowDownRight className="w-4 h-4 text-destructive/60" />
+          </CardHeader>
+          <CardContent className="px-5 pb-5">
+            <div className="text-2xl font-bold">{fmt(summary?.totalSpent)}</div>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-sm border-primary/20 bg-primary/5">
+          <CardHeader className="flex flex-row items-center justify-between pb-2 pt-4 px-5">
+            <CardTitle className="text-xs font-medium text-primary uppercase tracking-wider">Remaining</CardTitle>
             <Activity className="w-4 h-4 text-primary" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-primary">${summary?.remaining || "0.00"}</div>
+          <CardContent className="px-5 pb-5">
+            <div className="text-2xl font-bold text-primary">{fmt(summary?.remaining)}</div>
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      {/* Charts + sidebar */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Spending chart */}
         <Card className="col-span-1 lg:col-span-2 shadow-sm border-muted">
           <CardHeader>
-            <CardTitle>Spending by Category</CardTitle>
+            <CardTitle className="text-base">Spending by Category</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-[300px] w-full">
-              {spending && spending.length > 0 ? (
+            <div className="h-[280px] w-full">
+              {hasSpending ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
@@ -101,78 +119,103 @@ export default function Dashboard() {
                       cx="50%"
                       cy="50%"
                       outerRadius={100}
-                      innerRadius={60}
-                      fill="#8884d8"
-                      label={false}
+                      innerRadius={55}
                     >
-                      {spending.map((entry: any, index: number) => (
+                      {spending.map((_: any, index: number) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
-                    <Tooltip formatter={(value: any) => `$${value}`} />
-                    <Legend />
+                    <Tooltip formatter={(value: any) => `BND ${Number(value).toFixed(2)}`} />
+                    <Legend iconType="circle" iconSize={8} />
                   </PieChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="h-full flex items-center justify-center text-muted-foreground text-sm">
-                  No spending data for this month.
+                <div className="h-full flex flex-col items-center justify-center gap-4 text-center">
+                  <div className="text-4xl">📊</div>
+                  <div>
+                    <p className="font-medium text-foreground mb-1">No spending data yet</p>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Upload your BIBD or Baiduri statement, or add a transaction manually.
+                    </p>
+                    <div className="flex gap-2 justify-center">
+                      <Link href="/upload">
+                        <Button size="sm" variant="outline">Import Statement</Button>
+                      </Link>
+                      <Link href="/transactions">
+                        <Button size="sm">Add Transaction</Button>
+                      </Link>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
           </CardContent>
         </Card>
 
-        <div className="space-y-8 col-span-1 lg:col-span-1">
+        {/* Right column */}
+        <div className="space-y-6">
+          {/* Debt summary */}
           <Card className="shadow-sm border-muted">
-            <CardHeader>
-              <CardTitle>Debt Summary</CardTitle>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">Financing Summary</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
+              <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-muted-foreground">Monthly Payment</span>
-                  <span className="font-medium">${summary?.totalDebtMonthlyPayment || "0.00"}</span>
+                  <span className="font-semibold">{fmt(summary?.totalDebtMonthlyPayment)}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-muted-foreground">Debt-to-Income</span>
-                  <span className="font-medium">{summary?.debtToIncomeRatio || "0"}%</span>
+                  <span className="font-semibold">{summary?.debtToIncomeRatio ?? "0"}%</span>
                 </div>
-                <div className="pt-4 border-t">
+                <div className="pt-3 border-t">
                   <Link href="/debts">
-                    <Button variant="outline" className="w-full">Manage Debts</Button>
+                    <Button variant="outline" className="w-full gap-2" size="sm">
+                      Manage Financing <ArrowRight className="w-3 h-3" />
+                    </Button>
                   </Link>
                 </div>
               </div>
             </CardContent>
           </Card>
-          
+
+          {/* Recent transactions */}
           <Card className="shadow-sm border-muted">
-            <CardHeader>
-              <CardTitle>Recent Transactions</CardTitle>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">Recent Transactions</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {recentTransactions && recentTransactions.length > 0 ? (
-                  recentTransactions.map((tx) => (
-                    <div key={tx.id} className="flex items-center justify-between py-2 border-b last:border-0">
-                      <div className="flex flex-col">
-                        <span className="font-medium text-sm">{tx.description}</span>
-                        <span className="text-xs text-muted-foreground">{format(new Date(tx.date), "MMM d")} &bull; {tx.categoryName || 'Uncategorized'}</span>
+              {hasTransactions ? (
+                <div className="space-y-3">
+                  {recentTransactions.map((tx) => (
+                    <div key={tx.id} className="flex items-center justify-between py-1 border-b last:border-0">
+                      <div>
+                        <p className="font-medium text-sm leading-tight">{tx.description}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {format(new Date(tx.date), "d MMM")} &bull; {tx.categoryName || "Uncategorised"}
+                        </p>
                       </div>
-                      <div className={`font-medium ${tx.type === 'debit' ? '' : 'text-primary'}`}>
-                        {tx.type === 'debit' ? '-' : '+'}${tx.amount}
-                      </div>
+                      <span className={`font-semibold text-sm ${tx.type === "credit" ? "text-primary" : "text-foreground"}`}>
+                        {tx.type === "credit" ? "+" : "-"}BND {Number(tx.amount).toFixed(2)}
+                      </span>
                     </div>
-                  ))
-                ) : (
-                  <div className="text-center py-4 text-muted-foreground text-sm">
-                    No transactions yet.
-                  </div>
-                )}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="py-6 text-center">
+                  <div className="text-3xl mb-2">🧾</div>
+                  <p className="text-sm text-muted-foreground mb-1">No transactions recorded yet.</p>
+                  <p className="text-xs text-muted-foreground">
+                    Try importing your BIBD or Baiduri statement.
+                  </p>
+                </div>
+              )}
               <div className="mt-4">
                 <Link href="/transactions">
-                  <Button variant="link" className="w-full text-muted-foreground hover:text-foreground">View all</Button>
+                  <Button variant="ghost" className="w-full text-muted-foreground hover:text-foreground text-sm gap-1">
+                    View all transactions <ArrowRight className="w-3 h-3" />
+                  </Button>
                 </Link>
               </div>
             </CardContent>
