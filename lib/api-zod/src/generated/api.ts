@@ -439,6 +439,7 @@ export const CreateDebtBody = zod.object({
   outstandingBalance: zod.string(),
   monthlyPayment: zod.string(),
   interestRate: zod.string().nullish(),
+  startDate: zod.string().nullish(),
 });
 
 /**
@@ -455,6 +456,7 @@ export const UpdateDebtBody = zod.object({
   monthlyPayment: zod.string().nullish(),
   interestRate: zod.string().nullish(),
   targetExtraPayment: zod.string().nullish(),
+  startDate: zod.string().nullish(),
 });
 
 export const UpdateDebtResponse = zod.object({

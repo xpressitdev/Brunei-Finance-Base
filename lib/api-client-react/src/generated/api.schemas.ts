@@ -256,6 +256,8 @@ export interface Debt {
   interestRate?: string | null;
   /** @nullable */
   targetExtraPayment?: string | null;
+  /** Debt start date in YYYY-MM-DD format @nullable */
+  startDate?: string | null;
   /** @nullable */
   endDate?: string | null;
   createdAt: string;
@@ -269,6 +271,8 @@ export interface CreateDebtBody {
   monthlyPayment: string;
   /** @nullable */
   interestRate?: string | null;
+  /** Debt start date in YYYY-MM-DD format @nullable */
+  startDate?: string | null;
 }
 
 export interface UpdateDebtBody {
@@ -284,6 +288,8 @@ export interface UpdateDebtBody {
   interestRate?: string | null;
   /** @nullable */
   targetExtraPayment?: string | null;
+  /** Debt start date in YYYY-MM-DD format @nullable */
+  startDate?: string | null;
 }
 
 export interface DebtSimulateBody {
@@ -303,6 +309,20 @@ export interface DebtScenario {
   /** @nullable */
   newPayoffMonths?: number | null;
   createdAt: string;
+}
+
+export interface DebtSchedulePoint {
+  /** Month number (0 = start) */
+  month: number;
+  /** Outstanding balance at this month */
+  balance: number;
+  /** YYYY-MM label based on startDate, if available */
+  label?: string;
+}
+
+export interface DebtSchedule {
+  debtId: string;
+  schedule: DebtSchedulePoint[];
 }
 
 export interface Insight {

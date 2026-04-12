@@ -24,6 +24,7 @@ function formatDebt(d: typeof debtsTable.$inferSelect) {
     monthlyPayment: d.monthlyPayment,
     interestRate: d.interestRate,
     targetExtraPayment: d.targetExtraPayment,
+    startDate: d.startDate ?? null,
     endDate: d.endDate?.toISOString() ?? null,
     createdAt: d.createdAt.toISOString(),
     updatedAt: d.updatedAt.toISOString(),
@@ -47,6 +48,7 @@ router.post("/debts", requireAuth, async (req: AuthenticatedRequest, res): Promi
     outstandingBalance: parsed.data.outstandingBalance,
     monthlyPayment: parsed.data.monthlyPayment,
     interestRate: parsed.data.interestRate ?? null,
+    startDate: parsed.data.startDate ?? null,
   }).returning();
 
   res.status(201).json(formatDebt(debt));
@@ -65,6 +67,7 @@ router.patch("/debts/:id", requireAuth, async (req: AuthenticatedRequest, res): 
   if (body.data.monthlyPayment != null) updateData.monthlyPayment = body.data.monthlyPayment;
   if (body.data.interestRate !== undefined) updateData.interestRate = body.data.interestRate;
   if (body.data.targetExtraPayment !== undefined) updateData.targetExtraPayment = body.data.targetExtraPayment;
+  if (body.data.startDate !== undefined) updateData.startDate = body.data.startDate;
 
   const [updated] = await db.update(debtsTable).set(updateData)
     .where(and(eq(debtsTable.id, params.data.id), eq(debtsTable.userId, req.userId!)))
@@ -135,6 +138,48 @@ router.post("/debts/:id/simulate", requireAuth, async (req: AuthenticatedRequest
     newPayoffMonths: scenario.newPayoffMonths,
     createdAt: scenario.createdAt.toISOString(),
   });
+});
+
+router.get("/debts/:id/schedule", requireAuth, async (req: AuthenticatedRequest, res): Promise<void> => {
+  const params = UpdateDebtParams.safeParse(req.params);
+  if (!params.success) { res.status(400).json({ error: params.error.message }); return; }
+  const id = params.data.id;
+  const [debt] = await db.select().from(debtsTable)
+    .where(and(eq(debtsTable.id, id), eq(debtsTable.userId, req.userId!)))
+    .limit(1);
+  if (!debt) { res.status(404).json({ error: "Debt not found" }); return; }
+
+  const balance = parseFloat(debt.outstandingBalance);
+  const payment = parseFloat(debt.monthlyPayment);
+  const rate = debt.interestRate ? parseFloat(debt.interestRate) / 100 / 12 : 0;
+
+  const schedule: { month: number; balance: number; label?: string }[] = [];
+  let bal = balance;
+  let monthIndex = 0;
+
+  const startDate = debt.startDate ? new Date(debt.startDate) : null;
+
+  const getLabel = (monthOffset: number): string | undefined => {
+    if (!startDate) return undefined;
+    const d = new Date(startDate);
+    d.setMonth(d.getMonth() + monthOffset);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+  };
+
+  schedule.push({ month: 0, balance: Math.max(0, bal), label: getLabel(0) });
+
+  while (bal > 0 && monthIndex < 1200) {
+    if (rate > 0) {
+      bal = bal * (1 + rate) - payment;
+    } else {
+      bal = bal - payment;
+    }
+    monthIndex++;
+    schedule.push({ month: monthIndex, balance: Math.max(0, parseFloat(bal.toFixed(2))), label: getLabel(monthIndex) });
+    if (bal <= 0) break;
+  }
+
+  res.json({ debtId: debt.id, schedule });
 });
 
 export default router;

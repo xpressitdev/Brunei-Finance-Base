@@ -24,6 +24,8 @@ export * from "./createTransactionBody";
 export * from "./dashboardSummary";
 export * from "./debt";
 export * from "./debtScenario";
+export * from "./debtSchedule";
+export * from "./debtSchedulePoint";
 export * from "./debtSimulateBody";
 export * from "./deleteNetWorthSnapshotParams";
 export * from "./errorResponse";

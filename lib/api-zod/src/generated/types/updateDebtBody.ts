@@ -19,4 +19,6 @@ export interface UpdateDebtBody {
   interestRate?: string | null;
   /** @nullable */
   targetExtraPayment?: string | null;
+  /** Debt start date in YYYY-MM-DD format @nullable */
+  startDate?: string | null;
 }

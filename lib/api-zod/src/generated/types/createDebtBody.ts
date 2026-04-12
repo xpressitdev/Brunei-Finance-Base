@@ -13,4 +13,6 @@ export interface CreateDebtBody {
   monthlyPayment: string;
   /** @nullable */
   interestRate?: string | null;
+  /** Debt start date in YYYY-MM-DD format @nullable */
+  startDate?: string | null;
 }

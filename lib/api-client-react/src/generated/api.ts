@@ -33,6 +33,7 @@ import type {
   DashboardSummary,
   Debt,
   DebtScenario,
+  DebtSchedule,
   DebtSimulateBody,
   ErrorResponse,
   GenerateInsightsBody,
@@ -2639,6 +2640,78 @@ export const useSimulateDebtPayoff = <
   TContext
 > => {
   return useMutation(getSimulateDebtPayoffMutationOptions(options));
+};
+
+/**
+ * @summary Get monthly balance schedule for a debt
+ */
+export const getDebtScheduleUrl = (id: string) => {
+  return `/api/debts/${id}/schedule`;
+};
+
+export const getDebtSchedule = async (
+  id: string,
+  options?: RequestInit,
+): Promise<DebtSchedule> => {
+  return customFetch<DebtSchedule>(getDebtScheduleUrl(id), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getDebtScheduleQueryKey = (id: string) => {
+  return [`/api/debts/${id}/schedule`] as const;
+};
+
+export const getDebtScheduleQueryOptions = <
+  TData = Awaited<ReturnType<typeof getDebtSchedule>>,
+  TError = ErrorType<unknown>,
+>(
+  id: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getDebtSchedule>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryOptions<Awaited<ReturnType<typeof getDebtSchedule>>, TError, TData> & {
+  queryKey: QueryKey;
+} => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+  const queryKey = queryOptions?.queryKey ?? getDebtScheduleQueryKey(id);
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getDebtSchedule>>> = ({
+    signal,
+  }) => getDebtSchedule(id, { signal, ...requestOptions });
+  return { queryKey, queryFn, enabled: !!id, ...queryOptions };
+};
+
+export type GetDebtScheduleQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getDebtSchedule>>
+>;
+export type GetDebtScheduleQueryError = ErrorType<unknown>;
+
+export const useGetDebtSchedule = <
+  TData = Awaited<ReturnType<typeof getDebtSchedule>>,
+  TError = ErrorType<unknown>,
+>(
+  id: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getDebtSchedule>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+  const queryOptions = getDebtScheduleQueryOptions(id, options);
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+  query.queryKey = queryOptions.queryKey;
+  return query;
 };
 
 /**

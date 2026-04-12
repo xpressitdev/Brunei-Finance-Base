@@ -1,4 +1,4 @@
-import { pgTable, text, numeric, integer, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, numeric, integer, timestamp, date } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -11,6 +11,7 @@ export const debtsTable = pgTable("debts", {
   monthlyPayment: numeric("monthly_payment", { precision: 12, scale: 2 }).notNull(),
   interestRate: numeric("interest_rate", { precision: 7, scale: 4 }),
   targetExtraPayment: numeric("target_extra_payment", { precision: 12, scale: 2 }),
+  startDate: date("start_date"),
   endDate: timestamp("end_date", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),

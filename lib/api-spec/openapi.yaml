@@ -648,6 +648,31 @@ paths:
               schema:
                 $ref: "#/components/schemas/DebtScenario"
 
+  /debts/{id}/schedule:
+    get:
+      operationId: getDebtSchedule
+      tags: [debts]
+      summary: Get monthly balance schedule for a debt
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Monthly balance schedule
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DebtSchedule"
+        "404":
+          description: Debt not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   # Insights
   /insights:
     get:
@@ -1498,6 +1523,9 @@ components:
           type: ["string", "null"]
         targetExtraPayment:
           type: ["string", "null"]
+        startDate:
+          type: ["string", "null"]
+          description: "Debt start date in YYYY-MM-DD format"
         endDate:
           type: ["string", "null"]
         createdAt:
@@ -1527,6 +1555,9 @@ components:
           type: string
         interestRate:
           type: ["string", "null"]
+        startDate:
+          type: ["string", "null"]
+          description: "Debt start date in YYYY-MM-DD format"
       required:
         - debtType
         - lender
@@ -1548,6 +1579,9 @@ components:
           type: ["string", "null"]
         targetExtraPayment:
           type: ["string", "null"]
+        startDate:
+          type: ["string", "null"]
+          description: "Debt start date in YYYY-MM-DD format"
 
     DebtSimulateBody:
       type: object
@@ -1581,6 +1615,35 @@ components:
         - debtId
         - extraMonthlyPayment
         - createdAt
+
+    DebtSchedulePoint:
+      type: object
+      properties:
+        month:
+          type: integer
+          description: "Month number (0 = start)"
+        balance:
+          type: number
+          description: "Outstanding balance at this month"
+        label:
+          type: ["string", "null"]
+          description: "YYYY-MM calendar label derived from startDate, if debt has a startDate"
+      required:
+        - month
+        - balance
+
+    DebtSchedule:
+      type: object
+      properties:
+        debtId:
+          type: string
+        schedule:
+          type: array
+          items:
+            $ref: "#/components/schemas/DebtSchedulePoint"
+      required:
+        - debtId
+        - schedule
 
     # Insights
     Insight:
