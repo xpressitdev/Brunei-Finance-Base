@@ -1,0 +1,288 @@
+{\rtf1\ansi\deff0
+{\fonttbl{\f0 Calibri;}}
+\fs24
+\b Brunei Finance App Master Product Brief\b0\par
+\par
+\b Purpose\b0\par
+This document consolidates the current product direction, MVP definition, product improvement feedback, and gamification layer strategy for the Brunei personal finance app being built on Replit. It should be treated as the master guidance document for future iterations of the app.\par
+\par
+\b 1. Product Vision\b0\par
+Build a Brunei-first personal finance app that helps salaried users understand where their money goes, plan monthly spending, manage debt, and feel motivated to improve their financial habits. The product should feel practical, trustworthy, simple, and locally relevant.\par
+\par
+\b 2. Core Positioning\b0\par
+This is a Brunei-native personal finance app, not just a generic budgeting tool. It should help users manage salary, commitments, debt, savings, and spending in a way that fits Brunei banking behavior and everyday money habits.\par
+\par
+\b 3. Primary User\b0\par
+Brunei salaried professionals and households who:\par
+- get paid monthly\par
+- use local banks such as BIBD and Baiduri\par
+- have commitments and debt obligations\par
+- want more control over monthly money\par
+- need practical support more than financial theory\par
+\par
+\b 4. Core MVP Capabilities\b0\par
+The MVP should allow users to:\par
+- create an account and log in\par
+- set salary and payday\par
+- add commitments and debts\par
+- track expenses\par
+- create a monthly budget\par
+- upload local bank statements\par
+- review and confirm imported transactions\par
+- see dashboard summaries and insights\par
+\par
+\b 5. Current Product Problems to Fix\b0\par
+Founder feedback identified several important product issues:\par
+- onboarding is too manual\par
+- users have to type too many expenses and loans from scratch\par
+- the product needs more preset categories and common commitments\par
+- PDF statement import is not yet strong enough\par
+- screenshot-based transaction import is needed\par
+- the app needs to feel more Brunei-local in experience and presentation\par
+\par
+\b 6. Product Improvement Direction\b0\par
+The next iteration of the app should improve the product in three major ways:\par
+- make onboarding guided and preset-based\par
+- improve transaction input options, especially screenshot import\par
+- make the app feel more Brunei in design, categories, and tone\par
+\par
+\b 7. New Onboarding Direction\b0\par
+Onboarding should feel like a guided setup assistant, not a manual spreadsheet or accounting form.\par
+\par
+\b Recommended onboarding flow\b0\par
+\b Step 1: Salary and payday\b0\par
+- ask monthly salary\par
+- ask payday date\par
+\par
+\b Step 2: Fixed commitments\b0\par
+Let users select common items first, then enter amounts:\par
+- car loan\par
+- personal loan\par
+- house financing\par
+- rent\par
+- utilities\par
+- phone/internet\par
+- insurance/takaful\par
+- family support\par
+- school fees\par
+- credit card payment\par
+- other\par
+\par
+\b Step 3: Living expenses\b0\par
+Let users choose common spending categories and estimate amounts:\par
+- groceries\par
+- eating out\par
+- fuel\par
+- transport\par
+- shopping\par
+- entertainment\par
+- children/family\par
+- health\par
+- savings\par
+- miscellaneous\par
+\par
+\b Step 4: Debt setup\b0\par
+Use preset debt types:\par
+- car loan\par
+- personal financing\par
+- house financing\par
+- credit card\par
+- other debt\par
+\par
+Then ask for monthly payment and outstanding balance if known.\par
+\par
+\b Step 5: Financial goals\b0\par
+Ask simple intent questions like:\par
+- do you want to save more?\par
+- do you want to clear debt faster?\par
+- do you want to control spending better?\par
+\par
+\b 8. Preset Libraries to Include\b0\par
+\par
+\b Expense presets\b0\par
+- groceries\par
+- eating out\par
+- fuel\par
+- car maintenance\par
+- utilities\par
+- phone/internet\par
+- insurance/takaful\par
+- family support\par
+- shopping\par
+- entertainment\par
+- health\par
+- education\par
+- savings\par
+- emergency fund\par
+- miscellaneous\par
+\par
+\b Loan and commitment presets\b0\par
+- car loan\par
+- personal loan\par
+- house financing\par
+- credit card payment\par
+- rent\par
+- utilities\par
+- school fees\par
+- childcare\par
+- family support\par
+- insurance/takaful\par
+- subscriptions\par
+\par
+\b 9. Transaction Input Strategy\b0\par
+The app should support multiple real-world input methods:\par
+- manual transaction entry\par
+- PDF statement upload\par
+- screenshot/image upload\par
+- later: receipt image upload\par
+\par
+\b 10. Screenshot Import Requirement\b0\par
+This is an important product direction, especially for BIBD users who may rely on mobile banking instead of desktop online banking.\par
+\par
+The app should support:\par
+- JPG and PNG uploads\par
+- screenshot OCR extraction\par
+- parsing transaction rows from screenshots\par
+- review before final import\par
+- confidence flags for uncertain rows\par
+\par
+\b Example use case\b0\par
+A user opens the BIBD mobile app, takes screenshots of recent transactions, uploads them, and the app extracts dates, descriptions, and amounts into a review screen.\par
+\par
+\b 11. PDF Import Direction\b0\par
+The PDF statement import flow should be improved as a serious differentiator.\par
+\par
+\b Requirements\b0\par
+- improve BIBD parsing\par
+- improve Baiduri parsing\par
+- modular parser logic per bank\par
+- raw row storage before confirmation\par
+- clear error messaging for unsupported formats\par
+- fallback to screenshot upload or manual entry if needed\par
+\par
+\b 12. Brunei Localization Direction\b0\par
+The product should feel clearly localized for Brunei users.\par
+\par
+\b Requirements\b0\par
+- use BND everywhere\par
+- use categories and examples that feel locally familiar\par
+- use tone that is calm, practical, and trustworthy\par
+- reflect local banking habits\par
+- draw inspiration from BIBD and Baiduri style cues\par
+\par
+\b Design direction\b0\par
+- clean and credible\par
+- not too Western generic\par
+- not childish\par
+- subtle local-finance feel\par
+- trustworthy fintech tone\par
+\par
+\b 13. Gamification Layer Strategy\b0\par
+The app should include a light gamification layer, but finance must remain the primary identity.\par
+\par
+\b Core rule\b0\par
+This must remain a finance app first. Gamification should only act as a motivational and retention layer.\par
+\par
+\b Gamification goals\b0\par
+- increase retention\par
+- make progress feel rewarding\par
+- motivate savings and debt payoff\par
+- encourage better habits\par
+\par
+\b 14. Recommended Gamification Features for MVP\b0\par
+\par
+\b Progress bars\b0\par
+Use for:\par
+- savings goals\par
+- debt payoff progress\par
+- budget completion\par
+- emergency fund growth\par
+\par
+\b Streaks\b0\par
+Track:\par
+- staying within budget\par
+- saving monthly\par
+- checking in consistently\par
+- logging transactions regularly\par
+\par
+\b Milestones\b0\par
+Celebrate:\par
+- first budget created\par
+- first debt added\par
+- first statement imported\par
+- first BND 100 saved\par
+- first month under budget\par
+- debt reduced by milestone amounts\par
+\par
+\b Achievement badges\b0\par
+Examples:\par
+- Budget Starter\par
+- Savings Builder\par
+- Debt Crusher\par
+- Consistency Streak\par
+- Smart Spender\par
+- First Import Completed\par
+\par
+\b Monthly challenges\b0\par
+Examples:\par
+- spend BND 50 less on eating out\par
+- save BND 100 this month\par
+- avoid impulse spending for 7 days\par
+- upload your latest statement\par
+\par
+\b Positive reinforcement\b0\par
+Use encouraging but practical messages like:\par
+- Nice work, you stayed within budget this week\par
+- You are getting closer to your savings goal\par
+- You reduced dining spend compared to last month\par
+\par
+\b 15. What to Avoid in Gamification\b0\par
+Do not include these in the MVP:\par
+- full RPG systems\par
+- fantasy quests unrelated to money\par
+- avatars and levels as the main identity\par
+- complicated XP systems\par
+- daily quest overload\par
+- childish reward mechanics\par
+- leaderboards or social competition\par
+\par
+\b 16. Desired Product Feel\b0\par
+The product should feel like:\par
+- a Brunei personal finance assistant\par
+- a modern and trustworthy fintech tool\par
+- a calm motivator for better habits\par
+\par
+It should not feel like:\par
+- a spreadsheet clone\par
+- a generic Western budgeting app\par
+- a game pretending to be a finance tool\par
+\par
+\b 17. Recommended Build Priorities\b0\par
+\par
+\b Priority 1\b0\par
+- redesign onboarding into preset-based guided flow\par
+- reduce typing load\par
+- improve common expense and debt setup\par
+\par
+\b Priority 2\b0\par
+- support screenshot image uploads\par
+- add OCR flow for screenshots\par
+- improve PDF import reliability\par
+\par
+\b Priority 3\b0\par
+- improve Brunei localization in visuals, copy, and categories\par
+- add trust cues and local relevance\par
+\par
+\b Priority 4\b0\par
+- add light gamification features\par
+- progress bars\par
+- milestones\par
+- streaks\par
+- monthly challenges\par
+\par
+\b 18. Replit Master Instruction\b0\par
+Treat this document as the master product brief for the next app iteration. Improve the current product without discarding the useful architecture unless necessary. Prioritize guided onboarding, screenshot-based imports, stronger Brunei localization, and light gamification that supports financial behavior. Keep the app serious, practical, and trustworthy. Do not turn it into a fantasy game or a cluttered life simulator.\par
+\par
+\b 19. Final Product Direction\b0\par
+Build a Brunei-first finance app that helps users manage money, understand commitments, reduce debt, and feel encouraged to make progress. Make it feel local, simple, motivating, and useful enough to become a monthly habit.\par
+}

@@ -118,7 +118,7 @@ export default function Debts() {
           </div>
           <div>
             <div className="text-sm font-medium text-muted-foreground">Total Outstanding</div>
-            <div className="text-2xl font-bold text-foreground">${totalBalance.toFixed(2)}</div>
+            <div className="text-2xl font-bold text-foreground">BND {totalBalance.toFixed(2)}</div>
           </div>
         </div>
         <div className="bg-white border rounded-xl p-6 flex items-center gap-4">
@@ -127,7 +127,7 @@ export default function Debts() {
           </div>
           <div>
             <div className="text-sm font-medium text-muted-foreground">Total Monthly Payment</div>
-            <div className="text-2xl font-bold text-foreground">${totalMonthly.toFixed(2)}</div>
+            <div className="text-2xl font-bold text-foreground">BND {totalMonthly.toFixed(2)}</div>
           </div>
         </div>
       </div>

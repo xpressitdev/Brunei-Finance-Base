@@ -1,15 +1,45 @@
+import { useEffect } from "react";
 import { useGetDashboardSummary, useGetRecentTransactions, useGetSpendingByCategory } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { Link } from "wouter";
-import { Wallet, ArrowDownRight, CreditCard, Activity, ArrowRight, Upload } from "lucide-react";
+import { Wallet, ArrowDownRight, CreditCard, Activity, ArrowRight, Upload, Flame, Trophy } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
+import { useQuery, useMutation } from "@tanstack/react-query";
 
 const COLORS = ["#15a06e", "#0ea5e9", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4", "#84cc16", "#f97316"];
 
 const fmt = (val?: string | number) =>
   `BND ${Number(val || 0).toLocaleString("en-BN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+type GamificationSummary = {
+  streak: { current: number; longest: number };
+  achievements: { key: string; name: string; icon: string; unlocked: boolean; unlockedAt: string | null }[];
+  monthlyChallenge: { title: string; description: string; progress: number; target: number; unit: string };
+  totalUnlocked: number;
+  totalAvailable: number;
+};
+
+function useGamification() {
+  return useQuery<GamificationSummary>({
+    queryKey: ["gamification-summary"],
+    queryFn: async () => {
+      const res = await fetch(`/api/gamification/summary`, { credentials: "include" });
+      if (!res.ok) throw new Error("Failed");
+      return res.json();
+    },
+  });
+}
+
+function useCheckAchievements() {
+  return useMutation({
+    mutationFn: async () => {
+      await fetch(`/api/gamification/achievements/check`, { method: "POST", credentials: "include" });
+    },
+  });
+}
 
 export default function Dashboard() {
   const currentMonth = format(new Date(), "yyyy-MM");
@@ -17,6 +47,12 @@ export default function Dashboard() {
   const { data: summary, isLoading: summaryLoading } = useGetDashboardSummary({ month: currentMonth });
   const { data: spending, isLoading: spendingLoading } = useGetSpendingByCategory({ month: currentMonth });
   const { data: recentTransactions } = useGetRecentTransactions({ limit: 6 });
+  const { data: gamification, refetch: refetchGamification } = useGamification();
+  const checkAchievements = useCheckAchievements();
+
+  useEffect(() => {
+    checkAchievements.mutateAsync().then(() => refetchGamification());
+  }, []);
 
   const isLoading = summaryLoading || spendingLoading;
 
@@ -37,6 +73,11 @@ export default function Dashboard() {
 
   const hasTransactions = recentTransactions && recentTransactions.length > 0;
   const hasSpending = spending && spending.length > 0;
+  const challenge = gamification?.monthlyChallenge;
+  const challengePct = challenge ? Math.min(100, (challenge.progress / challenge.target) * 100) : 0;
+  const latestBadge = gamification?.achievements
+    .filter(a => a.unlocked && a.unlockedAt)
+    .sort((a, b) => new Date(b.unlockedAt!).getTime() - new Date(a.unlockedAt!).getTime())[0];
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
@@ -99,6 +140,64 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Gamification row */}
+      {gamification && (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {/* Streak */}
+          <Card className="border-orange-200 bg-orange-50">
+            <CardContent className="pt-5 pb-5 flex items-center gap-4">
+              <div className="w-11 h-11 rounded-full bg-orange-100 flex items-center justify-center">
+                <Flame className="w-6 h-6 text-orange-500" />
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-orange-600">{gamification.streak.current}</div>
+                <div className="text-xs text-orange-700/70 font-medium">
+                  {gamification.streak.current === 1 ? "Day streak" : "Day streak"}
+                </div>
+                {gamification.streak.current === 0 && (
+                  <div className="text-xs text-muted-foreground">Log a transaction to start</div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Monthly challenge */}
+          <Card className="sm:col-span-1">
+            <CardContent className="pt-5 pb-5 space-y-2">
+              <div className="flex justify-between items-center">
+                <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">This Month</div>
+                {challengePct >= 100 && <span className="text-xs text-primary font-semibold">✓ Done!</span>}
+              </div>
+              <p className="text-sm font-medium leading-tight">{challenge?.title}</p>
+              <Progress value={challengePct} className="h-1.5" />
+              <p className="text-xs text-muted-foreground">
+                {challenge?.progress} / {challenge?.target} {challenge?.unit}
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Badges */}
+          <Card>
+            <CardContent className="pt-5 pb-5 flex items-center gap-4">
+              <div className="w-11 h-11 rounded-full bg-amber-100 flex items-center justify-center text-xl">
+                {latestBadge ? latestBadge.icon : "🏅"}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-2xl font-bold">{gamification.totalUnlocked}</div>
+                <div className="text-xs text-muted-foreground">
+                  {latestBadge ? `Latest: ${latestBadge.name}` : "No badges yet"}
+                </div>
+                <Link href="/achievements">
+                  <button className="text-xs text-primary hover:underline flex items-center gap-1 mt-0.5">
+                    <Trophy className="w-3 h-3" /> View all badges
+                  </button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Charts + sidebar */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

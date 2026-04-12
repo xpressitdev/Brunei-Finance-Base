@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
-import { Menu, X, LayoutDashboard, Receipt, PieChart, CalendarDays, Wallet, Upload, Lightbulb, Settings, Star } from "lucide-react";
+import { Menu, X, LayoutDashboard, Receipt, PieChart, CalendarDays, Wallet, Upload, Lightbulb, Settings, Star, Trophy } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navigation = [
@@ -13,6 +13,7 @@ const navigation = [
   { name: "Debts", href: "/debts", icon: Wallet },
   { name: "Upload", href: "/upload", icon: Upload },
   { name: "Insights", href: "/insights", icon: Lightbulb },
+  { name: "Achievements", href: "/achievements", icon: Trophy },
   { name: "Settings", href: "/settings", icon: Settings },
   { name: "Premium", href: "/premium", icon: Star },
 ];
@@ -70,7 +71,7 @@ export function Sidebar() {
           </Button>
         </div>
       </div>
-      
+
       {mobileMenuOpen && (
         <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={() => setMobileMenuOpen(false)} />
       )}

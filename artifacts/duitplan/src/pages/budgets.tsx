@@ -82,9 +82,9 @@ export default function Budgets() {
               
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Spent: ${actualAmountStr}</span>
+                  <span className="text-muted-foreground">Spent: BND {actualAmountStr}</span>
                   <span className={`${percentage >= 100 ? 'text-destructive font-medium' : 'text-muted-foreground'}`}>
-                    {percentage >= 100 ? 'Over budget' : `${(plannedNum - actualNum).toFixed(2)} remaining`}
+                    {percentage >= 100 ? 'Over budget' : `BND ${(plannedNum - actualNum).toFixed(2)} remaining`}
                   </span>
                 </div>
                 <Progress value={percentage} className={`h-2 ${percentage >= 100 ? '[&>div]:bg-destructive' : ''}`} />
