@@ -137,6 +137,20 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent className="px-5 pb-5">
             <div className="text-2xl font-bold text-primary">{fmt(summary?.remaining)}</div>
+            <div className="mt-2 space-y-1 border-t pt-2">
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>Commitments</span>
+                <span>-{fmt(summary?.totalCommitments)}</span>
+              </div>
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>Debt Repayments</span>
+                <span>-{fmt(summary?.totalDebtPayments)}</span>
+              </div>
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>Spending</span>
+                <span>-{fmt(summary?.totalSpent)}</span>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>

@@ -30,11 +30,12 @@ router.get("/dashboard/summary", requireAuth, async (req: AuthenticatedRequest, 
 
   const totalSpent = txns.reduce((s, t) => s + parseFloat(t.amount), 0);
   const income = parseFloat(monthlyIncome);
-  const remaining = income - totalCommitments - totalSpent;
 
   const debts = await db.select().from(debtsTable).where(eq(debtsTable.userId, req.userId!));
   const totalDebtPayment = debts.reduce((s, d) => s + parseFloat(d.monthlyPayment), 0);
   const debtToIncomeRatio = income > 0 ? (totalDebtPayment / income) * 100 : 0;
+
+  const remaining = income - totalCommitments - totalSpent - totalDebtPayment;
 
   const allTxns = await db.select().from(transactionsTable).where(and(
     eq(transactionsTable.userId, req.userId!),
@@ -49,6 +50,7 @@ router.get("/dashboard/summary", requireAuth, async (req: AuthenticatedRequest, 
     totalSpent: totalSpent.toFixed(2),
     remaining: remaining.toFixed(2),
     totalDebtMonthlyPayment: totalDebtPayment.toFixed(2),
+    totalDebtPayments: totalDebtPayment.toFixed(2),
     debtToIncomeRatio: debtToIncomeRatio.toFixed(2),
     transactionCount: allTxns.length,
   });

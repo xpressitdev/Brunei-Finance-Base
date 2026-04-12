@@ -1633,6 +1633,8 @@ components:
           type: string
         totalDebtMonthlyPayment:
           type: string
+        totalDebtPayments:
+          type: string
         debtToIncomeRatio:
           type: string
         transactionCount:
@@ -1644,6 +1646,7 @@ components:
         - totalSpent
         - remaining
         - totalDebtMonthlyPayment
+        - totalDebtPayments
         - debtToIncomeRatio
         - transactionCount
 

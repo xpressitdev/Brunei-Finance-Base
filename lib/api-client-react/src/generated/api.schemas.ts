@@ -326,6 +326,7 @@ export interface DashboardSummary {
   totalSpent: string;
   remaining: string;
   totalDebtMonthlyPayment: string;
+  totalDebtPayments: string;
   debtToIncomeRatio: string;
   transactionCount: number;
 }
