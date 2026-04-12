@@ -259,7 +259,7 @@ export default function Goals() {
 
                 {(g.deadline || g.notes) && (
                   <div className="text-xs text-muted-foreground space-y-0.5">
-                    {g.deadline && <p>Target date: <span className="text-foreground font-medium">{g.deadline}</span></p>}
+                    {g.deadline && <DeadlineBadge deadline={g.deadline} done={done} />}
                     {g.notes && <p className="truncate">{g.notes}</p>}
                   </div>
                 )}
@@ -287,6 +287,41 @@ export default function Goals() {
         </Dialog>
       )}
     </div>
+  );
+}
+
+function DeadlineBadge({ deadline, done }: { deadline: string; done: boolean }) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const target = new Date(deadline);
+  target.setHours(0, 0, 0, 0);
+  const diffMs = target.getTime() - today.getTime();
+  const daysLeft = Math.ceil(diffMs / 86400000);
+
+  if (done) {
+    return <p>Target date: <span className="text-foreground font-medium">{deadline}</span></p>;
+  }
+  if (daysLeft < 0) {
+    return (
+      <p>
+        Target date: <span className="text-foreground font-medium">{deadline}</span>
+        {" "}<span className="text-red-600 font-medium">({Math.abs(daysLeft)} day{Math.abs(daysLeft) !== 1 ? "s" : ""} overdue)</span>
+      </p>
+    );
+  }
+  if (daysLeft === 0) {
+    return (
+      <p>
+        Target date: <span className="text-foreground font-medium">{deadline}</span>
+        {" "}<span className="text-amber-600 font-medium">(due today)</span>
+      </p>
+    );
+  }
+  return (
+    <p>
+      Target date: <span className="text-foreground font-medium">{deadline}</span>
+      {" "}<span className="text-muted-foreground">({daysLeft} day{daysLeft !== 1 ? "s" : ""} left)</span>
+    </p>
   );
 }
 
