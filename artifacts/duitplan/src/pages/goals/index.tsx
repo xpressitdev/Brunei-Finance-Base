@@ -36,22 +36,16 @@ import { Target, Plus, Pencil, Trash2, CheckCircle2 } from "lucide-react";
 const CATEGORIES = [
   { value: "savings", label: "Savings" },
   { value: "emergency", label: "Emergency Fund" },
-  { value: "investment", label: "Investment" },
   { value: "debt_payoff", label: "Debt Payoff" },
-  { value: "education", label: "Education" },
-  { value: "travel", label: "Travel" },
-  { value: "home", label: "Home" },
+  { value: "investment", label: "Investment" },
   { value: "custom", label: "Custom" },
 ];
 
 const CATEGORY_COLORS: Record<string, string> = {
   savings: "bg-emerald-100 text-emerald-800",
   emergency: "bg-red-100 text-red-800",
-  investment: "bg-blue-100 text-blue-800",
   debt_payoff: "bg-orange-100 text-orange-800",
-  education: "bg-purple-100 text-purple-800",
-  travel: "bg-sky-100 text-sky-800",
-  home: "bg-amber-100 text-amber-800",
+  investment: "bg-blue-100 text-blue-800",
   custom: "bg-gray-100 text-gray-800",
 };
 
@@ -166,11 +160,17 @@ export default function Goals() {
       </div>
 
       {/* Summary cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <SummaryCard
+          label="Total Goals"
+          value={String(goals?.length ?? 0)}
+          sub={`active goal${goals?.length !== 1 ? "s" : ""}`}
+          color="text-foreground"
+        />
         <SummaryCard
           label="Total Target"
           value={fmt(totalTarget)}
-          sub={`${goals?.length ?? 0} goal${goals?.length !== 1 ? "s" : ""}`}
+          sub="combined target"
           color="text-foreground"
         />
         <SummaryCard

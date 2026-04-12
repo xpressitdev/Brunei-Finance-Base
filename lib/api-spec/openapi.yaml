@@ -1656,12 +1656,14 @@ components:
           type: string
         category:
           type: string
+          enum: [savings, emergency, debt_payoff, investment, custom]
         targetAmount:
           type: string
         savedAmount:
           type: string
         deadline:
           type: ["string", "null"]
+          format: date
         notes:
           type: ["string", "null"]
         createdAt:
@@ -1685,12 +1687,14 @@ components:
           type: string
         category:
           type: string
+          enum: [savings, emergency, debt_payoff, investment, custom]
         targetAmount:
           type: string
         savedAmount:
           type: ["string", "null"]
         deadline:
           type: ["string", "null"]
+          format: date
         notes:
           type: ["string", "null"]
       required:
@@ -1704,12 +1708,14 @@ components:
           type: ["string", "null"]
         category:
           type: ["string", "null"]
+          enum: [savings, emergency, debt_payoff, investment, custom, "null"]
         targetAmount:
           type: ["string", "null"]
         savedAmount:
           type: ["string", "null"]
         deadline:
           type: ["string", "null"]
+          format: date
         notes:
           type: ["string", "null"]
 

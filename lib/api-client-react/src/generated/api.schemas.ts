@@ -369,11 +369,21 @@ export interface SubscriptionPlan {
   updatedAt: string;
 }
 
+export type GoalCategory = (typeof GoalCategory)[keyof typeof GoalCategory];
+
+export const GoalCategory = {
+  savings: "savings",
+  emergency: "emergency",
+  debt_payoff: "debt_payoff",
+  investment: "investment",
+  custom: "custom",
+} as const;
+
 export interface Goal {
   id: string;
   userId: string;
   title: string;
-  category: string;
+  category: GoalCategory;
   targetAmount: string;
   savedAmount: string;
   /** @nullable */
@@ -384,9 +394,20 @@ export interface Goal {
   updatedAt: string;
 }
 
+export type CreateGoalBodyCategory =
+  (typeof CreateGoalBodyCategory)[keyof typeof CreateGoalBodyCategory];
+
+export const CreateGoalBodyCategory = {
+  savings: "savings",
+  emergency: "emergency",
+  debt_payoff: "debt_payoff",
+  investment: "investment",
+  custom: "custom",
+} as const;
+
 export interface CreateGoalBody {
   title: string;
-  category?: string;
+  category?: CreateGoalBodyCategory;
   targetAmount: string;
   /** @nullable */
   savedAmount?: string | null;
@@ -396,11 +417,27 @@ export interface CreateGoalBody {
   notes?: string | null;
 }
 
+/**
+ * @nullable
+ */
+export type UpdateGoalBodyCategory =
+  | (typeof UpdateGoalBodyCategory)[keyof typeof UpdateGoalBodyCategory]
+  | null;
+
+export const UpdateGoalBodyCategory = {
+  savings: "savings",
+  emergency: "emergency",
+  debt_payoff: "debt_payoff",
+  investment: "investment",
+  custom: "custom",
+  null: "null",
+} as const;
+
 export interface UpdateGoalBody {
   /** @nullable */
   title?: string | null;
   /** @nullable */
-  category?: string | null;
+  category?: UpdateGoalBodyCategory;
   /** @nullable */
   targetAmount?: string | null;
   /** @nullable */

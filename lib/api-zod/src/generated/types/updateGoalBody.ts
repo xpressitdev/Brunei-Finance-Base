@@ -5,18 +5,19 @@
  * DuitPlan API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { UpdateGoalBodyCategory } from "./updateGoalBodyCategory";
 
 export interface UpdateGoalBody {
   /** @nullable */
   title?: string | null;
   /** @nullable */
-  category?: string | null;
+  category?: UpdateGoalBodyCategory;
   /** @nullable */
   targetAmount?: string | null;
   /** @nullable */
   savedAmount?: string | null;
   /** @nullable */
-  deadline?: string | null;
+  deadline?: Date | null;
   /** @nullable */
   notes?: string | null;
 }

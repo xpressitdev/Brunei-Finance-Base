@@ -654,10 +654,16 @@ export const ListGoalsResponseItem = zod.object({
   id: zod.string(),
   userId: zod.string(),
   title: zod.string(),
-  category: zod.string(),
+  category: zod.enum([
+    "savings",
+    "emergency",
+    "debt_payoff",
+    "investment",
+    "custom",
+  ]),
   targetAmount: zod.string(),
   savedAmount: zod.string(),
-  deadline: zod.string().nullish(),
+  deadline: zod.coerce.date().nullish(),
   notes: zod.string().nullish(),
   createdAt: zod.string(),
   updatedAt: zod.string(),
@@ -669,10 +675,12 @@ export const ListGoalsResponse = zod.array(ListGoalsResponseItem);
  */
 export const CreateGoalBody = zod.object({
   title: zod.string(),
-  category: zod.string().optional(),
+  category: zod
+    .enum(["savings", "emergency", "debt_payoff", "investment", "custom"])
+    .optional(),
   targetAmount: zod.string(),
   savedAmount: zod.string().nullish(),
-  deadline: zod.string().nullish(),
+  deadline: zod.coerce.date().nullish(),
   notes: zod.string().nullish(),
 });
 
@@ -685,10 +693,19 @@ export const UpdateGoalParams = zod.object({
 
 export const UpdateGoalBody = zod.object({
   title: zod.string().nullish(),
-  category: zod.string().nullish(),
+  category: zod
+    .enum([
+      "savings",
+      "emergency",
+      "debt_payoff",
+      "investment",
+      "custom",
+      "null",
+    ])
+    .nullish(),
   targetAmount: zod.string().nullish(),
   savedAmount: zod.string().nullish(),
-  deadline: zod.string().nullish(),
+  deadline: zod.coerce.date().nullish(),
   notes: zod.string().nullish(),
 });
 
@@ -696,10 +713,16 @@ export const UpdateGoalResponse = zod.object({
   id: zod.string(),
   userId: zod.string(),
   title: zod.string(),
-  category: zod.string(),
+  category: zod.enum([
+    "savings",
+    "emergency",
+    "debt_payoff",
+    "investment",
+    "custom",
+  ]),
   targetAmount: zod.string(),
   savedAmount: zod.string(),
-  deadline: zod.string().nullish(),
+  deadline: zod.coerce.date().nullish(),
   notes: zod.string().nullish(),
   createdAt: zod.string(),
   updatedAt: zod.string(),

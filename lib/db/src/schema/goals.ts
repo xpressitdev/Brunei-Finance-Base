@@ -1,6 +1,9 @@
-import { pgTable, text, numeric, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, numeric, timestamp, date } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
+
+export const GOAL_CATEGORIES = ["savings", "emergency", "debt_payoff", "investment", "custom"] as const;
+export type GoalCategory = typeof GOAL_CATEGORIES[number];
 
 export const goalsTable = pgTable("goals", {
   id: text("id").primaryKey(),
@@ -9,7 +12,7 @@ export const goalsTable = pgTable("goals", {
   category: text("category").notNull().default("savings"),
   targetAmount: numeric("target_amount", { precision: 12, scale: 2 }).notNull(),
   savedAmount: numeric("saved_amount", { precision: 12, scale: 2 }).notNull().default("0"),
-  deadline: text("deadline"),
+  deadline: date("deadline"),
   notes: text("notes"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
