@@ -694,14 +694,7 @@ export const UpdateGoalParams = zod.object({
 export const UpdateGoalBody = zod.object({
   title: zod.string().nullish(),
   category: zod
-    .enum([
-      "savings",
-      "emergency",
-      "debt_payoff",
-      "investment",
-      "custom",
-      "null",
-    ])
+    .enum(["savings", "emergency", "debt_payoff", "investment", "custom"])
     .nullish(),
   targetAmount: zod.string().nullish(),
   savedAmount: zod.string().nullish(),

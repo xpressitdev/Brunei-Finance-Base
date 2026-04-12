@@ -19,5 +19,4 @@ export const UpdateGoalBodyCategory = {
   debt_payoff: "debt_payoff",
   investment: "investment",
   custom: "custom",
-  null: "null",
 } as const;
