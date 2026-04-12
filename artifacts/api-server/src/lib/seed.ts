@@ -57,7 +57,7 @@ const HAKEM_USER_ID = "48cdc97e-088c-456b-bcd0-c88b526a6d60";
 const HAKEM_USER = {
   id: HAKEM_USER_ID,
   email: "hakemshahbirin@live.com",
-  passwordHash: "$2b$12$vLTaDt8VIH6WwiN4Use6qOIVV7cvf2gCNB/2HGJZxIHLFcAIT49fK",
+  passwordHash: "$2b$12$Q4lRQqadA7.kFiHe7.ts4uCrDS8E3bYl.qgoIIc6BCOO04ZO0ITmi",
   onboardingCompleted: true,
 };
 
