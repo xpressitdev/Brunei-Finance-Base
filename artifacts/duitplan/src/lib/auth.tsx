@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useGetMe, useLogout } from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
 import type { AuthUser } from "@workspace/api-client-react/src/generated/api.schemas";
 import { Loader2 } from "lucide-react";
 
@@ -21,14 +22,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   });
 
   const logoutMutation = useLogout();
+  const queryClient = useQueryClient();
 
   const handleLogout = async () => {
     try {
       await logoutMutation.mutateAsync();
-      await refetch();
-      setLocation("/");
     } catch (e) {
       console.error("Logout failed", e);
+    } finally {
+      queryClient.clear();
+      setLocation("/");
     }
   };
 
