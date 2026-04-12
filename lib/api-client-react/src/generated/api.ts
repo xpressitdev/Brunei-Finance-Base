@@ -54,6 +54,10 @@ import type {
   OnboardingStatus,
   Profile,
   RegisterBody,
+  RequestUploadUrlBody,
+  RequestUploadUrlResponse,
+  ScanReceiptBody,
+  ScanReceiptResponse,
   SubscriptionPlan,
   Transaction,
   UpdateAccountBody,
@@ -4129,3 +4133,175 @@ export function useGetCurrentSubscription<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+/**
+ * @summary Scan a receipt image and extract expense data
+ */
+export const getScanReceiptUrl = () => {
+  return `/api/receipt/scan`;
+};
+
+export const scanReceipt = async (
+  scanReceiptBody: ScanReceiptBody,
+  options?: RequestInit,
+): Promise<ScanReceiptResponse> => {
+  return customFetch<ScanReceiptResponse>(getScanReceiptUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(scanReceiptBody),
+  });
+};
+
+export const getScanReceiptMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof scanReceipt>>,
+    TError,
+    { data: BodyType<ScanReceiptBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof scanReceipt>>,
+  TError,
+  { data: BodyType<ScanReceiptBody> },
+  TContext
+> => {
+  const mutationKey = ["scanReceipt"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof scanReceipt>>,
+    { data: BodyType<ScanReceiptBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return scanReceipt(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ScanReceiptMutationResult = NonNullable<
+  Awaited<ReturnType<typeof scanReceipt>>
+>;
+export type ScanReceiptMutationBody = BodyType<ScanReceiptBody>;
+export type ScanReceiptMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Scan a receipt image and extract expense data
+ */
+export const useScanReceipt = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof scanReceipt>>,
+    TError,
+    { data: BodyType<ScanReceiptBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof scanReceipt>>,
+  TError,
+  { data: BodyType<ScanReceiptBody> },
+  TContext
+> => {
+  return useMutation(getScanReceiptMutationOptions(options));
+};
+
+/**
+ * @summary Request a presigned upload URL for object storage
+ */
+export const getRequestUploadUrlUrl = () => {
+  return `/api/storage/uploads/request-url`;
+};
+
+export const requestUploadUrl = async (
+  requestUploadUrlBody: RequestUploadUrlBody,
+  options?: RequestInit,
+): Promise<RequestUploadUrlResponse> => {
+  return customFetch<RequestUploadUrlResponse>(getRequestUploadUrlUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(requestUploadUrlBody),
+  });
+};
+
+export const getRequestUploadUrlMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof requestUploadUrl>>,
+    TError,
+    { data: BodyType<RequestUploadUrlBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof requestUploadUrl>>,
+  TError,
+  { data: BodyType<RequestUploadUrlBody> },
+  TContext
+> => {
+  const mutationKey = ["requestUploadUrl"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof requestUploadUrl>>,
+    { data: BodyType<RequestUploadUrlBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return requestUploadUrl(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RequestUploadUrlMutationResult = NonNullable<
+  Awaited<ReturnType<typeof requestUploadUrl>>
+>;
+export type RequestUploadUrlMutationBody = BodyType<RequestUploadUrlBody>;
+export type RequestUploadUrlMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Request a presigned upload URL for object storage
+ */
+export const useRequestUploadUrl = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof requestUploadUrl>>,
+    TError,
+    { data: BodyType<RequestUploadUrlBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof requestUploadUrl>>,
+  TError,
+  { data: BodyType<RequestUploadUrlBody> },
+  TContext
+> => {
+  return useMutation(getRequestUploadUrlMutationOptions(options));
+};

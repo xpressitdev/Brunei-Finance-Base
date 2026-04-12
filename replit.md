@@ -50,6 +50,7 @@ Tables in `lib/db/src/schema/`:
 - `commitments` — monthly recurring obligations (rent, bills, etc.)
 - `goals` — financial goals with target amount, saved amount, deadline, and category
 - `net_worth_snapshots` — monthly net worth entries (YYYY-MM key, unique per user per month)
+- `transactions.receipt_url` — nullable column for storing receipt image object path
 - `transactions` — manual + imported transactions
 - `monthly_budgets` — budget allocations by category/month
 - `debts` — loans and debt obligations
@@ -79,6 +80,10 @@ All routes under `/api`:
 - `/subscription/plans`, `/subscription/current`
 - `/goals` — CRUD (list, create, update, delete)
 - `/net-worth` — monthly snapshots (list ?year=, upsert POST, delete)
+- `/expenses` — Expense Tracker home page (frontend only, uses /transactions API)
+- `/receipt/scan` — POST: accepts base64 image, returns AI-extracted receipt data (merchant, amount, date, description, category)
+- `/storage/uploads/request-url` — POST: returns presigned GCS URL for receipt image uploads
+- `/storage/objects/*` — GET: serves uploaded objects from object storage
 
 ## Phases Completed
 

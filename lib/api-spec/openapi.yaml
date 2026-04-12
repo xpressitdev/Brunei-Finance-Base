@@ -40,6 +40,10 @@ tags:
     description: Financial goal operations
   - name: net-worth
     description: Net worth snapshot operations
+  - name: receipt
+    description: Receipt scanning operations
+  - name: storage
+    description: Object storage operations
 
 paths:
   /healthz:
@@ -980,8 +984,100 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  # Receipt scanning
+  /receipt/scan:
+    post:
+      operationId: scanReceipt
+      tags: [receipt]
+      summary: Scan a receipt image and extract expense data
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ScanReceiptBody"
+      responses:
+        "200":
+          description: Extracted receipt data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScanReceiptResponse"
+
+  # Storage
+  /storage/uploads/request-url:
+    post:
+      operationId: requestUploadUrl
+      tags: [storage]
+      summary: Request a presigned upload URL for object storage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestUploadUrlBody"
+      responses:
+        "200":
+          description: Presigned upload URL
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RequestUploadUrlResponse"
+
 components:
   schemas:
+    ScanReceiptBody:
+      type: object
+      properties:
+        imageBase64:
+          type: string
+          description: Base64-encoded compressed image data
+        mimeType:
+          type: string
+          description: MIME type of the image (e.g. image/jpeg)
+      required:
+        - imageBase64
+        - mimeType
+
+    ScanReceiptResponse:
+      type: object
+      properties:
+        merchant:
+          type: ["string", "null"]
+        amount:
+          type: ["string", "null"]
+        date:
+          type: ["string", "null"]
+        description:
+          type: ["string", "null"]
+        category:
+          type: ["string", "null"]
+
+    RequestUploadUrlBody:
+      type: object
+      properties:
+        name:
+          type: string
+        size:
+          type: number
+        contentType:
+          type: string
+      required:
+        - name
+        - size
+        - contentType
+
+    RequestUploadUrlResponse:
+      type: object
+      properties:
+        uploadURL:
+          type: string
+        objectPath:
+          type: string
+      required:
+        - uploadURL
+        - objectPath
+
     HealthStatus:
       type: object
       properties:
@@ -1269,6 +1365,8 @@ components:
           type: string
         notes:
           type: ["string", "null"]
+        receiptUrl:
+          type: ["string", "null"]
         createdAt:
           type: string
         updatedAt:
@@ -1303,6 +1401,10 @@ components:
           type: ["string", "null"]
         notes:
           type: ["string", "null"]
+        receiptUrl:
+          type: ["string", "null"]
+        source:
+          type: string
       required:
         - date
         - amount

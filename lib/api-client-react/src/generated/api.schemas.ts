@@ -5,6 +5,37 @@
  * DuitPlan API specification
  * OpenAPI spec version: 0.1.0
  */
+export interface ScanReceiptBody {
+  /** Base64-encoded compressed image data */
+  imageBase64: string;
+  /** MIME type of the image (e.g. image/jpeg) */
+  mimeType: string;
+}
+
+export interface ScanReceiptResponse {
+  /** @nullable */
+  merchant?: string | null;
+  /** @nullable */
+  amount?: string | null;
+  /** @nullable */
+  date?: string | null;
+  /** @nullable */
+  description?: string | null;
+  /** @nullable */
+  category?: string | null;
+}
+
+export interface RequestUploadUrlBody {
+  name: string;
+  size: number;
+  contentType: string;
+}
+
+export interface RequestUploadUrlResponse {
+  uploadURL: string;
+  objectPath: string;
+}
+
 export interface HealthStatus {
   status: string;
 }
@@ -153,6 +184,8 @@ export interface Transaction {
   source: string;
   /** @nullable */
   notes?: string | null;
+  /** @nullable */
+  receiptUrl?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -170,6 +203,9 @@ export interface CreateTransactionBody {
   accountId?: string | null;
   /** @nullable */
   notes?: string | null;
+  /** @nullable */
+  receiptUrl?: string | null;
+  source?: string;
 }
 
 export interface UpdateTransactionBody {

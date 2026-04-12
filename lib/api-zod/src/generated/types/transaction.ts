@@ -24,6 +24,8 @@ export interface Transaction {
   source: string;
   /** @nullable */
   notes?: string | null;
+  /** @nullable */
+  receiptUrl?: string | null;
   createdAt: string;
   updatedAt: string;
 }

@@ -2,10 +2,11 @@ import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
-import { Menu, X, LayoutDashboard, Receipt, PieChart, CalendarDays, Wallet, Upload, Lightbulb, Settings, Star, Trophy, Target, TrendingUp } from "lucide-react";
+import { Menu, X, LayoutDashboard, Receipt, PieChart, CalendarDays, Wallet, Upload, Lightbulb, Settings, Star, Trophy, Target, TrendingUp, ScanLine } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navigation = [
+  { name: "Expense Tracker", href: "/expenses", icon: ScanLine },
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Transactions", href: "/transactions", icon: Receipt },
   { name: "Budgets", href: "/budgets", icon: PieChart },

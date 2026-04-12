@@ -15,6 +15,7 @@ export const transactionsTable = pgTable("transactions", {
   source: text("source").notNull().default("manual"),
   notes: text("notes"),
   importedRowId: text("imported_row_id"),
+  receiptUrl: text("receipt_url"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

@@ -281,6 +281,7 @@ export const ListTransactionsResponseItem = zod.object({
   merchant: zod.string().nullish(),
   source: zod.string(),
   notes: zod.string().nullish(),
+  receiptUrl: zod.string().nullish(),
   createdAt: zod.string(),
   updatedAt: zod.string(),
 });
@@ -298,6 +299,8 @@ export const CreateTransactionBody = zod.object({
   categoryId: zod.string().nullish(),
   accountId: zod.string().nullish(),
   notes: zod.string().nullish(),
+  receiptUrl: zod.string().nullish(),
+  source: zod.string().optional(),
 });
 
 /**
@@ -320,6 +323,7 @@ export const GetTransactionResponse = zod.object({
   merchant: zod.string().nullish(),
   source: zod.string(),
   notes: zod.string().nullish(),
+  receiptUrl: zod.string().nullish(),
   createdAt: zod.string(),
   updatedAt: zod.string(),
 });
@@ -355,6 +359,7 @@ export const UpdateTransactionResponse = zod.object({
   merchant: zod.string().nullish(),
   source: zod.string(),
   notes: zod.string().nullish(),
+  receiptUrl: zod.string().nullish(),
   createdAt: zod.string(),
   updatedAt: zod.string(),
 });
@@ -586,6 +591,7 @@ export const GetRecentTransactionsResponseItem = zod.object({
   merchant: zod.string().nullish(),
   source: zod.string(),
   notes: zod.string().nullish(),
+  receiptUrl: zod.string().nullish(),
   createdAt: zod.string(),
   updatedAt: zod.string(),
 });
@@ -803,4 +809,34 @@ export const GetCurrentSubscriptionResponse = zod.object({
   endDate: zod.string().nullish(),
   createdAt: zod.string(),
   updatedAt: zod.string(),
+});
+
+/**
+ * @summary Scan a receipt image and extract expense data
+ */
+export const ScanReceiptBody = zod.object({
+  imageBase64: zod.string().describe("Base64-encoded compressed image data"),
+  mimeType: zod.string().describe("MIME type of the image (e.g. image\/jpeg)"),
+});
+
+export const ScanReceiptResponse = zod.object({
+  merchant: zod.string().nullish(),
+  amount: zod.string().nullish(),
+  date: zod.string().nullish(),
+  description: zod.string().nullish(),
+  category: zod.string().nullish(),
+});
+
+/**
+ * @summary Request a presigned upload URL for object storage
+ */
+export const RequestUploadUrlBody = zod.object({
+  name: zod.string(),
+  size: zod.number(),
+  contentType: zod.string(),
+});
+
+export const RequestUploadUrlResponse = zod.object({
+  uploadURL: zod.string(),
+  objectPath: zod.string(),
 });

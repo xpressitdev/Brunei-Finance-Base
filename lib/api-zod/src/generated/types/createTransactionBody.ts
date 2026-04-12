@@ -19,4 +19,7 @@ export interface CreateTransactionBody {
   accountId?: string | null;
   /** @nullable */
   notes?: string | null;
+  /** @nullable */
+  receiptUrl?: string | null;
+  source?: string;
 }
