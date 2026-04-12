@@ -38,6 +38,8 @@ tags:
     description: Subscription operations
   - name: goals
     description: Financial goal operations
+  - name: net-worth
+    description: Net worth snapshot operations
 
 paths:
   /healthz:
@@ -814,6 +816,61 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ImportConfirmResult"
+
+  # Net Worth
+  /net-worth:
+    get:
+      operationId: listNetWorthSnapshots
+      tags: [net-worth]
+      summary: List user net worth snapshots
+      parameters:
+        - name: year
+          in: query
+          schema:
+            type: ["string", "null"]
+          description: "Filter by year (YYYY format)"
+      responses:
+        "200":
+          description: List of net worth snapshots
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/NetWorthSnapshot"
+
+    post:
+      operationId: upsertNetWorthSnapshot
+      tags: [net-worth]
+      summary: Create or update a net worth snapshot for a month
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpsertNetWorthSnapshotBody"
+      responses:
+        "200":
+          description: Snapshot saved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NetWorthSnapshot"
+
+  /net-worth/{id}:
+    delete:
+      operationId: deleteNetWorthSnapshot
+      tags: [net-worth]
+      summary: Delete a net worth snapshot
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
 
   # Goals
   /goals:
@@ -1643,6 +1700,55 @@ components:
         - features
         - createdAt
         - updatedAt
+
+    # Net Worth
+    NetWorthSnapshot:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        month:
+          type: string
+          description: "YYYY-MM format"
+        netWorth:
+          type: string
+        notes:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - userId
+        - month
+        - netWorth
+        - createdAt
+        - updatedAt
+
+    UpsertNetWorthSnapshotBody:
+      type: object
+      properties:
+        month:
+          type: string
+          description: "YYYY-MM format"
+        netWorth:
+          type: string
+        notes:
+          type: ["string", "null"]
+      required:
+        - month
+        - netWorth
+
+    DeleteNetWorthSnapshotParams:
+      type: object
+      properties:
+        id:
+          type: string
+      required:
+        - id
 
     # Goal
     Goal:

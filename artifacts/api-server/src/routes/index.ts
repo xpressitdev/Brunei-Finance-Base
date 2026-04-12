@@ -15,6 +15,7 @@ import uploadsRouter from "./uploads";
 import subscriptionRouter from "./subscription";
 import gamificationRouter from "./gamification";
 import goalsRouter from "./goals";
+import netWorthRouter from "./net-worth";
 
 const router: IRouter = Router();
 
@@ -34,5 +35,6 @@ router.use(uploadsRouter);
 router.use(subscriptionRouter);
 router.use(gamificationRouter);
 router.use(goalsRouter);
+router.use(netWorthRouter);
 
 export default router;

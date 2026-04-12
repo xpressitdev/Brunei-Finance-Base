@@ -23,6 +23,7 @@ import Settings from "@/pages/settings";
 import Premium from "@/pages/premium";
 import Achievements from "@/pages/achievements";
 import Goals from "@/pages/goals";
+import NetWorth from "@/pages/net-worth";
 import NotFound from "@/pages/not-found";
 
 function ProtectedRoute({ component: Component, ...rest }: any) {
@@ -62,6 +63,7 @@ function Router() {
       <ProtectedRoute path="/premium" component={Premium} />
       <ProtectedRoute path="/achievements" component={Achievements} />
       <ProtectedRoute path="/goals" component={Goals} />
+      <ProtectedRoute path="/net-worth" component={NetWorth} />
       
       <Route component={NotFound} />
     </Switch>

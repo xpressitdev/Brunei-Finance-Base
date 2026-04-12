@@ -369,6 +369,30 @@ export interface SubscriptionPlan {
   updatedAt: string;
 }
 
+export interface NetWorthSnapshot {
+  id: string;
+  userId: string;
+  /** YYYY-MM format */
+  month: string;
+  netWorth: string;
+  /** @nullable */
+  notes?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UpsertNetWorthSnapshotBody {
+  /** YYYY-MM format */
+  month: string;
+  netWorth: string;
+  /** @nullable */
+  notes?: string | null;
+}
+
+export interface DeleteNetWorthSnapshotParams {
+  id: string;
+}
+
 export type GoalCategory = (typeof GoalCategory)[keyof typeof GoalCategory];
 
 export const GoalCategory = {
@@ -518,4 +542,12 @@ export type GetRecentTransactionsParams = {
    * @nullable
    */
   limit?: number | null;
+};
+
+export type ListNetWorthSnapshotsParams = {
+  /**
+   * Filter by year (YYYY format)
+   * @nullable
+   */
+  year?: string | null;
 };

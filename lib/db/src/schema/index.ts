@@ -11,3 +11,4 @@ export * from "./insights";
 export * from "./subscriptions";
 export * from "./achievements";
 export * from "./goals";
+export * from "./net_worth";

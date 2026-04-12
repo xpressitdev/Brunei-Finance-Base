@@ -648,6 +648,52 @@ export const ConfirmImportResponse = zod.object({
 });
 
 /**
+ * @summary List user net worth snapshots
+ */
+export const ListNetWorthSnapshotsQueryParams = zod.object({
+  year: zod.coerce.string().nullish().describe("Filter by year (YYYY format)"),
+});
+
+export const ListNetWorthSnapshotsResponseItem = zod.object({
+  id: zod.string(),
+  userId: zod.string(),
+  month: zod.string().describe("YYYY-MM format"),
+  netWorth: zod.string(),
+  notes: zod.string().nullish(),
+  createdAt: zod.string(),
+  updatedAt: zod.string(),
+});
+export const ListNetWorthSnapshotsResponse = zod.array(
+  ListNetWorthSnapshotsResponseItem,
+);
+
+/**
+ * @summary Create or update a net worth snapshot for a month
+ */
+export const UpsertNetWorthSnapshotBody = zod.object({
+  month: zod.string().describe("YYYY-MM format"),
+  netWorth: zod.string(),
+  notes: zod.string().nullish(),
+});
+
+export const UpsertNetWorthSnapshotResponse = zod.object({
+  id: zod.string(),
+  userId: zod.string(),
+  month: zod.string().describe("YYYY-MM format"),
+  netWorth: zod.string(),
+  notes: zod.string().nullish(),
+  createdAt: zod.string(),
+  updatedAt: zod.string(),
+});
+
+/**
+ * @summary Delete a net worth snapshot
+ */
+export const DeleteNetWorthSnapshotParams = zod.object({
+  id: zod.coerce.string(),
+});
+
+/**
  * @summary List user financial goals
  */
 export const ListGoalsResponseItem = zod.object({

@@ -49,6 +49,7 @@ Tables in `lib/db/src/schema/`:
 - `categories` — 15 default spending categories (seeded)
 - `commitments` — monthly recurring obligations (rent, bills, etc.)
 - `goals` — financial goals with target amount, saved amount, deadline, and category
+- `net_worth_snapshots` — monthly net worth entries (YYYY-MM key, unique per user per month)
 - `transactions` — manual + imported transactions
 - `monthly_budgets` — budget allocations by category/month
 - `debts` — loans and debt obligations
@@ -77,6 +78,7 @@ All routes under `/api`:
 - `/uploads` — PDF upload + row review + confirm import
 - `/subscription/plans`, `/subscription/current`
 - `/goals` — CRUD (list, create, update, delete)
+- `/net-worth` — monthly snapshots (list ?year=, upsert POST, delete)
 
 ## Phases Completed
 
