@@ -7,6 +7,8 @@
  */
 
 export * from "./account";
+export * from "./assetEntry";
+export * from "./assetEntryCategory";
 export * from "./authResponse";
 export * from "./authUser";
 export * from "./category";
@@ -15,6 +17,8 @@ export * from "./commitment";
 export * from "./confirmImportBody";
 export * from "./confirmImportRow";
 export * from "./createAccountBody";
+export * from "./createAssetBody";
+export * from "./createAssetBodyCategory";
 export * from "./createCategoryBody";
 export * from "./createCommitmentBody";
 export * from "./createDebtBody";
@@ -39,6 +43,8 @@ export * from "./healthStatus";
 export * from "./importConfirmResult";
 export * from "./importedTransactionRow";
 export * from "./insight";
+export * from "./listAssetsParams";
+export * from "./listAssetsQueryParams";
 export * from "./listBudgetsParams";
 export * from "./listInsightsParams";
 export * from "./listNetWorthSnapshotsParams";
@@ -56,6 +62,8 @@ export * from "./scanReceiptResponse";
 export * from "./subscriptionPlan";
 export * from "./transaction";
 export * from "./updateAccountBody";
+export * from "./updateAssetBody";
+export * from "./updateAssetBodyCategory";
 export * from "./updateCommitmentBody";
 export * from "./updateDebtBody";
 export * from "./updateGoalBody";

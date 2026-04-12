@@ -1,28 +1,110 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
+import { useQueries } from "@tanstack/react-query";
 import {
-  useListNetWorthSnapshots,
-  useUpsertNetWorthSnapshot,
-  useDeleteNetWorthSnapshot,
+  useListAssets,
+  useCreateAsset,
+  useUpdateAsset,
+  useDeleteAsset,
+  listAssets,
 } from "@workspace/api-client-react";
 import {
-  LineChart,
-  Line,
+  BarChart,
+  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  Cell,
+  LineChart,
+  Line,
 } from "recharts";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ChevronLeft, ChevronRight, TrendingUp, TrendingDown, Minus, Save, Trash2 } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Plus,
+  Pencil,
+  Trash2,
+  Landmark,
+  Home,
+  Car,
+  TrendingUp,
+  Briefcase,
+  Package,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const MONTHS = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
-];
 const MONTH_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const MONTHS_FULL = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+const ASSET_CATEGORIES = ["Savings", "Property", "Vehicle", "Investment", "Business", "Other"] as const;
+type AssetCategory = typeof ASSET_CATEGORIES[number];
+
+const CATEGORY_ICONS: Record<AssetCategory, React.ReactNode> = {
+  Savings: <Landmark className="w-4 h-4" />,
+  Property: <Home className="w-4 h-4" />,
+  Vehicle: <Car className="w-4 h-4" />,
+  Investment: <TrendingUp className="w-4 h-4" />,
+  Business: <Briefcase className="w-4 h-4" />,
+  Other: <Package className="w-4 h-4" />,
+};
+
+const CATEGORY_COLORS: Record<AssetCategory, string> = {
+  Savings: "hsl(217, 91%, 60%)",
+  Property: "hsl(142, 71%, 45%)",
+  Vehicle: "hsl(38, 92%, 50%)",
+  Investment: "hsl(271, 91%, 65%)",
+  Business: "hsl(0, 84%, 60%)",
+  Other: "hsl(220, 9%, 46%)",
+};
+
+const CATEGORY_BG: Record<AssetCategory, string> = {
+  Savings: "bg-blue-50 text-blue-600",
+  Property: "bg-emerald-50 text-emerald-600",
+  Vehicle: "bg-amber-50 text-amber-600",
+  Investment: "bg-purple-50 text-purple-600",
+  Business: "bg-red-50 text-red-600",
+  Other: "bg-gray-50 text-gray-600",
+};
+
+function currentMonth() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function prevMonthStr(month: string) {
+  const [y, m] = month.split("-").map(Number);
+  if (m === 1) return `${y - 1}-12`;
+  return `${y}-${String(m - 1).padStart(2, "0")}`;
+}
+
+function nextMonthStr(month: string) {
+  const [y, m] = month.split("-").map(Number);
+  if (m === 12) return `${y + 1}-01`;
+  return `${y}-${String(m + 1).padStart(2, "0")}`;
+}
+
+function monthLabel(month: string) {
+  const [y, m] = month.split("-").map(Number);
+  return `${MONTHS_FULL[m - 1]} ${y}`;
+}
 
 function fmt(n: number) {
   return "BND " + n.toLocaleString("en-BN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -34,14 +116,49 @@ function fmtCompact(n: number) {
   return fmt(n);
 }
 
-type Snapshot = {
+function getLast12Months(fromMonth: string): string[] {
+  const months: string[] = [];
+  let m = fromMonth;
+  for (let i = 0; i < 12; i++) {
+    months.unshift(m);
+    m = prevMonthStr(m);
+  }
+  return months;
+}
+
+type Asset = {
   id: string;
+  userId: string;
+  category: string;
+  name: string;
+  value: string;
   month: string;
-  netWorth: string;
-  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
 };
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+type FormState = {
+  category: AssetCategory;
+  name: string;
+  value: string;
+  month: string;
+};
+
+function emptyForm(month: string): FormState {
+  return { category: "Savings", name: "", value: "", month };
+}
+
+const BarTooltip = ({ active, payload, label }: any) => {
+  if (!active || !payload || !payload.length) return null;
+  return (
+    <div className="bg-card border rounded-lg p-3 shadow-lg text-sm">
+      <p className="font-semibold text-foreground mb-1">{label}</p>
+      <p className="text-primary font-bold">{fmt(payload[0].value)}</p>
+    </div>
+  );
+};
+
+const LineTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload || !payload.length) return null;
   return (
     <div className="bg-card border rounded-lg p-3 shadow-lg text-sm">
@@ -52,79 +169,111 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 export default function NetWorth() {
-  const currentYear = new Date().getFullYear();
-  const [year, setYear] = useState(currentYear);
-  const [editing, setEditing] = useState<Record<string, string>>({});
-  const inputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const [selectedMonth, setSelectedMonth] = useState(currentMonth());
+  const today = currentMonth();
 
-  const { data: allSnapshots, refetch } = useListNetWorthSnapshots();
-  const upsertMutation = useUpsertNetWorthSnapshot();
-  const deleteMutation = useDeleteNetWorthSnapshot();
+  const { data: currentAssets = [], refetch: refetchCurrent } = useListAssets(
+    { month: selectedMonth },
+    { query: { queryKey: ["assets", selectedMonth] } }
+  );
 
-  const yearStr = String(year);
-
-  const snapshotByMonth: Record<string, Snapshot> = {};
-  (allSnapshots ?? []).forEach((s) => {
-    snapshotByMonth[s.month] = s as Snapshot;
+  const last12 = getLast12Months(today);
+  const trendResults = useQueries({
+    queries: last12.map((m) => ({
+      queryKey: ["assets", m],
+      queryFn: () => listAssets({ month: m }),
+      staleTime: 60_000,
+    })),
   });
 
-  const yearSnapshots = (allSnapshots ?? [])
-    .filter((s) => s.month.startsWith(yearStr))
-    .sort((a, b) => a.month.localeCompare(b.month));
+  const createMutation = useCreateAsset();
+  const updateMutation = useUpdateAsset();
+  const deleteMutation = useDeleteAsset();
 
-  const chartData = yearSnapshots
-    .filter((s) => s.netWorth !== null)
-    .map((s) => {
-      const [, mo] = s.month.split("-");
-      return {
-        month: MONTH_SHORT[parseInt(mo) - 1],
-        value: parseFloat(s.netWorth),
-      };
-    });
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [form, setForm] = useState<FormState>(() => emptyForm(currentMonth()));
 
-  const allSortedSnapshots = (allSnapshots ?? [])
-    .filter((s) => s.netWorth !== null)
-    .sort((a, b) => a.month.localeCompare(b.month));
+  const assets = currentAssets as Asset[];
 
-  const latestSnapshot = allSortedSnapshots[allSortedSnapshots.length - 1];
-  const secondLatestSnapshot = allSortedSnapshots[allSortedSnapshots.length - 2];
-  const firstSnapshot = allSortedSnapshots[0];
+  const totalNetWorth = assets.reduce((sum, a) => sum + parseFloat(a.value), 0);
 
-  const latestValue = latestSnapshot ? parseFloat(latestSnapshot.netWorth) : null;
-  const prevValue = secondLatestSnapshot ? parseFloat(secondLatestSnapshot.netWorth) : null;
-  const firstValue = firstSnapshot ? parseFloat(firstSnapshot.netWorth) : null;
+  const byCategory: Record<string, Asset[]> = {};
+  ASSET_CATEGORIES.forEach((c) => { byCategory[c] = []; });
+  assets.forEach((a) => {
+    if (!byCategory[a.category]) byCategory[a.category] = [];
+    byCategory[a.category].push(a);
+  });
 
-  const monthChange = latestValue !== null && prevValue !== null ? latestValue - prevValue : null;
-  const monthChangePct = monthChange !== null && prevValue !== null && prevValue !== 0
-    ? (monthChange / Math.abs(prevValue)) * 100 : null;
-  const totalChange = latestValue !== null && firstValue !== null ? latestValue - firstValue : null;
-  const totalChangePct = totalChange !== null && firstValue !== null && firstValue !== 0
-    ? (totalChange / Math.abs(firstValue)) * 100 : null;
+  const barData = ASSET_CATEGORIES
+    .map((cat) => ({
+      category: cat,
+      value: byCategory[cat].reduce((s, a) => s + parseFloat(a.value), 0),
+    }))
+    .filter((d) => d.value > 0);
 
-  const handleSave = async (monthKey: string) => {
-    const raw = editing[monthKey];
-    if (raw === undefined || raw.trim() === "") return;
-    const val = parseFloat(raw);
-    if (isNaN(val)) return;
-    await upsertMutation.mutateAsync({
-      data: { month: monthKey, netWorth: val.toFixed(2) },
-    });
-    setEditing((prev) => { const n = { ...prev }; delete n[monthKey]; return n; });
-    refetch();
+  const trendData = last12.map((m, i) => {
+    const monthAssets = ((trendResults[i]?.data as Asset[] | undefined) ?? []);
+    const total = monthAssets.reduce((s, a) => s + parseFloat(a.value), 0);
+    const [, mo] = m.split("-");
+    return { month: MONTH_SHORT[parseInt(mo) - 1], value: total, fullMonth: m };
+  });
+
+  const openCreate = () => {
+    setEditingId(null);
+    setForm(emptyForm(selectedMonth));
+    setDialogOpen(true);
   };
 
-  const handleDelete = async (id: string, monthKey: string) => {
-    await deleteMutation.mutateAsync({ id });
-    setEditing((prev) => { const n = { ...prev }; delete n[monthKey]; return n; });
-    refetch();
+  const openEdit = (asset: Asset) => {
+    setEditingId(asset.id);
+    setForm({
+      category: asset.category as AssetCategory,
+      name: asset.name,
+      value: asset.value,
+      month: asset.month,
+    });
+    setDialogOpen(true);
   };
 
-  const handleKeyDown = async (e: React.KeyboardEvent, monthKey: string) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      await handleSave(monthKey);
+  const handleSave = async () => {
+    if (!form.name.trim() || !form.value || !form.month) return;
+    const val = parseFloat(form.value);
+    if (isNaN(val) || val < 0) return;
+    if (!/^\d{4}-\d{2}$/.test(form.month)) return;
+
+    if (editingId) {
+      await updateMutation.mutateAsync({
+        id: editingId,
+        data: {
+          category: form.category,
+          name: form.name.trim(),
+          value: val.toFixed(2),
+          month: form.month,
+        },
+      });
+    } else {
+      await createMutation.mutateAsync({
+        data: {
+          category: form.category,
+          name: form.name.trim(),
+          value: val.toFixed(2),
+          month: form.month,
+        },
+      });
     }
+    setDialogOpen(false);
+    refetchCurrent();
+    trendResults.forEach((r) => r.refetch());
   };
+
+  const handleDelete = async (id: string) => {
+    await deleteMutation.mutateAsync({ id });
+    refetchCurrent();
+    trendResults.forEach((r) => r.refetch());
+  };
+
+  const isSaving = createMutation.isPending || updateMutation.isPending;
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
@@ -132,233 +281,254 @@ export default function NetWorth() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold text-foreground tracking-tight">Net Worth</h1>
-          <p className="text-muted-foreground">Track your overall financial health over time.</p>
+          <p className="text-muted-foreground">Track your assets by category.</p>
         </div>
-        {/* Year navigator */}
-        <div className="flex items-center gap-2 bg-white border rounded-xl px-3 py-2">
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setYear((y) => y - 1)}>
-            <ChevronLeft className="w-4 h-4" />
-          </Button>
-          <span className="text-sm font-semibold w-12 text-center">{year}</span>
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setYear((y) => y + 1)}>
-            <ChevronRight className="w-4 h-4" />
+        <div className="flex items-center gap-3">
+          {/* Month navigator */}
+          <div className="flex items-center gap-1 bg-white border rounded-xl px-3 py-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              onClick={() => setSelectedMonth((m) => prevMonthStr(m))}
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </Button>
+            <span className="text-sm font-semibold w-36 text-center">{monthLabel(selectedMonth)}</span>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              onClick={() => setSelectedMonth((m) => nextMonthStr(m))}
+              disabled={selectedMonth >= today}
+            >
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+          </div>
+          <Button onClick={openCreate} className="gap-2">
+            <Plus className="w-4 h-4" />
+            Add Asset
           </Button>
         </div>
       </div>
 
-      {/* Summary cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <SummaryCard
-          label="Latest Net Worth"
-          value={latestValue !== null ? fmt(latestValue) : "—"}
-          sub={latestSnapshot ? latestSnapshot.month : "No data yet"}
-          color="text-foreground"
-        />
-        <SummaryCard
-          label="Change (Last Month)"
-          value={monthChange !== null ? fmt(Math.abs(monthChange)) : "—"}
-          sub={monthChangePct !== null ? `${monthChangePct >= 0 ? "+" : ""}${monthChangePct.toFixed(1)}%` : "Need 2+ months"}
-          color={monthChange !== null ? (monthChange >= 0 ? "text-emerald-600" : "text-red-600") : "text-foreground"}
-          icon={monthChange !== null ? (monthChange > 0 ? "up" : monthChange < 0 ? "down" : "flat") : undefined}
-          negative={monthChange !== null && monthChange < 0}
-        />
-        <SummaryCard
-          label="Change Since Start"
-          value={totalChange !== null ? fmt(Math.abs(totalChange)) : "—"}
-          sub={totalChangePct !== null ? `${totalChangePct >= 0 ? "+" : ""}${totalChangePct.toFixed(1)}% all time` : "Need 2+ months"}
-          color={totalChange !== null ? (totalChange >= 0 ? "text-emerald-600" : "text-red-600") : "text-foreground"}
-          icon={totalChange !== null ? (totalChange > 0 ? "up" : totalChange < 0 ? "down" : "flat") : undefined}
-          negative={totalChange !== null && totalChange < 0}
-        />
+      {/* Total net worth */}
+      <div className="bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 rounded-xl p-6">
+        <p className="text-sm text-muted-foreground font-medium">Total Net Worth — {monthLabel(selectedMonth)}</p>
+        <p className="text-4xl font-bold text-foreground mt-1">{fmt(totalNetWorth)}</p>
+        <p className="text-xs text-muted-foreground mt-1">{assets.length} asset{assets.length !== 1 ? "s" : ""} across {barData.length} categor{barData.length !== 1 ? "ies" : "y"}</p>
       </div>
 
-      {/* Line chart */}
-      <div className="bg-card border rounded-xl p-5">
-        <h2 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide mb-4">
-          Net Worth — {year}
-        </h2>
-        {chartData.length < 2 ? (
-          <div className="flex items-center justify-center h-48 text-sm text-muted-foreground">
-            Enter at least 2 months to see the trend chart.
+      {/* Charts row */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Bar chart - category breakdown */}
+        <div className="bg-card border rounded-xl p-5">
+          <h2 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide mb-4">
+            Breakdown by Category
+          </h2>
+          {barData.length === 0 ? (
+            <div className="flex items-center justify-center h-48 text-sm text-muted-foreground">
+              No assets for this month yet.
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height={220}>
+              <BarChart data={barData} margin={{ top: 4, right: 8, left: 0, bottom: 4 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                <XAxis
+                  dataKey="category"
+                  tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <YAxis
+                  tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                  axisLine={false}
+                  tickLine={false}
+                  tickFormatter={(v) => fmtCompact(v)}
+                  width={70}
+                />
+                <Tooltip content={<BarTooltip />} />
+                <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+                  {barData.map((entry) => (
+                    <Cell key={entry.category} fill={CATEGORY_COLORS[entry.category as AssetCategory] ?? "hsl(var(--primary))"} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </div>
+
+        {/* Line chart - 12 month trend */}
+        <div className="bg-card border rounded-xl p-5">
+          <h2 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide mb-4">
+            12-Month Net Worth Trend
+          </h2>
+          {trendData.every((d) => d.value === 0) ? (
+            <div className="flex items-center justify-center h-48 text-sm text-muted-foreground">
+              Add assets across multiple months to see the trend.
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height={220}>
+              <LineChart data={trendData} margin={{ top: 4, right: 8, left: 0, bottom: 4 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis
+                  dataKey="month"
+                  tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <YAxis
+                  tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                  axisLine={false}
+                  tickLine={false}
+                  tickFormatter={(v) => fmtCompact(v)}
+                  width={70}
+                />
+                <Tooltip content={<LineTooltip />} />
+                <Line
+                  type="monotone"
+                  dataKey="value"
+                  stroke="hsl(var(--primary))"
+                  strokeWidth={2.5}
+                  dot={{ r: 3, fill: "hsl(var(--primary))", strokeWidth: 0 }}
+                  activeDot={{ r: 5 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          )}
+        </div>
+      </div>
+
+      {/* Asset list grouped by category */}
+      <div className="space-y-4">
+        {assets.length === 0 ? (
+          <div className="bg-card border rounded-xl p-10 text-center">
+            <p className="text-muted-foreground text-sm">No assets recorded for {monthLabel(selectedMonth)}.</p>
+            <Button variant="outline" className="mt-4 gap-2" onClick={openCreate}>
+              <Plus className="w-4 h-4" />
+              Add your first asset
+            </Button>
           </div>
         ) : (
-          <ResponsiveContainer width="100%" height={220}>
-            <LineChart data={chartData} margin={{ top: 4, right: 16, left: 0, bottom: 4 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis
-                dataKey="month"
-                tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
-                axisLine={false}
-                tickLine={false}
-              />
-              <YAxis
-                tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
-                axisLine={false}
-                tickLine={false}
-                tickFormatter={(v) => fmtCompact(v)}
-                width={70}
-              />
-              <Tooltip content={<CustomTooltip />} />
-              <Line
-                type="monotone"
-                dataKey="value"
-                stroke="hsl(var(--primary))"
-                strokeWidth={2.5}
-                dot={{ r: 4, fill: "hsl(var(--primary))", strokeWidth: 0 }}
-                activeDot={{ r: 6 }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
+          ASSET_CATEGORIES.filter((cat) => byCategory[cat].length > 0).map((cat) => {
+            const catAssets = byCategory[cat];
+            const subtotal = catAssets.reduce((s, a) => s + parseFloat(a.value), 0);
+            return (
+              <div key={cat} className="bg-card border rounded-xl overflow-hidden">
+                {/* Category header */}
+                <div className="flex items-center justify-between px-5 py-3.5 border-b bg-muted/30">
+                  <div className="flex items-center gap-2.5">
+                    <span className={cn("p-1.5 rounded-lg", CATEGORY_BG[cat])}>
+                      {CATEGORY_ICONS[cat]}
+                    </span>
+                    <span className="font-semibold text-foreground">{cat}</span>
+                    <span className="text-xs text-muted-foreground">({catAssets.length})</span>
+                  </div>
+                  <span className="text-sm font-bold text-foreground">{fmt(subtotal)}</span>
+                </div>
+                {/* Asset rows */}
+                <div className="divide-y">
+                  {catAssets.map((asset) => (
+                    <div key={asset.id} className="flex items-center gap-4 px-5 py-3.5 group">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-foreground truncate">{asset.name}</p>
+                      </div>
+                      <span className="text-sm font-semibold text-foreground">{fmt(parseFloat(asset.value))}</span>
+                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                          onClick={() => openEdit(asset)}
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                          onClick={() => handleDelete(asset.id)}
+                          disabled={deleteMutation.isPending}
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })
         )}
       </div>
 
-      {/* Monthly table */}
-      <div className="bg-card border rounded-xl overflow-hidden">
-        <div className="px-5 py-4 border-b">
-          <h2 className="font-semibold text-foreground">Monthly Entries — {year}</h2>
-          <p className="text-xs text-muted-foreground mt-0.5">Enter net worth for each month. Press Enter or click Save to record.</p>
-        </div>
-        <div className="divide-y">
-          {Array.from({ length: 12 }, (_, i) => {
-            const mo = String(i + 1).padStart(2, "0");
-            const monthKey = `${yearStr}-${mo}`;
-            const snapshot = snapshotByMonth[monthKey];
-            const editVal = editing[monthKey];
-            const hasEdit = editVal !== undefined;
-            const savedValue = snapshot ? parseFloat(snapshot.netWorth) : null;
-            const isFuture = monthKey > format(new Date());
-
-            return (
-              <div
-                key={monthKey}
-                className={cn(
-                  "flex items-center gap-4 px-5 py-3.5",
-                  isFuture && "opacity-50"
-                )}
+      {/* Add/Edit Dialog */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{editingId ? "Edit Asset" : "Add Asset"}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-1.5">
+              <Label>Category</Label>
+              <Select
+                value={form.category}
+                onValueChange={(v) => setForm((f) => ({ ...f, category: v as AssetCategory }))}
               >
-                <div className="w-28 flex-shrink-0">
-                  <p className="text-sm font-medium text-foreground">{MONTHS[i]}</p>
-                  <p className="text-xs text-muted-foreground">{monthKey}</p>
-                </div>
-
-                <div className="flex-1 flex items-center gap-2">
-                  {!hasEdit && savedValue !== null ? (
-                    <>
-                      <span className="text-sm font-semibold text-foreground">{fmt(savedValue)}</span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 px-2 text-xs text-muted-foreground"
-                        onClick={() => setEditing((prev) => ({ ...prev, [monthKey]: snapshot!.netWorth }))}
-                      >
-                        Edit
-                      </Button>
-                    </>
-                  ) : (
-                    <>
-                      <Input
-                        ref={(el) => { inputRefs.current[monthKey] = el; }}
-                        type="number"
-                        step="0.01"
-                        placeholder={savedValue !== null ? String(savedValue) : "0.00"}
-                        value={editVal ?? ""}
-                        onChange={(e) => setEditing((prev) => ({ ...prev, [monthKey]: e.target.value }))}
-                        onKeyDown={(e) => handleKeyDown(e, monthKey)}
-                        className="h-8 w-40 text-sm"
-                        disabled={isFuture}
-                      />
-                      {hasEdit && (
-                        <Button
-                          size="sm"
-                          className="h-8 px-3 gap-1"
-                          onClick={() => handleSave(monthKey)}
-                          disabled={upsertMutation.isPending || isFuture}
-                        >
-                          <Save className="w-3.5 h-3.5" />
-                          Save
-                        </Button>
-                      )}
-                      {hasEdit && savedValue === null && (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-8 px-2"
-                          onClick={() => setEditing((prev) => { const n = { ...prev }; delete n[monthKey]; return n; })}
-                        >
-                          Cancel
-                        </Button>
-                      )}
-                    </>
-                  )}
-
-                  {!hasEdit && savedValue === null && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 px-2 text-xs text-muted-foreground"
-                      disabled={isFuture}
-                      onClick={() => {
-                        setEditing((prev) => ({ ...prev, [monthKey]: "" }));
-                        setTimeout(() => inputRefs.current[monthKey]?.focus(), 50);
-                      }}
-                    >
-                      + Enter
-                    </Button>
-                  )}
-                </div>
-
-                {/* Empty indicator */}
-                {savedValue === null && !hasEdit && (
-                  <span className="text-sm text-muted-foreground/40 ml-auto">—</span>
-                )}
-
-                {/* Delete button */}
-                {snapshot && !hasEdit && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7 text-muted-foreground hover:text-destructive ml-auto"
-                    onClick={() => handleDelete(snapshot.id, monthKey)}
-                    disabled={deleteMutation.isPending}
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </Button>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </div>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {ASSET_CATEGORIES.map((cat) => (
+                    <SelectItem key={cat} value={cat}>
+                      <div className="flex items-center gap-2">
+                        <span className={cn("p-1 rounded", CATEGORY_BG[cat])}>{CATEGORY_ICONS[cat]}</span>
+                        {cat}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Name</Label>
+              <Input
+                placeholder='e.g. "Maybank savings", "Honda Civic"'
+                value={form.name}
+                onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Value (BND)</Label>
+              <Input
+                type="number"
+                step="0.01"
+                min="0"
+                placeholder="0.00"
+                value={form.value}
+                onChange={(e) => setForm((f) => ({ ...f, value: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Month</Label>
+              <Input
+                type="month"
+                value={form.month}
+                onChange={(e) => setForm((f) => ({ ...f, month: e.target.value }))}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
+            <Button
+              onClick={handleSave}
+              disabled={isSaving || !form.name.trim() || !form.value || !form.month}
+            >
+              {isSaving ? "Saving..." : editingId ? "Save Changes" : "Add Asset"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
-}
-
-function SummaryCard({
-  label, value, sub, color, icon, negative,
-}: {
-  label: string;
-  value: string;
-  sub: string;
-  color: string;
-  icon?: "up" | "down" | "flat";
-  negative?: boolean;
-}) {
-  return (
-    <div className="bg-card border rounded-xl p-5">
-      <p className="text-sm text-muted-foreground">{label}</p>
-      <div className="flex items-center gap-1.5 mt-1">
-        {icon === "up" && <TrendingUp className={cn("w-4 h-4", negative ? "text-red-500" : "text-emerald-500")} />}
-        {icon === "down" && <TrendingDown className={cn("w-4 h-4", negative ? "text-red-500" : "text-emerald-500")} />}
-        {icon === "flat" && <Minus className="w-4 h-4 text-muted-foreground" />}
-        <p className={`text-2xl font-bold ${color}`}>{value}</p>
-      </div>
-      <p className="text-xs text-muted-foreground mt-1">{sub}</p>
-    </div>
-  );
-}
-
-function format(date: Date) {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, "0");
-  return `${y}-${m}`;
 }

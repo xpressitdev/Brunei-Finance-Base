@@ -426,6 +426,82 @@ export interface SubscriptionPlan {
   updatedAt: string;
 }
 
+export type AssetEntryCategory =
+  (typeof AssetEntryCategory)[keyof typeof AssetEntryCategory];
+
+export const AssetEntryCategory = {
+  Savings: "Savings",
+  Property: "Property",
+  Vehicle: "Vehicle",
+  Investment: "Investment",
+  Business: "Business",
+  Other: "Other",
+} as const;
+
+export interface AssetEntry {
+  id: string;
+  userId: string;
+  category: AssetEntryCategory;
+  name: string;
+  value: string;
+  /** YYYY-MM format */
+  month: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type CreateAssetBodyCategory =
+  (typeof CreateAssetBodyCategory)[keyof typeof CreateAssetBodyCategory];
+
+export const CreateAssetBodyCategory = {
+  Savings: "Savings",
+  Property: "Property",
+  Vehicle: "Vehicle",
+  Investment: "Investment",
+  Business: "Business",
+  Other: "Other",
+} as const;
+
+export interface CreateAssetBody {
+  category: CreateAssetBodyCategory;
+  name: string;
+  value: string;
+  /** YYYY-MM format */
+  month: string;
+}
+
+/**
+ * @nullable
+ */
+export type UpdateAssetBodyCategory =
+  | (typeof UpdateAssetBodyCategory)[keyof typeof UpdateAssetBodyCategory]
+  | null;
+
+export const UpdateAssetBodyCategory = {
+  Savings: "Savings",
+  Property: "Property",
+  Vehicle: "Vehicle",
+  Investment: "Investment",
+  Business: "Business",
+  Other: "Other",
+} as const;
+
+export interface UpdateAssetBody {
+  /** @nullable */
+  category?: UpdateAssetBodyCategory;
+  /** @nullable */
+  name?: string | null;
+  /** @nullable */
+  value?: string | null;
+  /** @nullable */
+  month?: string | null;
+}
+
+export interface ListAssetsQueryParams {
+  /** @nullable */
+  month?: string | null;
+}
+
 export interface NetWorthSnapshot {
   id: string;
   userId: string;
@@ -607,4 +683,12 @@ export type ListNetWorthSnapshotsParams = {
    * @nullable
    */
   year?: string | null;
+};
+
+export type ListAssetsParams = {
+  /**
+   * Filter by month (YYYY-MM format)
+   * @nullable
+   */
+  month?: string | null;
 };

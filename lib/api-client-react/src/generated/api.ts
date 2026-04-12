@@ -18,6 +18,7 @@ import type {
 
 import type {
   Account,
+  AssetEntry,
   AuthResponse,
   AuthUser,
   Category,
@@ -25,6 +26,7 @@ import type {
   Commitment,
   ConfirmImportBody,
   CreateAccountBody,
+  CreateAssetBody,
   CreateCategoryBody,
   CreateCommitmentBody,
   CreateDebtBody,
@@ -45,6 +47,7 @@ import type {
   ImportConfirmResult,
   ImportedTransactionRow,
   Insight,
+  ListAssetsParams,
   ListBudgetsParams,
   ListInsightsParams,
   ListNetWorthSnapshotsParams,
@@ -62,6 +65,7 @@ import type {
   SubscriptionPlan,
   Transaction,
   UpdateAccountBody,
+  UpdateAssetBody,
   UpdateCommitmentBody,
   UpdateDebtBody,
   UpdateGoalBody,
@@ -70,7 +74,6 @@ import type {
   UploadStatementBody,
   UploadedDocument,
   UpsertBudgetBody,
-  UpsertNetWorthSnapshotBody,
   UserSubscription,
 } from "./api.schemas";
 
@@ -3464,7 +3467,7 @@ export const useConfirmImport = <
 };
 
 /**
- * @summary List user net worth snapshots
+ * @summary List user net worth snapshots (read-only; use /assets for new entries)
  */
 export const getListNetWorthSnapshotsUrl = (
   params?: ListNetWorthSnapshotsParams,
@@ -3537,7 +3540,7 @@ export type ListNetWorthSnapshotsQueryResult = NonNullable<
 export type ListNetWorthSnapshotsQueryError = ErrorType<unknown>;
 
 /**
- * @summary List user net worth snapshots
+ * @summary List user net worth snapshots (read-only; use /assets for new entries)
  */
 
 export function useListNetWorthSnapshots<
@@ -3564,42 +3567,136 @@ export function useListNetWorthSnapshots<
 }
 
 /**
- * @summary Create or update a net worth snapshot for a month
+ * @summary List user asset entries for a month
  */
-export const getUpsertNetWorthSnapshotUrl = () => {
-  return `/api/net-worth`;
+export const getListAssetsUrl = (params?: ListAssetsParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/assets?${stringifiedParams}`
+    : `/api/assets`;
 };
 
-export const upsertNetWorthSnapshot = async (
-  upsertNetWorthSnapshotBody: UpsertNetWorthSnapshotBody,
+export const listAssets = async (
+  params?: ListAssetsParams,
   options?: RequestInit,
-): Promise<NetWorthSnapshot> => {
-  return customFetch<NetWorthSnapshot>(getUpsertNetWorthSnapshotUrl(), {
+): Promise<AssetEntry[]> => {
+  return customFetch<AssetEntry[]>(getListAssetsUrl(params), {
     ...options,
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...options?.headers },
-    body: JSON.stringify(upsertNetWorthSnapshotBody),
+    method: "GET",
   });
 };
 
-export const getUpsertNetWorthSnapshotMutationOptions = <
+export const getListAssetsQueryKey = (params?: ListAssetsParams) => {
+  return [`/api/assets`, ...(params ? [params] : [])] as const;
+};
+
+export const getListAssetsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listAssets>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: ListAssetsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listAssets>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListAssetsQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listAssets>>> = ({
+    signal,
+  }) => listAssets(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listAssets>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListAssetsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listAssets>>
+>;
+export type ListAssetsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List user asset entries for a month
+ */
+
+export function useListAssets<
+  TData = Awaited<ReturnType<typeof listAssets>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: ListAssetsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listAssets>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListAssetsQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Create an asset entry
+ */
+export const getCreateAssetUrl = () => {
+  return `/api/assets`;
+};
+
+export const createAsset = async (
+  createAssetBody: CreateAssetBody,
+  options?: RequestInit,
+): Promise<AssetEntry> => {
+  return customFetch<AssetEntry>(getCreateAssetUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createAssetBody),
+  });
+};
+
+export const getCreateAssetMutationOptions = <
   TError = ErrorType<unknown>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof upsertNetWorthSnapshot>>,
+    Awaited<ReturnType<typeof createAsset>>,
     TError,
-    { data: BodyType<UpsertNetWorthSnapshotBody> },
+    { data: BodyType<CreateAssetBody> },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationOptions<
-  Awaited<ReturnType<typeof upsertNetWorthSnapshot>>,
+  Awaited<ReturnType<typeof createAsset>>,
   TError,
-  { data: BodyType<UpsertNetWorthSnapshotBody> },
+  { data: BodyType<CreateAssetBody> },
   TContext
 > => {
-  const mutationKey = ["upsertNetWorthSnapshot"];
+  const mutationKey = ["createAsset"];
   const { mutation: mutationOptions, request: requestOptions } = options
     ? options.mutation &&
       "mutationKey" in options.mutation &&
@@ -3609,82 +3706,168 @@ export const getUpsertNetWorthSnapshotMutationOptions = <
     : { mutation: { mutationKey }, request: undefined };
 
   const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof upsertNetWorthSnapshot>>,
-    { data: BodyType<UpsertNetWorthSnapshotBody> }
+    Awaited<ReturnType<typeof createAsset>>,
+    { data: BodyType<CreateAssetBody> }
   > = (props) => {
     const { data } = props ?? {};
 
-    return upsertNetWorthSnapshot(data, requestOptions);
+    return createAsset(data, requestOptions);
   };
 
   return { mutationFn, ...mutationOptions };
 };
 
-export type UpsertNetWorthSnapshotMutationResult = NonNullable<
-  Awaited<ReturnType<typeof upsertNetWorthSnapshot>>
+export type CreateAssetMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createAsset>>
 >;
-export type UpsertNetWorthSnapshotMutationBody =
-  BodyType<UpsertNetWorthSnapshotBody>;
-export type UpsertNetWorthSnapshotMutationError = ErrorType<unknown>;
+export type CreateAssetMutationBody = BodyType<CreateAssetBody>;
+export type CreateAssetMutationError = ErrorType<unknown>;
 
 /**
- * @summary Create or update a net worth snapshot for a month
+ * @summary Create an asset entry
  */
-export const useUpsertNetWorthSnapshot = <
+export const useCreateAsset = <
   TError = ErrorType<unknown>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof upsertNetWorthSnapshot>>,
+    Awaited<ReturnType<typeof createAsset>>,
     TError,
-    { data: BodyType<UpsertNetWorthSnapshotBody> },
+    { data: BodyType<CreateAssetBody> },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationResult<
-  Awaited<ReturnType<typeof upsertNetWorthSnapshot>>,
+  Awaited<ReturnType<typeof createAsset>>,
   TError,
-  { data: BodyType<UpsertNetWorthSnapshotBody> },
+  { data: BodyType<CreateAssetBody> },
   TContext
 > => {
-  return useMutation(getUpsertNetWorthSnapshotMutationOptions(options));
+  return useMutation(getCreateAssetMutationOptions(options));
 };
 
 /**
- * @summary Delete a net worth snapshot
+ * @summary Update an asset entry
  */
-export const getDeleteNetWorthSnapshotUrl = (id: string) => {
-  return `/api/net-worth/${id}`;
+export const getUpdateAssetUrl = (id: string) => {
+  return `/api/assets/${id}`;
 };
 
-export const deleteNetWorthSnapshot = async (
+export const updateAsset = async (
+  id: string,
+  updateAssetBody: UpdateAssetBody,
+  options?: RequestInit,
+): Promise<AssetEntry> => {
+  return customFetch<AssetEntry>(getUpdateAssetUrl(id), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(updateAssetBody),
+  });
+};
+
+export const getUpdateAssetMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateAsset>>,
+    TError,
+    { id: string; data: BodyType<UpdateAssetBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateAsset>>,
+  TError,
+  { id: string; data: BodyType<UpdateAssetBody> },
+  TContext
+> => {
+  const mutationKey = ["updateAsset"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateAsset>>,
+    { id: string; data: BodyType<UpdateAssetBody> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return updateAsset(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateAssetMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateAsset>>
+>;
+export type UpdateAssetMutationBody = BodyType<UpdateAssetBody>;
+export type UpdateAssetMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Update an asset entry
+ */
+export const useUpdateAsset = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateAsset>>,
+    TError,
+    { id: string; data: BodyType<UpdateAssetBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateAsset>>,
+  TError,
+  { id: string; data: BodyType<UpdateAssetBody> },
+  TContext
+> => {
+  return useMutation(getUpdateAssetMutationOptions(options));
+};
+
+/**
+ * @summary Delete an asset entry
+ */
+export const getDeleteAssetUrl = (id: string) => {
+  return `/api/assets/${id}`;
+};
+
+export const deleteAsset = async (
   id: string,
   options?: RequestInit,
 ): Promise<void> => {
-  return customFetch<void>(getDeleteNetWorthSnapshotUrl(id), {
+  return customFetch<void>(getDeleteAssetUrl(id), {
     ...options,
     method: "DELETE",
   });
 };
 
-export const getDeleteNetWorthSnapshotMutationOptions = <
+export const getDeleteAssetMutationOptions = <
   TError = ErrorType<unknown>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof deleteNetWorthSnapshot>>,
+    Awaited<ReturnType<typeof deleteAsset>>,
     TError,
     { id: string },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationOptions<
-  Awaited<ReturnType<typeof deleteNetWorthSnapshot>>,
+  Awaited<ReturnType<typeof deleteAsset>>,
   TError,
   { id: string },
   TContext
 > => {
-  const mutationKey = ["deleteNetWorthSnapshot"];
+  const mutationKey = ["deleteAsset"];
   const { mutation: mutationOptions, request: requestOptions } = options
     ? options.mutation &&
       "mutationKey" in options.mutation &&
@@ -3694,44 +3877,44 @@ export const getDeleteNetWorthSnapshotMutationOptions = <
     : { mutation: { mutationKey }, request: undefined };
 
   const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof deleteNetWorthSnapshot>>,
+    Awaited<ReturnType<typeof deleteAsset>>,
     { id: string }
   > = (props) => {
     const { id } = props ?? {};
 
-    return deleteNetWorthSnapshot(id, requestOptions);
+    return deleteAsset(id, requestOptions);
   };
 
   return { mutationFn, ...mutationOptions };
 };
 
-export type DeleteNetWorthSnapshotMutationResult = NonNullable<
-  Awaited<ReturnType<typeof deleteNetWorthSnapshot>>
+export type DeleteAssetMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteAsset>>
 >;
 
-export type DeleteNetWorthSnapshotMutationError = ErrorType<unknown>;
+export type DeleteAssetMutationError = ErrorType<unknown>;
 
 /**
- * @summary Delete a net worth snapshot
+ * @summary Delete an asset entry
  */
-export const useDeleteNetWorthSnapshot = <
+export const useDeleteAsset = <
   TError = ErrorType<unknown>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof deleteNetWorthSnapshot>>,
+    Awaited<ReturnType<typeof deleteAsset>>,
     TError,
     { id: string },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationResult<
-  Awaited<ReturnType<typeof deleteNetWorthSnapshot>>,
+  Awaited<ReturnType<typeof deleteAsset>>,
   TError,
   { id: string },
   TContext
 > => {
-  return useMutation(getDeleteNetWorthSnapshotMutationOptions(options));
+  return useMutation(getDeleteAssetMutationOptions(options));
 };
 
 /**

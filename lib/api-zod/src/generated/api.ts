@@ -552,6 +552,7 @@ export const GetDashboardSummaryResponse = zod.object({
   totalSpent: zod.string(),
   remaining: zod.string(),
   totalDebtMonthlyPayment: zod.string(),
+  totalDebtPayments: zod.string(),
   debtToIncomeRatio: zod.string(),
   transactionCount: zod.number(),
 });
@@ -656,7 +657,7 @@ export const ConfirmImportResponse = zod.object({
 });
 
 /**
- * @summary List user net worth snapshots
+ * @summary List user net worth snapshots (read-only; use /assets for new entries)
  */
 export const ListNetWorthSnapshotsQueryParams = zod.object({
   year: zod.coerce.string().nullish().describe("Filter by year (YYYY format)"),
@@ -676,28 +677,97 @@ export const ListNetWorthSnapshotsResponse = zod.array(
 );
 
 /**
- * @summary Create or update a net worth snapshot for a month
+ * @summary List user asset entries for a month
  */
-export const UpsertNetWorthSnapshotBody = zod.object({
-  month: zod.string().describe("YYYY-MM format"),
-  netWorth: zod.string(),
-  notes: zod.string().nullish(),
+export const ListAssetsQueryParams = zod.object({
+  month: zod.coerce
+    .string()
+    .nullish()
+    .describe("Filter by month (YYYY-MM format)"),
 });
 
-export const UpsertNetWorthSnapshotResponse = zod.object({
+export const ListAssetsResponseItem = zod.object({
   id: zod.string(),
   userId: zod.string(),
+  category: zod.enum([
+    "Savings",
+    "Property",
+    "Vehicle",
+    "Investment",
+    "Business",
+    "Other",
+  ]),
+  name: zod.string(),
+  value: zod.string(),
   month: zod.string().describe("YYYY-MM format"),
-  netWorth: zod.string(),
-  notes: zod.string().nullish(),
+  createdAt: zod.string(),
+  updatedAt: zod.string(),
+});
+export const ListAssetsResponse = zod.array(ListAssetsResponseItem);
+
+/**
+ * @summary Create an asset entry
+ */
+export const CreateAssetBody = zod.object({
+  category: zod.enum([
+    "Savings",
+    "Property",
+    "Vehicle",
+    "Investment",
+    "Business",
+    "Other",
+  ]),
+  name: zod.string(),
+  value: zod.string(),
+  month: zod.string().describe("YYYY-MM format"),
+});
+
+/**
+ * @summary Update an asset entry
+ */
+export const UpdateAssetParams = zod.object({
+  id: zod.coerce.string(),
+});
+
+export const UpdateAssetBody = zod.object({
+  category: zod
+    .union([
+      zod.literal("Savings"),
+      zod.literal("Property"),
+      zod.literal("Vehicle"),
+      zod.literal("Investment"),
+      zod.literal("Business"),
+      zod.literal("Other"),
+      zod.literal(null),
+    ])
+    .nullish(),
+  name: zod.string().nullish(),
+  value: zod.string().nullish(),
+  month: zod.string().nullish(),
+});
+
+export const UpdateAssetResponse = zod.object({
+  id: zod.string(),
+  userId: zod.string(),
+  category: zod.enum([
+    "Savings",
+    "Property",
+    "Vehicle",
+    "Investment",
+    "Business",
+    "Other",
+  ]),
+  name: zod.string(),
+  value: zod.string(),
+  month: zod.string().describe("YYYY-MM format"),
   createdAt: zod.string(),
   updatedAt: zod.string(),
 });
 
 /**
- * @summary Delete a net worth snapshot
+ * @summary Delete an asset entry
  */
-export const DeleteNetWorthSnapshotParams = zod.object({
+export const DeleteAssetParams = zod.object({
   id: zod.coerce.string(),
 });
 

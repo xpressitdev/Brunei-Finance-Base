@@ -40,6 +40,8 @@ tags:
     description: Financial goal operations
   - name: net-worth
     description: Net worth snapshot operations
+  - name: assets
+    description: Asset entry operations
   - name: receipt
     description: Receipt scanning operations
   - name: storage
@@ -851,7 +853,7 @@ paths:
     get:
       operationId: listNetWorthSnapshots
       tags: [net-worth]
-      summary: List user net worth snapshots
+      summary: List user net worth snapshots (read-only; use /assets for new entries)
       parameters:
         - name: year
           in: query
@@ -868,29 +870,75 @@ paths:
                 items:
                   $ref: "#/components/schemas/NetWorthSnapshot"
 
+  # Asset Entries
+  /assets:
+    get:
+      operationId: listAssets
+      tags: [assets]
+      summary: List user asset entries for a month
+      parameters:
+        - name: month
+          in: query
+          schema:
+            type: ["string", "null"]
+          description: "Filter by month (YYYY-MM format)"
+      responses:
+        "200":
+          description: List of asset entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AssetEntry"
+
     post:
-      operationId: upsertNetWorthSnapshot
-      tags: [net-worth]
-      summary: Create or update a net worth snapshot for a month
+      operationId: createAsset
+      tags: [assets]
+      summary: Create an asset entry
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/UpsertNetWorthSnapshotBody"
+              $ref: "#/components/schemas/CreateAssetBody"
       responses:
-        "200":
-          description: Snapshot saved
+        "201":
+          description: Asset entry created
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/NetWorthSnapshot"
+                $ref: "#/components/schemas/AssetEntry"
 
-  /net-worth/{id}:
+  /assets/{id}:
+    patch:
+      operationId: updateAsset
+      tags: [assets]
+      summary: Update an asset entry
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateAssetBody"
+      responses:
+        "200":
+          description: Updated asset entry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AssetEntry"
+
     delete:
-      operationId: deleteNetWorthSnapshot
-      tags: [net-worth]
-      summary: Delete a net worth snapshot
+      operationId: deleteAsset
+      tags: [assets]
+      summary: Delete an asset entry
       parameters:
         - name: id
           in: path
@@ -1868,6 +1916,76 @@ components:
         - features
         - createdAt
         - updatedAt
+
+    # Asset Entries
+    AssetEntry:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        category:
+          type: string
+          enum: [Savings, Property, Vehicle, Investment, Business, Other]
+        name:
+          type: string
+        value:
+          type: string
+        month:
+          type: string
+          description: "YYYY-MM format"
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - userId
+        - category
+        - name
+        - value
+        - month
+        - createdAt
+        - updatedAt
+
+    CreateAssetBody:
+      type: object
+      properties:
+        category:
+          type: string
+          enum: [Savings, Property, Vehicle, Investment, Business, Other]
+        name:
+          type: string
+        value:
+          type: string
+        month:
+          type: string
+          description: "YYYY-MM format"
+      required:
+        - category
+        - name
+        - value
+        - month
+
+    UpdateAssetBody:
+      type: object
+      properties:
+        category:
+          type: ["string", "null"]
+          enum: [Savings, Property, Vehicle, Investment, Business, Other, null]
+        name:
+          type: ["string", "null"]
+        value:
+          type: ["string", "null"]
+        month:
+          type: ["string", "null"]
+
+    ListAssetsQueryParams:
+      type: object
+      properties:
+        month:
+          type: ["string", "null"]
 
     # Net Worth
     NetWorthSnapshot:

@@ -16,6 +16,7 @@ import subscriptionRouter from "./subscription";
 import gamificationRouter from "./gamification";
 import goalsRouter from "./goals";
 import netWorthRouter from "./net-worth";
+import assetsRouter from "./assets";
 import receiptRouter from "./receipt";
 import storageRouter from "./storage";
 
@@ -38,6 +39,7 @@ router.use(subscriptionRouter);
 router.use(gamificationRouter);
 router.use(goalsRouter);
 router.use(netWorthRouter);
+router.use(assetsRouter);
 router.use(receiptRouter);
 router.use(storageRouter);
 
