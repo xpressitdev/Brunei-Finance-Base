@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
-import { Menu, X, LayoutDashboard, Receipt, PieChart, CalendarDays, Wallet, Upload, Lightbulb, Settings, Star, Trophy } from "lucide-react";
+import { Menu, X, LayoutDashboard, Receipt, PieChart, CalendarDays, Wallet, Upload, Lightbulb, Settings, Star, Trophy, Target } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navigation = [
@@ -11,6 +11,7 @@ const navigation = [
   { name: "Budgets", href: "/budgets", icon: PieChart },
   { name: "Commitments", href: "/commitments", icon: CalendarDays },
   { name: "Debts", href: "/debts", icon: Wallet },
+  { name: "Goals", href: "/goals", icon: Target },
   { name: "Upload", href: "/upload", icon: Upload },
   { name: "Insights", href: "/insights", icon: Lightbulb },
   { name: "Achievements", href: "/achievements", icon: Trophy },

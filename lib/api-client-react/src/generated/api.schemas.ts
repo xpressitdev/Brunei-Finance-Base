@@ -369,6 +369,48 @@ export interface SubscriptionPlan {
   updatedAt: string;
 }
 
+export interface Goal {
+  id: string;
+  userId: string;
+  title: string;
+  category: string;
+  targetAmount: string;
+  savedAmount: string;
+  /** @nullable */
+  deadline?: string | null;
+  /** @nullable */
+  notes?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateGoalBody {
+  title: string;
+  category?: string;
+  targetAmount: string;
+  /** @nullable */
+  savedAmount?: string | null;
+  /** @nullable */
+  deadline?: string | null;
+  /** @nullable */
+  notes?: string | null;
+}
+
+export interface UpdateGoalBody {
+  /** @nullable */
+  title?: string | null;
+  /** @nullable */
+  category?: string | null;
+  /** @nullable */
+  targetAmount?: string | null;
+  /** @nullable */
+  savedAmount?: string | null;
+  /** @nullable */
+  deadline?: string | null;
+  /** @nullable */
+  notes?: string | null;
+}
+
 export interface UserSubscription {
   id: string;
   userId: string;

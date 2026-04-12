@@ -648,6 +648,71 @@ export const ConfirmImportResponse = zod.object({
 });
 
 /**
+ * @summary List user financial goals
+ */
+export const ListGoalsResponseItem = zod.object({
+  id: zod.string(),
+  userId: zod.string(),
+  title: zod.string(),
+  category: zod.string(),
+  targetAmount: zod.string(),
+  savedAmount: zod.string(),
+  deadline: zod.string().nullish(),
+  notes: zod.string().nullish(),
+  createdAt: zod.string(),
+  updatedAt: zod.string(),
+});
+export const ListGoalsResponse = zod.array(ListGoalsResponseItem);
+
+/**
+ * @summary Create a financial goal
+ */
+export const CreateGoalBody = zod.object({
+  title: zod.string(),
+  category: zod.string().optional(),
+  targetAmount: zod.string(),
+  savedAmount: zod.string().nullish(),
+  deadline: zod.string().nullish(),
+  notes: zod.string().nullish(),
+});
+
+/**
+ * @summary Update a financial goal
+ */
+export const UpdateGoalParams = zod.object({
+  id: zod.coerce.string(),
+});
+
+export const UpdateGoalBody = zod.object({
+  title: zod.string().nullish(),
+  category: zod.string().nullish(),
+  targetAmount: zod.string().nullish(),
+  savedAmount: zod.string().nullish(),
+  deadline: zod.string().nullish(),
+  notes: zod.string().nullish(),
+});
+
+export const UpdateGoalResponse = zod.object({
+  id: zod.string(),
+  userId: zod.string(),
+  title: zod.string(),
+  category: zod.string(),
+  targetAmount: zod.string(),
+  savedAmount: zod.string(),
+  deadline: zod.string().nullish(),
+  notes: zod.string().nullish(),
+  createdAt: zod.string(),
+  updatedAt: zod.string(),
+});
+
+/**
+ * @summary Delete a financial goal
+ */
+export const DeleteGoalParams = zod.object({
+  id: zod.coerce.string(),
+});
+
+/**
  * @summary List available subscription plans
  */
 export const ListSubscriptionPlansResponseItem = zod.object({

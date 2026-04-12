@@ -48,6 +48,7 @@ Tables in `lib/db/src/schema/`:
 - `accounts` — bank accounts
 - `categories` — 15 default spending categories (seeded)
 - `commitments` — monthly recurring obligations (rent, bills, etc.)
+- `goals` — financial goals with target amount, saved amount, deadline, and category
 - `transactions` — manual + imported transactions
 - `monthly_budgets` — budget allocations by category/month
 - `debts` — loans and debt obligations
@@ -75,6 +76,7 @@ All routes under `/api`:
 - `/dashboard/summary`, `/dashboard/spending-by-category`, `/dashboard/recent-transactions`
 - `/uploads` — PDF upload + row review + confirm import
 - `/subscription/plans`, `/subscription/current`
+- `/goals` — CRUD (list, create, update, delete)
 
 ## Phases Completed
 

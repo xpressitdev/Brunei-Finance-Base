@@ -10,3 +10,4 @@ export * from "./uploads";
 export * from "./insights";
 export * from "./subscriptions";
 export * from "./achievements";
+export * from "./goals";

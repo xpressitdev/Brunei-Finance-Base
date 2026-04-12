@@ -36,6 +36,8 @@ tags:
     description: Statement upload operations
   - name: subscription
     description: Subscription operations
+  - name: goals
+    description: Financial goal operations
 
 paths:
   /healthz:
@@ -813,6 +815,79 @@ paths:
               schema:
                 $ref: "#/components/schemas/ImportConfirmResult"
 
+  # Goals
+  /goals:
+    get:
+      operationId: listGoals
+      tags: [goals]
+      summary: List user financial goals
+      responses:
+        "200":
+          description: List of goals
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Goal"
+
+    post:
+      operationId: createGoal
+      tags: [goals]
+      summary: Create a financial goal
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateGoalBody"
+      responses:
+        "201":
+          description: Goal created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Goal"
+
+  /goals/{id}:
+    patch:
+      operationId: updateGoal
+      tags: [goals]
+      summary: Update a financial goal
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateGoalBody"
+      responses:
+        "200":
+          description: Updated goal
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Goal"
+
+    delete:
+      operationId: deleteGoal
+      tags: [goals]
+      summary: Delete a financial goal
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
+
   # Subscription
   /subscription/plans:
     get:
@@ -1568,6 +1643,75 @@ components:
         - features
         - createdAt
         - updatedAt
+
+    # Goal
+    Goal:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        title:
+          type: string
+        category:
+          type: string
+        targetAmount:
+          type: string
+        savedAmount:
+          type: string
+        deadline:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - userId
+        - title
+        - category
+        - targetAmount
+        - savedAmount
+        - createdAt
+        - updatedAt
+
+    CreateGoalBody:
+      type: object
+      properties:
+        title:
+          type: string
+        category:
+          type: string
+        targetAmount:
+          type: string
+        savedAmount:
+          type: ["string", "null"]
+        deadline:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+      required:
+        - title
+        - targetAmount
+
+    UpdateGoalBody:
+      type: object
+      properties:
+        title:
+          type: ["string", "null"]
+        category:
+          type: ["string", "null"]
+        targetAmount:
+          type: ["string", "null"]
+        savedAmount:
+          type: ["string", "null"]
+        deadline:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
 
     UserSubscription:
       type: object

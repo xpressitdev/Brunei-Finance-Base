@@ -14,6 +14,7 @@ import dashboardRouter from "./dashboard";
 import uploadsRouter from "./uploads";
 import subscriptionRouter from "./subscription";
 import gamificationRouter from "./gamification";
+import goalsRouter from "./goals";
 
 const router: IRouter = Router();
 
@@ -32,5 +33,6 @@ router.use(dashboardRouter);
 router.use(uploadsRouter);
 router.use(subscriptionRouter);
 router.use(gamificationRouter);
+router.use(goalsRouter);
 
 export default router;
