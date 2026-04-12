@@ -1,9 +1,11 @@
 import { Router, type IRouter } from "express";
-import { eq, and } from "drizzle-orm";
+import { eq, and, like, asc } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
 import { db, netWorthSnapshotsTable } from "@workspace/db";
 import { UpsertNetWorthSnapshotBody, DeleteNetWorthSnapshotParams, ListNetWorthSnapshotsQueryParams } from "@workspace/api-zod";
 import { requireAuth, type AuthenticatedRequest } from "../lib/auth";
+
+const MONTH_RE = /^\d{4}-\d{2}$/;
 
 const router: IRouter = Router();
 
@@ -23,23 +25,24 @@ router.get("/net-worth", requireAuth, async (req: AuthenticatedRequest, res): Pr
   const qp = ListNetWorthSnapshotsQueryParams.safeParse(req.query);
   if (!qp.success) { res.status(400).json({ error: qp.error.message }); return; }
 
-  let query = db.select().from(netWorthSnapshotsTable)
-    .where(eq(netWorthSnapshotsTable.userId, req.userId!));
-
-  const snapshots = await query;
-
-  let filtered = snapshots;
+  const conditions = [eq(netWorthSnapshotsTable.userId, req.userId!)];
   if (qp.data.year) {
-    filtered = snapshots.filter(s => s.month.startsWith(qp.data.year!));
+    conditions.push(like(netWorthSnapshotsTable.month, `${qp.data.year}-%`));
   }
 
-  filtered.sort((a, b) => a.month.localeCompare(b.month));
-  res.json(filtered.map(formatSnapshot));
+  const snapshots = await db.select().from(netWorthSnapshotsTable)
+    .where(and(...conditions))
+    .orderBy(asc(netWorthSnapshotsTable.month));
+
+  res.json(snapshots.map(formatSnapshot));
 });
 
 router.post("/net-worth", requireAuth, async (req: AuthenticatedRequest, res): Promise<void> => {
   const parsed = UpsertNetWorthSnapshotBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
+  if (!MONTH_RE.test(parsed.data.month)) {
+    res.status(400).json({ error: "month must be in YYYY-MM format" }); return;
+  }
 
   const existing = await db.select().from(netWorthSnapshotsTable)
     .where(and(
