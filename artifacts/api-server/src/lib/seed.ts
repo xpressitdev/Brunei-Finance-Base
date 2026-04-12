@@ -1,5 +1,6 @@
 import {
   db,
+  pool,
   categoriesTable,
   subscriptionPlansTable,
   usersTable,
@@ -111,8 +112,28 @@ async function seedHakemData() {
   logger.info("Seeded Hakem's account data");
 }
 
+async function ensureSessionsTable() {
+  const client = await pool.connect();
+  try {
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS "sessions" (
+        "sid" varchar NOT NULL COLLATE "default",
+        "sess" json NOT NULL,
+        "expire" timestamp(6) NOT NULL,
+        CONSTRAINT "session_pkey" PRIMARY KEY ("sid") NOT DEFERRABLE INITIALLY IMMEDIATE
+      ) WITH (OIDS=FALSE);
+      CREATE INDEX IF NOT EXISTS "IDX_session_expire" ON "sessions" ("expire");
+    `);
+    logger.info("Sessions table ready");
+  } finally {
+    client.release();
+  }
+}
+
 export async function seedIfEmpty() {
   try {
+    await ensureSessionsTable();
+
     const [{ value: catCount }] = await db.select({ value: count() }).from(categoriesTable);
     if (catCount === 0) {
       await db.insert(categoriesTable).values(CATEGORIES).onConflictDoNothing();
