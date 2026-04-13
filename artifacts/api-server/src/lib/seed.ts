@@ -130,9 +130,32 @@ async function ensureSessionsTable() {
   }
 }
 
+async function ensureMissingSchema() {
+  const client = await pool.connect();
+  try {
+    await client.query(`ALTER TABLE debts ADD COLUMN IF NOT EXISTS start_date date;`);
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS asset_entries (
+        id text PRIMARY KEY,
+        user_id text NOT NULL,
+        category text NOT NULL,
+        name text NOT NULL,
+        value numeric(14, 2) NOT NULL,
+        month text NOT NULL,
+        created_at timestamptz NOT NULL DEFAULT now(),
+        updated_at timestamptz NOT NULL DEFAULT now()
+      );
+    `);
+    logger.info("Schema migrations applied (start_date, asset_entries)");
+  } finally {
+    client.release();
+  }
+}
+
 export async function seedIfEmpty() {
   try {
     await ensureSessionsTable();
+    await ensureMissingSchema();
 
     const [{ value: catCount }] = await db.select({ value: count() }).from(categoriesTable);
     if (catCount === 0) {
