@@ -13,4 +13,9 @@ export interface UpdateAccountBody {
   type?: string | null;
   /** @nullable */
   bankName?: string | null;
+  /**
+   * Updated balance in BND
+   * @nullable
+   */
+  balance?: string | null;
 }

@@ -1284,6 +1284,9 @@ components:
           type: string
         bankName:
           type: ["string", "null"]
+        balance:
+          type: string
+          description: Current account balance in BND (numeric string)
         createdAt:
           type: string
         updatedAt:
@@ -1293,6 +1296,7 @@ components:
         - userId
         - name
         - type
+        - balance
         - createdAt
         - updatedAt
 
@@ -1305,6 +1309,9 @@ components:
           type: string
         bankName:
           type: ["string", "null"]
+        balance:
+          type: string
+          description: Initial balance in BND
       required:
         - name
         - type
@@ -1318,6 +1325,9 @@ components:
           type: ["string", "null"]
         bankName:
           type: ["string", "null"]
+        balance:
+          type: ["string", "null"]
+          description: Updated balance in BND
 
     # Category
     Category:

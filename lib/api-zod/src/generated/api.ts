@@ -132,6 +132,9 @@ export const ListAccountsResponseItem = zod.object({
   name: zod.string(),
   type: zod.string(),
   bankName: zod.string().nullish(),
+  balance: zod
+    .string()
+    .describe("Current account balance in BND (numeric string)"),
   createdAt: zod.string(),
   updatedAt: zod.string(),
 });
@@ -144,6 +147,7 @@ export const CreateAccountBody = zod.object({
   name: zod.string(),
   type: zod.string(),
   bankName: zod.string().nullish(),
+  balance: zod.string().optional().describe("Initial balance in BND"),
 });
 
 /**
@@ -157,6 +161,7 @@ export const UpdateAccountBody = zod.object({
   name: zod.string().nullish(),
   type: zod.string().nullish(),
   bankName: zod.string().nullish(),
+  balance: zod.string().nullish().describe("Updated balance in BND"),
 });
 
 export const UpdateAccountResponse = zod.object({
@@ -165,6 +170,9 @@ export const UpdateAccountResponse = zod.object({
   name: zod.string(),
   type: zod.string(),
   bankName: zod.string().nullish(),
+  balance: zod
+    .string()
+    .describe("Current account balance in BND (numeric string)"),
   createdAt: zod.string(),
   updatedAt: zod.string(),
 });
@@ -424,6 +432,10 @@ export const ListDebtsResponseItem = zod.object({
   monthlyPayment: zod.string(),
   interestRate: zod.string().nullish(),
   targetExtraPayment: zod.string().nullish(),
+  startDate: zod
+    .string()
+    .nullish()
+    .describe("Debt start date in YYYY-MM-DD format"),
   endDate: zod.string().nullish(),
   createdAt: zod.string(),
   updatedAt: zod.string(),
@@ -439,7 +451,10 @@ export const CreateDebtBody = zod.object({
   outstandingBalance: zod.string(),
   monthlyPayment: zod.string(),
   interestRate: zod.string().nullish(),
-  startDate: zod.string().nullish(),
+  startDate: zod
+    .string()
+    .nullish()
+    .describe("Debt start date in YYYY-MM-DD format"),
 });
 
 /**
@@ -456,7 +471,10 @@ export const UpdateDebtBody = zod.object({
   monthlyPayment: zod.string().nullish(),
   interestRate: zod.string().nullish(),
   targetExtraPayment: zod.string().nullish(),
-  startDate: zod.string().nullish(),
+  startDate: zod
+    .string()
+    .nullish()
+    .describe("Debt start date in YYYY-MM-DD format"),
 });
 
 export const UpdateDebtResponse = zod.object({
@@ -468,6 +486,10 @@ export const UpdateDebtResponse = zod.object({
   monthlyPayment: zod.string(),
   interestRate: zod.string().nullish(),
   targetExtraPayment: zod.string().nullish(),
+  startDate: zod
+    .string()
+    .nullish()
+    .describe("Debt start date in YYYY-MM-DD format"),
   endDate: zod.string().nullish(),
   createdAt: zod.string(),
   updatedAt: zod.string(),
@@ -500,6 +522,29 @@ export const SimulateDebtPayoffResponse = zod.object({
   basePayoffMonths: zod.number().nullish(),
   newPayoffMonths: zod.number().nullish(),
   createdAt: zod.string(),
+});
+
+/**
+ * @summary Get monthly balance schedule for a debt
+ */
+export const GetDebtScheduleParams = zod.object({
+  id: zod.coerce.string(),
+});
+
+export const GetDebtScheduleResponse = zod.object({
+  debtId: zod.string(),
+  schedule: zod.array(
+    zod.object({
+      month: zod.number().describe("Month number (0 = start)"),
+      balance: zod.number().describe("Outstanding balance at this month"),
+      label: zod
+        .string()
+        .nullish()
+        .describe(
+          "YYYY-MM calendar label derived from startDate, if debt has a startDate",
+        ),
+    }),
+  ),
 });
 
 /**

@@ -6,6 +6,7 @@ import {
   useListCategories,
   useGetProfile,
   useListCommitments,
+  useListAccounts,
 } from "@workspace/api-client-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -21,6 +22,8 @@ import {
   Lock,
   Table2,
   LayoutList,
+  Building2,
+  ChevronDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -284,6 +287,7 @@ export default function Budgets() {
   const [activeDate, setActiveDate] = useState(new Date());
   const [view, setView] = useState<"plan" | "actual" | "annual">("plan");
   const [editing, setEditing] = useState<Record<string, string>>({});
+  const [showAccountsPanel, setShowAccountsPanel] = useState(true);
 
   const month = format(activeDate, "yyyy-MM");
   const monthLabel = format(activeDate, "MMMM yyyy");
@@ -293,6 +297,7 @@ export default function Budgets() {
   const { data: commitments } = useListCommitments();
   const { data: budgets, refetch } = useListBudgets({ month });
   const { data: categories } = useListCategories();
+  const { data: accounts = [] } = useListAccounts();
   const upsert = useUpsertBudget();
 
   const salary = parseFloat(profile?.monthlyIncome ?? "0");
@@ -313,6 +318,9 @@ export default function Budgets() {
 
   const pool = salary - totalCommitments - totalPlanned;
   const poolActual = salary - totalCommitments - totalActual;
+
+  const totalAccountBalance = accounts.reduce((s, a) => s + parseFloat(a.balance ?? "0"), 0);
+  const readyToAssign = totalAccountBalance - totalCommitments - totalPlanned;
 
   const handleSave = async (categoryId: string) => {
     const val = editing[categoryId];
@@ -429,12 +437,21 @@ export default function Budgets() {
         <>
           {/* Summary cards */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            <SummaryCard
-              label="Monthly Income"
-              value={fmt(salary)}
-              sub={profile?.fullName ? `Gaji ${profile.fullName.split(" ")[0]}` : "From profile"}
-              color="bg-emerald-50 border border-emerald-200"
-            />
+            {view === "plan" ? (
+              <SummaryCard
+                label="Monthly Income"
+                value={fmt(salary)}
+                sub={profile?.fullName ? `Gaji ${profile.fullName.split(" ")[0]}` : "From profile"}
+                color="bg-emerald-50 border border-emerald-200"
+              />
+            ) : (
+              <SummaryCard
+                label="Account Balances"
+                value={fmt(totalAccountBalance)}
+                sub={`${accounts.length} account${accounts.length !== 1 ? "s" : ""}`}
+                color="bg-emerald-50 border border-emerald-200"
+              />
+            )}
             <SummaryCard
               label="Fixed Commitments"
               value={fmt(totalCommitments)}
@@ -448,33 +465,81 @@ export default function Budgets() {
               color="bg-blue-50 border border-blue-200"
             />
             <SummaryCard
-              label={view === "plan" ? "Available Pool" : "Remaining"}
-              value={fmt(view === "plan" ? pool : poolActual)}
-              sub={pool < 0 ? "Over-committed!" : "After all deductions"}
-              color={pool < 0 ? "bg-red-50 border border-red-200" : "bg-white border"}
+              label={view === "plan" ? "Available Pool" : "Ready to Assign"}
+              value={fmt(view === "plan" ? pool : readyToAssign)}
+              sub={
+                view === "plan"
+                  ? pool < 0 ? "Over-committed!" : "After all deductions"
+                  : readyToAssign < 0 ? "Over-assigned!" : "Unallocated real cash"
+              }
+              color={
+                view === "plan"
+                  ? pool < 0 ? "bg-red-50 border border-red-200" : "bg-white border"
+                  : readyToAssign < 0 ? "bg-red-50 border border-red-200" : "bg-white border"
+              }
             />
           </div>
 
-          {/* Income section */}
-          <section className="space-y-2">
-            <div className="flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-emerald-600" />
-              <h2 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">Income</h2>
-            </div>
-            <div className="bg-white border rounded-xl overflow-hidden">
-              <div className="flex items-center justify-between px-5 py-4">
-                <div>
-                  <p className="font-semibold text-foreground">Monthly Salary / Gaji</p>
-                  <p className="text-xs text-muted-foreground">Payday: {profile?.payday ? `${profile.payday}th of the month` : "—"}</p>
+          {/* Income / Account Balances section */}
+          {view === "plan" ? (
+            <section className="space-y-2">
+              <div className="flex items-center gap-2">
+                <TrendingUp className="w-4 h-4 text-emerald-600" />
+                <h2 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">Income</h2>
+              </div>
+              <div className="bg-white border rounded-xl overflow-hidden">
+                <div className="flex items-center justify-between px-5 py-4">
+                  <div>
+                    <p className="font-semibold text-foreground">Monthly Salary / Gaji</p>
+                    <p className="text-xs text-muted-foreground">Payday: {profile?.payday ? `${profile.payday}th of the month` : "—"}</p>
+                  </div>
+                  <span className="font-bold text-emerald-700 text-lg">{fmt(salary)}</span>
                 </div>
-                <span className="font-bold text-emerald-700 text-lg">{fmt(salary)}</span>
+                <div className="bg-emerald-50 px-5 py-2 flex justify-between items-center border-t border-emerald-100">
+                  <span className="text-xs font-medium text-emerald-800">Total Income</span>
+                  <span className="text-sm font-bold text-emerald-800">{fmt(salary)}</span>
+                </div>
               </div>
-              <div className="bg-emerald-50 px-5 py-2 flex justify-between items-center border-t border-emerald-100">
-                <span className="text-xs font-medium text-emerald-800">Total Income</span>
-                <span className="text-sm font-bold text-emerald-800">{fmt(salary)}</span>
-              </div>
-            </div>
-          </section>
+            </section>
+          ) : (
+            <section className="space-y-2">
+              <button
+                className="flex items-center gap-2 w-full text-left"
+                onClick={() => setShowAccountsPanel(p => !p)}
+              >
+                <Building2 className="w-4 h-4 text-emerald-600" />
+                <h2 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground flex-1">
+                  Account Balances
+                </h2>
+                <ChevronDown className={cn("w-4 h-4 text-muted-foreground transition-transform", !showAccountsPanel && "-rotate-90")} />
+              </button>
+              {showAccountsPanel && (
+                <div className="bg-white border rounded-xl overflow-hidden">
+                  {accounts.length === 0 ? (
+                    <div className="px-5 py-4 text-sm text-muted-foreground">
+                      No accounts added yet. <a href="/accounts" className="text-primary underline">Add your accounts</a> to use YNAB-style budgeting.
+                    </div>
+                  ) : (
+                    <>
+                      {accounts.map(a => (
+                        <div key={a.id} className="flex items-center justify-between px-5 py-3 border-b last:border-0">
+                          <div>
+                            <span className="text-sm font-medium text-foreground">{a.name}</span>
+                            {a.bankName && <span className="text-xs text-muted-foreground ml-2">{a.bankName}</span>}
+                          </div>
+                          <span className="font-semibold text-emerald-700 text-sm">{fmt(parseFloat(a.balance ?? "0"))}</span>
+                        </div>
+                      ))}
+                    </>
+                  )}
+                  <div className="bg-emerald-50 px-5 py-2 flex justify-between items-center border-t border-emerald-100">
+                    <span className="text-xs font-medium text-emerald-800">Total Cash</span>
+                    <span className="text-sm font-bold text-emerald-800">{fmt(totalAccountBalance)}</span>
+                  </div>
+                </div>
+              )}
+            </section>
+          )}
 
           {/* Fixed Commitments section */}
           <section className="space-y-2">
@@ -505,25 +570,36 @@ export default function Budgets() {
             <div className="flex items-center gap-2">
               <TrendingDown className="w-4 h-4 text-blue-600" />
               <h2 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">
-                {view === "plan" ? "Variable Budget" : "Variable Budget — Actual vs Plan"}
+                {view === "plan" ? "Variable Budget" : "Category Budget — Actual (YNAB)"}
               </h2>
             </div>
-            <div className="bg-white border rounded-xl overflow-hidden divide-y">
+
+            {/* YNAB-style column header for actual view */}
+            {view === "actual" && (
+              <div className="grid grid-cols-[1fr_auto_auto_auto] gap-3 px-5 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide border-b bg-gray-50 rounded-t-xl border">
+                <span>Category</span>
+                <span className="w-24 text-right">Assigned</span>
+                <span className="w-24 text-right">Activity</span>
+                <span className="w-24 text-right">Available</span>
+              </div>
+            )}
+
+            <div className={cn("bg-white border rounded-xl overflow-hidden divide-y", view === "actual" && "rounded-t-none border-t-0")}>
               {expenseCategories.map(cat => {
                 const b = budgetMap[cat.id];
                 const planned = parseFloat(b?.plannedAmount ?? "0");
                 const actual = parseFloat(b?.actualAmount ?? "0");
+                const available = planned - actual;
                 const pct = planned > 0 ? Math.min(100, (actual / planned) * 100) : 0;
                 const isOver = actual > planned && planned > 0;
                 const editVal = editing[cat.id];
                 const displayVal = editVal !== undefined ? editVal : planned > 0 ? planned.toFixed(2) : "";
 
                 return (
-                  <div key={cat.id} className="px-5 py-4 space-y-3">
-                    <div className="flex items-center justify-between gap-3">
-                      <span className="text-sm font-medium text-foreground flex-1">{cat.name}</span>
-
-                      {view === "plan" ? (
+                  <div key={cat.id} className="px-5 py-4 space-y-2">
+                    {view === "plan" ? (
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="text-sm font-medium text-foreground flex-1">{cat.name}</span>
                         <div className="flex items-center gap-2">
                           <span className="text-xs text-muted-foreground">BND</span>
                           <Input
@@ -543,25 +619,34 @@ export default function Budgets() {
                             </Button>
                           )}
                         </div>
-                      ) : (
-                        <div className="text-right">
-                          <p className={cn("text-sm font-semibold", isOver ? "text-destructive" : "text-foreground")}>
-                            {fmt(actual)}
-                          </p>
-                          <p className="text-xs text-muted-foreground">of {fmt(planned)}</p>
-                        </div>
-                      )}
-                    </div>
+                      </div>
+                    ) : (
+                      /* YNAB-style row: Category | Assigned | Activity | Available */
+                      <div className="grid grid-cols-[1fr_auto_auto_auto] gap-3 items-center">
+                        <span className="text-sm font-medium text-foreground">{cat.name}</span>
+                        <span className="w-24 text-right text-sm text-muted-foreground font-mono">
+                          {planned > 0 ? `BND ${planned.toFixed(2)}` : "—"}
+                        </span>
+                        <span className="w-24 text-right text-sm font-mono text-foreground">
+                          {actual > 0 ? `-BND ${actual.toFixed(2)}` : "—"}
+                        </span>
+                        <span className={cn(
+                          "w-24 text-right text-sm font-semibold font-mono",
+                          isOver ? "text-destructive" : planned > 0 ? "text-emerald-700" : "text-muted-foreground"
+                        )}>
+                          {planned > 0 ? `BND ${available.toFixed(2)}` : "—"}
+                        </span>
+                      </div>
+                    )}
 
                     {view === "actual" && planned > 0 && (
                       <div className="space-y-1">
-                        <Progress value={pct} className={cn("h-1.5", isOver && "[&>div]:bg-destructive")} />
-                        <div className="flex justify-between text-xs text-muted-foreground">
-                          <span>{pct.toFixed(0)}% used</span>
-                          <span className={isOver ? "text-destructive font-medium" : ""}>
-                            {isOver ? `BND ${(actual - planned).toFixed(2)} over` : `BND ${(planned - actual).toFixed(2)} left`}
-                          </span>
-                        </div>
+                        <Progress value={pct} className={cn("h-1", isOver && "[&>div]:bg-destructive")} />
+                        {isOver && (
+                          <p className="text-xs text-destructive font-medium">
+                            BND {(actual - planned).toFixed(2)} over budget
+                          </p>
+                        )}
                       </div>
                     )}
                   </div>
@@ -569,18 +654,28 @@ export default function Budgets() {
               })}
 
               <div className="bg-blue-50 px-5 py-2 flex justify-between items-center">
-                <span className="text-xs font-medium text-blue-800">
-                  {view === "plan" ? "Total Budgeted" : "Total Spent"}
-                </span>
-                <span className="text-sm font-bold text-blue-800">
-                  {view === "plan" ? fmt(totalPlanned) : fmt(totalActual)}
-                </span>
+                {view === "plan" ? (
+                  <>
+                    <span className="text-xs font-medium text-blue-800">Total Budgeted</span>
+                    <span className="text-sm font-bold text-blue-800">{fmt(totalPlanned)}</span>
+                  </>
+                ) : (
+                  <div className="grid grid-cols-[1fr_auto_auto_auto] gap-3 w-full text-xs font-bold text-blue-800">
+                    <span>Total</span>
+                    <span className="w-24 text-right">{fmt(totalPlanned)}</span>
+                    <span className="w-24 text-right">{fmt(totalActual)}</span>
+                    <span className={cn("w-24 text-right", (totalPlanned - totalActual) < 0 ? "text-destructive" : "text-emerald-700")}>
+                      {fmt(totalPlanned - totalActual)}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           </section>
 
-          {/* Pool summary */}
+          {/* Pool / Ready to Assign summary */}
           <section>
+            {view === "plan" ? (
             <div className={cn(
               "rounded-xl p-5 flex items-center justify-between",
               pool < 0 ? "bg-red-50 border-2 border-red-300" : "bg-emerald-50 border-2 border-emerald-300"
@@ -589,17 +684,49 @@ export default function Budgets() {
                 <Wallet className={cn("w-6 h-6", pool < 0 ? "text-red-600" : "text-emerald-600")} />
                 <div>
                   <p className={cn("font-bold text-base", pool < 0 ? "text-red-800" : "text-emerald-800")}>
-                    {view === "plan" ? "Available Pool" : "Remaining After Spending"}
+                    Available Pool
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {fmt(salary)} income − {fmt(totalCommitments)} commitments − {fmt(view === "plan" ? totalPlanned : totalActual)} {view === "plan" ? "budgeted" : "spent"}
+                    {fmt(salary)} income − {fmt(totalCommitments)} commitments − {fmt(totalPlanned)} budgeted
                   </p>
                 </div>
               </div>
               <span className={cn("text-2xl font-extrabold", pool < 0 ? "text-red-700" : "text-emerald-700")}>
-                {fmt(view === "plan" ? pool : poolActual)}
+                {fmt(pool)}
               </span>
             </div>
+            ) : (
+            <div className={cn(
+              "rounded-xl p-5",
+              readyToAssign < 0 ? "bg-red-50 border-2 border-red-300" : "bg-emerald-50 border-2 border-emerald-300"
+            )}>
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-3">
+                  <Building2 className={cn("w-6 h-6", readyToAssign < 0 ? "text-red-600" : "text-emerald-600")} />
+                  <p className={cn("font-bold text-base", readyToAssign < 0 ? "text-red-800" : "text-emerald-800")}>
+                    Ready to Assign
+                  </p>
+                </div>
+                <span className={cn("text-2xl font-extrabold", readyToAssign < 0 ? "text-red-700" : "text-emerald-700")}>
+                  {fmt(readyToAssign)}
+                </span>
+              </div>
+              <div className="space-y-1 text-xs text-muted-foreground border-t pt-3">
+                <div className="flex justify-between">
+                  <span>Total Account Balances</span>
+                  <span className="font-medium text-emerald-700">{fmt(totalAccountBalance)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>− Fixed Commitments</span>
+                  <span className="font-medium text-orange-700">−{fmt(totalCommitments)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>− Assigned to Categories</span>
+                  <span className="font-medium text-blue-700">−{fmt(totalPlanned)}</span>
+                </div>
+              </div>
+            </div>
+            )}
           </section>
         </>
       )}

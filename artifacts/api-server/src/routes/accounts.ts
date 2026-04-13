@@ -14,6 +14,7 @@ function formatAccount(a: typeof accountsTable.$inferSelect) {
     name: a.name,
     type: a.type,
     bankName: a.bankName,
+    balance: a.balance,
     createdAt: a.createdAt.toISOString(),
     updatedAt: a.updatedAt.toISOString(),
   };
@@ -33,7 +34,10 @@ router.post("/accounts", requireAuth, async (req: AuthenticatedRequest, res): Pr
   const [account] = await db.insert(accountsTable).values({
     id: uuidv4(),
     userId: req.userId!,
-    ...parsed.data,
+    name: parsed.data.name,
+    type: parsed.data.type,
+    bankName: parsed.data.bankName ?? null,
+    balance: parsed.data.balance ?? "0",
   }).returning();
   res.status(201).json(formatAccount(account));
 });
@@ -48,6 +52,7 @@ router.patch("/accounts/:id", requireAuth, async (req: AuthenticatedRequest, res
   if (body.data.name != null) updateData.name = body.data.name;
   if (body.data.type != null) updateData.type = body.data.type;
   if (body.data.bankName !== undefined) updateData.bankName = body.data.bankName;
+  if (body.data.balance != null) updateData.balance = body.data.balance;
 
   const [updated] = await db.update(accountsTable).set(updateData)
     .where(and(eq(accountsTable.id, params.data.id), eq(accountsTable.userId, req.userId!)))

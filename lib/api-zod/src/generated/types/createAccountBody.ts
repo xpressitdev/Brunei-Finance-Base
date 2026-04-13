@@ -11,4 +11,6 @@ export interface CreateAccountBody {
   type: string;
   /** @nullable */
   bankName?: string | null;
+  /** Initial balance in BND */
+  balance?: string;
 }

@@ -17,7 +17,10 @@ export interface Debt {
   interestRate?: string | null;
   /** @nullable */
   targetExtraPayment?: string | null;
-  /** Debt start date in YYYY-MM-DD format @nullable */
+  /**
+   * Debt start date in YYYY-MM-DD format
+   * @nullable
+   */
   startDate?: string | null;
   /** @nullable */
   endDate?: string | null;

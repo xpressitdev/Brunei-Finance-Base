@@ -17,7 +17,8 @@ export async function runStartupMigrations(): Promise<void> {
         updated_at   timestamptz    NOT NULL DEFAULT now()
       );
     `);
-    logger.info("Startup migrations applied (debts.start_date, asset_entries)");
+    await client.query(`ALTER TABLE accounts ADD COLUMN IF NOT EXISTS balance numeric(14,2) NOT NULL DEFAULT 0;`);
+    logger.info("Startup migrations applied (debts.start_date, asset_entries, accounts.balance)");
   } catch (err) {
     logger.error({ err }, "Startup migration failed — aborting server start");
     throw err;

@@ -13,6 +13,8 @@ export interface Account {
   type: string;
   /** @nullable */
   bankName?: string | null;
+  /** Current account balance in BND (numeric string) */
+  balance: string;
   createdAt: string;
   updatedAt: string;
 }

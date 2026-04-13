@@ -11,6 +11,9 @@ export interface DebtSchedulePoint {
   month: number;
   /** Outstanding balance at this month */
   balance: number;
-  /** YYYY-MM label based on startDate, if available */
-  label?: string;
+  /**
+   * YYYY-MM calendar label derived from startDate, if debt has a startDate
+   * @nullable
+   */
+  label?: string | null;
 }

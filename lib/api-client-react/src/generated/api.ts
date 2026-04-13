@@ -2648,7 +2648,7 @@ export const useSimulateDebtPayoff = <
 /**
  * @summary Get monthly balance schedule for a debt
  */
-export const getDebtScheduleUrl = (id: string) => {
+export const getGetDebtScheduleUrl = (id: string) => {
   return `/api/debts/${id}/schedule`;
 };
 
@@ -2656,19 +2656,19 @@ export const getDebtSchedule = async (
   id: string,
   options?: RequestInit,
 ): Promise<DebtSchedule> => {
-  return customFetch<DebtSchedule>(getDebtScheduleUrl(id), {
+  return customFetch<DebtSchedule>(getGetDebtScheduleUrl(id), {
     ...options,
     method: "GET",
   });
 };
 
-export const getDebtScheduleQueryKey = (id: string) => {
+export const getGetDebtScheduleQueryKey = (id: string) => {
   return [`/api/debts/${id}/schedule`] as const;
 };
 
-export const getDebtScheduleQueryOptions = <
+export const getGetDebtScheduleQueryOptions = <
   TData = Awaited<ReturnType<typeof getDebtSchedule>>,
-  TError = ErrorType<unknown>,
+  TError = ErrorType<ErrorResponse>,
 >(
   id: string,
   options?: {
@@ -2679,25 +2679,39 @@ export const getDebtScheduleQueryOptions = <
     >;
     request?: SecondParameter<typeof customFetch>;
   },
-): UseQueryOptions<Awaited<ReturnType<typeof getDebtSchedule>>, TError, TData> & {
-  queryKey: QueryKey;
-} => {
+) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
-  const queryKey = queryOptions?.queryKey ?? getDebtScheduleQueryKey(id);
+
+  const queryKey = queryOptions?.queryKey ?? getGetDebtScheduleQueryKey(id);
+
   const queryFn: QueryFunction<Awaited<ReturnType<typeof getDebtSchedule>>> = ({
     signal,
   }) => getDebtSchedule(id, { signal, ...requestOptions });
-  return { queryKey, queryFn, enabled: !!id, ...queryOptions };
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!id,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getDebtSchedule>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
 };
 
 export type GetDebtScheduleQueryResult = NonNullable<
   Awaited<ReturnType<typeof getDebtSchedule>>
 >;
-export type GetDebtScheduleQueryError = ErrorType<unknown>;
+export type GetDebtScheduleQueryError = ErrorType<ErrorResponse>;
 
-export const useGetDebtSchedule = <
+/**
+ * @summary Get monthly balance schedule for a debt
+ */
+
+export function useGetDebtSchedule<
   TData = Awaited<ReturnType<typeof getDebtSchedule>>,
-  TError = ErrorType<unknown>,
+  TError = ErrorType<ErrorResponse>,
 >(
   id: string,
   options?: {
@@ -2708,14 +2722,15 @@ export const useGetDebtSchedule = <
     >;
     request?: SecondParameter<typeof customFetch>;
   },
-): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
-  const queryOptions = getDebtScheduleQueryOptions(id, options);
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetDebtScheduleQueryOptions(id, options);
+
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;
   };
-  query.queryKey = queryOptions.queryKey;
-  return query;
-};
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
 
 /**
  * @summary Get financial insights for a month

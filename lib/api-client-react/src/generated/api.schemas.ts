@@ -101,6 +101,8 @@ export interface Account {
   type: string;
   /** @nullable */
   bankName?: string | null;
+  /** Current account balance in BND (numeric string) */
+  balance: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -110,6 +112,8 @@ export interface CreateAccountBody {
   type: string;
   /** @nullable */
   bankName?: string | null;
+  /** Initial balance in BND */
+  balance?: string;
 }
 
 export interface UpdateAccountBody {
@@ -119,6 +123,11 @@ export interface UpdateAccountBody {
   type?: string | null;
   /** @nullable */
   bankName?: string | null;
+  /**
+   * Updated balance in BND
+   * @nullable
+   */
+  balance?: string | null;
 }
 
 export interface Category {
@@ -256,7 +265,10 @@ export interface Debt {
   interestRate?: string | null;
   /** @nullable */
   targetExtraPayment?: string | null;
-  /** Debt start date in YYYY-MM-DD format @nullable */
+  /**
+   * Debt start date in YYYY-MM-DD format
+   * @nullable
+   */
   startDate?: string | null;
   /** @nullable */
   endDate?: string | null;
@@ -271,7 +283,10 @@ export interface CreateDebtBody {
   monthlyPayment: string;
   /** @nullable */
   interestRate?: string | null;
-  /** Debt start date in YYYY-MM-DD format @nullable */
+  /**
+   * Debt start date in YYYY-MM-DD format
+   * @nullable
+   */
   startDate?: string | null;
 }
 
@@ -288,7 +303,10 @@ export interface UpdateDebtBody {
   interestRate?: string | null;
   /** @nullable */
   targetExtraPayment?: string | null;
-  /** Debt start date in YYYY-MM-DD format @nullable */
+  /**
+   * Debt start date in YYYY-MM-DD format
+   * @nullable
+   */
   startDate?: string | null;
 }
 
@@ -316,8 +334,11 @@ export interface DebtSchedulePoint {
   month: number;
   /** Outstanding balance at this month */
   balance: number;
-  /** YYYY-MM label based on startDate, if available */
-  label?: string;
+  /**
+   * YYYY-MM calendar label derived from startDate, if debt has a startDate
+   * @nullable
+   */
+  label?: string | null;
 }
 
 export interface DebtSchedule {
