@@ -68,7 +68,7 @@ type FormState = {
   balance: string;
 };
 
-const EMPTY_FORM: FormState = { name: "", type: "savings", bankName: "BIBD", balance: "0.00" };
+const EMPTY_FORM: FormState = { name: "", type: "savings", bankName: "BIBD", balance: "" };
 
 function AccountForm({
   initial,
@@ -135,9 +135,11 @@ function AccountForm({
             className="pl-14 text-right font-mono"
             value={form.balance}
             onChange={e => set("balance", e.target.value)}
-            placeholder="0.00"
+            onFocus={e => e.target.select()}
+            placeholder="e.g. 5000.00"
           />
         </div>
+        <p className="text-xs text-muted-foreground">Enter the current amount in your account today.</p>
       </div>
 
       <DialogFooter className="pt-2">
