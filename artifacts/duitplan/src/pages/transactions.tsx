@@ -24,7 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Trash2, Edit2, Plus, Search } from "lucide-react";
+import { Trash2, Plus, Search, Receipt, Wallet as WalletIcon } from "lucide-react";
 
 export default function Transactions() {
   const currentMonth = format(new Date(), "yyyy-MM");
@@ -187,7 +187,7 @@ export default function Transactions() {
               <div key={tx.id} className="p-4 flex items-center justify-between hover:bg-muted/30 transition-colors">
                 <div className="flex items-start gap-4">
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${tx.type === 'credit' ? 'bg-primary/10 text-primary' : 'bg-orange-500/10 text-orange-600'}`}>
-                    <Wallet className="w-5 h-5" />
+                    <WalletIcon className="w-5 h-5" />
                   </div>
                   <div>
                     <div className="font-medium text-foreground">{tx.description}</div>
@@ -200,7 +200,7 @@ export default function Transactions() {
                 </div>
                 <div className="flex items-center gap-4">
                   <div className={`font-semibold ${tx.type === 'credit' ? 'text-primary' : 'text-foreground'}`}>
-                    {tx.type === 'credit' ? '+' : '-'}${tx.amount}
+                    {tx.type === 'credit' ? '+' : '-'}BND {tx.amount}
                   </div>
                   <div className="flex gap-1">
                     <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => handleDelete(tx.id)}>
@@ -216,6 +216,3 @@ export default function Transactions() {
     </div>
   );
 }
-
-// Temporary icon imports just to make the code above valid.
-import { Receipt, Wallet as WalletIcon } from "lucide-react";
