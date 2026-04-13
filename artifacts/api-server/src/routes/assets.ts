@@ -22,6 +22,20 @@ function formatAsset(a: typeof assetEntriesTable.$inferSelect) {
   };
 }
 
+// Raw SQL results come back with snake_case column names from PostgreSQL
+function formatRawAsset(a: Record<string, unknown>) {
+  return {
+    id: a.id as string,
+    userId: a.user_id as string,
+    category: a.category as string,
+    name: a.name as string,
+    value: a.value as string,
+    month: a.month as string,
+    createdAt: new Date(a.created_at as string).toISOString(),
+    updatedAt: new Date(a.updated_at as string).toISOString(),
+  };
+}
+
 router.get("/assets", requireAuth, async (req: AuthenticatedRequest, res): Promise<void> => {
   const qp = ListAssetsQueryParams.safeParse(req.query);
   if (!qp.success) { res.status(400).json({ error: qp.error.message }); return; }
@@ -39,7 +53,7 @@ router.get("/assets", requireAuth, async (req: AuthenticatedRequest, res): Promi
       WHERE user_id = ${req.userId} AND month <= ${qp.data.month}
       ORDER BY name, category, month DESC
     `);
-    res.json((rows.rows as typeof assetEntriesTable.$inferSelect[]).map(formatAsset));
+    res.json((rows.rows as Record<string, unknown>[]).map(formatRawAsset));
     return;
   }
 
