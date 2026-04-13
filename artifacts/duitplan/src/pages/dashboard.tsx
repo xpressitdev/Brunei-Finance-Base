@@ -5,7 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { Link } from "wouter";
-import { Wallet, ArrowDownRight, CreditCard, Activity, ArrowRight, Upload, Flame, Trophy } from "lucide-react";
+import { Wallet, ArrowDownRight, CreditCard, Activity, ArrowRight, Upload, Flame, Trophy, Landmark } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
 import { useQuery, useMutation } from "@tanstack/react-query";
 
@@ -60,8 +60,8 @@ export default function Dashboard() {
     return (
       <div className="space-y-8 animate-pulse">
         <div className="h-10 w-56 bg-muted rounded-xl" />
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {[...Array(4)].map((_, i) => <div key={i} className="h-28 bg-muted rounded-2xl" />)}
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+          {[...Array(5)].map((_, i) => <div key={i} className="h-28 bg-muted rounded-2xl" />)}
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="col-span-2 h-80 bg-muted rounded-2xl" />
@@ -99,7 +99,7 @@ export default function Dashboard() {
       </div>
 
       {/* Summary cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         <Card className="shadow-sm border-muted">
           <CardHeader className="flex flex-row items-center justify-between pb-2 pt-4 px-5">
             <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Monthly Salary</CardTitle>
@@ -117,6 +117,17 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent className="px-5 pb-5">
             <div className="text-2xl font-bold">{fmt(summary?.totalCommitments)}</div>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-sm border-muted">
+          <CardHeader className="flex flex-row items-center justify-between pb-2 pt-4 px-5">
+            <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Liabilities</CardTitle>
+            <Landmark className="w-4 h-4 text-rose-500/70" />
+          </CardHeader>
+          <CardContent className="px-5 pb-5">
+            <div className="text-2xl font-bold">{fmt(summary?.totalDebtMonthlyPayment)}</div>
+            <p className="text-xs text-muted-foreground mt-1">Loan monthly payments</p>
           </CardContent>
         </Card>
 
