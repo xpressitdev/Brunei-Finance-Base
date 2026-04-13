@@ -1,6 +1,7 @@
 import app from "./app";
 import { logger } from "./lib/logger";
 import { seedIfEmpty } from "./lib/seed";
+import { runStartupMigrations } from "./lib/migrate";
 
 const rawPort = process.env["PORT"];
 
@@ -16,13 +17,20 @@ if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
 }
 
-app.listen(port, (err) => {
-  if (err) {
-    logger.error({ err }, "Error listening on port");
+runStartupMigrations()
+  .then(() => {
+    app.listen(port, (err) => {
+      if (err) {
+        logger.error({ err }, "Error listening on port");
+        process.exit(1);
+      }
+
+      logger.info({ port }, "Server listening");
+
+      seedIfEmpty().catch((e) => logger.error({ err: e }, "Seed error"));
+    });
+  })
+  .catch((err) => {
+    logger.error({ err }, "Startup migration failed — server will not start");
     process.exit(1);
-  }
-
-  logger.info({ port }, "Server listening");
-
-  seedIfEmpty().catch((e) => logger.error({ err: e }, "Seed error"));
-});
+  });
