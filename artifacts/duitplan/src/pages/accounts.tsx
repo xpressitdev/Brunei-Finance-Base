@@ -169,6 +169,11 @@ export default function Accounts() {
 
   const totalBalance = accounts.reduce((s, a) => s + parseFloat(a.balance ?? "0"), 0);
 
+  function safeBalance(raw: string): string {
+    const n = parseFloat(raw);
+    return isNaN(n) ? "0.00" : n.toFixed(2);
+  }
+
   async function handleCreate(form: FormState) {
     setSaving(true);
     try {
@@ -177,7 +182,7 @@ export default function Accounts() {
           name: form.name.trim(),
           type: form.type,
           bankName: form.bankName || null,
-          balance: parseFloat(form.balance).toFixed(2),
+          balance: safeBalance(form.balance),
         },
       });
       await invalidate();
@@ -197,7 +202,7 @@ export default function Accounts() {
           name: form.name.trim(),
           type: form.type,
           bankName: form.bankName || null,
-          balance: parseFloat(form.balance).toFixed(2),
+          balance: safeBalance(form.balance),
         },
       });
       await invalidate();
