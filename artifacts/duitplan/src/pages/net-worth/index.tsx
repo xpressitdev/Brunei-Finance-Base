@@ -231,7 +231,9 @@ export default function NetWorth() {
       category: asset.category as AssetCategory,
       name: asset.name,
       value: asset.value,
-      month: asset.month,
+      // Always edit in the context of the currently viewed month so changes
+      // are saved as a new snapshot for that month, not overwriting history.
+      month: selectedMonth,
     });
     setDialogOpen(true);
   };
@@ -243,15 +245,34 @@ export default function NetWorth() {
     if (!/^\d{4}-\d{2}$/.test(form.month)) return;
 
     if (editingId) {
-      await updateMutation.mutateAsync({
-        id: editingId,
-        data: {
-          category: form.category,
-          name: form.name.trim(),
-          value: val.toFixed(2),
-          month: form.month,
-        },
-      });
+      // Check if the asset record already belongs to this month (exact match).
+      // If it's a carried-forward entry from an older month, save a new record
+      // for selectedMonth instead of overwriting the historical entry.
+      const existingAsset = assets.find(a => a.id === editingId);
+      const isCarriedForward = existingAsset && existingAsset.month !== selectedMonth;
+
+      if (isCarriedForward) {
+        // Create a new entry for the currently viewed month
+        await createMutation.mutateAsync({
+          data: {
+            category: form.category,
+            name: form.name.trim(),
+            value: val.toFixed(2),
+            month: selectedMonth,
+          },
+        });
+      } else {
+        // Update the existing record in place (it belongs to this month)
+        await updateMutation.mutateAsync({
+          id: editingId,
+          data: {
+            category: form.category,
+            name: form.name.trim(),
+            value: val.toFixed(2),
+            month: form.month,
+          },
+        });
+      }
     } else {
       await createMutation.mutateAsync({
         data: {

@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, and } from "drizzle-orm";
+import { eq, and, lte, sql } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
 import { db, assetEntriesTable } from "@workspace/db";
 import { CreateAssetBody, UpdateAssetBody, ListAssetsQueryParams } from "@workspace/api-zod";
@@ -26,15 +26,26 @@ router.get("/assets", requireAuth, async (req: AuthenticatedRequest, res): Promi
   const qp = ListAssetsQueryParams.safeParse(req.query);
   if (!qp.success) { res.status(400).json({ error: qp.error.message }); return; }
 
-  const conditions = [eq(assetEntriesTable.userId, req.userId!)];
   if (qp.data.month) {
+    // Carry-forward: for the given month, return the most recent entry for each
+    // (name, category) pair that exists up to and including that month.
+    // This makes assets persistent — once entered they remain visible in future months.
     if (!MONTH_RE.test(qp.data.month)) {
       res.status(400).json({ error: "month must be in YYYY-MM format" }); return;
     }
-    conditions.push(eq(assetEntriesTable.month, qp.data.month));
+    const rows = await db.execute(sql`
+      SELECT DISTINCT ON (name, category) *
+      FROM asset_entries
+      WHERE user_id = ${req.userId} AND month <= ${qp.data.month}
+      ORDER BY name, category, month DESC
+    `);
+    res.json((rows.rows as typeof assetEntriesTable.$inferSelect[]).map(formatAsset));
+    return;
   }
 
-  const entries = await db.select().from(assetEntriesTable).where(and(...conditions));
+  // No month filter — return all entries for this user
+  const entries = await db.select().from(assetEntriesTable)
+    .where(eq(assetEntriesTable.userId, req.userId!));
   res.json(entries.map(formatAsset));
 });
 
