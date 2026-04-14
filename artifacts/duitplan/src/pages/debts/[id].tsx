@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { useParams, Link } from "wouter";
+import { useParams, Link, useLocation } from "wouter";
 import { useListDebts, useDeleteDebt } from "@workspace/api-client-react";
+import { isTrialExpiredError } from "@/lib/trialExpired";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -70,6 +71,7 @@ function mergeCurves(
 
 export default function DebtDetail() {
   const { id } = useParams<{ id: string }>();
+  const [, setLocation] = useLocation();
   const { data: debts, isLoading } = useListDebts();
   const deleteMutation = useDeleteDebt();
 
@@ -126,8 +128,12 @@ export default function DebtDetail() {
 
   const handleDelete = async () => {
     if (confirm("Are you sure you want to delete this debt?")) {
-      await deleteMutation.mutateAsync({ id: id! });
-      window.location.href = "/debts";
+      try {
+        await deleteMutation.mutateAsync({ id: id! });
+        setLocation("/debts");
+      } catch (err) {
+        if (isTrialExpiredError(err)) setLocation("/premium");
+      }
     }
   };
 

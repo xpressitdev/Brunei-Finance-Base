@@ -11,6 +11,7 @@ import {
   SimulateDebtPayoffParams,
 } from "@workspace/api-zod";
 import { requireAuth, type AuthenticatedRequest } from "../lib/auth";
+import { requireAccess } from "../lib/access";
 
 const router: IRouter = Router();
 
@@ -36,7 +37,7 @@ router.get("/debts", requireAuth, async (req: AuthenticatedRequest, res): Promis
   res.json(debts.map(formatDebt));
 });
 
-router.post("/debts", requireAuth, async (req: AuthenticatedRequest, res): Promise<void> => {
+router.post("/debts", requireAuth, requireAccess, async (req: AuthenticatedRequest, res): Promise<void> => {
   const parsed = CreateDebtBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
 
@@ -54,7 +55,7 @@ router.post("/debts", requireAuth, async (req: AuthenticatedRequest, res): Promi
   res.status(201).json(formatDebt(debt));
 });
 
-router.patch("/debts/:id", requireAuth, async (req: AuthenticatedRequest, res): Promise<void> => {
+router.patch("/debts/:id", requireAuth, requireAccess, async (req: AuthenticatedRequest, res): Promise<void> => {
   const params = UpdateDebtParams.safeParse(req.params);
   if (!params.success) { res.status(400).json({ error: params.error.message }); return; }
   const body = UpdateDebtBody.safeParse(req.body);
@@ -76,7 +77,7 @@ router.patch("/debts/:id", requireAuth, async (req: AuthenticatedRequest, res): 
   res.json(formatDebt(updated));
 });
 
-router.delete("/debts/:id", requireAuth, async (req: AuthenticatedRequest, res): Promise<void> => {
+router.delete("/debts/:id", requireAuth, requireAccess, async (req: AuthenticatedRequest, res): Promise<void> => {
   const params = DeleteDebtParams.safeParse(req.params);
   if (!params.success) { res.status(400).json({ error: params.error.message }); return; }
   await db.delete(debtsTable).where(and(eq(debtsTable.id, params.data.id), eq(debtsTable.userId, req.userId!)));

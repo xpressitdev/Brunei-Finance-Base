@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLocation } from "wouter";
 import { format } from "date-fns";
 import { 
   useListTransactions, 
@@ -25,12 +26,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Trash2, Plus, Search, Receipt, Wallet as WalletIcon } from "lucide-react";
+import { TrialExpiredPrompt } from "@/components/subscription/TrialExpiredPrompt";
+import { isTrialExpiredError } from "@/lib/trialExpired";
 
 export default function Transactions() {
   const currentMonth = format(new Date(), "yyyy-MM");
+  const [, setLocation] = useLocation();
   const [month, setMonth] = useState(currentMonth);
   const [search, setSearch] = useState("");
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [trialExpiredError, setTrialExpiredError] = useState(false);
 
   const { data: transactions, isLoading, refetch } = useListTransactions({ month, search });
   const { data: categories } = useListCategories();
@@ -48,31 +53,42 @@ export default function Transactions() {
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
-    await createMutation.mutateAsync({
-      data: {
-        date: new Date(formData.date).toISOString(),
-        amount: formData.amount,
-        type: formData.type,
-        description: formData.description,
-        categoryId: formData.categoryId === "none" ? undefined : formData.categoryId,
-        source: "manual"
+    setTrialExpiredError(false);
+    try {
+      await createMutation.mutateAsync({
+        data: {
+          date: new Date(formData.date).toISOString(),
+          amount: formData.amount,
+          type: formData.type,
+          description: formData.description,
+          categoryId: formData.categoryId === "none" ? undefined : formData.categoryId,
+          source: "manual"
+        }
+      });
+      setIsAddOpen(false);
+      refetch();
+      setFormData({
+        date: format(new Date(), "yyyy-MM-dd"),
+        amount: "",
+        type: "debit",
+        description: "",
+        categoryId: "none",
+      });
+    } catch (err) {
+      if (isTrialExpiredError(err)) {
+        setTrialExpiredError(true);
       }
-    });
-    setIsAddOpen(false);
-    refetch();
-    setFormData({
-      date: format(new Date(), "yyyy-MM-dd"),
-      amount: "",
-      type: "debit",
-      description: "",
-      categoryId: "none",
-    });
+    }
   };
 
   const handleDelete = async (id: string) => {
     if (confirm("Are you sure you want to delete this transaction?")) {
-      await deleteMutation.mutateAsync({ id });
-      refetch();
+      try {
+        await deleteMutation.mutateAsync({ id });
+        refetch();
+      } catch (err) {
+        if (isTrialExpiredError(err)) setLocation("/premium");
+      }
     }
   };
 
@@ -84,7 +100,7 @@ export default function Transactions() {
           <p className="text-muted-foreground">Manage your income and expenses.</p>
         </div>
         
-        <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
+        <Dialog open={isAddOpen} onOpenChange={(open) => { setIsAddOpen(open); if (!open) setTrialExpiredError(false); }}>
           <DialogTrigger asChild>
             <Button><Plus className="w-4 h-4 mr-2" /> Add Transaction</Button>
           </DialogTrigger>
@@ -93,6 +109,9 @@ export default function Transactions() {
               <DialogTitle>Add Transaction</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleAdd} className="space-y-4">
+              {trialExpiredError && (
+                <TrialExpiredPrompt action="add transactions" />
+              )}
               <div className="space-y-2">
                 <Label>Date</Label>
                 <Input 

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import {
   useListDebts,
   useCreateDebt,
@@ -18,6 +18,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Wallet, Plus, ArrowRight, Pencil } from "lucide-react";
+import { TrialExpiredPrompt } from "@/components/subscription/TrialExpiredPrompt";
+import { isTrialExpiredError } from "@/lib/trialExpired";
 import {
   AreaChart,
   Area,
@@ -100,21 +102,28 @@ export default function Debts() {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingDebt, setEditingDebt] = useState<Debt | null>(null);
   const [formData, setFormData] = useState(EMPTY_FORM);
+  const [trialExpiredError, setTrialExpiredError] = useState(false);
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
-    await createMutation.mutateAsync({
-      data: {
-        lender: formData.lender,
-        debtType: formData.debtType,
-        outstandingBalance: formData.outstandingBalance,
-        monthlyPayment: formData.monthlyPayment,
-        interestRate: formData.interestRate || undefined,
-        startDate: formData.startDate || undefined,
-      },
-    });
-    setIsAddOpen(false);
-    refetch();
+    try {
+      await createMutation.mutateAsync({
+        data: {
+          lender: formData.lender,
+          debtType: formData.debtType,
+          outstandingBalance: formData.outstandingBalance,
+          monthlyPayment: formData.monthlyPayment,
+          interestRate: formData.interestRate || undefined,
+          startDate: formData.startDate || undefined,
+        },
+      });
+      setIsAddOpen(false);
+      refetch();
+    } catch (err) {
+      if (isTrialExpiredError(err)) {
+        setTrialExpiredError(true);
+      }
+    }
     setFormData(EMPTY_FORM);
   };
 
@@ -133,20 +142,26 @@ export default function Debts() {
   const handleEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingDebt) return;
-    await updateMutation.mutateAsync({
-      id: editingDebt.id,
-      data: {
-        lender: formData.lender,
-        debtType: formData.debtType,
-        outstandingBalance: formData.outstandingBalance,
-        monthlyPayment: formData.monthlyPayment,
-        interestRate: formData.interestRate || null,
-        startDate: formData.startDate || null,
-      },
-    });
-    setEditingDebt(null);
-    refetch();
-    setFormData(EMPTY_FORM);
+    try {
+      await updateMutation.mutateAsync({
+        id: editingDebt.id,
+        data: {
+          lender: formData.lender,
+          debtType: formData.debtType,
+          outstandingBalance: formData.outstandingBalance,
+          monthlyPayment: formData.monthlyPayment,
+          interestRate: formData.interestRate || null,
+          startDate: formData.startDate || null,
+        },
+      });
+      setEditingDebt(null);
+      refetch();
+      setFormData(EMPTY_FORM);
+    } catch (err) {
+      if (isTrialExpiredError(err)) {
+        setTrialExpiredError(true);
+      }
+    }
   };
 
   const totalBalance =
@@ -158,6 +173,9 @@ export default function Debts() {
 
   const debtForm = (onSubmit: (e: React.FormEvent) => void, isPending: boolean) => (
     <form onSubmit={onSubmit} className="space-y-4">
+      {trialExpiredError && (
+        <TrialExpiredPrompt action="manage debts" />
+      )}
       <div className="space-y-2">
         <Label>Lender / Bank Name</Label>
         <Input
@@ -225,7 +243,7 @@ export default function Debts() {
           <p className="text-muted-foreground">Track your loans and plan payoffs.</p>
         </div>
 
-        <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
+        <Dialog open={isAddOpen} onOpenChange={(open) => { setIsAddOpen(open); if (!open) setTrialExpiredError(false); }}>
           <DialogTrigger asChild>
             <Button>
               <Plus className="w-4 h-4 mr-2" /> Add Debt
@@ -243,7 +261,7 @@ export default function Debts() {
       <Dialog
         open={!!editingDebt}
         onOpenChange={(open) => {
-          if (!open) { setEditingDebt(null); setFormData(EMPTY_FORM); }
+          if (!open) { setEditingDebt(null); setFormData(EMPTY_FORM); setTrialExpiredError(false); }
         }}
       >
         <DialogContent>

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLocation } from "wouter";
 import { useListCommitments, useCreateCommitment, useDeleteCommitment } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,13 +12,17 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Trash2, Plus, CalendarDays } from "lucide-react";
+import { TrialExpiredPrompt } from "@/components/subscription/TrialExpiredPrompt";
+import { isTrialExpiredError } from "@/lib/trialExpired";
 
 export default function Commitments() {
+  const [, setLocation] = useLocation();
   const { data: commitments, isLoading, refetch } = useListCommitments();
   const createMutation = useCreateCommitment();
   const deleteMutation = useDeleteCommitment();
   
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [trialExpiredError, setTrialExpiredError] = useState(false);
   const [formData, setFormData] = useState({
     label: "",
     amount: "",
@@ -26,23 +31,33 @@ export default function Commitments() {
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
-    await createMutation.mutateAsync({
-      data: {
-        label: formData.label,
-        amount: formData.amount,
-        dueDay: formData.dueDay ? parseInt(formData.dueDay, 10) : undefined,
-        recurrence: "monthly"
+    try {
+      await createMutation.mutateAsync({
+        data: {
+          label: formData.label,
+          amount: formData.amount,
+          dueDay: formData.dueDay ? parseInt(formData.dueDay, 10) : undefined,
+          recurrence: "monthly"
+        }
+      });
+      setIsAddOpen(false);
+      refetch();
+      setFormData({ label: "", amount: "", dueDay: "" });
+    } catch (err) {
+      if (isTrialExpiredError(err)) {
+        setTrialExpiredError(true);
       }
-    });
-    setIsAddOpen(false);
-    refetch();
-    setFormData({ label: "", amount: "", dueDay: "" });
+    }
   };
 
   const handleDelete = async (id: string) => {
     if (confirm("Are you sure?")) {
-      await deleteMutation.mutateAsync({ id });
-      refetch();
+      try {
+        await deleteMutation.mutateAsync({ id });
+        refetch();
+      } catch (err) {
+        if (isTrialExpiredError(err)) setLocation("/premium");
+      }
     }
   };
 
@@ -58,7 +73,7 @@ export default function Commitments() {
           <p className="text-muted-foreground">Fixed monthly expenses you can't avoid.</p>
         </div>
         
-        <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
+        <Dialog open={isAddOpen} onOpenChange={(open) => { setIsAddOpen(open); if (!open) setTrialExpiredError(false); }}>
           <DialogTrigger asChild>
             <Button><Plus className="w-4 h-4 mr-2" /> Add Commitment</Button>
           </DialogTrigger>
@@ -67,6 +82,9 @@ export default function Commitments() {
               <DialogTitle>Add Monthly Commitment</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleAdd} className="space-y-4">
+              {trialExpiredError && (
+                <TrialExpiredPrompt action="add commitments" />
+              )}
               <div className="space-y-2">
                 <Label>Label</Label>
                 <Input 

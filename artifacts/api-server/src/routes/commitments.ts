@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from "uuid";
 import { db, commitmentsTable } from "@workspace/db";
 import { CreateCommitmentBody, UpdateCommitmentBody, UpdateCommitmentParams, DeleteCommitmentParams } from "@workspace/api-zod";
 import { requireAuth, type AuthenticatedRequest } from "../lib/auth";
+import { requireAccess } from "../lib/access";
 
 const router: IRouter = Router();
 
@@ -25,7 +26,7 @@ router.get("/commitments", requireAuth, async (req: AuthenticatedRequest, res): 
   res.json(items.map(formatCommitment));
 });
 
-router.post("/commitments", requireAuth, async (req: AuthenticatedRequest, res): Promise<void> => {
+router.post("/commitments", requireAuth, requireAccess, async (req: AuthenticatedRequest, res): Promise<void> => {
   const parsed = CreateCommitmentBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
   const [item] = await db.insert(commitmentsTable).values({
@@ -39,7 +40,7 @@ router.post("/commitments", requireAuth, async (req: AuthenticatedRequest, res):
   res.status(201).json(formatCommitment(item));
 });
 
-router.patch("/commitments/:id", requireAuth, async (req: AuthenticatedRequest, res): Promise<void> => {
+router.patch("/commitments/:id", requireAuth, requireAccess, async (req: AuthenticatedRequest, res): Promise<void> => {
   const params = UpdateCommitmentParams.safeParse(req.params);
   if (!params.success) { res.status(400).json({ error: params.error.message }); return; }
   const body = UpdateCommitmentBody.safeParse(req.body);
@@ -58,7 +59,7 @@ router.patch("/commitments/:id", requireAuth, async (req: AuthenticatedRequest, 
   res.json(formatCommitment(updated));
 });
 
-router.delete("/commitments/:id", requireAuth, async (req: AuthenticatedRequest, res): Promise<void> => {
+router.delete("/commitments/:id", requireAuth, requireAccess, async (req: AuthenticatedRequest, res): Promise<void> => {
   const params = DeleteCommitmentParams.safeParse(req.params);
   if (!params.success) { res.status(400).json({ error: params.error.message }); return; }
   await db.delete(commitmentsTable).where(and(eq(commitmentsTable.id, params.data.id), eq(commitmentsTable.userId, req.userId!)));

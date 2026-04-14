@@ -6,10 +6,13 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, Check, X, AlertCircle } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
+import { TrialExpiredPrompt } from "@/components/subscription/TrialExpiredPrompt";
+import { isTrialExpiredError } from "@/lib/trialExpired";
 
 export default function ReviewImport() {
   const { id } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
+  const [trialExpiredError, setTrialExpiredError] = useState(false);
   
   const { data: rows, isLoading } = useGetImportedRows(id!);
   const { data: categories } = useListCategories();
@@ -55,13 +58,16 @@ export default function ReviewImport() {
       skip: data.skip
     }));
 
+    setTrialExpiredError(false);
     try {
       await confirmMutation.mutateAsync({
         data: { rows: payloadRows }
       });
       setLocation("/transactions");
-    } catch (e) {
-      console.error(e);
+    } catch (err) {
+      if (isTrialExpiredError(err)) {
+        setTrialExpiredError(true);
+      }
     }
   };
 
@@ -86,6 +92,10 @@ export default function ReviewImport() {
           </Button>
         </div>
       </div>
+
+      {trialExpiredError && (
+        <TrialExpiredPrompt action="confirm import" />
+      )}
 
       {errorRows.length > 0 && (
         <Card className="border-destructive/50 bg-destructive/5">

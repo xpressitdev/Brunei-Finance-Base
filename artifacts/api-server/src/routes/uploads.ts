@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from "uuid";
 import { db, uploadedDocumentsTable, importedTransactionRowsTable, transactionsTable, categoriesTable } from "@workspace/db";
 import { GetImportedRowsParams, ConfirmImportParams, ConfirmImportBody } from "@workspace/api-zod";
 import { requireAuth, type AuthenticatedRequest } from "../lib/auth";
+import { requireAccess } from "../lib/access";
 
 const router: IRouter = Router();
 
@@ -40,7 +41,7 @@ function mockParseStatement(bankType: string, fileName: string): Array<{
   return rows;
 }
 
-router.post("/uploads", requireAuth, async (req: AuthenticatedRequest, res): Promise<void> => {
+router.post("/uploads", requireAuth, requireAccess, async (req: AuthenticatedRequest, res): Promise<void> => {
   const { bankType, inputMethod } = req.body as { bankType?: string; inputMethod?: string };
   if (!bankType || !["bibd", "baiduri"].includes(bankType)) {
     res.status(400).json({ error: "bankType must be 'bibd' or 'baiduri'" });
@@ -116,7 +117,7 @@ router.get("/uploads/:id/rows", requireAuth, async (req: AuthenticatedRequest, r
   })));
 });
 
-router.post("/uploads/:id/confirm", requireAuth, async (req: AuthenticatedRequest, res): Promise<void> => {
+router.post("/uploads/:id/confirm", requireAuth, requireAccess, async (req: AuthenticatedRequest, res): Promise<void> => {
   const params = ConfirmImportParams.safeParse(req.params);
   if (!params.success) { res.status(400).json({ error: params.error.message }); return; }
   const body = ConfirmImportBody.safeParse(req.body);

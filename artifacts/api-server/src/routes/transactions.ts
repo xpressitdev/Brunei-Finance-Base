@@ -11,6 +11,7 @@ import {
   ListTransactionsQueryParams,
 } from "@workspace/api-zod";
 import { requireAuth, type AuthenticatedRequest } from "../lib/auth";
+import { requireAccess } from "../lib/access";
 
 const router: IRouter = Router();
 
@@ -61,7 +62,7 @@ router.get("/transactions", requireAuth, async (req: AuthenticatedRequest, res):
   res.json(result);
 });
 
-router.post("/transactions", requireAuth, async (req: AuthenticatedRequest, res): Promise<void> => {
+router.post("/transactions", requireAuth, requireAccess, async (req: AuthenticatedRequest, res): Promise<void> => {
   const parsed = CreateTransactionBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
 
@@ -92,7 +93,7 @@ router.get("/transactions/:id", requireAuth, async (req: AuthenticatedRequest, r
   res.json(await formatTransaction(txn));
 });
 
-router.patch("/transactions/:id", requireAuth, async (req: AuthenticatedRequest, res): Promise<void> => {
+router.patch("/transactions/:id", requireAuth, requireAccess, async (req: AuthenticatedRequest, res): Promise<void> => {
   const params = UpdateTransactionParams.safeParse(req.params);
   if (!params.success) { res.status(400).json({ error: params.error.message }); return; }
   const body = UpdateTransactionBody.safeParse(req.body);
@@ -115,7 +116,7 @@ router.patch("/transactions/:id", requireAuth, async (req: AuthenticatedRequest,
   res.json(await formatTransaction(updated));
 });
 
-router.delete("/transactions/:id", requireAuth, async (req: AuthenticatedRequest, res): Promise<void> => {
+router.delete("/transactions/:id", requireAuth, requireAccess, async (req: AuthenticatedRequest, res): Promise<void> => {
   const params = DeleteTransactionParams.safeParse(req.params);
   if (!params.success) { res.status(400).json({ error: params.error.message }); return; }
   await db.delete(transactionsTable).where(and(eq(transactionsTable.id, params.data.id), eq(transactionsTable.userId, req.userId!)));

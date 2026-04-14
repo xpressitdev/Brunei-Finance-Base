@@ -31,22 +31,17 @@ const CATEGORIES = [
 
 const PLANS = [
   {
-    id: "9bae83c8-878b-40ad-bfcc-5b1fbcbc5fa9",
-    name: "Free",
-    price: "0.00",
-    billingInterval: "monthly",
-    features: ["Up to 50 transactions/month", "Basic budgeting", "1 account"],
-  },
-  {
     id: "965eca59-2f7a-415f-b9b7-2588ec9cfb2c",
-    name: "Premium",
-    price: "9.90",
+    name: "DuitPlan",
+    price: "10.00",
     billingInterval: "monthly",
     features: [
       "Unlimited transactions",
       "PDF & screenshot import",
-      "Debt scenarios",
-      "AI insights",
+      "Debt scenarios & payoff simulator",
+      "AI-driven financial insights",
+      "Budget tracking & commitments",
+      "Goals & net worth tracking",
       "Priority support",
     ],
   },

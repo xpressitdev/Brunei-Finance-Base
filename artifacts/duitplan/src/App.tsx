@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/lib/auth";
+import { SubscriptionProvider } from "@/lib/subscription";
 import { AppLayout } from "@/components/layout/AppLayout";
 
 // Pages
@@ -26,6 +27,8 @@ import Goals from "@/pages/goals";
 import NetWorth from "@/pages/net-worth";
 import Expenses from "@/pages/expenses";
 import AccountsPage from "@/pages/accounts";
+import SubscriptionSuccess from "@/pages/subscription/success";
+import SubscriptionFailed from "@/pages/subscription/failed";
 import NotFound from "@/pages/not-found";
 
 function ProtectedRoute({ component: Component, ...rest }: any) {
@@ -43,6 +46,21 @@ function ProtectedRoute({ component: Component, ...rest }: any) {
   );
 }
 
+function SubscriptionCallbackRoute({ component: Component, path }: { component: React.ComponentType; path: string }) {
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) return <div className="min-h-screen bg-background" />;
+  if (!user) return null;
+
+  return (
+    <Route path={path}>
+      <SubscriptionProvider>
+        <Component />
+      </SubscriptionProvider>
+    </Route>
+  );
+}
+
 function Router() {
   return (
     <Switch>
@@ -51,6 +69,10 @@ function Router() {
       <Route path="/register" component={Register} />
       <Route path="/onboarding" component={Onboarding} />
       
+      {/* Payment return pages */}
+      <SubscriptionCallbackRoute path="/subscription/success" component={SubscriptionSuccess} />
+      <SubscriptionCallbackRoute path="/subscription/failed" component={SubscriptionFailed} />
+
       {/* Protected Routes inside AppLayout */}
       <ProtectedRoute path="/dashboard" component={Dashboard} />
       <ProtectedRoute path="/transactions" component={Transactions} />

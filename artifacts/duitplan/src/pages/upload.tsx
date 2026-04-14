@@ -9,6 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Upload as UploadIcon, FileText, Image, AlertCircle, CheckCircle2, X, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { TrialExpiredPrompt } from "@/components/subscription/TrialExpiredPrompt";
+import { isTrialExpiredError } from "@/lib/trialExpired";
 
 export default function Upload() {
   const [tab, setTab] = useState<"pdf" | "screenshot">("screenshot");
@@ -16,6 +18,7 @@ export default function Upload() {
   const [screenshots, setScreenshots] = useState<File[]>([]);
   const [bankType, setBankType] = useState<string>("bibd");
   const [error, setError] = useState<string>("");
+  const [trialExpiredError, setTrialExpiredError] = useState(false);
   const [, setLocation] = useLocation();
   const screenshotInputRef = useRef<HTMLInputElement>(null);
 
@@ -47,17 +50,18 @@ export default function Upload() {
       return;
     }
 
+    setTrialExpiredError(false);
     try {
       const result = await uploadMutation.mutateAsync({
-        data: {
-          file: uploadFile,
-          bankType,
-          ...(tab === "screenshot" ? { inputMethod: "screenshot" } : {}),
-        } as any
+        data: { file: uploadFile, bankType },
       });
       setLocation(`/upload/${result.id}/review`);
-    } catch (e: any) {
-      setError(e?.error || "Upload failed. Please try again.");
+    } catch (err) {
+      if (isTrialExpiredError(err)) {
+        setTrialExpiredError(true);
+      } else {
+        setError("Upload failed. Please try again.");
+      }
     }
   };
 
@@ -77,6 +81,10 @@ export default function Upload() {
           Upload your bank statement PDF or share screenshots from your mobile banking app.
         </p>
       </div>
+
+      {trialExpiredError && (
+        <TrialExpiredPrompt action="import transactions" />
+      )}
 
       {error && (
         <Alert variant="destructive">

@@ -26,6 +26,8 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { TrialExpiredPrompt } from "@/components/subscription/TrialExpiredPrompt";
+import { isTrialExpiredError } from "@/lib/trialExpired";
 
 function fmt(n: number) {
   return "BND " + n.toLocaleString("en-BN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -322,12 +324,20 @@ export default function Budgets() {
   const totalAccountBalance = accounts.reduce((s, a) => s + parseFloat(a.balance ?? "0"), 0);
   const readyToAssign = totalAccountBalance - totalCommitments - totalPlanned;
 
+  const [trialExpiredError, setTrialExpiredError] = useState(false);
+
   const handleSave = async (categoryId: string) => {
     const val = editing[categoryId];
     if (val === undefined) return;
-    await upsert.mutateAsync({ data: { categoryId, month, plannedAmount: parseFloat(val).toFixed(2) } });
-    setEditing(prev => { const n = { ...prev }; delete n[categoryId]; return n; });
-    refetch();
+    try {
+      await upsert.mutateAsync({ data: { categoryId, month, plannedAmount: parseFloat(val).toFixed(2) } });
+      setEditing(prev => { const n = { ...prev }; delete n[categoryId]; return n; });
+      refetch();
+    } catch (err) {
+      if (isTrialExpiredError(err)) {
+        setTrialExpiredError(true);
+      }
+    }
   };
 
   return (
@@ -361,6 +371,10 @@ export default function Budgets() {
           </div>
         )}
       </div>
+
+      {trialExpiredError && (
+        <TrialExpiredPrompt action="set budgets" />
+      )}
 
       {/* View toggle */}
       <div className="flex gap-2 flex-wrap">

@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback } from "react";
+import { useLocation } from "wouter";
 import { format, startOfMonth, endOfMonth, isToday, parseISO } from "date-fns";
 import {
   useListTransactions,
@@ -54,6 +55,8 @@ import {
   CheckCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { TrialExpiredPrompt } from "@/components/subscription/TrialExpiredPrompt";
+import { isTrialExpiredError } from "@/lib/trialExpired";
 
 function fmt(n: number) {
   return "BND " + n.toLocaleString("en-BN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -139,6 +142,8 @@ export default function Expenses() {
   const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
   const [isScanningReceipt, setIsScanningReceipt] = useState(false);
   const [scanSuccess, setScanSuccess] = useState(false);
+  const [trialExpiredError, setTrialExpiredError] = useState(false);
+  const [, setLocation] = useLocation();
 
   const { data: transactions, refetch } = useListTransactions({ month: currentMonth });
   const { data: categories } = useListCategories();
@@ -180,6 +185,7 @@ export default function Expenses() {
     setForm({ ...defaultForm, date: format(new Date(), "yyyy-MM-dd"), ...prefill });
     setReceiptPreview(null);
     setScanSuccess(false);
+    setTrialExpiredError(false);
     setIsAddOpen(true);
   };
 
@@ -234,31 +240,43 @@ export default function Expenses() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.amount || !form.description) return;
+    setTrialExpiredError(false);
 
-    await createMutation.mutateAsync({
-      data: {
-        date: new Date(form.date).toISOString(),
-        amount: parseFloat(form.amount).toFixed(2),
-        type: form.type,
-        description: form.description,
-        merchant: form.merchant || undefined,
-        categoryId: form.categoryId === "none" ? undefined : form.categoryId,
-        receiptUrl: form.receiptUrl || undefined,
-        source: "manual",
-      },
-    });
-
-    refetch();
-    setIsAddOpen(false);
-    setReceiptPreview(null);
-    setForm(defaultForm);
-    toast({ title: "Expense added!" });
+    try {
+      await createMutation.mutateAsync({
+        data: {
+          date: new Date(form.date).toISOString(),
+          amount: parseFloat(form.amount).toFixed(2),
+          type: form.type,
+          description: form.description,
+          merchant: form.merchant || undefined,
+          categoryId: form.categoryId === "none" ? undefined : form.categoryId,
+          receiptUrl: form.receiptUrl || undefined,
+          source: "manual",
+        },
+      });
+      refetch();
+      setIsAddOpen(false);
+      setReceiptPreview(null);
+      setForm(defaultForm);
+      toast({ title: "Expense added!" });
+    } catch (err) {
+      if (isTrialExpiredError(err)) {
+        setTrialExpiredError(true);
+      } else {
+        toast({ title: "Failed to add expense", variant: "destructive" });
+      }
+    }
   };
 
   const handleDelete = async (id: string) => {
-    await deleteMutation.mutateAsync({ id });
-    refetch();
-    setDeleteId(null);
+    try {
+      await deleteMutation.mutateAsync({ id });
+      refetch();
+      setDeleteId(null);
+    } catch (err) {
+      if (isTrialExpiredError(err)) setLocation("/premium");
+    }
   };
 
   const monthLabel = format(new Date(currentMonth + "-01"), "MMMM yyyy");
@@ -412,6 +430,9 @@ export default function Expenses() {
           </DialogHeader>
 
           <form onSubmit={handleSubmit} className="space-y-4 mt-2">
+            {trialExpiredError && (
+              <TrialExpiredPrompt action="add expenses" />
+            )}
             {/* Receipt scan section */}
             <div className="rounded-xl border-2 border-dashed border-muted-foreground/20 p-3 text-center space-y-2">
               {isScanningReceipt ? (

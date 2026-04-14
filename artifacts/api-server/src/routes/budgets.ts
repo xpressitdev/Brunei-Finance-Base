@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from "uuid";
 import { db, monthlyBudgetsTable, categoriesTable, transactionsTable } from "@workspace/db";
 import { UpsertBudgetBody, ListBudgetsQueryParams } from "@workspace/api-zod";
 import { requireAuth, type AuthenticatedRequest } from "../lib/auth";
+import { requireAccess } from "../lib/access";
 
 const router: IRouter = Router();
 
@@ -45,7 +46,7 @@ router.get("/budgets", requireAuth, async (req: AuthenticatedRequest, res): Prom
   res.json(result);
 });
 
-router.post("/budgets", requireAuth, async (req: AuthenticatedRequest, res): Promise<void> => {
+router.post("/budgets", requireAuth, requireAccess, async (req: AuthenticatedRequest, res): Promise<void> => {
   const parsed = UpsertBudgetBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
 

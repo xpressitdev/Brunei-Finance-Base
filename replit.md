@@ -59,8 +59,8 @@ Tables in `lib/db/src/schema/`:
 - `imported_transaction_rows` — parsed rows awaiting review
 - `merchant_rules` — auto-categorization rules
 - `insights` — generated financial observations
-- `subscription_plans` — Free + Premium plans (seeded)
-- `user_subscriptions` — user subscription records
+- `subscription_plans` — Single "DuitPlan" plan at BND 10/month (seeded)
+- `user_subscriptions` — user subscription records (status, nextBillingDate, pocketOrderId)
 
 ## API Routes
 
@@ -77,7 +77,10 @@ All routes under `/api`:
 - `/insights` — list + generate (rules-based)
 - `/dashboard/summary`, `/dashboard/spending-by-category`, `/dashboard/recent-transactions`
 - `/uploads` — PDF upload + row review + confirm import
-- `/subscription/plans`, `/subscription/current`
+- `/subscription/current` — unified status: trial (with daysRemaining), active, or expired
+- `/subscription/checkout` — POST: initiates Pocket Pay session (BND 10/month)
+- `/subscription/callback` — POST: Pocket Pay payment callback (updates subscription)
+- `/subscription/activate-test` — POST: dev-only endpoint to activate subscription
 - `/goals` — CRUD (list, create, update, delete)
 - `/net-worth` — monthly snapshots (list ?year=, upsert POST, delete)
 - `/expenses` — Expense Tracker home page (frontend only, uses /transactions API)
@@ -104,12 +107,29 @@ All routes under `/api`:
 - **Phase 4**: Statement import — BIBD + Baiduri PDF parsers, review UI
 - **Phase 5**: Insights + premium gating
 
+## Monetization Model
+
+- **45-day free trial**: All new users get full access for 45 days from account creation (derived from `users.created_at + 45 days`). No credit card required.
+- **Post-trial**: BND 10/month subscription via Pocket Pay (home.pocket.com.bn) by ThreeG Media.
+- **Subscription states**: `trial` (days remaining shown), `active` (paid), `expired` (read-only).
+- **Feature gating**: Write routes (transactions, uploads, insights, debts, budgets, commitments) return 403 with `TRIAL_EXPIRED` code when expired.
+- **Trial banner**: Persistent top banner in app layout — neutral color >14 days, amber 7–14 days, red <7 days.
+- **Expired overlay**: Full-screen overlay blocks interaction, prompts subscribe.
+- **Premium page**: Single plan page (not Basic/Premium split) with Pocket Pay checkout button.
+- **Payment callbacks**: Pocket Pay callbacks at `/api/subscription/callback` update subscription status.
+- **Pocket Pay credentials**: Set `POCKET_MERCHANT_ID`, `POCKET_TERMINAL_ID`, `POCKET_API_KEY`, `POCKET_API_BASE`, `APP_BASE_URL` as environment variables once DuitPlan merchant account is registered.
+
 ## Environment Variables
 
 - `DATABASE_URL` — PostgreSQL connection string (auto-provisioned)
 - `SESSION_SECRET` — Session signing secret
 - `PORT` — Port for each service (auto-assigned)
 - `BASE_PATH` — Base path for frontend routing
+- `POCKET_MERCHANT_ID` — Pocket Pay merchant ID (swap in once account registered)
+- `POCKET_TERMINAL_ID` — Pocket Pay terminal ID
+- `POCKET_API_KEY` — Pocket Pay API key (used for HMAC callback validation)
+- `POCKET_API_BASE` — Pocket Pay API base URL (default: https://home.pocket.com.bn/api)
+- `APP_BASE_URL` — Public app URL for payment return URLs
 
 ## Design
 

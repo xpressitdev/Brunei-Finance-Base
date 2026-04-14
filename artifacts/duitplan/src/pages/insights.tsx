@@ -5,17 +5,27 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Lightbulb, Info, AlertTriangle, CheckCircle, Sparkles } from "lucide-react";
+import { TrialExpiredPrompt } from "@/components/subscription/TrialExpiredPrompt";
+import { isTrialExpiredError } from "@/lib/trialExpired";
 
 export default function Insights() {
   const currentMonth = format(new Date(), "yyyy-MM");
   const [month, setMonth] = useState(currentMonth);
+  const [trialExpiredError, setTrialExpiredError] = useState(false);
 
   const { data: insights, isLoading, refetch } = useListInsights({ month });
   const generateMutation = useGenerateInsights();
 
   const handleGenerate = async () => {
-    await generateMutation.mutateAsync({ data: { month } });
-    refetch();
+    setTrialExpiredError(false);
+    try {
+      await generateMutation.mutateAsync({ data: { month } });
+      refetch();
+    } catch (err) {
+      if (isTrialExpiredError(err)) {
+        setTrialExpiredError(true);
+      }
+    }
   };
 
   const getIcon = (severity: string) => {
@@ -47,6 +57,10 @@ export default function Insights() {
           </Button>
         </div>
       </div>
+
+      {trialExpiredError && (
+        <TrialExpiredPrompt action="generate insights" />
+      )}
 
       {isLoading ? (
         <div className="p-8 text-center text-muted-foreground">Analyzing your data...</div>

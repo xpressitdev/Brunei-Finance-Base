@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from "uuid";
 import { db, insightsTable, transactionsTable, categoriesTable, debtsTable, profilesTable, commitmentsTable } from "@workspace/db";
 import { GenerateInsightsBody, ListInsightsQueryParams } from "@workspace/api-zod";
 import { requireAuth, type AuthenticatedRequest } from "../lib/auth";
+import { requireAccess } from "../lib/access";
 
 const router: IRouter = Router();
 
@@ -25,7 +26,7 @@ router.get("/insights", requireAuth, async (req: AuthenticatedRequest, res): Pro
   })));
 });
 
-router.post("/insights/generate", requireAuth, async (req: AuthenticatedRequest, res): Promise<void> => {
+router.post("/insights/generate", requireAuth, requireAccess, async (req: AuthenticatedRequest, res): Promise<void> => {
   const parsed = GenerateInsightsBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
 

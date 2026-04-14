@@ -19,6 +19,8 @@ export const userSubscriptionsTable = pgTable("user_subscriptions", {
   status: text("status").notNull(),
   startDate: timestamp("start_date", { withTimezone: true }).notNull(),
   endDate: timestamp("end_date", { withTimezone: true }),
+  nextBillingDate: timestamp("next_billing_date", { withTimezone: true }),
+  pocketOrderId: text("pocket_order_id"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });
