@@ -213,7 +213,6 @@ export default function NetWorth() {
 
   const assets = currentAssets as AssetEntry[];
 
-  // ── Core calculations ──────────────────────────────────────────────────────
   const totalAssetEntries = assets.reduce((sum, a) => sum + parseFloat(a.value), 0);
   const totalAccountBalance = (accounts as Account[]).reduce(
     (sum, a) => sum + parseFloat(a.balance ?? "0"),
@@ -227,7 +226,6 @@ export default function NetWorth() {
   const netWorth = totalAssets - totalLiabilities;
   const netWorthPositive = netWorth >= 0;
 
-  // ── Asset breakdown by category ───────────────────────────────────────────
   const byCategory: Record<string, AssetEntry[]> = {};
   ASSET_CATEGORIES.forEach((c) => { byCategory[c] = []; });
   assets.forEach((a) => {
@@ -235,7 +233,6 @@ export default function NetWorth() {
     byCategory[a.category].push(a);
   });
 
-  // ── Charts ────────────────────────────────────────────────────────────────
   const comparisonData: ComparisonPayload[] = [
     { name: "Assets vs Liabilities", Assets: totalAssets, Liabilities: totalLiabilities },
   ];
@@ -247,7 +244,6 @@ export default function NetWorth() {
     return { month: MONTH_SHORT[parseInt(mo) - 1], value: total, fullMonth: m };
   });
 
-  // ── Handlers ──────────────────────────────────────────────────────────────
   const openCreate = () => {
     setEditingId(null);
     setForm(emptyForm(selectedMonth));
@@ -328,7 +324,6 @@ export default function NetWorth() {
         </div>
       </div>
 
-      {/* ── Hero: Net Worth Formula ───────────────────────────────────────── */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Total Assets */}
         <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-5">
@@ -372,7 +367,6 @@ export default function NetWorth() {
         </div>
       </div>
 
-      {/* ── Charts ───────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Assets vs Liabilities comparison chart */}
         <div className="bg-card border rounded-xl p-5">
@@ -416,7 +410,6 @@ export default function NetWorth() {
         </div>
       </div>
 
-      {/* ── Account Balances (read-only) ──────────────────────────────────── */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -459,7 +452,6 @@ export default function NetWorth() {
         </div>
       </div>
 
-      {/* ── Manual Asset Entries ──────────────────────────────────────────── */}
       <div className="space-y-4">
         <div className="flex items-center gap-2">
           <TrendingUp className="w-4 h-4 text-blue-600" />
@@ -524,7 +516,6 @@ export default function NetWorth() {
         )}
       </div>
 
-      {/* ── Liabilities (read-only) ───────────────────────────────────────── */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -571,7 +562,6 @@ export default function NetWorth() {
         </div>
       </div>
 
-      {/* ── Add/Edit Dialog ───────────────────────────────────────────────── */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
