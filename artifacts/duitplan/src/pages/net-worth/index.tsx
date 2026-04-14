@@ -9,6 +9,7 @@ import {
   useListDebts,
   listAssets,
 } from "@workspace/api-client-react";
+import type { Account, Debt } from "@workspace/api-client-react";
 import {
   BarChart,
   Bar,
@@ -21,6 +22,7 @@ import {
   Line,
   Legend,
 } from "recharts";
+import type { TooltipProps } from "recharts";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -51,9 +53,8 @@ import {
   Briefcase,
   Package,
   Building2,
-  CreditCard,
-  ArrowRight,
   TrendingDown,
+  ArrowRight,
 } from "lucide-react";
 import { Link } from "wouter";
 import { cn } from "@/lib/utils";
@@ -133,7 +134,7 @@ function getLast12Months(fromMonth: string): string[] {
   return months;
 }
 
-type Asset = {
+type AssetEntry = {
   id: string;
   userId: string;
   category: string;
@@ -155,24 +156,28 @@ function emptyForm(month: string): FormState {
   return { category: "Savings", name: "", value: "", month };
 }
 
-const ComparisonTooltip = ({ active, payload, label }: any) => {
+type ComparisonPayload = { name: string; Assets: number; Liabilities: number };
+
+const ComparisonTooltip = ({ active, payload, label }: TooltipProps<number, string>) => {
   if (!active || !payload || !payload.length) return null;
   return (
     <div className="bg-card border rounded-lg p-3 shadow-lg text-sm">
       <p className="font-semibold text-foreground mb-1">{label}</p>
-      {payload.map((p: any) => (
-        <p key={p.dataKey} style={{ color: p.fill }} className="font-bold">{p.name}: {fmt(p.value)}</p>
+      {payload.map((p) => (
+        <p key={p.dataKey as string} style={{ color: p.fill }} className="font-bold">
+          {p.name}: {fmt(p.value ?? 0)}
+        </p>
       ))}
     </div>
   );
 };
 
-const LineTooltip = ({ active, payload, label }: any) => {
+const LineTooltip = ({ active, payload, label }: TooltipProps<number, string>) => {
   if (!active || !payload || !payload.length) return null;
   return (
     <div className="bg-card border rounded-lg p-3 shadow-lg text-sm">
       <p className="font-semibold text-foreground mb-1">{label}</p>
-      <p className="text-primary font-bold">{fmt(payload[0].value)}</p>
+      <p className="text-primary font-bold">{fmt(payload[0].value ?? 0)}</p>
     </div>
   );
 };
@@ -206,18 +211,24 @@ export default function NetWorth() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(() => emptyForm(currentMonth()));
 
-  const assets = currentAssets as Asset[];
+  const assets = currentAssets as AssetEntry[];
 
   // ── Core calculations ──────────────────────────────────────────────────────
   const totalAssetEntries = assets.reduce((sum, a) => sum + parseFloat(a.value), 0);
-  const totalAccountBalance = accounts.reduce((sum, a) => sum + parseFloat(a.balance ?? "0"), 0);
+  const totalAccountBalance = (accounts as Account[]).reduce(
+    (sum, a) => sum + parseFloat(a.balance ?? "0"),
+    0
+  );
   const totalAssets = totalAssetEntries + totalAccountBalance;
-  const totalLiabilities = (debts as any[]).reduce((sum, d) => sum + parseFloat(d.outstandingBalance ?? "0"), 0);
+  const totalLiabilities = (debts as Debt[]).reduce(
+    (sum, d) => sum + parseFloat(d.outstandingBalance ?? "0"),
+    0
+  );
   const netWorth = totalAssets - totalLiabilities;
   const netWorthPositive = netWorth >= 0;
 
   // ── Asset breakdown by category ───────────────────────────────────────────
-  const byCategory: Record<string, Asset[]> = {};
+  const byCategory: Record<string, AssetEntry[]> = {};
   ASSET_CATEGORIES.forEach((c) => { byCategory[c] = []; });
   assets.forEach((a) => {
     if (!byCategory[a.category]) byCategory[a.category] = [];
@@ -225,12 +236,12 @@ export default function NetWorth() {
   });
 
   // ── Charts ────────────────────────────────────────────────────────────────
-  const comparisonData = [
+  const comparisonData: ComparisonPayload[] = [
     { name: "Assets vs Liabilities", Assets: totalAssets, Liabilities: totalLiabilities },
   ];
 
   const trendData = last12.map((m, i) => {
-    const monthAssets = ((trendResults[i]?.data as Asset[] | undefined) ?? []);
+    const monthAssets = ((trendResults[i]?.data as AssetEntry[] | undefined) ?? []);
     const total = monthAssets.reduce((s, a) => s + parseFloat(a.value), 0);
     const [, mo] = m.split("-");
     return { month: MONTH_SHORT[parseInt(mo) - 1], value: total, fullMonth: m };
@@ -243,7 +254,7 @@ export default function NetWorth() {
     setDialogOpen(true);
   };
 
-  const openEdit = (asset: Asset) => {
+  const openEdit = (asset: AssetEntry) => {
     setEditingId(asset.id);
     setForm({
       category: asset.category as AssetCategory,
@@ -261,7 +272,7 @@ export default function NetWorth() {
     if (!/^\d{4}-\d{2}$/.test(form.month)) return;
 
     if (editingId) {
-      const existingAsset = assets.find(a => a.id === editingId);
+      const existingAsset = assets.find((a) => a.id === editingId);
       const isCarriedForward = existingAsset && existingAsset.month !== selectedMonth;
 
       if (isCarriedForward) {
@@ -340,7 +351,7 @@ export default function NetWorth() {
           <p className="text-xs font-semibold text-red-700 uppercase tracking-wide mb-1">Total Liabilities</p>
           <p className="text-2xl font-bold text-red-800">{fmt(totalLiabilities)}</p>
           <div className="mt-2">
-            <p className="text-xs text-red-700">{(debts as any[]).length} debt{(debts as any[]).length !== 1 ? "s" : ""} outstanding</p>
+            <p className="text-xs text-red-700">{debts.length} debt{debts.length !== 1 ? "s" : ""} outstanding</p>
           </div>
         </div>
 
@@ -363,7 +374,7 @@ export default function NetWorth() {
 
       {/* ── Charts ───────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Assets vs Liabilities bar chart */}
+        {/* Assets vs Liabilities comparison chart */}
         <div className="bg-card border rounded-xl p-5">
           <h2 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide mb-4">
             Assets vs Liabilities
@@ -372,7 +383,7 @@ export default function NetWorth() {
             <BarChart data={comparisonData} margin={{ top: 4, right: 8, left: 0, bottom: 4 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
               <XAxis dataKey="name" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} tickFormatter={(v) => fmtCompact(v)} width={70} />
+              <YAxis tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} tickFormatter={(v: number) => fmtCompact(v)} width={70} />
               <Tooltip content={<ComparisonTooltip />} />
               <Legend wrapperStyle={{ fontSize: 12 }} />
               <Bar dataKey="Assets" name="Assets" fill="hsl(142, 71%, 45%)" radius={[4, 4, 0, 0]} />
@@ -396,7 +407,7 @@ export default function NetWorth() {
               <LineChart data={trendData} margin={{ top: 4, right: 8, left: 0, bottom: 4 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis dataKey="month" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} tickFormatter={(v) => fmtCompact(v)} width={70} />
+                <YAxis tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} tickFormatter={(v: number) => fmtCompact(v)} width={70} />
                 <Tooltip content={<LineTooltip />} />
                 <Line type="monotone" dataKey="value" stroke="hsl(var(--primary))" strokeWidth={2.5} dot={{ r: 3, fill: "hsl(var(--primary))", strokeWidth: 0 }} activeDot={{ r: 5 }} />
               </LineChart>
@@ -430,7 +441,7 @@ export default function NetWorth() {
             </div>
           ) : (
             <>
-              {(accounts as any[]).map((a) => (
+              {(accounts as Account[]).map((a) => (
                 <div key={a.id} className="flex items-center justify-between px-5 py-3 border-b last:border-0">
                   <div>
                     <span className="text-sm font-medium text-foreground">{a.name}</span>
@@ -527,7 +538,7 @@ export default function NetWorth() {
           </Link>
         </div>
         <div className="bg-card border rounded-xl overflow-hidden">
-          {(debts as any[]).length === 0 ? (
+          {debts.length === 0 ? (
             <div className="px-5 py-4 text-sm text-muted-foreground flex items-center justify-between">
               <span>No debts recorded yet.</span>
               <Link href="/debts">
@@ -538,7 +549,7 @@ export default function NetWorth() {
             </div>
           ) : (
             <>
-              {(debts as any[]).map((d) => (
+              {(debts as Debt[]).map((d) => (
                 <div key={d.id} className="flex items-center justify-between px-5 py-3 border-b last:border-0">
                   <div>
                     <span className="text-sm font-medium text-foreground">{d.lender}</span>
