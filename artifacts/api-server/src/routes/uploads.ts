@@ -142,6 +142,11 @@ router.post("/uploads/:id/confirm", requireAuth, requireAccess, async (req: Auth
       continue;
     }
 
+    if (row.status === "imported" || row.status === "skipped") {
+      skipped++;
+      continue;
+    }
+
     let categoryId = rowConf.categoryId ?? null;
     if (!categoryId && row.categorySuggestion) {
       const [cat] = await db.select().from(categoriesTable)

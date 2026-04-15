@@ -30,16 +30,15 @@ import { TrialExpiredPrompt } from "@/components/subscription/TrialExpiredPrompt
 import { isTrialExpiredError } from "@/lib/trialExpired";
 
 export default function Transactions() {
-  const currentMonth = format(new Date(), "yyyy-MM");
   const [, setLocation] = useLocation();
   const searchString = useSearch();
   const queryMonth = new URLSearchParams(searchString).get("month");
-  const [month, setMonth] = useState(queryMonth && /^\d{4}-\d{2}$/.test(queryMonth) ? queryMonth : currentMonth);
+  const [month, setMonth] = useState(queryMonth && /^\d{4}-\d{2}$/.test(queryMonth) ? queryMonth : "");
   const [search, setSearch] = useState("");
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [trialExpiredError, setTrialExpiredError] = useState(false);
 
-  const { data: transactions, isLoading, refetch } = useListTransactions({ month, search });
+  const { data: transactions, isLoading, refetch } = useListTransactions(month ? { month, search } : { search });
   const { data: categories } = useListCategories();
   
   const createMutation = useCreateTransaction();
@@ -173,14 +172,24 @@ export default function Transactions() {
         </Dialog>
       </div>
 
-      <div className="flex gap-4 items-center bg-white p-4 rounded-xl border">
-        <Input 
-          type="month" 
-          value={month} 
-          onChange={(e) => setMonth(e.target.value)} 
-          className="w-48"
-        />
-        <div className="relative flex-1 max-w-md">
+      <div className="flex gap-3 items-center bg-white p-4 rounded-xl border flex-wrap">
+        <div className="flex items-center gap-2">
+          <Input 
+            type="month" 
+            value={month} 
+            onChange={(e) => setMonth(e.target.value)} 
+            className="w-44"
+            placeholder="All months"
+          />
+          {month ? (
+            <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={() => setMonth("")}>
+              Clear
+            </Button>
+          ) : (
+            <span className="text-sm text-muted-foreground">All months</span>
+          )}
+        </div>
+        <div className="relative flex-1 min-w-48 max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input 
             placeholder="Search descriptions..." 
@@ -199,8 +208,17 @@ export default function Transactions() {
             <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-4">
               <Receipt className="w-6 h-6 text-muted-foreground" />
             </div>
-            <h3 className="font-semibold text-lg mb-1">No transactions</h3>
-            <p className="text-muted-foreground">You don't have any transactions for this period.</p>
+            <h3 className="font-semibold text-lg mb-1">No transactions found</h3>
+            <p className="text-muted-foreground mb-4">
+              {month
+                ? `No transactions for ${format(new Date(month + "-01"), "MMMM yyyy")}. Imported transactions may be in a different month.`
+                : "No transactions yet. Import a bank statement or add one manually."}
+            </p>
+            {month && (
+              <Button variant="outline" size="sm" onClick={() => setMonth("")}>
+                View all transactions
+              </Button>
+            )}
           </div>
         ) : (
           <div className="divide-y">
