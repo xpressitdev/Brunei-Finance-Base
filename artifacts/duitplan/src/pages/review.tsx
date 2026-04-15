@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { format } from "date-fns";
 import { useParams, Link, useLocation } from "wouter";
 import { useGetImportedRows, useConfirmImport, useListCategories } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
@@ -61,9 +62,13 @@ export default function ReviewImport() {
     setTrialExpiredError(false);
     try {
       await confirmMutation.mutateAsync({
+        id: id!,
         data: { rows: payloadRows }
       });
-      setLocation("/transactions");
+      // Navigate to the month of the first imported row so user sees their transactions immediately
+      const firstDate = rows?.find(r => r.normalizedDate)?.normalizedDate;
+      const month = firstDate ? firstDate.slice(0, 7) : format(new Date(), "yyyy-MM");
+      setLocation(`/transactions?month=${month}`);
     } catch (err) {
       if (isTrialExpiredError(err)) {
         setTrialExpiredError(true);

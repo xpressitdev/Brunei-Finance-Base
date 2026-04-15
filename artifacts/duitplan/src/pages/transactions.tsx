@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useLocation } from "wouter";
+import { useLocation, useSearch } from "wouter";
 import { format } from "date-fns";
 import { 
   useListTransactions, 
@@ -32,7 +32,9 @@ import { isTrialExpiredError } from "@/lib/trialExpired";
 export default function Transactions() {
   const currentMonth = format(new Date(), "yyyy-MM");
   const [, setLocation] = useLocation();
-  const [month, setMonth] = useState(currentMonth);
+  const searchString = useSearch();
+  const queryMonth = new URLSearchParams(searchString).get("month");
+  const [month, setMonth] = useState(queryMonth && /^\d{4}-\d{2}$/.test(queryMonth) ? queryMonth : currentMonth);
   const [search, setSearch] = useState("");
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [trialExpiredError, setTrialExpiredError] = useState(false);

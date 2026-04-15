@@ -76,7 +76,7 @@ router.post("/uploads", requireAuth, requireAccess, async (req: AuthenticatedReq
     type: row.type,
     categorySuggestion: row.categorySuggestion,
     confidence: row.confidence,
-    status: "pending_review",
+    status: "parsed",
   }));
 
   await db.insert(importedTransactionRowsTable).values(rowValues);
