@@ -577,7 +577,7 @@ router.post("/agent/chat", requireAuth, async (req: AuthenticatedRequest, res: R
             type: txn.type || "debit",
             categorySuggestion: txn.category || "other",
             confidence: "0.85",
-            status: "pending_review",
+            status: "parsed",
           }));
 
           await db.insert(importedTransactionRowsTable).values(rowValues);
