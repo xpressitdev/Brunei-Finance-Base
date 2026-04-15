@@ -29,6 +29,7 @@ import Expenses from "@/pages/expenses";
 import AccountsPage from "@/pages/accounts";
 import SubscriptionSuccess from "@/pages/subscription/success";
 import SubscriptionFailed from "@/pages/subscription/failed";
+import AgentPage from "@/pages/agent";
 import NotFound from "@/pages/not-found";
 
 function ProtectedRoute({ component: Component, ...rest }: any) {
@@ -90,6 +91,7 @@ function Router() {
       <ProtectedRoute path="/net-worth" component={NetWorth} />
       <ProtectedRoute path="/expenses" component={Expenses} />
       <ProtectedRoute path="/accounts" component={AccountsPage} />
+      <ProtectedRoute path="/agent" component={AgentPage} />
       
       <Route component={NotFound} />
     </Switch>

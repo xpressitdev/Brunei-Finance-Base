@@ -19,6 +19,7 @@ import netWorthRouter from "./net-worth";
 import assetsRouter from "./assets";
 import receiptRouter from "./receipt";
 import storageRouter from "./storage";
+import agentRouter from "./agent";
 
 const router: IRouter = Router();
 
@@ -42,5 +43,6 @@ router.use(netWorthRouter);
 router.use(assetsRouter);
 router.use(receiptRouter);
 router.use(storageRouter);
+router.use(agentRouter);
 
 export default router;

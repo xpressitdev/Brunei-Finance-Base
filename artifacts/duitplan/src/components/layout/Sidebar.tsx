@@ -2,10 +2,11 @@ import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
-import { Menu, X, LayoutDashboard, Receipt, PieChart, CalendarDays, Wallet, Upload, Lightbulb, Settings, Star, Trophy, Target, TrendingUp, ScanLine, Building2 } from "lucide-react";
+import { Menu, X, LayoutDashboard, Receipt, PieChart, CalendarDays, Wallet, Upload, Lightbulb, Settings, Star, Trophy, Target, TrendingUp, ScanLine, Building2, Bot } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navigation = [
+  { name: "DuitPlan AI", href: "/agent", icon: Bot },
   { name: "Expense Tracker", href: "/expenses", icon: ScanLine },
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Accounts", href: "/accounts", icon: Building2 },

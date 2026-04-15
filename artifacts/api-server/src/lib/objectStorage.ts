@@ -128,6 +128,24 @@ export class ObjectStorageService {
     });
   }
 
+  async getAgentUploadURL(userId: string): Promise<{ uploadURL: string; objectPath: string }> {
+    const privateObjectDir = this.getPrivateObjectDir();
+    const objectId = randomUUID();
+    const safeUserId = userId.replace(/[^a-zA-Z0-9_-]/g, "_");
+    const fullPath = `${privateObjectDir}/agent-uploads/${safeUserId}/${objectId}`;
+    const { bucketName, objectName } = parseObjectPath(fullPath);
+    const uploadURL = await signObjectURL({ bucketName, objectName, method: "PUT", ttlSec: 900 });
+    return {
+      uploadURL,
+      objectPath: this.normalizeObjectEntityPath(uploadURL),
+    };
+  }
+
+  extractAgentUploadOwner(objectPath: string): string | null {
+    const match = objectPath.match(/^\/objects\/agent-uploads\/([^/]+)\//);
+    return match ? match[1] : null;
+  }
+
   async getObjectEntityFile(objectPath: string): Promise<File> {
     if (!objectPath.startsWith("/objects/")) {
       throw new ObjectNotFoundError();
