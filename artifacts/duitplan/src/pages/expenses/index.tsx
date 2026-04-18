@@ -58,6 +58,7 @@ import {
   Loader2,
   ImageIcon,
   CheckCircle,
+  Info,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { TrialExpiredPrompt } from "@/components/subscription/TrialExpiredPrompt";
@@ -699,6 +700,21 @@ export default function Expenses() {
                 Income
               </Button>
             </div>
+            {editingTx && editData.type !== editingTx.type && (
+              <div className="flex items-start gap-1.5 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-3 py-2">
+                <Info className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
+                <span className="flex-1">
+                  Changing from <strong>{editingTx.type === "debit" ? "Expense" : "Income"}</strong> to <strong>{editData.type === "debit" ? "Expense" : "Income"}</strong> will reverse the balance adjustment on the linked account. Make sure this is intentional.
+                </span>
+                <button
+                  type="button"
+                  className="underline font-medium ml-2 whitespace-nowrap"
+                  onClick={() => setEditData((d) => ({ ...d, type: editingTx.type }))}
+                >
+                  Revert
+                </button>
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label>Date</Label>
