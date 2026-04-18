@@ -15,34 +15,75 @@ import { requireAccess } from "../lib/access";
 
 const router: IRouter = Router();
 
-async function formatTransaction(t: typeof transactionsTable.$inferSelect) {
-  let categoryName: string | null = null;
-  if (t.categoryId) {
-    const [cat] = await db.select().from(categoriesTable).where(eq(categoriesTable.id, t.categoryId)).limit(1);
-    categoryName = cat?.name ?? null;
-  }
-  let accountName: string | null = null;
-  if (t.accountId) {
-    const [acc] = await db.select().from(accountsTable).where(and(eq(accountsTable.id, t.accountId), eq(accountsTable.userId, t.userId))).limit(1);
-    accountName = acc?.name ?? null;
-  }
+const joinedTransactionSelect = {
+  id: transactionsTable.id,
+  userId: transactionsTable.userId,
+  accountId: transactionsTable.accountId,
+  categoryId: transactionsTable.categoryId,
+  date: transactionsTable.date,
+  amount: transactionsTable.amount,
+  type: transactionsTable.type,
+  description: transactionsTable.description,
+  merchant: transactionsTable.merchant,
+  source: transactionsTable.source,
+  notes: transactionsTable.notes,
+  createdAt: transactionsTable.createdAt,
+  updatedAt: transactionsTable.updatedAt,
+  categoryName: categoriesTable.name,
+  accountName: accountsTable.name,
+};
+
+function formatJoinedRow(row: {
+  id: string;
+  userId: string;
+  accountId: string | null;
+  categoryId: string | null;
+  date: Date;
+  amount: string;
+  type: string;
+  description: string;
+  merchant: string | null;
+  source: string;
+  notes: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  categoryName: string | null;
+  accountName: string | null;
+}) {
   return {
-    id: t.id,
-    userId: t.userId,
-    accountId: t.accountId,
-    categoryId: t.categoryId,
-    categoryName,
-    accountName,
-    date: t.date.toISOString(),
-    amount: t.amount,
-    type: t.type,
-    description: t.description,
-    merchant: t.merchant,
-    source: t.source,
-    notes: t.notes,
-    createdAt: t.createdAt.toISOString(),
-    updatedAt: t.updatedAt.toISOString(),
+    id: row.id,
+    userId: row.userId,
+    accountId: row.accountId,
+    categoryId: row.categoryId,
+    categoryName: row.categoryName ?? null,
+    accountName: row.accountName ?? null,
+    date: row.date.toISOString(),
+    amount: row.amount,
+    type: row.type,
+    description: row.description,
+    merchant: row.merchant,
+    source: row.source,
+    notes: row.notes,
+    createdAt: row.createdAt.toISOString(),
+    updatedAt: row.updatedAt.toISOString(),
   };
+}
+
+async function fetchFormattedTransaction(id: string, userId: string) {
+  const [row] = await db
+    .select(joinedTransactionSelect)
+    .from(transactionsTable)
+    .leftJoin(categoriesTable, eq(transactionsTable.categoryId, categoriesTable.id))
+    .leftJoin(
+      accountsTable,
+      and(
+        eq(transactionsTable.accountId, accountsTable.id),
+        eq(accountsTable.userId, transactionsTable.userId),
+      ),
+    )
+    .where(and(eq(transactionsTable.id, id), eq(transactionsTable.userId, userId)))
+    .limit(1);
+  return row ? formatJoinedRow(row) : null;
 }
 
 router.get("/transactions", requireAuth, async (req: AuthenticatedRequest, res): Promise<void> => {
@@ -63,9 +104,21 @@ router.get("/transactions", requireAuth, async (req: AuthenticatedRequest, res):
   if (qp.data.type) conditions.push(eq(transactionsTable.type, qp.data.type));
   if (qp.data.search) conditions.push(ilike(transactionsTable.description, `%${qp.data.search}%`));
 
-  const txns = await db.select().from(transactionsTable).where(and(...conditions)).orderBy(transactionsTable.date);
-  const result = await Promise.all(txns.map(formatTransaction));
-  res.json(result);
+  const rows = await db
+    .select(joinedTransactionSelect)
+    .from(transactionsTable)
+    .leftJoin(categoriesTable, eq(transactionsTable.categoryId, categoriesTable.id))
+    .leftJoin(
+      accountsTable,
+      and(
+        eq(transactionsTable.accountId, accountsTable.id),
+        eq(accountsTable.userId, transactionsTable.userId),
+      ),
+    )
+    .where(and(...conditions))
+    .orderBy(transactionsTable.date);
+
+  res.json(rows.map(formatJoinedRow));
 });
 
 router.post("/transactions", requireAuth, requireAccess, async (req: AuthenticatedRequest, res): Promise<void> => {
@@ -99,17 +152,17 @@ router.post("/transactions", requireAuth, requireAccess, async (req: Authenticat
     return inserted;
   });
 
-  res.status(201).json(await formatTransaction(txn));
+  const formatted = await fetchFormattedTransaction(txn.id, txn.userId);
+  res.status(201).json(formatted);
 });
 
 router.get("/transactions/:id", requireAuth, async (req: AuthenticatedRequest, res): Promise<void> => {
   const params = GetTransactionParams.safeParse(req.params);
   if (!params.success) { res.status(400).json({ error: params.error.message }); return; }
-  const [txn] = await db.select().from(transactionsTable)
-    .where(and(eq(transactionsTable.id, params.data.id), eq(transactionsTable.userId, req.userId!)))
-    .limit(1);
-  if (!txn) { res.status(404).json({ error: "Transaction not found" }); return; }
-  res.json(await formatTransaction(txn));
+
+  const formatted = await fetchFormattedTransaction(params.data.id, req.userId!);
+  if (!formatted) { res.status(404).json({ error: "Transaction not found" }); return; }
+  res.json(formatted);
 });
 
 router.patch("/transactions/:id", requireAuth, requireAccess, async (req: AuthenticatedRequest, res): Promise<void> => {
@@ -169,7 +222,8 @@ router.patch("/transactions/:id", requireAuth, requireAccess, async (req: Authen
   });
 
   if (!updated) { res.status(404).json({ error: "Transaction not found" }); return; }
-  res.json(await formatTransaction(updated));
+  const formatted = await fetchFormattedTransaction(updated.id, updated.userId);
+  res.json(formatted);
 });
 
 router.delete("/transactions/:id", requireAuth, requireAccess, async (req: AuthenticatedRequest, res): Promise<void> => {
