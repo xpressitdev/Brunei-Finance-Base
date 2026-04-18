@@ -15,6 +15,13 @@
       "when": 1776485369778,
       "tag": "0001_add_transaction_indexes",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1745020800000,
+      "tag": "0002_add_category_spending_index",
+      "breakpoints": true
     }
   ]
 }
