@@ -21,12 +21,18 @@ async function formatTransaction(t: typeof transactionsTable.$inferSelect) {
     const [cat] = await db.select().from(categoriesTable).where(eq(categoriesTable.id, t.categoryId)).limit(1);
     categoryName = cat?.name ?? null;
   }
+  let accountName: string | null = null;
+  if (t.accountId) {
+    const [acc] = await db.select().from(accountsTable).where(and(eq(accountsTable.id, t.accountId), eq(accountsTable.userId, t.userId))).limit(1);
+    accountName = acc?.name ?? null;
+  }
   return {
     id: t.id,
     userId: t.userId,
     accountId: t.accountId,
     categoryId: t.categoryId,
     categoryName,
+    accountName,
     date: t.date.toISOString(),
     amount: t.amount,
     type: t.type,

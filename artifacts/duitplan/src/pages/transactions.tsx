@@ -394,10 +394,13 @@ export default function Transactions() {
                   </div>
                   <div>
                     <div className="font-medium text-foreground">{tx.description}</div>
-                    <div className="text-sm text-muted-foreground flex items-center gap-2">
+                    <div className="text-sm text-muted-foreground flex items-center gap-2 flex-wrap">
                       {format(new Date(tx.date), "MMM d, yyyy")}
                       <span>&bull;</span>
                       <span className="bg-muted px-2 py-0.5 rounded-full text-xs">{tx.categoryName || 'Uncategorized'}</span>
+                      {tx.accountName && (
+                        <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-xs">{tx.accountName}</span>
+                      )}
                     </div>
                   </div>
                 </div>

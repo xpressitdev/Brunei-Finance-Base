@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { eq, and, gte, lte } from "drizzle-orm";
-import { db, transactionsTable, commitmentsTable, debtsTable, profilesTable, categoriesTable } from "@workspace/db";
+import { db, transactionsTable, commitmentsTable, debtsTable, profilesTable, categoriesTable, accountsTable } from "@workspace/db";
 import { GetDashboardSummaryQueryParams, GetSpendingByCategoryQueryParams, GetRecentTransactionsQueryParams } from "@workspace/api-zod";
 import { requireAuth, type AuthenticatedRequest } from "../lib/auth";
 
@@ -126,12 +126,18 @@ router.get("/dashboard/recent-transactions", requireAuth, async (req: Authentica
       const [cat] = await db.select().from(categoriesTable).where(eq(categoriesTable.id, t.categoryId)).limit(1);
       categoryName = cat?.name ?? null;
     }
+    let accountName: string | null = null;
+    if (t.accountId) {
+      const [acc] = await db.select().from(accountsTable).where(and(eq(accountsTable.id, t.accountId), eq(accountsTable.userId, t.userId))).limit(1);
+      accountName = acc?.name ?? null;
+    }
     return {
       id: t.id,
       userId: t.userId,
       accountId: t.accountId,
       categoryId: t.categoryId,
       categoryName,
+      accountName,
       date: t.date.toISOString(),
       amount: t.amount,
       type: t.type,

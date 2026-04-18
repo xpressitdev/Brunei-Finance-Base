@@ -184,6 +184,8 @@ export interface Transaction {
   categoryId?: string | null;
   /** @nullable */
   categoryName?: string | null;
+  /** @nullable */
+  accountName?: string | null;
   date: string;
   amount: string;
   type: string;

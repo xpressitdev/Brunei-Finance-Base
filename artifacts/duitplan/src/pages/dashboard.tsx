@@ -323,8 +323,11 @@ export default function Dashboard() {
                     <div key={tx.id} className="flex items-center justify-between py-1 border-b last:border-0">
                       <div>
                         <p className="font-medium text-sm leading-tight">{tx.description}</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">
+                        <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1 flex-wrap">
                           {format(new Date(tx.date), "d MMM")} &bull; {tx.categoryName || "Uncategorised"}
+                          {tx.accountName && (
+                            <span className="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full text-xs leading-none">{tx.accountName}</span>
+                          )}
                         </p>
                       </div>
                       <span className={`font-semibold text-sm ${tx.type === "credit" ? "text-emerald-600" : "text-red-500"}`}>
