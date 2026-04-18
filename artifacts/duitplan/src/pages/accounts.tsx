@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useListAccounts, useCreateAccount, useUpdateAccount, useDeleteAccount } from "@workspace/api-client-react";
+import { useListAccounts, useCreateAccount, useUpdateAccount, useDeleteAccount, useGetAccountBalanceHistory } from "@workspace/api-client-react";
 import type { Account } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,7 +31,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Building2, Plus, Pencil, Trash2, Upload, Wallet, PiggyBank, Landmark, TrendingUp, Lock } from "lucide-react";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
+import { Building2, Plus, Pencil, Trash2, Upload, Wallet, PiggyBank, Landmark, TrendingUp, Lock, BarChart2 } from "lucide-react";
 import { Link } from "wouter";
 import { cn } from "@/lib/utils";
 
@@ -53,12 +62,36 @@ const BANKS = [
   "Other",
 ];
 
+const PERIOD_OPTIONS = [
+  { label: "7 days", value: 7 },
+  { label: "30 days", value: 30 },
+  { label: "90 days", value: 90 },
+];
+
 function getTypeInfo(type: string) {
   return ACCOUNT_TYPES.find(t => t.value === type) ?? ACCOUNT_TYPES[ACCOUNT_TYPES.length - 1];
 }
 
 function fmt(val: string | number) {
   return `BND ${Number(val || 0).toLocaleString("en-BN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+function fmtShort(val: number) {
+  if (Math.abs(val) >= 1000) {
+    return `${(val / 1000).toFixed(1)}k`;
+  }
+  return val.toFixed(0);
+}
+
+function fmtDate(dateStr: string, days: number) {
+  const d = new Date(dateStr + "T00:00:00");
+  if (days <= 7) {
+    return d.toLocaleDateString("en-BN", { weekday: "short" });
+  }
+  if (days <= 30) {
+    return d.toLocaleDateString("en-BN", { month: "short", day: "numeric" });
+  }
+  return d.toLocaleDateString("en-BN", { month: "short", day: "numeric" });
 }
 
 type FormState = {
@@ -155,6 +188,111 @@ function AccountForm({
   );
 }
 
+function BalanceHistoryChart({ account }: { account: Account }) {
+  const [days, setDays] = useState(30);
+  const { data: history = [], isLoading } = useGetAccountBalanceHistory(account.id, { days });
+
+  const minBal = history.length > 0 ? Math.min(...history.map(p => p.balance)) : 0;
+  const maxBal = history.length > 0 ? Math.max(...history.map(p => p.balance)) : 0;
+  const padding = (maxBal - minBal) * 0.1 || 100;
+  const yMin = Math.floor((minBal - padding) / 100) * 100;
+  const yMax = Math.ceil((maxBal + padding) / 100) * 100;
+
+  const chartData = history.map(p => ({
+    date: p.date,
+    balance: p.balance,
+    label: fmtDate(p.date, days),
+  }));
+
+  const tickInterval = days <= 7 ? 0 : days <= 30 ? 4 : 14;
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-muted-foreground">
+          Daily balance snapshots derived from transaction history
+        </p>
+        <div className="flex gap-1">
+          {PERIOD_OPTIONS.map(opt => (
+            <Button
+              key={opt.value}
+              variant={days === opt.value ? "default" : "outline"}
+              size="sm"
+              className="h-7 px-2.5 text-xs"
+              onClick={() => setDays(opt.value)}
+            >
+              {opt.label}
+            </Button>
+          ))}
+        </div>
+      </div>
+
+      {isLoading ? (
+        <div className="h-56 flex items-center justify-center">
+          <div className="text-muted-foreground text-sm animate-pulse">Loading chart…</div>
+        </div>
+      ) : history.length === 0 ? (
+        <div className="h-56 flex items-center justify-center rounded-xl border-2 border-dashed border-muted">
+          <p className="text-sm text-muted-foreground">No data available</p>
+        </div>
+      ) : (
+        <div className="h-56">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={chartData} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+              <XAxis
+                dataKey="label"
+                tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                interval={tickInterval}
+                axisLine={false}
+                tickLine={false}
+              />
+              <YAxis
+                domain={[yMin, yMax]}
+                tickFormatter={fmtShort}
+                tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                axisLine={false}
+                tickLine={false}
+                width={42}
+              />
+              <Tooltip
+                formatter={(value: number) => [fmt(value), "Balance"]}
+                labelFormatter={(label) => `Date: ${label}`}
+                contentStyle={{
+                  background: "hsl(var(--card))",
+                  border: "1px solid hsl(var(--border))",
+                  borderRadius: "8px",
+                  fontSize: "12px",
+                }}
+              />
+              <Line
+                type="monotone"
+                dataKey="balance"
+                stroke="hsl(var(--primary))"
+                strokeWidth={2}
+                dot={false}
+                activeDot={{ r: 4, strokeWidth: 0 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+
+      <div className="flex justify-between text-xs text-muted-foreground border-t pt-3">
+        <span>
+          Lowest: <span className="font-medium text-foreground">{fmt(minBal)}</span>
+        </span>
+        <span>
+          Highest: <span className="font-medium text-foreground">{fmt(maxBal)}</span>
+        </span>
+        <span>
+          Current: <span className="font-semibold text-foreground">{fmt(account.balance)}</span>
+        </span>
+      </div>
+    </div>
+  );
+}
+
 export default function Accounts() {
   const qc = useQueryClient();
   const { data: accounts = [], isLoading } = useListAccounts();
@@ -165,6 +303,7 @@ export default function Accounts() {
   const [addOpen, setAddOpen] = useState(false);
   const [editAccount, setEditAccount] = useState<Account | null>(null);
   const [deleteAccount, setDeleteAccount] = useState<Account | null>(null);
+  const [historyAccount, setHistoryAccount] = useState<Account | null>(null);
   const [saving, setSaving] = useState(false);
 
   const invalidate = () => qc.invalidateQueries({ queryKey: ["/api/accounts"] });
@@ -310,6 +449,15 @@ export default function Accounts() {
                     <Button
                       variant="ghost"
                       size="icon"
+                      className="h-8 w-8 text-muted-foreground hover:text-primary"
+                      title="Balance history"
+                      onClick={() => setHistoryAccount(account)}
+                    >
+                      <BarChart2 className="w-3.5 h-3.5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
                       className="h-8 w-8 text-muted-foreground hover:text-foreground"
                       onClick={() => setEditAccount(account)}
                     >
@@ -330,6 +478,19 @@ export default function Accounts() {
           })}
         </div>
       )}
+
+      {/* Balance history dialog */}
+      <Dialog open={!!historyAccount} onOpenChange={open => { if (!open) setHistoryAccount(null); }}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <BarChart2 className="w-4 h-4 text-primary" />
+              Balance History — {historyAccount?.name}
+            </DialogTitle>
+          </DialogHeader>
+          {historyAccount && <BalanceHistoryChart account={historyAccount} />}
+        </DialogContent>
+      </Dialog>
 
       {/* Add account dialog */}
       <Dialog open={addOpen} onOpenChange={setAddOpen}>

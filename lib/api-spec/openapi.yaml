@@ -245,6 +245,33 @@ paths:
               schema:
                 $ref: "#/components/schemas/Account"
 
+  /accounts/{id}/balance-history:
+    get:
+      operationId: getAccountBalanceHistory
+      tags: [accounts]
+      summary: Get daily balance history for an account
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: days
+          in: query
+          required: false
+          schema:
+            type: number
+            default: 30
+      responses:
+        "200":
+          description: Daily balance snapshots
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BalanceHistoryPoint"
+
   /accounts/{id}:
     patch:
       operationId: updateAccount
@@ -1329,6 +1356,19 @@ components:
           type: ["string", "null"]
           description: Updated balance in BND
 
+    BalanceHistoryPoint:
+      type: object
+      properties:
+        date:
+          type: string
+          description: ISO date string (YYYY-MM-DD)
+        balance:
+          type: number
+          description: Account balance at end of that day
+      required:
+        - date
+        - balance
+
     # Category
     Category:
       type: object
@@ -1748,6 +1788,9 @@ components:
           type: string
         monthlyIncome:
           type: string
+        actualIncomeThisMonth:
+          type: string
+          description: Sum of credit transactions in the current month
         totalCommitments:
           type: string
         totalSpent:
@@ -1765,6 +1808,7 @@ components:
       required:
         - month
         - monthlyIncome
+        - actualIncomeThisMonth
         - totalCommitments
         - totalSpent
         - remaining

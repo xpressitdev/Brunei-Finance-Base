@@ -1,7 +1,7 @@
 import { Router, type IRouter } from "express";
-import { eq, and } from "drizzle-orm";
+import { eq, and, gte, lte, asc } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
-import { db, accountsTable } from "@workspace/db";
+import { db, accountsTable, transactionsTable } from "@workspace/db";
 import { CreateAccountBody, UpdateAccountBody, UpdateAccountParams, DeleteAccountParams } from "@workspace/api-zod";
 import { requireAuth, type AuthenticatedRequest } from "../lib/auth";
 
@@ -59,6 +59,79 @@ router.patch("/accounts/:id", requireAuth, async (req: AuthenticatedRequest, res
     .returning();
   if (!updated) { res.status(404).json({ error: "Account not found" }); return; }
   res.json(formatAccount(updated));
+});
+
+router.get("/accounts/:id/balance-history", requireAuth, async (req: AuthenticatedRequest, res): Promise<void> => {
+  const { id } = req.params;
+  const rawDays = Number(req.query.days ?? 30);
+  const days = isNaN(rawDays) || rawDays < 1 ? 30 : Math.min(rawDays, 365);
+
+  const [account] = await db.select().from(accountsTable)
+    .where(and(eq(accountsTable.id, id), eq(accountsTable.userId, req.userId!)))
+    .limit(1);
+  if (!account) { res.status(404).json({ error: "Account not found" }); return; }
+
+  const currentBalance = parseFloat(account.balance ?? "0");
+
+  const endOfToday = new Date();
+  endOfToday.setHours(23, 59, 59, 999);
+
+  const allTxns = await db.select({
+    date: transactionsTable.date,
+    amount: transactionsTable.amount,
+    type: transactionsTable.type,
+  })
+    .from(transactionsTable)
+    .where(and(
+      eq(transactionsTable.accountId, id),
+      eq(transactionsTable.userId, req.userId!),
+    ))
+    .orderBy(asc(transactionsTable.date));
+
+  function netDelta(t: { amount: string; type: string }): number {
+    const amt = parseFloat(t.amount ?? "0");
+    return t.type === "credit" ? amt : t.type === "debit" ? -amt : 0;
+  }
+
+  const futureNet = allTxns
+    .filter(t => t.date > endOfToday)
+    .reduce((sum, t) => sum + netDelta(t), 0);
+  const balanceEndOfToday = currentBalance - futureNet;
+
+  const dailyDeltas = new Map<string, number>();
+  for (const t of allTxns) {
+    if (t.date > endOfToday) continue;
+    const key = t.date.toISOString().slice(0, 10);
+    dailyDeltas.set(key, (dailyDeltas.get(key) ?? 0) + netDelta(t));
+  }
+
+  const todayKey = endOfToday.toISOString().slice(0, 10);
+  const balanceByDay = new Map<string, number>();
+  balanceByDay.set(todayKey, balanceEndOfToday);
+
+  for (let i = 1; i < days; i++) {
+    const d = new Date(endOfToday);
+    d.setDate(endOfToday.getDate() - i);
+    const key = d.toISOString().slice(0, 10);
+
+    const prev = new Date(endOfToday);
+    prev.setDate(endOfToday.getDate() - i + 1);
+    const prevKey = prev.toISOString().slice(0, 10);
+
+    const prevBalance = balanceByDay.get(prevKey)!;
+    const delta = dailyDeltas.get(prevKey) ?? 0;
+    balanceByDay.set(key, Math.round((prevBalance - delta) * 100) / 100);
+  }
+
+  const result: { date: string; balance: number }[] = [];
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date(endOfToday);
+    d.setDate(endOfToday.getDate() - i);
+    const key = d.toISOString().slice(0, 10);
+    result.push({ date: key, balance: balanceByDay.get(key) ?? 0 });
+  }
+
+  res.json(result);
 });
 
 router.delete("/accounts/:id", requireAuth, async (req: AuthenticatedRequest, res): Promise<void> => {

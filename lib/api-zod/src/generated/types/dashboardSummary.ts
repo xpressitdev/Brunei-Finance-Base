@@ -9,6 +9,8 @@
 export interface DashboardSummary {
   month: string;
   monthlyIncome: string;
+  /** Sum of credit transactions in the current month */
+  actualIncomeThisMonth: string;
   totalCommitments: string;
   totalSpent: string;
   remaining: string;
@@ -16,5 +18,4 @@ export interface DashboardSummary {
   totalDebtPayments: string;
   debtToIncomeRatio: string;
   transactionCount: number;
-  actualIncomeThisMonth?: string;
 }

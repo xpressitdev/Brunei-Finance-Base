@@ -21,6 +21,7 @@ import type {
   AssetEntry,
   AuthResponse,
   AuthUser,
+  BalanceHistoryPoint,
   Category,
   CategorySpend,
   Commitment,
@@ -39,6 +40,7 @@ import type {
   DebtSimulateBody,
   ErrorResponse,
   GenerateInsightsBody,
+  GetAccountBalanceHistoryParams,
   GetDashboardSummaryParams,
   GetRecentTransactionsParams,
   GetSpendingByCategoryParams,
@@ -950,6 +952,126 @@ export const useCreateAccount = <
 > => {
   return useMutation(getCreateAccountMutationOptions(options));
 };
+
+/**
+ * @summary Get daily balance history for an account
+ */
+export const getGetAccountBalanceHistoryUrl = (
+  id: string,
+  params?: GetAccountBalanceHistoryParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/accounts/${id}/balance-history?${stringifiedParams}`
+    : `/api/accounts/${id}/balance-history`;
+};
+
+export const getAccountBalanceHistory = async (
+  id: string,
+  params?: GetAccountBalanceHistoryParams,
+  options?: RequestInit,
+): Promise<BalanceHistoryPoint[]> => {
+  return customFetch<BalanceHistoryPoint[]>(
+    getGetAccountBalanceHistoryUrl(id, params),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getGetAccountBalanceHistoryQueryKey = (
+  id: string,
+  params?: GetAccountBalanceHistoryParams,
+) => {
+  return [
+    `/api/accounts/${id}/balance-history`,
+    ...(params ? [params] : []),
+  ] as const;
+};
+
+export const getGetAccountBalanceHistoryQueryOptions = <
+  TData = Awaited<ReturnType<typeof getAccountBalanceHistory>>,
+  TError = ErrorType<unknown>,
+>(
+  id: string,
+  params?: GetAccountBalanceHistoryParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getAccountBalanceHistory>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetAccountBalanceHistoryQueryKey(id, params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getAccountBalanceHistory>>
+  > = ({ signal }) =>
+    getAccountBalanceHistory(id, params, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!id,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getAccountBalanceHistory>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetAccountBalanceHistoryQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getAccountBalanceHistory>>
+>;
+export type GetAccountBalanceHistoryQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get daily balance history for an account
+ */
+
+export function useGetAccountBalanceHistory<
+  TData = Awaited<ReturnType<typeof getAccountBalanceHistory>>,
+  TError = ErrorType<unknown>,
+>(
+  id: string,
+  params?: GetAccountBalanceHistoryParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getAccountBalanceHistory>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetAccountBalanceHistoryQueryOptions(
+    id,
+    params,
+    options,
+  );
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
 
 /**
  * @summary Update a bank account

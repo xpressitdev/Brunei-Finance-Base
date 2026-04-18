@@ -151,6 +151,27 @@ export const CreateAccountBody = zod.object({
 });
 
 /**
+ * @summary Get daily balance history for an account
+ */
+export const GetAccountBalanceHistoryParams = zod.object({
+  id: zod.coerce.string(),
+});
+
+export const getAccountBalanceHistoryQueryDaysDefault = 30;
+
+export const GetAccountBalanceHistoryQueryParams = zod.object({
+  days: zod.coerce.number().default(getAccountBalanceHistoryQueryDaysDefault),
+});
+
+export const GetAccountBalanceHistoryResponseItem = zod.object({
+  date: zod.string().describe("ISO date string (YYYY-MM-DD)"),
+  balance: zod.number().describe("Account balance at end of that day"),
+});
+export const GetAccountBalanceHistoryResponse = zod.array(
+  GetAccountBalanceHistoryResponseItem,
+);
+
+/**
  * @summary Update a bank account
  */
 export const UpdateAccountParams = zod.object({
@@ -282,6 +303,7 @@ export const ListTransactionsResponseItem = zod.object({
   accountId: zod.string().nullish(),
   categoryId: zod.string().nullish(),
   categoryName: zod.string().nullish(),
+  accountName: zod.string().nullish(),
   date: zod.string(),
   amount: zod.string(),
   type: zod.string(),
@@ -324,6 +346,7 @@ export const GetTransactionResponse = zod.object({
   accountId: zod.string().nullish(),
   categoryId: zod.string().nullish(),
   categoryName: zod.string().nullish(),
+  accountName: zod.string().nullish(),
   date: zod.string(),
   amount: zod.string(),
   type: zod.string(),
@@ -360,6 +383,7 @@ export const UpdateTransactionResponse = zod.object({
   accountId: zod.string().nullish(),
   categoryId: zod.string().nullish(),
   categoryName: zod.string().nullish(),
+  accountName: zod.string().nullish(),
   date: zod.string(),
   amount: zod.string(),
   type: zod.string(),
@@ -593,6 +617,9 @@ export const GetDashboardSummaryQueryParams = zod.object({
 export const GetDashboardSummaryResponse = zod.object({
   month: zod.string(),
   monthlyIncome: zod.string(),
+  actualIncomeThisMonth: zod
+    .string()
+    .describe("Sum of credit transactions in the current month"),
   totalCommitments: zod.string(),
   totalSpent: zod.string(),
   remaining: zod.string(),
@@ -600,7 +627,6 @@ export const GetDashboardSummaryResponse = zod.object({
   totalDebtPayments: zod.string(),
   debtToIncomeRatio: zod.string(),
   transactionCount: zod.number(),
-  actualIncomeThisMonth: zod.string().optional(),
 });
 
 /**
@@ -633,6 +659,7 @@ export const GetRecentTransactionsResponseItem = zod.object({
   accountId: zod.string().nullish(),
   categoryId: zod.string().nullish(),
   categoryName: zod.string().nullish(),
+  accountName: zod.string().nullish(),
   date: zod.string(),
   amount: zod.string(),
   type: zod.string(),

@@ -130,6 +130,13 @@ export interface UpdateAccountBody {
   balance?: string | null;
 }
 
+export interface BalanceHistoryPoint {
+  /** ISO date string (YYYY-MM-DD) */
+  date: string;
+  /** Account balance at end of that day */
+  balance: number;
+}
+
 export interface Category {
   id: string;
   name: string;
@@ -365,6 +372,8 @@ export interface GenerateInsightsBody {
 export interface DashboardSummary {
   month: string;
   monthlyIncome: string;
+  /** Sum of credit transactions in the current month */
+  actualIncomeThisMonth: string;
   totalCommitments: string;
   totalSpent: string;
   remaining: string;
@@ -372,7 +381,6 @@ export interface DashboardSummary {
   totalDebtPayments: string;
   debtToIncomeRatio: string;
   transactionCount: number;
-  actualIncomeThisMonth?: string;
 }
 
 export interface CategorySpend {
@@ -640,6 +648,10 @@ export interface UserSubscription {
   createdAt: string;
   updatedAt: string;
 }
+
+export type GetAccountBalanceHistoryParams = {
+  days?: number;
+};
 
 export type ListTransactionsParams = {
   /**
