@@ -28,7 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Trash2, Plus, Search, Receipt, TrendingUp, TrendingDown, Pencil } from "lucide-react";
+import { Trash2, Plus, Search, Receipt, TrendingUp, TrendingDown, Pencil, Info } from "lucide-react";
 import { TrialExpiredPrompt } from "@/components/subscription/TrialExpiredPrompt";
 import { isTrialExpiredError } from "@/lib/trialExpired";
 
@@ -313,6 +313,18 @@ export default function Transactions() {
                   ))}
                 </SelectContent>
               </Select>
+              {editingTx && editData.accountId !== (editingTx.accountId || "none") && (
+                <div className="flex items-start gap-1.5 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-3 py-2">
+                  <Info className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
+                  <span>
+                    {editData.accountId !== "none" && (editingTx.accountId || "none") !== "none"
+                      ? "Saving will adjust balances on both the old and new accounts."
+                      : editData.accountId === "none"
+                        ? "Saving will remove the balance adjustment from the original account."
+                        : "Saving will adjust the balance on the selected account."}
+                  </span>
+                </div>
+              )}
             </div>
             <div className="space-y-2">
               <Label>Category</Label>
