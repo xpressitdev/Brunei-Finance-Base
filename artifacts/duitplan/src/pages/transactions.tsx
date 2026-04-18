@@ -51,6 +51,7 @@ export default function Transactions() {
   const [month, setMonth] = useState(queryMonth && /^\d{4}-\d{2}$/.test(queryMonth) ? queryMonth : "");
   const [search, setSearch] = useState("");
   const [accountFilter, setAccountFilter] = useState("");
+  const [typeFilter, setTypeFilter] = useState("");
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingTx, setEditingTx] = useState<TransactionItem | null>(null);
   const [trialExpiredError, setTrialExpiredError] = useState(false);
@@ -60,6 +61,7 @@ export default function Transactions() {
     ...(month ? { month } : {}), 
     ...(search ? { search } : {}),
     ...(accountFilter ? { accountId: accountFilter } : {}),
+    ...(typeFilter ? { type: typeFilter } : {}),
   };
   const { data: transactions, isLoading, refetch } = useListTransactions(listParams);
   const { data: categories } = useListCategories();
@@ -393,6 +395,18 @@ export default function Transactions() {
               {accounts?.map(a => (
                 <SelectItem key={a.id} value={a.id}>{a.name}{a.bankName ? ` — ${a.bankName}` : ""}</SelectItem>
               ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="w-36">
+          <Select value={typeFilter || "all"} onValueChange={(val) => setTypeFilter(val === "all" ? "" : val)}>
+            <SelectTrigger>
+              <SelectValue placeholder="All types" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All types</SelectItem>
+              <SelectItem value="debit">Expense</SelectItem>
+              <SelectItem value="credit">Income</SelectItem>
             </SelectContent>
           </Select>
         </div>
