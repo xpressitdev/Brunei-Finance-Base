@@ -1,4 +1,4 @@
-import { pgTable, text, numeric, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, numeric, timestamp, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -18,7 +18,12 @@ export const transactionsTable = pgTable("transactions", {
   receiptUrl: text("receipt_url"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
-});
+}, (table) => [
+  index("transactions_user_id_idx").on(table.userId),
+  index("transactions_date_idx").on(table.date),
+  index("transactions_category_id_idx").on(table.categoryId),
+  index("transactions_account_id_idx").on(table.accountId),
+]);
 
 export const insertTransactionSchema = createInsertSchema(transactionsTable).omit({ createdAt: true, updatedAt: true });
 export type InsertTransaction = z.infer<typeof insertTransactionSchema>;
