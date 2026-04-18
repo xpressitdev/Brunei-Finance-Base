@@ -50,12 +50,18 @@ export default function Transactions() {
   const queryMonth = new URLSearchParams(searchString).get("month");
   const [month, setMonth] = useState(queryMonth && /^\d{4}-\d{2}$/.test(queryMonth) ? queryMonth : "");
   const [search, setSearch] = useState("");
+  const [accountFilter, setAccountFilter] = useState("");
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingTx, setEditingTx] = useState<TransactionItem | null>(null);
   const [trialExpiredError, setTrialExpiredError] = useState(false);
   const [editTrialExpiredError, setEditTrialExpiredError] = useState(false);
 
-  const { data: transactions, isLoading, refetch } = useListTransactions(month ? { month, search } : { search });
+  const listParams = { 
+    ...(month ? { month } : {}), 
+    ...(search ? { search } : {}),
+    ...(accountFilter ? { accountId: accountFilter } : {}),
+  };
+  const { data: transactions, isLoading, refetch } = useListTransactions(listParams);
   const { data: categories } = useListCategories();
   const { data: accounts } = useListAccounts();
   
@@ -361,6 +367,19 @@ export default function Transactions() {
           ) : (
             <span className="text-sm text-muted-foreground">All months</span>
           )}
+        </div>
+        <div className="w-48">
+          <Select value={accountFilter || "all"} onValueChange={(val) => setAccountFilter(val === "all" ? "" : val)}>
+            <SelectTrigger>
+              <SelectValue placeholder="All accounts" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All accounts</SelectItem>
+              {accounts?.map(a => (
+                <SelectItem key={a.id} value={a.id}>{a.name}{a.bankName ? ` — ${a.bankName}` : ""}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         <div className="relative flex-1 min-w-48 max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
