@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, and, gte, lte, inArray } from "drizzle-orm";
+import { eq, and, gte, lte, sql } from "drizzle-orm";
 import { db, transactionsTable, commitmentsTable, debtsTable, profilesTable, categoriesTable, accountsTable } from "@workspace/db";
 import { GetDashboardSummaryQueryParams, GetSpendingByCategoryQueryParams, GetRecentTransactionsQueryParams } from "@workspace/api-zod";
 import { requireAuth, type AuthenticatedRequest } from "../lib/auth";
@@ -76,43 +76,32 @@ router.get("/dashboard/spending-by-category", requireAuth, async (req: Authentic
   const start = new Date(year, mo - 1, 1);
   const end = new Date(year, mo, 1);
 
-  const txns = await db.select().from(transactionsTable).where(and(
-    eq(transactionsTable.userId, req.userId!),
-    eq(transactionsTable.type, "debit"),
-    gte(transactionsTable.date, start),
-    lte(transactionsTable.date, end),
-  ));
+  const rows = await db
+    .select({
+      categoryId: transactionsTable.categoryId,
+      categoryName: categoriesTable.name,
+      total: sql<string>`SUM(${transactionsTable.amount}::numeric)`,
+    })
+    .from(transactionsTable)
+    .leftJoin(categoriesTable, eq(transactionsTable.categoryId, categoriesTable.id))
+    .where(and(
+      eq(transactionsTable.userId, req.userId!),
+      eq(transactionsTable.type, "debit"),
+      gte(transactionsTable.date, start),
+      lte(transactionsTable.date, end),
+    ))
+    .groupBy(transactionsTable.categoryId, categoriesTable.name);
 
-  const catSpend: Record<string, { total: number; catId: string | null }> = {};
-  for (const txn of txns) {
-    const key = txn.categoryId ?? "__uncategorized__";
-    if (!catSpend[key]) catSpend[key] = { total: 0, catId: txn.categoryId };
-    catSpend[key].total += parseFloat(txn.amount);
-  }
+  const totalSpent = rows.reduce((s, r) => s + parseFloat(r.total ?? "0"), 0);
 
-  const categoryIds = Object.values(catSpend)
-    .map((v) => v.catId)
-    .filter((id): id is string => id !== null);
-
-  const categoryRows = categoryIds.length > 0
-    ? await db.select({ id: categoriesTable.id, name: categoriesTable.name })
-        .from(categoriesTable)
-        .where(inArray(categoriesTable.id, categoryIds))
-    : [];
-
-  const categoryMap = new Map(categoryRows.map((c) => [c.id, c.name]));
-
-  const totalSpent = Object.values(catSpend).reduce((s, v) => s + v.total, 0);
-
-  const result = Object.entries(catSpend).map(([, { total, catId }]) => {
-    const catName = catId ? (categoryMap.get(catId) ?? "Uncategorized") : "Uncategorized";
-    return {
-      categoryId: catId,
-      categoryName: catName,
-      totalSpent: total.toFixed(2),
-      percentage: totalSpent > 0 ? parseFloat(((total / totalSpent) * 100).toFixed(2)) : 0,
-    };
-  });
+  const result = rows.map((r) => ({
+    categoryId: r.categoryId,
+    categoryName: r.categoryName ?? "Uncategorized",
+    totalSpent: parseFloat(r.total ?? "0").toFixed(2),
+    percentage: totalSpent > 0
+      ? parseFloat(((parseFloat(r.total ?? "0") / totalSpent) * 100).toFixed(2))
+      : 0,
+  }));
 
   res.json(result.sort((a, b) => parseFloat(b.totalSpent) - parseFloat(a.totalSpent)));
 });
