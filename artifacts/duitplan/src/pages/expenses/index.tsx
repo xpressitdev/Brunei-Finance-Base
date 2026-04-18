@@ -1,12 +1,16 @@
 import { useState, useRef, useCallback } from "react";
 import { useLocation } from "wouter";
 import { format, startOfMonth, endOfMonth, isToday, parseISO } from "date-fns";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   useListTransactions,
   useListCategories,
+  useListAccounts,
   useCreateTransaction,
+  useUpdateTransaction,
   useDeleteTransaction,
   useScanReceipt,
+  getListAccountsQueryKey,
 } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,6 +43,7 @@ import {
   Camera,
   Plus,
   Trash2,
+  Pencil,
   Receipt,
   ShoppingCart,
   Utensils,
@@ -130,8 +135,22 @@ const defaultForm: FormState = {
   receiptUrl: "",
 };
 
+type TransactionItem = {
+  id: string;
+  date: string;
+  amount: string | number;
+  type: string;
+  description: string;
+  categoryId?: string | null;
+  categoryName?: string | null;
+  accountId?: string | null;
+  merchant?: string | null;
+  receiptUrl?: string | null;
+};
+
 export default function Expenses() {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
@@ -145,9 +164,23 @@ export default function Expenses() {
   const [trialExpiredError, setTrialExpiredError] = useState(false);
   const [, setLocation] = useLocation();
 
+  const [editingTx, setEditingTx] = useState<TransactionItem | null>(null);
+  const [editTrialExpiredError, setEditTrialExpiredError] = useState(false);
+  const [editData, setEditData] = useState({
+    date: "",
+    amount: "",
+    type: "debit",
+    description: "",
+    merchant: "",
+    categoryId: "none",
+    accountId: "none",
+  });
+
   const { data: transactions, refetch } = useListTransactions({ month: currentMonth });
   const { data: categories } = useListCategories();
+  const { data: accounts } = useListAccounts();
   const createMutation = useCreateTransaction();
+  const updateMutation = useUpdateTransaction();
   const deleteMutation = useDeleteTransaction();
   const scanMutation = useScanReceipt();
 
@@ -187,6 +220,50 @@ export default function Expenses() {
     setScanSuccess(false);
     setTrialExpiredError(false);
     setIsAddOpen(true);
+  };
+
+  const openEdit = (tx: TransactionItem) => {
+    setEditingTx(tx);
+    setEditTrialExpiredError(false);
+    setEditData({
+      date: format(new Date(tx.date), "yyyy-MM-dd"),
+      amount: String(tx.amount),
+      type: tx.type,
+      description: tx.description,
+      merchant: tx.merchant ?? "",
+      categoryId: tx.categoryId || "none",
+      accountId: tx.accountId || "none",
+    });
+  };
+
+  const handleEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingTx) return;
+    setEditTrialExpiredError(false);
+    try {
+      await updateMutation.mutateAsync({
+        id: editingTx.id,
+        data: {
+          date: new Date(editData.date).toISOString(),
+          amount: editData.amount,
+          type: editData.type,
+          description: editData.description,
+          merchant: editData.merchant || null,
+          categoryId: editData.categoryId === "none" ? null : editData.categoryId,
+          accountId: editData.accountId === "none" ? null : editData.accountId,
+        },
+      });
+      setEditingTx(null);
+      refetch();
+      queryClient.invalidateQueries({ queryKey: getListAccountsQueryKey() });
+      toast({ title: "Transaction updated!" });
+    } catch (err) {
+      if (isTrialExpiredError(err)) {
+        setEditTrialExpiredError(true);
+      } else {
+        toast({ title: "Failed to update transaction", variant: "destructive" });
+      }
+    }
   };
 
   const handleReceiptFile = useCallback(async (file: File) => {
@@ -359,6 +436,14 @@ export default function Expenses() {
                       </div>
                       <div className="flex items-center gap-2 flex-shrink-0">
                         <p className="text-sm font-semibold text-foreground">{fmt(parseFloat(t.amount))}</p>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground transition-opacity"
+                          onClick={() => openEdit(t)}
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                        </Button>
                         <Button
                           variant="ghost"
                           size="icon"
@@ -576,6 +661,115 @@ export default function Expenses() {
             <Button type="submit" className="w-full" disabled={createMutation.isPending}>
               {createMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
               Save Expense
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Transaction Dialog */}
+      <Dialog open={!!editingTx} onOpenChange={(open) => { if (!open) setEditingTx(null); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Pencil className="w-5 h-5 text-primary" />
+              Edit Transaction
+            </DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleEdit} className="space-y-4 mt-2">
+            {editTrialExpiredError && (
+              <TrialExpiredPrompt action="edit transactions" />
+            )}
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant={editData.type === "debit" ? "default" : "outline"}
+                size="sm"
+                className="flex-1"
+                onClick={() => setEditData((d) => ({ ...d, type: "debit" }))}
+              >
+                Expense
+              </Button>
+              <Button
+                type="button"
+                variant={editData.type === "credit" ? "default" : "outline"}
+                size="sm"
+                className="flex-1"
+                onClick={() => setEditData((d) => ({ ...d, type: "credit" }))}
+              >
+                Income
+              </Button>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>Date</Label>
+                <Input
+                  type="date"
+                  value={editData.date}
+                  onChange={(e) => setEditData((d) => ({ ...d, date: e.target.value }))}
+                  required
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Amount (BND)</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder="0.00"
+                  value={editData.amount}
+                  onChange={(e) => setEditData((d) => ({ ...d, amount: e.target.value }))}
+                  required
+                />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Description</Label>
+              <Input
+                placeholder="What did you spend on?"
+                value={editData.description}
+                onChange={(e) => setEditData((d) => ({ ...d, description: e.target.value }))}
+                required
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Merchant (optional)</Label>
+              <Input
+                placeholder="Store or vendor name"
+                value={editData.merchant}
+                onChange={(e) => setEditData((d) => ({ ...d, merchant: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Account <span className="text-muted-foreground text-xs">(optional)</span></Label>
+              <Select value={editData.accountId} onValueChange={(v) => setEditData((d) => ({ ...d, accountId: v }))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="No account" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No account</SelectItem>
+                  {(accounts ?? []).map((a) => (
+                    <SelectItem key={a.id} value={a.id}>{a.name}{a.bankName ? ` — ${a.bankName}` : ""}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Category</Label>
+              <Select value={editData.categoryId} onValueChange={(v) => setEditData((d) => ({ ...d, categoryId: v }))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Uncategorised</SelectItem>
+                  {(categories ?? []).map((c) => (
+                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button type="submit" className="w-full" disabled={updateMutation.isPending}>
+              {updateMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+              Save Changes
             </Button>
           </form>
         </DialogContent>
