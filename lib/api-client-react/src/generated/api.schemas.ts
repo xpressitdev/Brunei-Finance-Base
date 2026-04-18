@@ -370,6 +370,7 @@ export interface DashboardSummary {
   totalDebtPayments: string;
   debtToIncomeRatio: string;
   transactionCount: number;
+  actualIncomeThisMonth?: string;
 }
 
 export interface CategorySpend {

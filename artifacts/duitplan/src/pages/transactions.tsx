@@ -4,9 +4,9 @@ import { format } from "date-fns";
 import { 
   useListTransactions, 
   useListCategories,
+  useListAccounts,
   useCreateTransaction,
   useDeleteTransaction,
-  useUpdateTransaction
 } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,7 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Trash2, Plus, Search, Receipt, Wallet as WalletIcon } from "lucide-react";
+import { Trash2, Plus, Search, Receipt, TrendingUp, TrendingDown } from "lucide-react";
 import { TrialExpiredPrompt } from "@/components/subscription/TrialExpiredPrompt";
 import { isTrialExpiredError } from "@/lib/trialExpired";
 
@@ -40,6 +40,7 @@ export default function Transactions() {
 
   const { data: transactions, isLoading, refetch } = useListTransactions(month ? { month, search } : { search });
   const { data: categories } = useListCategories();
+  const { data: accounts } = useListAccounts();
   
   const createMutation = useCreateTransaction();
   const deleteMutation = useDeleteTransaction();
@@ -50,6 +51,7 @@ export default function Transactions() {
     type: "debit",
     description: "",
     categoryId: "none",
+    accountId: "none",
   });
 
   const handleAdd = async (e: React.FormEvent) => {
@@ -63,6 +65,7 @@ export default function Transactions() {
           type: formData.type,
           description: formData.description,
           categoryId: formData.categoryId === "none" ? undefined : formData.categoryId,
+          accountId: formData.accountId === "none" ? undefined : formData.accountId,
           source: "manual"
         }
       });
@@ -74,6 +77,7 @@ export default function Transactions() {
         type: "debit",
         description: "",
         categoryId: "none",
+        accountId: "none",
       });
     } catch (err) {
       if (isTrialExpiredError(err)) {
@@ -153,6 +157,18 @@ export default function Transactions() {
                 </div>
               </div>
               <div className="space-y-2">
+                <Label>Account <span className="text-muted-foreground text-xs">(optional)</span></Label>
+                <Select value={formData.accountId} onValueChange={(val) => setFormData({...formData, accountId: val})}>
+                  <SelectTrigger><SelectValue placeholder="No account" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">No account</SelectItem>
+                    {accounts?.map(a => (
+                      <SelectItem key={a.id} value={a.id}>{a.name}{a.bankName ? ` — ${a.bankName}` : ""}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
                 <Label>Category</Label>
                 <Select value={formData.categoryId} onValueChange={(val) => setFormData({...formData, categoryId: val})}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
@@ -225,8 +241,11 @@ export default function Transactions() {
             {transactions.map(tx => (
               <div key={tx.id} className="p-4 flex items-center justify-between hover:bg-muted/30 transition-colors">
                 <div className="flex items-start gap-4">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${tx.type === 'credit' ? 'bg-primary/10 text-primary' : 'bg-orange-500/10 text-orange-600'}`}>
-                    <WalletIcon className="w-5 h-5" />
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${tx.type === 'credit' ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-500'}`}>
+                    {tx.type === 'credit'
+                      ? <TrendingUp className="w-5 h-5" />
+                      : <TrendingDown className="w-5 h-5" />
+                    }
                   </div>
                   <div>
                     <div className="font-medium text-foreground">{tx.description}</div>
@@ -238,8 +257,8 @@ export default function Transactions() {
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
-                  <div className={`font-semibold ${tx.type === 'credit' ? 'text-primary' : 'text-foreground'}`}>
-                    {tx.type === 'credit' ? '+' : '-'}BND {tx.amount}
+                  <div className={`font-semibold ${tx.type === 'credit' ? 'text-emerald-600' : 'text-red-500'}`}>
+                    {tx.type === 'credit' ? '+' : '−'}BND {Number(tx.amount).toFixed(2)}
                   </div>
                   <div className="flex gap-1">
                     <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => handleDelete(tx.id)}>

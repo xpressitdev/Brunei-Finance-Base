@@ -600,6 +600,7 @@ export const GetDashboardSummaryResponse = zod.object({
   totalDebtPayments: zod.string(),
   debtToIncomeRatio: zod.string(),
   transactionCount: zod.number(),
+  actualIncomeThisMonth: zod.string().optional(),
 });
 
 /**

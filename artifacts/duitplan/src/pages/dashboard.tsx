@@ -5,7 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { Link } from "wouter";
-import { Wallet, ArrowDownRight, CreditCard, Activity, ArrowRight, Upload, Flame, Trophy, Landmark } from "lucide-react";
+import { Wallet, ArrowDownRight, CreditCard, Activity, ArrowRight, Upload, Flame, Trophy, Landmark, ArrowUpRight } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
 import { useQuery, useMutation } from "@tanstack/react-query";
 
@@ -107,6 +107,13 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent className="px-5 pb-5">
             <div className="text-2xl font-bold">{fmt(summary?.monthlyIncome)}</div>
+            {summary?.actualIncomeThisMonth !== undefined && (
+              <div className="mt-1.5 flex items-center gap-1 text-xs text-emerald-600">
+                <ArrowUpRight className="w-3 h-3" />
+                <span className="font-medium">{fmt(summary.actualIncomeThisMonth)}</span>
+                <span className="text-muted-foreground">received</span>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -320,8 +327,8 @@ export default function Dashboard() {
                           {format(new Date(tx.date), "d MMM")} &bull; {tx.categoryName || "Uncategorised"}
                         </p>
                       </div>
-                      <span className={`font-semibold text-sm ${tx.type === "credit" ? "text-primary" : "text-foreground"}`}>
-                        {tx.type === "credit" ? "+" : "-"}BND {Number(tx.amount).toFixed(2)}
+                      <span className={`font-semibold text-sm ${tx.type === "credit" ? "text-emerald-600" : "text-red-500"}`}>
+                        {tx.type === "credit" ? "+" : "−"}BND {Number(tx.amount).toFixed(2)}
                       </span>
                     </div>
                   ))}

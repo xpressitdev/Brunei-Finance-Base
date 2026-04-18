@@ -1,7 +1,7 @@
 import { Router, type IRouter } from "express";
-import { eq, and, ilike, gte, lte } from "drizzle-orm";
+import { eq, and, ilike, gte, lte, sql } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
-import { db, transactionsTable, categoriesTable } from "@workspace/db";
+import { db, transactionsTable, categoriesTable, accountsTable } from "@workspace/db";
 import {
   CreateTransactionBody,
   UpdateTransactionBody,
@@ -66,19 +66,32 @@ router.post("/transactions", requireAuth, requireAccess, async (req: Authenticat
   const parsed = CreateTransactionBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
 
-  const [txn] = await db.insert(transactionsTable).values({
-    id: uuidv4(),
-    userId: req.userId!,
-    date: new Date(parsed.data.date),
-    amount: parsed.data.amount,
-    type: parsed.data.type,
-    description: parsed.data.description,
-    merchant: parsed.data.merchant ?? null,
-    categoryId: parsed.data.categoryId ?? null,
-    accountId: parsed.data.accountId ?? null,
-    notes: parsed.data.notes ?? null,
-    source: "manual",
-  }).returning();
+  const txn = await db.transaction(async (tx) => {
+    const [inserted] = await tx.insert(transactionsTable).values({
+      id: uuidv4(),
+      userId: req.userId!,
+      date: new Date(parsed.data.date),
+      amount: parsed.data.amount,
+      type: parsed.data.type,
+      description: parsed.data.description,
+      merchant: parsed.data.merchant ?? null,
+      categoryId: parsed.data.categoryId ?? null,
+      accountId: parsed.data.accountId ?? null,
+      notes: parsed.data.notes ?? null,
+      source: "manual",
+    }).returning();
+
+    if (inserted.accountId) {
+      const balanceDelta = inserted.type === "credit"
+        ? sql`${accountsTable.balance} + ${inserted.amount}::numeric`
+        : sql`${accountsTable.balance} - ${inserted.amount}::numeric`;
+      await tx.update(accountsTable)
+        .set({ balance: balanceDelta })
+        .where(and(eq(accountsTable.id, inserted.accountId), eq(accountsTable.userId, req.userId!)));
+    }
+
+    return inserted;
+  });
 
   res.status(201).json(await formatTransaction(txn));
 });
@@ -119,7 +132,25 @@ router.patch("/transactions/:id", requireAuth, requireAccess, async (req: Authen
 router.delete("/transactions/:id", requireAuth, requireAccess, async (req: AuthenticatedRequest, res): Promise<void> => {
   const params = DeleteTransactionParams.safeParse(req.params);
   if (!params.success) { res.status(400).json({ error: params.error.message }); return; }
-  await db.delete(transactionsTable).where(and(eq(transactionsTable.id, params.data.id), eq(transactionsTable.userId, req.userId!)));
+
+  await db.transaction(async (tx) => {
+    const [txn] = await tx.select().from(transactionsTable)
+      .where(and(eq(transactionsTable.id, params.data.id), eq(transactionsTable.userId, req.userId!)))
+      .limit(1);
+
+    if (txn?.accountId) {
+      const reverseDelta = txn.type === "credit"
+        ? sql`${accountsTable.balance} - ${txn.amount}::numeric`
+        : sql`${accountsTable.balance} + ${txn.amount}::numeric`;
+      await tx.update(accountsTable)
+        .set({ balance: reverseDelta })
+        .where(and(eq(accountsTable.id, txn.accountId), eq(accountsTable.userId, req.userId!)));
+    }
+
+    await tx.delete(transactionsTable)
+      .where(and(eq(transactionsTable.id, params.data.id), eq(transactionsTable.userId, req.userId!)));
+  });
+
   res.sendStatus(204);
 });
 

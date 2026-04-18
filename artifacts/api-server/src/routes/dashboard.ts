@@ -21,14 +21,24 @@ router.get("/dashboard/summary", requireAuth, async (req: AuthenticatedRequest, 
   const commitments = await db.select().from(commitmentsTable).where(eq(commitmentsTable.userId, req.userId!));
   const totalCommitments = commitments.reduce((s, c) => s + parseFloat(c.amount), 0);
 
-  const txns = await db.select().from(transactionsTable).where(and(
+  const debitTxns = await db.select().from(transactionsTable).where(and(
     eq(transactionsTable.userId, req.userId!),
     eq(transactionsTable.type, "debit"),
     gte(transactionsTable.date, start),
     lte(transactionsTable.date, end),
   ));
 
-  const totalSpent = txns.reduce((s, t) => s + parseFloat(t.amount), 0);
+  const totalSpent = debitTxns.reduce((s, t) => s + parseFloat(t.amount), 0);
+
+  const creditTxns = await db.select().from(transactionsTable).where(and(
+    eq(transactionsTable.userId, req.userId!),
+    eq(transactionsTable.type, "credit"),
+    gte(transactionsTable.date, start),
+    lte(transactionsTable.date, end),
+  ));
+
+  const actualIncomeThisMonth = creditTxns.reduce((s, t) => s + parseFloat(t.amount), 0);
+
   const income = parseFloat(monthlyIncome);
 
   const debts = await db.select().from(debtsTable).where(eq(debtsTable.userId, req.userId!));
@@ -53,6 +63,7 @@ router.get("/dashboard/summary", requireAuth, async (req: AuthenticatedRequest, 
     totalDebtPayments: totalDebtPayment.toFixed(2),
     debtToIncomeRatio: debtToIncomeRatio.toFixed(2),
     transactionCount: allTxns.length,
+    actualIncomeThisMonth: actualIncomeThisMonth.toFixed(2),
   });
 });
 
