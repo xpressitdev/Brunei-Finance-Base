@@ -112,19 +112,56 @@ router.patch("/transactions/:id", requireAuth, requireAccess, async (req: Authen
   const body = UpdateTransactionBody.safeParse(req.body);
   if (!body.success) { res.status(400).json({ error: body.error.message }); return; }
 
-  const updateData: Record<string, unknown> = {};
-  if (body.data.date != null) updateData.date = new Date(body.data.date);
-  if (body.data.amount != null) updateData.amount = body.data.amount;
-  if (body.data.type != null) updateData.type = body.data.type;
-  if (body.data.description != null) updateData.description = body.data.description;
-  if (body.data.merchant !== undefined) updateData.merchant = body.data.merchant;
-  if (body.data.categoryId !== undefined) updateData.categoryId = body.data.categoryId;
-  if (body.data.accountId !== undefined) updateData.accountId = body.data.accountId;
-  if (body.data.notes !== undefined) updateData.notes = body.data.notes;
+  const updated = await db.transaction(async (tx) => {
+    const [existing] = await tx.select().from(transactionsTable)
+      .where(and(eq(transactionsTable.id, params.data.id), eq(transactionsTable.userId, req.userId!)))
+      .limit(1);
+    if (!existing) return null;
 
-  const [updated] = await db.update(transactionsTable).set(updateData)
-    .where(and(eq(transactionsTable.id, params.data.id), eq(transactionsTable.userId, req.userId!)))
-    .returning();
+    const newAmount = body.data.amount != null ? body.data.amount : existing.amount;
+    const newType = body.data.type != null ? body.data.type : existing.type;
+    const newAccountId = body.data.accountId !== undefined ? body.data.accountId : existing.accountId;
+
+    const balanceAffected =
+      String(newAmount) !== String(existing.amount) ||
+      newType !== existing.type ||
+      newAccountId !== existing.accountId;
+
+    if (balanceAffected && existing.accountId) {
+      const reverseDelta = existing.type === "credit"
+        ? sql`${accountsTable.balance} - ${existing.amount}::numeric`
+        : sql`${accountsTable.balance} + ${existing.amount}::numeric`;
+      await tx.update(accountsTable)
+        .set({ balance: reverseDelta })
+        .where(and(eq(accountsTable.id, existing.accountId), eq(accountsTable.userId, req.userId!)));
+    }
+
+    const updateData: Record<string, unknown> = {};
+    if (body.data.date != null) updateData.date = new Date(body.data.date);
+    if (body.data.amount != null) updateData.amount = body.data.amount;
+    if (body.data.type != null) updateData.type = body.data.type;
+    if (body.data.description != null) updateData.description = body.data.description;
+    if (body.data.merchant !== undefined) updateData.merchant = body.data.merchant;
+    if (body.data.categoryId !== undefined) updateData.categoryId = body.data.categoryId;
+    if (body.data.accountId !== undefined) updateData.accountId = body.data.accountId;
+    if (body.data.notes !== undefined) updateData.notes = body.data.notes;
+
+    const [row] = await tx.update(transactionsTable).set(updateData)
+      .where(and(eq(transactionsTable.id, params.data.id), eq(transactionsTable.userId, req.userId!)))
+      .returning();
+
+    if (balanceAffected && newAccountId) {
+      const applyDelta = newType === "credit"
+        ? sql`${accountsTable.balance} + ${newAmount}::numeric`
+        : sql`${accountsTable.balance} - ${newAmount}::numeric`;
+      await tx.update(accountsTable)
+        .set({ balance: applyDelta })
+        .where(and(eq(accountsTable.id, newAccountId), eq(accountsTable.userId, req.userId!)));
+    }
+
+    return row;
+  });
+
   if (!updated) { res.status(404).json({ error: "Transaction not found" }); return; }
   res.json(await formatTransaction(updated));
 });

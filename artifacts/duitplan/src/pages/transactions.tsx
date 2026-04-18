@@ -1,12 +1,15 @@
 import { useState } from "react";
 import { useLocation, useSearch } from "wouter";
 import { format } from "date-fns";
+import { useQueryClient } from "@tanstack/react-query";
 import { 
   useListTransactions, 
   useListCategories,
   useListAccounts,
   useCreateTransaction,
+  useUpdateTransaction,
   useDeleteTransaction,
+  getListAccountsQueryKey,
 } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,24 +28,39 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Trash2, Plus, Search, Receipt, TrendingUp, TrendingDown } from "lucide-react";
+import { Trash2, Plus, Search, Receipt, TrendingUp, TrendingDown, Pencil } from "lucide-react";
 import { TrialExpiredPrompt } from "@/components/subscription/TrialExpiredPrompt";
 import { isTrialExpiredError } from "@/lib/trialExpired";
 
+type TransactionItem = {
+  id: string;
+  date: string;
+  amount: string | number;
+  type: string;
+  description: string;
+  categoryId?: string | null;
+  categoryName?: string | null;
+  accountId?: string | null;
+};
+
 export default function Transactions() {
+  const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
   const searchString = useSearch();
   const queryMonth = new URLSearchParams(searchString).get("month");
   const [month, setMonth] = useState(queryMonth && /^\d{4}-\d{2}$/.test(queryMonth) ? queryMonth : "");
   const [search, setSearch] = useState("");
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [editingTx, setEditingTx] = useState<TransactionItem | null>(null);
   const [trialExpiredError, setTrialExpiredError] = useState(false);
+  const [editTrialExpiredError, setEditTrialExpiredError] = useState(false);
 
   const { data: transactions, isLoading, refetch } = useListTransactions(month ? { month, search } : { search });
   const { data: categories } = useListCategories();
   const { data: accounts } = useListAccounts();
   
   const createMutation = useCreateTransaction();
+  const updateMutation = useUpdateTransaction();
   const deleteMutation = useDeleteTransaction();
 
   const [formData, setFormData] = useState({
@@ -53,6 +71,28 @@ export default function Transactions() {
     categoryId: "none",
     accountId: "none",
   });
+
+  const [editData, setEditData] = useState({
+    date: "",
+    amount: "",
+    type: "debit",
+    description: "",
+    categoryId: "none",
+    accountId: "none",
+  });
+
+  const openEdit = (tx: TransactionItem) => {
+    setEditingTx(tx);
+    setEditTrialExpiredError(false);
+    setEditData({
+      date: format(new Date(tx.date), "yyyy-MM-dd"),
+      amount: String(tx.amount),
+      type: tx.type,
+      description: tx.description,
+      categoryId: tx.categoryId || "none",
+      accountId: tx.accountId || "none",
+    });
+  };
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -82,6 +122,32 @@ export default function Transactions() {
     } catch (err) {
       if (isTrialExpiredError(err)) {
         setTrialExpiredError(true);
+      }
+    }
+  };
+
+  const handleEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingTx) return;
+    setEditTrialExpiredError(false);
+    try {
+      await updateMutation.mutateAsync({
+        id: editingTx.id,
+        data: {
+          date: new Date(editData.date).toISOString(),
+          amount: editData.amount,
+          type: editData.type,
+          description: editData.description,
+          categoryId: editData.categoryId === "none" ? null : editData.categoryId,
+          accountId: editData.accountId === "none" ? null : editData.accountId,
+        }
+      });
+      setEditingTx(null);
+      refetch();
+      queryClient.invalidateQueries({ queryKey: getListAccountsQueryKey() });
+    } catch (err) {
+      if (isTrialExpiredError(err)) {
+        setEditTrialExpiredError(true);
       }
     }
   };
@@ -188,6 +254,85 @@ export default function Transactions() {
         </Dialog>
       </div>
 
+      <Dialog open={!!editingTx} onOpenChange={(open) => { if (!open) setEditingTx(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Transaction</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleEdit} className="space-y-4">
+            {editTrialExpiredError && (
+              <TrialExpiredPrompt action="edit transactions" />
+            )}
+            <div className="space-y-2">
+              <Label>Date</Label>
+              <Input 
+                type="date" 
+                value={editData.date} 
+                onChange={(e) => setEditData({...editData, date: e.target.value})}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Description</Label>
+              <Input 
+                value={editData.description} 
+                onChange={(e) => setEditData({...editData, description: e.target.value})}
+                required
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Amount</Label>
+                <Input 
+                  type="number" 
+                  step="0.01" 
+                  value={editData.amount} 
+                  onChange={(e) => setEditData({...editData, amount: e.target.value})}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Type</Label>
+                <Select value={editData.type} onValueChange={(val) => setEditData({...editData, type: val})}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="debit">Expense</SelectItem>
+                    <SelectItem value="credit">Income</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Account <span className="text-muted-foreground text-xs">(optional)</span></Label>
+              <Select value={editData.accountId} onValueChange={(val) => setEditData({...editData, accountId: val})}>
+                <SelectTrigger><SelectValue placeholder="No account" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No account</SelectItem>
+                  {accounts?.map(a => (
+                    <SelectItem key={a.id} value={a.id}>{a.name}{a.bankName ? ` — ${a.bankName}` : ""}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Category</Label>
+              <Select value={editData.categoryId} onValueChange={(val) => setEditData({...editData, categoryId: val})}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Uncategorized</SelectItem>
+                  {categories?.map(c => (
+                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button type="submit" className="w-full" disabled={updateMutation.isPending}>
+              {updateMutation.isPending ? "Saving..." : "Save Changes"}
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
+
       <div className="flex gap-3 items-center bg-white p-4 rounded-xl border flex-wrap">
         <div className="flex items-center gap-2">
           <Input 
@@ -261,6 +406,9 @@ export default function Transactions() {
                     {tx.type === 'credit' ? '+' : '−'}BND {Number(tx.amount).toFixed(2)}
                   </div>
                   <div className="flex gap-1">
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => openEdit(tx)}>
+                      <Pencil className="w-4 h-4" />
+                    </Button>
                     <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => handleDelete(tx.id)}>
                       <Trash2 className="w-4 h-4" />
                     </Button>
