@@ -281,7 +281,7 @@ function AnnualView({
 }
 
 export default function Budgets() {
-  const { fmt, currencyLabel, inputStep } = useCurrency();
+  const { fmt, currencyLabel, inputStep, inputPlaceholder, fmtApi } = useCurrency();
   const [activeDate, setActiveDate] = useState(new Date());
   const [view, setView] = useState<"plan" | "actual" | "annual">("plan");
   const [editing, setEditing] = useState<Record<string, string>>({});
@@ -326,7 +326,7 @@ export default function Budgets() {
     const val = editing[categoryId];
     if (val === undefined) return;
     try {
-      await upsert.mutateAsync({ data: { categoryId, month, plannedAmount: parseFloat(val).toFixed(2) } });
+      await upsert.mutateAsync({ data: { categoryId, month, plannedAmount: fmtApi(parseFloat(val)) } });
       setEditing(prev => { const n = { ...prev }; delete n[categoryId]; return n; });
       refetch();
     } catch (err) {
@@ -603,7 +603,7 @@ export default function Budgets() {
                 const pct = planned > 0 ? Math.min(100, (actual / planned) * 100) : 0;
                 const isOver = actual > planned && planned > 0;
                 const editVal = editing[cat.id];
-                const displayVal = editVal !== undefined ? editVal : planned > 0 ? planned.toFixed(2) : "";
+                const displayVal = editVal !== undefined ? editVal : planned > 0 ? fmtApi(planned) : "";
 
                 return (
                   <div key={cat.id} className="px-5 py-4 space-y-2">
@@ -618,7 +618,7 @@ export default function Budgets() {
                             min="0"
                             className="w-28 text-right h-8 text-sm"
                             value={displayVal}
-                            placeholder="0.00"
+                            placeholder={inputPlaceholder}
                             onChange={e => setEditing(prev => ({ ...prev, [cat.id]: e.target.value }))}
                             onBlur={() => { if (editVal !== undefined) handleSave(cat.id); }}
                             onKeyDown={e => { if (e.key === "Enter") handleSave(cat.id); }}

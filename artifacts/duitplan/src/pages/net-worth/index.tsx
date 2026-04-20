@@ -186,7 +186,7 @@ const LineTooltip = ({ active, payload, label }: TooltipProps<number, string>) =
 };
 
 export default function NetWorth() {
-  const { fmt, fmtCompact, currencyLabel, inputStep } = useCurrency();
+  const { fmt, fmtCompact, currencyLabel, inputStep, inputPlaceholder, fmtApi } = useCurrency();
   const [selectedMonth, setSelectedMonth] = useState(currentMonth());
   const today = currentMonth();
 
@@ -277,17 +277,17 @@ export default function NetWorth() {
 
       if (isCarriedForward) {
         await createMutation.mutateAsync({
-          data: { category: form.category, name: form.name.trim(), value: val.toFixed(2), month: selectedMonth },
+          data: { category: form.category, name: form.name.trim(), value: fmtApi(val), month: selectedMonth },
         });
       } else {
         await updateMutation.mutateAsync({
           id: editingId,
-          data: { category: form.category, name: form.name.trim(), value: val.toFixed(2), month: form.month },
+          data: { category: form.category, name: form.name.trim(), value: fmtApi(val), month: form.month },
         });
       }
     } else {
       await createMutation.mutateAsync({
-        data: { category: form.category, name: form.name.trim(), value: val.toFixed(2), month: form.month },
+        data: { category: form.category, name: form.name.trim(), value: fmtApi(val), month: form.month },
       });
     }
     setDialogOpen(false);
@@ -606,7 +606,7 @@ export default function NetWorth() {
             </div>
             <div className="space-y-1.5">
               <Label>Value ({currencyLabel})</Label>
-              <Input type="number" step={inputStep} min="0" placeholder="0.00" value={form.value} onFocus={(e) => e.target.select()} onChange={(e) => setForm((f) => ({ ...f, value: e.target.value }))} />
+              <Input type="number" step={inputStep} min="0" placeholder={inputPlaceholder} value={form.value} onFocus={(e) => e.target.select()} onChange={(e) => setForm((f) => ({ ...f, value: e.target.value }))} />
             </div>
             <div className="space-y-1.5">
               <Label>Month</Label>

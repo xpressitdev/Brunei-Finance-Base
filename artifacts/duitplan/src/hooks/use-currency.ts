@@ -8,6 +8,7 @@ import {
   formatNumber,
   getCurrencyInputStep,
   getCurrencyPlaceholder,
+  formatAmountForApi,
 } from "@/lib/formatting";
 
 /**
@@ -41,5 +42,7 @@ export function useCurrency() {
     inputPlaceholder: getCurrencyPlaceholder(currency),
     /** Currency code symbol label, e.g. "RM" or "Rp" or "BND" */
     currencyLabel: currency,
+    /** Round and stringify an amount correctly for API/DB submission (IDR → integer string, others → 2dp) */
+    fmtApi: (amount: number) => formatAmountForApi(amount, currency),
   };
 }

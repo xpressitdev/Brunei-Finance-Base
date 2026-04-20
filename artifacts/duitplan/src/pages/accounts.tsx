@@ -73,13 +73,6 @@ function getTypeInfo(type: string) {
   return ACCOUNT_TYPES.find(t => t.value === type) ?? ACCOUNT_TYPES[ACCOUNT_TYPES.length - 1];
 }
 
-function fmtShort(val: number) {
-  if (Math.abs(val) >= 1000) {
-    return `${(val / 1000).toFixed(1)}k`;
-  }
-  return val.toFixed(0);
-}
-
 function fmtDate(dateStr: string, days: number, locale: string) {
   const d = new Date(dateStr + "T00:00:00");
   if (days <= 7) {
@@ -108,7 +101,7 @@ function AccountForm({
   onCancel: () => void;
   saving: boolean;
 }) {
-  const { currencyLabel, inputStep } = useCurrency();
+  const { currencyLabel, inputStep, inputPlaceholder } = useCurrency();
   const [form, setForm] = useState<FormState>(initial);
   const set = (k: keyof FormState, v: string) => setForm(prev => ({ ...prev, [k]: v }));
 
@@ -164,7 +157,7 @@ function AccountForm({
             value={form.balance}
             onChange={e => set("balance", e.target.value)}
             onFocus={e => e.target.select()}
-            placeholder="e.g. 5000.00"
+            placeholder={inputPlaceholder}
           />
         </div>
         <p className="text-xs text-muted-foreground">Enter the current amount in your account today.</p>
@@ -184,7 +177,7 @@ function AccountForm({
 }
 
 function BalanceHistoryChart({ account }: { account: Account }) {
-  const { fmt, locale } = useCurrency();
+  const { fmt, fmtCompact, locale } = useCurrency();
   const [days, setDays] = useState(30);
   const { data: history = [], isLoading } = useGetAccountBalanceHistory(account.id, { days });
 
@@ -245,7 +238,7 @@ function BalanceHistoryChart({ account }: { account: Account }) {
               />
               <YAxis
                 domain={[yMin, yMax]}
-                tickFormatter={fmtShort}
+                tickFormatter={(v) => fmtCompact(Number(v))}
                 tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
                 axisLine={false}
                 tickLine={false}
@@ -290,7 +283,7 @@ function BalanceHistoryChart({ account }: { account: Account }) {
 }
 
 export default function Accounts() {
-  const { fmt } = useCurrency();
+  const { fmt, fmtApi } = useCurrency();
   const qc = useQueryClient();
   const { data: accounts = [], isLoading } = useListAccounts();
   const createMut = useCreateAccount();
@@ -309,7 +302,7 @@ export default function Accounts() {
 
   function safeBalance(raw: string): string {
     const n = parseFloat(raw);
-    return isNaN(n) ? "0.00" : n.toFixed(2);
+    return isNaN(n) ? fmtApi(0) : fmtApi(n);
   }
 
   async function handleCreate(form: FormState) {
@@ -516,7 +509,7 @@ export default function Accounts() {
                 name: editAccount.name,
                 type: editAccount.type,
                 bankName: editAccount.bankName ?? "BIBD",
-                balance: parseFloat(editAccount.balance ?? "0").toFixed(2),
+                balance: fmtApi(parseFloat(editAccount.balance ?? "0")),
               }}
               onSave={handleUpdate}
               onCancel={() => setEditAccount(null)}

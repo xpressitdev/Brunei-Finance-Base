@@ -71,7 +71,7 @@ function mergeCurves(
 }
 
 export default function DebtDetail() {
-  const { fmt, currencyLabel, inputStep } = useCurrency();
+  const { fmt, currencyLabel, inputStep, fmtApi } = useCurrency();
   const { id } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
   const { data: debts, isLoading } = useListDebts();
@@ -123,7 +123,7 @@ export default function DebtDetail() {
       basePayoffMonths: baseMonths,
       newPayoffMonths: newMonths,
       estimatedMonthsSaved: monthsSaved,
-      totalInterestSaved: parseFloat(interestSaved.toFixed(2)),
+      totalInterestSaved: parseFloat(fmtApi(interestSaved)),
       chartData,
     });
   };

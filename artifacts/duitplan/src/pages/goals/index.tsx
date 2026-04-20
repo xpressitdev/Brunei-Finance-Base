@@ -60,7 +60,7 @@ const emptyForm = {
 };
 
 export default function Goals() {
-  const { fmt, currencyLabel, inputStep } = useCurrency();
+  const { fmt, currencyLabel, inputStep, inputPlaceholder } = useCurrency();
   const { data: goals, isLoading, refetch } = useListGoals();
   const createMutation = useCreateGoal();
   const updateMutation = useUpdateGoal();
@@ -346,7 +346,7 @@ function GoalForm({
   loading: boolean;
   submitLabel: string;
 }) {
-  const { currencyLabel, inputStep } = useCurrency();
+  const { currencyLabel, inputStep, inputPlaceholder } = useCurrency();
   const set = (key: keyof typeof emptyForm) => (val: string) => onChange({ ...form, [key]: val });
   const setE = (key: keyof typeof emptyForm) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => onChange({ ...form, [key]: e.target.value });
 
@@ -372,11 +372,11 @@ function GoalForm({
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label>Target Amount ({currencyLabel})</Label>
-          <Input type="number" step={inputStep} min="0" value={form.targetAmount} onChange={setE("targetAmount")} placeholder="0.00" required />
+          <Input type="number" step={inputStep} min="0" value={form.targetAmount} onChange={setE("targetAmount")} placeholder={inputPlaceholder} required />
         </div>
         <div className="space-y-2">
           <Label>Amount Saved ({currencyLabel})</Label>
-          <Input type="number" step={inputStep} min="0" value={form.savedAmount} onChange={setE("savedAmount")} placeholder="0.00" />
+          <Input type="number" step={inputStep} min="0" value={form.savedAmount} onChange={setE("savedAmount")} placeholder={inputPlaceholder} />
         </div>
       </div>
       <div className="space-y-2">

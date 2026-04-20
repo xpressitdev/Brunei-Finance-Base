@@ -148,7 +148,7 @@ type TransactionItem = {
 };
 
 export default function Expenses() {
-  const { fmt, currencyLabel, inputStep } = useCurrency();
+  const { fmt, currencyLabel, inputStep, inputPlaceholder, fmtApi } = useCurrency();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -326,7 +326,7 @@ export default function Expenses() {
       await createMutation.mutateAsync({
         data: {
           date: new Date(form.date).toISOString(),
-          amount: parseFloat(form.amount).toFixed(2),
+          amount: fmtApi(parseFloat(form.amount)),
           type: form.type,
           description: form.description,
           merchant: form.merchant || undefined,
@@ -621,7 +621,7 @@ export default function Expenses() {
                   type="number"
                   step={inputStep}
                   min="0"
-                  placeholder="0.00"
+                  placeholder={inputPlaceholder}
                   value={form.amount}
                   onChange={(e) => setForm((f) => ({ ...f, amount: e.target.value }))}
                   required
@@ -738,7 +738,7 @@ export default function Expenses() {
                   type="number"
                   step={inputStep}
                   min="0"
-                  placeholder="0.00"
+                  placeholder={inputPlaceholder}
                   value={editData.amount}
                   onChange={(e) => setEditData((d) => ({ ...d, amount: e.target.value }))}
                   required

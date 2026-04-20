@@ -187,3 +187,18 @@ export function getCurrencyInputStep(currency: string): string {
 export function getCurrencyPlaceholder(currency: string): string {
   return fractionDigits(currency) === 0 ? "0" : "0.00";
 }
+
+/**
+ * Round an amount to the correct number of decimal places for the currency
+ * and return it as a numeric string suitable for API/DB submission.
+ * e.g. formatAmountForApi(50000.7, "IDR") → "50001"
+ *      formatAmountForApi(50000.7, "BND") → "50000.70"
+ */
+export function formatAmountForApi(amount: number, currency: string): string {
+  const d = fractionDigits(currency);
+  if (d === 0) {
+    return String(Math.round(amount));
+  }
+  const factor = Math.pow(10, d);
+  return (Math.round(amount * factor) / factor).toFixed(d);
+}
