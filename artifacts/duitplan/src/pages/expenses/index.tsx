@@ -11,6 +11,7 @@ import {
   useDeleteTransaction,
   useScanReceipt,
   getListAccountsQueryKey,
+  useGetProfile,
 } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -180,6 +181,7 @@ export default function Expenses() {
   const { data: transactions, refetch } = useListTransactions({ month: currentMonth });
   const { data: categories } = useListCategories();
   const { data: accounts } = useListAccounts();
+  const { data: profile } = useGetProfile();
   const createMutation = useCreateTransaction();
   const updateMutation = useUpdateTransaction();
   const deleteMutation = useDeleteTransaction();
@@ -189,7 +191,9 @@ export default function Expenses() {
   const income = (transactions ?? []).filter((t) => t.type === "credit");
 
   const totalExpenses = expenses.reduce((s, t) => s + parseFloat(t.amount), 0);
-  const totalIncome = income.reduce((s, t) => s + parseFloat(t.amount), 0);
+  const configuredSalary = parseFloat(profile?.monthlyIncome ?? "0");
+  const totalIncome = income.reduce((s, t) => s + parseFloat(t.amount), 0) + configuredSalary;
+  const incomeEntryCount = income.length + (configuredSalary > 0 ? 1 : 0);
 
   const todayTransactions = expenses.filter((t) => {
     try { return isToday(parseISO(t.date)); } catch { return false; }
@@ -394,7 +398,12 @@ export default function Expenses() {
         <div className="bg-card border rounded-xl p-4">
           <p className="text-xs text-muted-foreground uppercase tracking-wide">Month Income</p>
           <p className="text-xl font-bold text-emerald-600 mt-1">{fmt(totalIncome)}</p>
-          <p className="text-xs text-muted-foreground mt-1">{income.length} entries</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            {incomeEntryCount} {incomeEntryCount === 1 ? "entry" : "entries"}
+            {configuredSalary > 0 && income.length === 0 && (
+              <span className="ml-1">(salary)</span>
+            )}
+          </p>
         </div>
       </div>
 
