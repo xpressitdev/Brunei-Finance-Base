@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  Lightbulb, Sparkles, TrendingUp, TrendingDown, Minus,
+  Lightbulb, Sparkles, TrendingUp, TrendingDown, ArrowRight,
   AlertTriangle, CheckCircle, Info, RefreshCw, Repeat,
   PiggyBank, Scale, LayoutGrid, Zap,
 } from "lucide-react";
@@ -205,8 +205,10 @@ export default function Insights() {
             <Card className={`border-l-4 ${borderColor(spendSeverity)}`}>
               <CardHeader className="pb-2">
                 <CardTitle className="flex items-center gap-2 text-base">
-                  {st?.changePct == null ? <Minus className="w-5 h-5 text-muted-foreground" />
-                    : st.changePct > 0 ? <TrendingUp className="w-5 h-5 text-orange-500" />
+                  {st?.changePct == null
+                    ? <ArrowRight className="w-5 h-5 text-muted-foreground" />
+                    : st.changePct > 0
+                    ? <TrendingUp className="w-5 h-5 text-orange-500" />
                     : <TrendingDown className="w-5 h-5 text-emerald-500" />
                   }
                   Spending Trend
@@ -214,7 +216,23 @@ export default function Insights() {
               </CardHeader>
               <CardContent>
                 {!st?.hasData ? (
-                  <p className="text-muted-foreground text-sm">We need at least 2 months of data to show spending trends.</p>
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                    <p className="text-muted-foreground text-sm flex-1">
+                      We need at least 2 months of data to show spending trends.
+                    </p>
+                    <div className="h-20 w-full sm:w-48 shrink-0 opacity-25 pointer-events-none select-none">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart
+                          data={[{ label: prevMonthLabel, value: 60 }, { label: thisMonthLabel, value: 60 }]}
+                          margin={{ top: 4, right: 4, left: -20, bottom: 0 }}
+                        >
+                          <XAxis dataKey="label" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
+                          <YAxis hide />
+                          <Bar dataKey="value" radius={[4, 4, 0, 0]} fill="#94a3b8" />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
                 ) : (
                   <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                     <div className="flex-1 min-w-0">
@@ -332,13 +350,15 @@ export default function Insights() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {sr?.income === 0 ? (
-                  <p className="text-sm text-muted-foreground">Set your monthly income in Settings to see your savings rate.</p>
+                {sr?.income === 0 && (sr?.spent ?? 0) === 0 ? (
+                  <p className="text-sm text-muted-foreground">Configure your salary in Settings to see your savings rate.</p>
+                ) : sr?.income === 0 && (sr?.spent ?? 0) > 0 ? (
+                  <p className="text-sm text-muted-foreground">Spending exceeds income this month.</p>
                 ) : (
                   <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                     <div className="flex-1 min-w-0">
                       <p className="text-2xl font-bold">
-                        {sr?.rate != null ? `${sr.rate}%` : "—"}
+                        {`${sr?.rate ?? 0}%`}
                       </p>
                       <p className="text-sm text-muted-foreground mt-1">
                         {sr?.rate != null && sr.rate >= 20
@@ -356,7 +376,7 @@ export default function Insights() {
                     <div className="w-full sm:w-40 shrink-0">
                       <div className="flex justify-between text-xs text-muted-foreground mb-1">
                         <span>Saved</span>
-                        <span className="font-medium">{sr?.rate != null ? `${Math.max(0, sr.rate)}%` : "—"} / 20%</span>
+                        <span className="font-medium">{sr?.rate != null ? `${Math.max(0, sr.rate)}%` : "0%"} / 20%</span>
                       </div>
                       <div className="h-3 bg-muted rounded-full overflow-hidden">
                         <div
@@ -420,9 +440,20 @@ export default function Insights() {
               </CardHeader>
               <CardContent>
                 {!ba || ba.total === 0 ? (
-                  <p className="text-sm text-muted-foreground">
-                    No budgets set for {format(parseISO(`${month}-01`), "MMMM yyyy")}. Set budgets in the Cash Flow Plan to track adherence.
-                  </p>
+                  <div>
+                    <p className="text-sm text-muted-foreground">
+                      No budgets set for {format(parseISO(`${month}-01`), "MMMM yyyy")}. Set budgets in the Cash Flow Plan to track adherence.
+                    </p>
+                    <div className="mt-3 opacity-25 pointer-events-none select-none">
+                      <div className="flex justify-between text-xs text-muted-foreground mb-1">
+                        <span>On track</span><span>— / — budgets</span>
+                      </div>
+                      <div className="h-2 bg-muted rounded-full overflow-hidden">
+                        <div className="h-full w-0 rounded-full bg-blue-400" />
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">0% of budgets on track</p>
+                    </div>
+                  </div>
                 ) : (
                   <div>
                     <p className="text-2xl font-bold">
