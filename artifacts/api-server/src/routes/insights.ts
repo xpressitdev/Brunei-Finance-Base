@@ -96,11 +96,12 @@ router.get("/insights/computed", requireAuth, async (req: AuthenticatedRequest, 
     histByCategory[k].months.add(mKey);
   }
 
-  const catIds = new Set([...Object.keys(thisByCategory), ...Object.keys(histByCategory)]);
   const catNames: Record<string, string> = {};
-  const catIdsToFetch = [...catIds].filter(id => id !== "__none__" && id !== "uncategorized");
+  const catIdsToFetch = [
+    ...new Set([...Object.keys(thisByCategory), ...Object.keys(histByCategory)])
+  ].filter(id => id !== "__none__" && id !== "uncategorized");
   if (catIdsToFetch.length > 0) {
-    const cats = await db.select().from(categoriesTable).where(eq(categoriesTable.userId, userId));
+    const cats = await db.select({ id: categoriesTable.id, name: categoriesTable.name }).from(categoriesTable);
     for (const c of cats) catNames[c.id] = c.name;
   }
 

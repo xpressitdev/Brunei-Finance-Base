@@ -419,29 +419,29 @@ export default function Insights() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {ba?.total === 0 ? (
+                {!ba || ba.total === 0 ? (
                   <p className="text-sm text-muted-foreground">
                     No budgets set for {format(parseISO(`${month}-01`), "MMMM yyyy")}. Set budgets in the Cash Flow Plan to track adherence.
                   </p>
                 ) : (
                   <div>
                     <p className="text-2xl font-bold">
-                      {ba!.onTrack} of {ba!.total}
+                      {ba.onTrack} of {ba.total}
                     </p>
                     <p className="text-sm text-muted-foreground mt-1">
-                      {ba!.pct === 100
+                      {ba.pct === 100
                         ? "All budgets on track — great discipline!"
-                        : ba!.onTrack === 0
+                        : ba.onTrack === 0
                         ? "All budgets over-spent this month."
-                        : `${ba!.onTrack} on track, ${ba!.overBudget} over-budget.`}
+                        : `${ba.onTrack} on track, ${ba.overBudget} over-budget.`}
                     </p>
                     <div className="mt-3 h-2 bg-muted rounded-full overflow-hidden">
                       <div
                         className={`h-full rounded-full ${baSeverity === "success" ? "bg-emerald-500" : baSeverity === "warning" ? "bg-orange-400" : "bg-blue-400"}`}
-                        style={{ width: `${ba!.pct ?? 0}%` }}
+                        style={{ width: `${ba.pct ?? 0}%` }}
                       />
                     </div>
-                    <p className="text-xs text-muted-foreground mt-1">{ba!.pct ?? 0}% of budgets on track</p>
+                    <p className="text-xs text-muted-foreground mt-1">{ba.pct ?? 0}% of budgets on track</p>
                   </div>
                 )}
               </CardContent>
