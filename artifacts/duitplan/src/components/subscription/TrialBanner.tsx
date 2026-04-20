@@ -26,10 +26,14 @@ export function TrialBanner() {
   const [dismissed, setDismissed] = useState(isDismissed);
   const [, setLocation] = useLocation();
 
-  if (dismissed || status !== "trial" || daysRemaining === null) return null;
+  if (status !== "trial" || daysRemaining === null) return null;
 
-  const isUrgent = daysRemaining < 7;
-  const isWarning = daysRemaining >= 7 && daysRemaining <= 14;
+  const isUrgent = daysRemaining <= 7;
+
+  // Dismissed state is overridden when urgent (≤7 days) — too important to hide
+  if (dismissed && !isUrgent) return null;
+
+  const isWarning = daysRemaining > 7 && daysRemaining <= 14;
 
   const label = daysRemaining === 0
     ? "Your trial ends today!"

@@ -1,0 +1,154 @@
+Task: Implement Phase 1.4 from ROADMAP.md — UX Polish
+
+Read ROADMAP.md in the project root for full context. Then implement section 1.4 only.
+
+This task is a collection of small UX improvements. Implement all three sub-tasks below.
+
+1.4.a — Sidebar active-state consistency
+
+Problem: The sidebar's currently-active page indicator is inconsistent — some items have padding issues, the highlight doesn't align uniformly, and the visual weight of the active vs. inactive state differs between items.
+
+Requirements:
+
+
+
+
+
+Audit every sidebar item (DuitPlan AI, Expense Tracker, Dashboard, Accounts, Transactions, Budgets, Commitments, Debts, Goals, Net Worth, Upload, Insights, Achievements, Settings, Premium).
+
+
+
+Ensure all items share identical: left/right padding, vertical padding, icon-to-label spacing, and font size.
+
+
+
+The active state should be a single, consistent treatment: same background color, same text color, same left-border or pill shape — whichever the current design uses. Pick one and apply it uniformly.
+
+
+
+Hover state should also be consistent across all items.
+
+
+
+Do not introduce a new visual language — match what's already there, just make it uniform.
+
+1.4.b — Dismissible trial banner
+
+Problem: The "37 days left in your trial — Subscribe for BND 10/month" banner appears at the top of every page, every session. It's visually noisy and users see it dozens of times per session.
+
+Requirements:
+
+
+
+
+
+The banner should be dismissible via the existing × close button.
+
+
+
+Once dismissed, it stays hidden for the rest of the browser session (use sessionStorage, not localStorage — we want it to reappear on next login as a gentle reminder).
+
+
+
+The banner should automatically reappear when there are 7 or fewer days left in the trial, regardless of dismissal state — at that point it becomes urgent enough to override the dismissal.
+
+
+
+Once a user has subscribed, the banner should never render at all.
+
+1.4.c — "Last updated" timestamps on Net Worth and Debt cards
+
+Problem: Financial data feels untrustworthy when users don't know how fresh it is. Net Worth and Debt balances should show when they were last calculated or last had a related transaction.
+
+Requirements:
+
+
+
+
+
+On the Net Worth page, display a small muted-text timestamp near the top: "Last updated: [relative time]" (e.g., "Last updated: 2 hours ago", "Last updated: yesterday", "Last updated: 3 days ago").
+
+
+
+On the Debts page, show the same pattern on each debt card — reflecting the most recent transaction or balance change on that specific debt.
+
+
+
+Use a relative-time utility (e.g., date-fns formatDistanceToNow). Don't install a heavy library if one already exists in the project.
+
+
+
+Timestamps should update on page refresh, not in real-time (no polling).
+
+
+
+If no data exists yet (new user, no transactions on a debt), show "No activity yet" instead of a timestamp.
+
+Out of scope — do NOT touch:
+
+
+
+
+
+Dashboard page (beyond the sidebar itself)
+
+
+
+Expense Tracker page
+
+
+
+Insights page
+
+
+
+Any business logic, calculations, or data models
+
+
+
+The styling of any card content — only the small timestamp additions on Net Worth and Debts
+
+Verification before stopping:
+
+
+
+
+
+Click through every sidebar item — the active state looks identical for each, with no padding jumps or alignment shifts.
+
+
+
+Dismiss the trial banner — it stays gone as you navigate between pages. Open a new browser tab / new session — it reappears.
+
+
+
+Manually set the trial countdown to 6 days (or simulate it in code) — the banner reappears even after dismissal.
+
+
+
+Visit Net Worth — timestamp is present, human-readable, and matches the most recent underlying data change.
+
+
+
+Visit Debts — each debt card shows its own "last updated" based on its own history. A debt with no transactions shows "No activity yet".
+
+Stop after 1.4 is verified working. Report back:
+
+
+
+
+
+Files changed
+
+
+
+Screenshots or descriptions of the three changes
+
+
+
+Any sidebar items where the active-state fix required more than trivial changes
+
+
+
+Whether sessionStorage approach worked cleanly or you had to use a different mechanism
+

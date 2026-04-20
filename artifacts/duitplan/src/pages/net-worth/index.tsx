@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { formatDistanceToNow } from "date-fns";
 import { useQueries } from "@tanstack/react-query";
 import {
   useListAssets,
@@ -122,6 +123,15 @@ function fmtCompact(n: number) {
   if (Math.abs(n) >= 1_000_000) return "BND " + (n / 1_000_000).toFixed(1) + "M";
   if (Math.abs(n) >= 1_000) return "BND " + (n / 1_000).toFixed(1) + "K";
   return fmt(n);
+}
+
+function relativeTime(isoString: string | null | undefined): string {
+  if (!isoString) return "No activity yet";
+  try {
+    return formatDistanceToNow(new Date(isoString), { addSuffix: true });
+  } catch {
+    return "No activity yet";
+  }
 }
 
 function getLast12Months(fromMonth: string): string[] {
@@ -299,6 +309,15 @@ export default function NetWorth() {
 
   const isSaving = createMutation.isPending || updateMutation.isPending;
 
+  const allTimestamps: string[] = [
+    ...assets.map((a) => a.updatedAt),
+    ...(accounts as Account[]).map((a) => a.updatedAt),
+    ...(debts as Debt[]).map((d) => d.updatedAt),
+  ].filter(Boolean);
+  const mostRecentUpdate = allTimestamps.length > 0
+    ? allTimestamps.reduce((latest, t) => (t > latest ? t : latest))
+    : null;
+
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       {/* Header */}
@@ -306,6 +325,9 @@ export default function NetWorth() {
         <div>
           <h1 className="text-3xl font-bold text-foreground tracking-tight">Net Worth</h1>
           <p className="text-muted-foreground">Assets − Liabilities = Your net financial position.</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Last updated: {mostRecentUpdate ? relativeTime(mostRecentUpdate) : "No activity yet"}
+          </p>
         </div>
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1 bg-white border rounded-xl px-3 py-2">

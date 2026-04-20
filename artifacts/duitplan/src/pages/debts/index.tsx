@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { formatDistanceToNow } from "date-fns";
 import { Link, useLocation } from "wouter";
 import {
   useListDebts,
@@ -310,7 +311,14 @@ export default function Debts() {
               <div key={d.id} className="p-6 hover:bg-muted/30 transition-colors">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-lg">{d.lender}</h3>
+                    <div className="flex items-baseline gap-3">
+                      <h3 className="font-semibold text-lg">{d.lender}</h3>
+                      <span className="text-xs text-muted-foreground">
+                        {d.updatedAt
+                          ? `Last updated ${formatDistanceToNow(new Date(d.updatedAt), { addSuffix: true })}`
+                          : "No activity yet"}
+                      </span>
+                    </div>
                     <div className="text-sm text-muted-foreground mt-1 flex flex-wrap gap-4">
                       <span>
                         Balance:{" "}
