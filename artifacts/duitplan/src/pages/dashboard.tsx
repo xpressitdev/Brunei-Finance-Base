@@ -252,7 +252,7 @@ export default function Dashboard() {
                       outerRadius={100}
                       innerRadius={55}
                     >
-                      {spending.map((_: any, index: number) => (
+                      {spending.map((_entry, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>

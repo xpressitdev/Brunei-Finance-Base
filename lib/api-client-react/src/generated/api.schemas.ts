@@ -387,7 +387,7 @@ export interface CategorySpend {
   /** @nullable */
   categoryId?: string | null;
   categoryName: string;
-  totalSpent: string;
+  totalSpent: number;
   percentage: number;
 }
 

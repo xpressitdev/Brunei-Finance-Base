@@ -94,16 +94,19 @@ router.get("/dashboard/spending-by-category", requireAuth, async (req: Authentic
 
   const totalSpent = rows.reduce((s, r) => s + parseFloat(r.total ?? "0"), 0);
 
-  const result = rows.map((r) => ({
-    categoryId: r.categoryId,
-    categoryName: r.categoryName ?? "Uncategorized",
-    totalSpent: parseFloat(r.total ?? "0").toFixed(2),
-    percentage: totalSpent > 0
-      ? parseFloat(((parseFloat(r.total ?? "0") / totalSpent) * 100).toFixed(2))
-      : 0,
-  }));
+  const result = rows.map((r) => {
+    const amount = parseFloat(r.total ?? "0");
+    return {
+      categoryId: r.categoryId,
+      categoryName: r.categoryName ?? "Uncategorized",
+      totalSpent: Math.round(amount * 100) / 100,
+      percentage: totalSpent > 0
+        ? Math.round((amount / totalSpent) * 10000) / 100
+        : 0,
+    };
+  });
 
-  res.json(result.sort((a, b) => parseFloat(b.totalSpent) - parseFloat(a.totalSpent)));
+  res.json(result.sort((a, b) => b.totalSpent - a.totalSpent));
 });
 
 router.get("/dashboard/recent-transactions", requireAuth, async (req: AuthenticatedRequest, res): Promise<void> => {

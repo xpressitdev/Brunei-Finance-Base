@@ -1825,7 +1825,7 @@ components:
         categoryName:
           type: string
         totalSpent:
-          type: string
+          type: number
         percentage:
           type: number
       required:
