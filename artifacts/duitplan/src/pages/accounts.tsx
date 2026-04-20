@@ -43,6 +43,7 @@ import {
 import { Building2, Plus, Pencil, Trash2, Upload, Wallet, PiggyBank, Landmark, TrendingUp, Lock, BarChart2 } from "lucide-react";
 import { Link } from "wouter";
 import { cn } from "@/lib/utils";
+import { useCurrency } from "@/hooks/use-currency";
 
 const ACCOUNT_TYPES = [
   { value: "cash", label: "Cash in Hand", icon: Wallet, color: "bg-emerald-100 text-emerald-800" },
@@ -72,10 +73,6 @@ function getTypeInfo(type: string) {
   return ACCOUNT_TYPES.find(t => t.value === type) ?? ACCOUNT_TYPES[ACCOUNT_TYPES.length - 1];
 }
 
-function fmt(val: string | number) {
-  return `BND ${Number(val || 0).toLocaleString("en-BN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-}
-
 function fmtShort(val: number) {
   if (Math.abs(val) >= 1000) {
     return `${(val / 1000).toFixed(1)}k`;
@@ -83,15 +80,12 @@ function fmtShort(val: number) {
   return val.toFixed(0);
 }
 
-function fmtDate(dateStr: string, days: number) {
+function fmtDate(dateStr: string, days: number, locale: string) {
   const d = new Date(dateStr + "T00:00:00");
   if (days <= 7) {
-    return d.toLocaleDateString("en-BN", { weekday: "short" });
+    return d.toLocaleDateString(locale, { weekday: "short" });
   }
-  if (days <= 30) {
-    return d.toLocaleDateString("en-BN", { month: "short", day: "numeric" });
-  }
-  return d.toLocaleDateString("en-BN", { month: "short", day: "numeric" });
+  return d.toLocaleDateString(locale, { month: "short", day: "numeric" });
 }
 
 type FormState = {
@@ -114,6 +108,7 @@ function AccountForm({
   onCancel: () => void;
   saving: boolean;
 }) {
+  const { currencyLabel, inputStep } = useCurrency();
   const [form, setForm] = useState<FormState>(initial);
   const set = (k: keyof FormState, v: string) => setForm(prev => ({ ...prev, [k]: v }));
 
@@ -158,12 +153,12 @@ function AccountForm({
       </div>
 
       <div className="space-y-1.5">
-        <Label>Current balance (BND)</Label>
+        <Label>Current balance ({currencyLabel})</Label>
         <div className="relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm font-medium">BND</span>
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm font-medium">{currencyLabel}</span>
           <Input
             type="number"
-            step="0.01"
+            step={inputStep}
             min="0"
             className="pl-14 text-right font-mono"
             value={form.balance}
@@ -189,6 +184,7 @@ function AccountForm({
 }
 
 function BalanceHistoryChart({ account }: { account: Account }) {
+  const { fmt, locale } = useCurrency();
   const [days, setDays] = useState(30);
   const { data: history = [], isLoading } = useGetAccountBalanceHistory(account.id, { days });
 
@@ -201,7 +197,7 @@ function BalanceHistoryChart({ account }: { account: Account }) {
   const chartData = history.map(p => ({
     date: p.date,
     balance: p.balance,
-    label: fmtDate(p.date, days),
+    label: fmtDate(p.date, days, locale),
   }));
 
   const tickInterval = days <= 7 ? 0 : days <= 30 ? 4 : 14;
@@ -294,6 +290,7 @@ function BalanceHistoryChart({ account }: { account: Account }) {
 }
 
 export default function Accounts() {
+  const { fmt } = useCurrency();
   const qc = useQueryClient();
   const { data: accounts = [], isLoading } = useListAccounts();
   const createMut = useCreateAccount();

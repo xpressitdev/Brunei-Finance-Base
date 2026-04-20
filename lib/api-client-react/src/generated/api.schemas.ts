@@ -60,6 +60,8 @@ export interface Profile {
   userId: string;
   fullName: string;
   currency: string;
+  /** @nullable */
+  locale?: string | null;
   payday: number;
   monthlyIncome: string;
   createdAt: string;
@@ -86,6 +88,8 @@ export interface UpdateProfileBody {
   monthlyIncome?: string | null;
   /** @nullable */
   currency?: string | null;
+  /** @nullable */
+  locale?: string | null;
 }
 
 export interface OnboardingStatus {

@@ -59,6 +59,7 @@ import {
 } from "lucide-react";
 import { Link } from "wouter";
 import { cn } from "@/lib/utils";
+import { useCurrency } from "@/hooks/use-currency";
 
 const MONTH_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const MONTHS_FULL = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
@@ -115,16 +116,6 @@ function monthLabel(month: string) {
   return `${MONTHS_FULL[m - 1]} ${y}`;
 }
 
-function fmt(n: number) {
-  return "BND " + n.toLocaleString("en-BN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
-
-function fmtCompact(n: number) {
-  if (Math.abs(n) >= 1_000_000) return "BND " + (n / 1_000_000).toFixed(1) + "M";
-  if (Math.abs(n) >= 1_000) return "BND " + (n / 1_000).toFixed(1) + "K";
-  return fmt(n);
-}
-
 function relativeTime(isoString: string | null | undefined): string {
   if (!isoString) return "No activity yet";
   try {
@@ -169,6 +160,7 @@ function emptyForm(month: string): FormState {
 type ComparisonPayload = { name: string; Assets: number; Liabilities: number };
 
 const ComparisonTooltip = ({ active, payload, label }: TooltipProps<number, string>) => {
+  const { fmt } = useCurrency();
   if (!active || !payload || !payload.length) return null;
   return (
     <div className="bg-card border rounded-lg p-3 shadow-lg text-sm">
@@ -183,6 +175,7 @@ const ComparisonTooltip = ({ active, payload, label }: TooltipProps<number, stri
 };
 
 const LineTooltip = ({ active, payload, label }: TooltipProps<number, string>) => {
+  const { fmt } = useCurrency();
   if (!active || !payload || !payload.length) return null;
   return (
     <div className="bg-card border rounded-lg p-3 shadow-lg text-sm">
@@ -193,6 +186,7 @@ const LineTooltip = ({ active, payload, label }: TooltipProps<number, string>) =
 };
 
 export default function NetWorth() {
+  const { fmt, fmtCompact, currencyLabel, inputStep } = useCurrency();
   const [selectedMonth, setSelectedMonth] = useState(currentMonth());
   const today = currentMonth();
 
@@ -611,8 +605,8 @@ export default function NetWorth() {
               <Input placeholder='e.g. "My Honda Civic", "Rimba property"' value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />
             </div>
             <div className="space-y-1.5">
-              <Label>Value (BND)</Label>
-              <Input type="number" step="0.01" min="0" placeholder="0.00" value={form.value} onFocus={(e) => e.target.select()} onChange={(e) => setForm((f) => ({ ...f, value: e.target.value }))} />
+              <Label>Value ({currencyLabel})</Label>
+              <Input type="number" step={inputStep} min="0" placeholder="0.00" value={form.value} onFocus={(e) => e.target.select()} onChange={(e) => setForm((f) => ({ ...f, value: e.target.value }))} />
             </div>
             <div className="space-y-1.5">
               <Label>Month</Label>

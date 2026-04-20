@@ -44,7 +44,7 @@ lib/
 
 Tables in `lib/db/src/schema/`:
 - `users` — email/password auth, onboarding status
-- `profiles` — fullName, currency (BND), payday, monthlyIncome
+- `profiles` — fullName, currency (BND default), locale (en-BN default), payday, monthlyIncome
 - `accounts` — bank accounts
 - `categories` — 15 default spending categories (seeded)
 - `commitments` — monthly recurring obligations (rent, bills, etc.)
@@ -131,10 +131,18 @@ All routes under `/api`:
 - `POCKET_API_BASE` — Pocket Pay API base URL (default: https://home.pocket.com.bn/api)
 - `APP_BASE_URL` — Public app URL for payment return URLs
 
+## Multi-Currency & Localisation (Phase 2.1)
+
+- `useCurrency()` hook in `artifacts/duitplan/src/hooks/use-currency.ts` reads the user's `currency` + `locale` from the auth profile and exposes: `fmt`, `fmtCompact`, `fmtDate`, `fmtNumber`, `inputStep`, `inputPlaceholder`, `currencyLabel`, `currency`, `locale`
+- Central formatters in `artifacts/duitplan/src/lib/formatting.ts` with `SUPPORTED_CURRENCIES` and `SUPPORTED_LOCALES` constants (BND/MYR/IDR; en-BN/en-MY/id-ID)
+- All monetary displays across every page (dashboard, expenses, accounts, transactions, budgets, commitments, debts, goals, net-worth, insights, agent) use `useCurrency()` — no hardcoded "BND" strings in display code
+- Settings page has a "Currency & Region" tab where users can switch currency/locale live; changes invalidate the auth cache so all pages update instantly
+- New users get currency/locale auto-detected via `ipapi.co` on first login
+
 ## Design
 
 - Calm fintech dashboard aesthetic — teal/green primary color
 - Trustworthy, modern, practical
 - Left sidebar on desktop, mobile-responsive
-- Currency: BND (Brunei Dollar)
+- Default currency: BND (Brunei Dollar); supports MYR, IDR for MY/ID expansion
 - Built for Brunei salaried professionals

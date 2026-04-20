@@ -7,6 +7,7 @@ export const profilesTable = pgTable("profiles", {
   userId: text("user_id").notNull().unique(),
   fullName: text("full_name").notNull(),
   currency: text("currency").notNull().default("BND"),
+  locale: text("locale"),
   payday: integer("payday").notNull(),
   monthlyIncome: numeric("monthly_income", { precision: 12, scale: 2 }).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

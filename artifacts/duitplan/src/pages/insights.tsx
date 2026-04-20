@@ -17,9 +17,7 @@ import {
 } from "recharts";
 import { TrialExpiredPrompt } from "@/components/subscription/TrialExpiredPrompt";
 import { isTrialExpiredError } from "@/lib/trialExpired";
-
-const fmt = (v: number) =>
-  `BND ${v.toLocaleString("en-BN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+import { useCurrency } from "@/hooks/use-currency";
 
 type ComputedInsights = {
   month: string;
@@ -106,6 +104,7 @@ function InsightSkeleton() {
 }
 
 export default function Insights() {
+  const { fmt } = useCurrency();
   const currentMonth = format(new Date(), "yyyy-MM");
   const [month, setMonth] = useState(currentMonth);
   const [trialExpiredError, setTrialExpiredError] = useState(false);

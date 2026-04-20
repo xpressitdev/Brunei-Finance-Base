@@ -8,11 +8,9 @@ import { Link } from "wouter";
 import { Wallet, ArrowDownRight, CreditCard, Activity, ArrowRight, Upload, Flame, Trophy, Landmark, ArrowUpRight } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { useCurrency } from "@/hooks/use-currency";
 
 const COLORS = ["#15a06e", "#0ea5e9", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4", "#84cc16", "#f97316"];
-
-const fmt = (val?: string | number) =>
-  `BND ${Number(val || 0).toLocaleString("en-BN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 type GamificationSummary = {
   streak: { current: number; longest: number };
@@ -42,6 +40,7 @@ function useCheckAchievements() {
 }
 
 export default function Dashboard() {
+  const { fmt } = useCurrency();
   const currentMonth = format(new Date(), "yyyy-MM");
 
   const { data: summary, isLoading: summaryLoading } = useGetDashboardSummary({ month: currentMonth });
@@ -256,7 +255,7 @@ export default function Dashboard() {
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
-                    <Tooltip formatter={(value: any) => `BND ${Number(value).toFixed(2)}`} />
+                    <Tooltip formatter={(value: any) => fmt(Number(value))} />
                     <Legend iconType="circle" iconSize={8} />
                   </PieChart>
                 </ResponsiveContainer>
@@ -331,7 +330,7 @@ export default function Dashboard() {
                         </p>
                       </div>
                       <span className={`font-semibold text-sm ${tx.type === "credit" ? "text-emerald-600" : "text-red-500"}`}>
-                        {tx.type === "credit" ? "+" : "−"}BND {Number(tx.amount).toFixed(2)}
+                        {tx.type === "credit" ? "+" : "−"}{fmt(Number(tx.amount))}
                       </span>
                     </div>
                   ))}

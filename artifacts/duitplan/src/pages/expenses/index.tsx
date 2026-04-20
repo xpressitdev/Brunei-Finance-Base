@@ -64,10 +64,7 @@ import {
 import { cn } from "@/lib/utils";
 import { TrialExpiredPrompt } from "@/components/subscription/TrialExpiredPrompt";
 import { isTrialExpiredError } from "@/lib/trialExpired";
-
-function fmt(n: number) {
-  return "BND " + n.toLocaleString("en-BN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
+import { useCurrency } from "@/hooks/use-currency";
 
 function getCategoryIcon(name: string | null | undefined) {
   const n = (name ?? "").toLowerCase();
@@ -151,6 +148,7 @@ type TransactionItem = {
 };
 
 export default function Expenses() {
+  const { fmt, currencyLabel, inputStep } = useCurrency();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -618,10 +616,10 @@ export default function Expenses() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label>Amount (BND)</Label>
+                <Label>Amount ({currencyLabel})</Label>
                 <Input
                   type="number"
-                  step="0.01"
+                  step={inputStep}
                   min="0"
                   placeholder="0.00"
                   value={form.amount}
@@ -735,10 +733,10 @@ export default function Expenses() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label>Amount (BND)</Label>
+                <Label>Amount ({currencyLabel})</Label>
                 <Input
                   type="number"
-                  step="0.01"
+                  step={inputStep}
                   min="0"
                   placeholder="0.00"
                   value={editData.amount}

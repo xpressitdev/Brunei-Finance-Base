@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ArrowLeft, TrendingDown, Clock, Trash2 } from "lucide-react";
+import { useCurrency } from "@/hooks/use-currency";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   LineChart,
@@ -70,6 +71,7 @@ function mergeCurves(
 }
 
 export default function DebtDetail() {
+  const { fmt, currencyLabel, inputStep } = useCurrency();
   const { id } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
   const { data: debts, isLoading } = useListDebts();
@@ -167,13 +169,13 @@ export default function DebtDetail() {
             <div className="flex justify-between items-center py-2 border-b">
               <span className="text-muted-foreground">Outstanding Balance</span>
               <span className="font-bold text-lg">
-                BND {parseFloat(debt.outstandingBalance).toFixed(2)}
+                {fmt(parseFloat(debt.outstandingBalance))}
               </span>
             </div>
             <div className="flex justify-between items-center py-2 border-b">
               <span className="text-muted-foreground">Monthly Payment</span>
               <span className="font-bold text-lg">
-                BND {parseFloat(debt.monthlyPayment).toFixed(2)}
+                {fmt(parseFloat(debt.monthlyPayment))}
               </span>
             </div>
             {debt.interestRate && (
@@ -206,11 +208,11 @@ export default function DebtDetail() {
           <CardContent className="p-6">
             <form onSubmit={handleSimulate} className="space-y-4">
               <div className="space-y-2">
-                <Label>Extra Monthly Payment (BND)</Label>
+                <Label>Extra Monthly Payment ({currencyLabel})</Label>
                 <div className="flex gap-2">
                   <Input
                     type="number"
-                    step="0.01"
+                    step={inputStep}
                     min="0.01"
                     placeholder="e.g. 50.00"
                     value={extraPayment}
@@ -239,7 +241,7 @@ export default function DebtDetail() {
                     Interest Saved
                   </span>
                   <span className="font-bold text-green-600">
-                    BND {scenario.totalInterestSaved.toFixed(2)}
+                    {fmt(scenario.totalInterestSaved)}
                   </span>
                 </div>
                 <div className="pt-3 border-t flex items-center gap-3">
@@ -251,7 +253,7 @@ export default function DebtDetail() {
                       Save {scenario.estimatedMonthsSaved} months
                     </div>
                     <div className="text-xs text-muted-foreground">
-                      by adding BND {scenario.extraMonthlyPayment} extra each month.
+                      by adding {fmt(parseFloat(scenario.extraMonthlyPayment))} extra each month.
                     </div>
                   </div>
                 </div>
@@ -283,14 +285,12 @@ export default function DebtDetail() {
                   tick={{ fontSize: 12 }}
                 />
                 <YAxis
-                  tickFormatter={(v) => `BND ${v.toLocaleString()}`}
+                  tickFormatter={(v) => fmt(Number(v))}
                   tick={{ fontSize: 11 }}
                   width={90}
                 />
                 <Tooltip
-                  formatter={(value: number) => [
-                    `BND ${value.toLocaleString(undefined, { minimumFractionDigits: 2 })}`,
-                  ]}
+                  formatter={(value: number) => [fmt(value)]}
                   labelFormatter={(label) => `Month ${label}`}
                 />
                 <Legend />
@@ -313,7 +313,7 @@ export default function DebtDetail() {
               </LineChart>
             </ResponsiveContainer>
             <p className="text-xs text-muted-foreground text-center mt-2">
-              X-axis: Months elapsed &nbsp;·&nbsp; Y-axis: Outstanding balance (BND)
+              X-axis: Months elapsed &nbsp;·&nbsp; Y-axis: Outstanding balance ({currencyLabel})
             </p>
           </CardContent>
         </Card>

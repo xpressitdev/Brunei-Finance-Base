@@ -31,6 +31,7 @@ import {
 import { Trash2, Plus, Search, Receipt, TrendingUp, TrendingDown, Pencil, Info } from "lucide-react";
 import { TrialExpiredPrompt } from "@/components/subscription/TrialExpiredPrompt";
 import { isTrialExpiredError } from "@/lib/trialExpired";
+import { useCurrency } from "@/hooks/use-currency";
 
 type TransactionItem = {
   id: string;
@@ -44,6 +45,7 @@ type TransactionItem = {
 };
 
 export default function Transactions() {
+  const { fmt, currencyLabel, inputStep } = useCurrency();
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
   const searchString = useSearch();
@@ -210,10 +212,10 @@ export default function Transactions() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Amount</Label>
+                  <Label>Amount ({currencyLabel})</Label>
                   <Input 
                     type="number" 
-                    step="0.01" 
+                    step={inputStep} 
                     value={formData.amount} 
                     onChange={(e) => setFormData({...formData, amount: e.target.value})}
                     required
@@ -290,10 +292,10 @@ export default function Transactions() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Amount</Label>
+                <Label>Amount ({currencyLabel})</Label>
                 <Input 
                   type="number" 
-                  step="0.01" 
+                  step={inputStep} 
                   value={editData.amount} 
                   onChange={(e) => setEditData({...editData, amount: e.target.value})}
                   required
@@ -466,7 +468,7 @@ export default function Transactions() {
                 </div>
                 <div className="flex items-center gap-4">
                   <div className={`font-semibold ${tx.type === 'credit' ? 'text-emerald-600' : 'text-red-500'}`}>
-                    {tx.type === 'credit' ? '+' : '−'}BND {Number(tx.amount).toFixed(2)}
+                    {tx.type === 'credit' ? '+' : '−'}{fmt(Number(tx.amount))}
                   </div>
                   <div className="flex gap-1">
                     <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => openEdit(tx)}>

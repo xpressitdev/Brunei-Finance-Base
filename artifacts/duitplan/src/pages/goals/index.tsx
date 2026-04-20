@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Target, Plus, Pencil, Trash2, CheckCircle2 } from "lucide-react";
+import { useCurrency } from "@/hooks/use-currency";
 
 const CATEGORIES = [
   { value: "savings", label: "Savings" },
@@ -49,10 +50,6 @@ const CATEGORY_COLORS: Record<string, string> = {
   custom: "bg-gray-100 text-gray-800",
 };
 
-function fmt(val: string | number) {
-  return "BND " + parseFloat(String(val)).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-}
-
 const emptyForm = {
   title: "",
   category: "savings",
@@ -63,6 +60,7 @@ const emptyForm = {
 };
 
 export default function Goals() {
+  const { fmt, currencyLabel, inputStep } = useCurrency();
   const { data: goals, isLoading, refetch } = useListGoals();
   const createMutation = useCreateGoal();
   const updateMutation = useUpdateGoal();
@@ -348,6 +346,7 @@ function GoalForm({
   loading: boolean;
   submitLabel: string;
 }) {
+  const { currencyLabel, inputStep } = useCurrency();
   const set = (key: keyof typeof emptyForm) => (val: string) => onChange({ ...form, [key]: val });
   const setE = (key: keyof typeof emptyForm) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => onChange({ ...form, [key]: e.target.value });
 
@@ -372,12 +371,12 @@ function GoalForm({
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label>Target Amount (BND)</Label>
-          <Input type="number" step="0.01" min="0" value={form.targetAmount} onChange={setE("targetAmount")} placeholder="0.00" required />
+          <Label>Target Amount ({currencyLabel})</Label>
+          <Input type="number" step={inputStep} min="0" value={form.targetAmount} onChange={setE("targetAmount")} placeholder="0.00" required />
         </div>
         <div className="space-y-2">
-          <Label>Amount Saved (BND)</Label>
-          <Input type="number" step="0.01" min="0" value={form.savedAmount} onChange={setE("savedAmount")} placeholder="0.00" />
+          <Label>Amount Saved ({currencyLabel})</Label>
+          <Input type="number" step={inputStep} min="0" value={form.savedAmount} onChange={setE("savedAmount")} placeholder="0.00" />
         </div>
       </div>
       <div className="space-y-2">

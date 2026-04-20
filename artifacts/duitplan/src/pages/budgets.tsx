@@ -28,14 +28,7 @@ import {
 import { cn } from "@/lib/utils";
 import { TrialExpiredPrompt } from "@/components/subscription/TrialExpiredPrompt";
 import { isTrialExpiredError } from "@/lib/trialExpired";
-
-function fmt(n: number) {
-  return "BND " + n.toLocaleString("en-BN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
-
-function fmtShort(n: number) {
-  return n.toLocaleString("en-BN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
+import { useCurrency } from "@/hooks/use-currency";
 
 function SummaryCard({ label, value, sub, color }: { label: string; value: string; sub?: string; color?: string }) {
   return (
@@ -60,6 +53,8 @@ function AnnualView({
   commitments: Array<{ id: string; label: string; amount: string }>;
   categories: Array<{ id: string; name: string; kind: string }>;
 }) {
+  const { fmtNumber } = useCurrency();
+  const fmtShort = fmtNumber;
   const months = MONTH_LABELS.map((_, i) => `${year}-${String(i + 1).padStart(2, "0")}`);
   const expenseCats = categories.filter(c => c.kind === "expense");
 
@@ -286,6 +281,7 @@ function AnnualView({
 }
 
 export default function Budgets() {
+  const { fmt, currencyLabel, inputStep } = useCurrency();
   const [activeDate, setActiveDate] = useState(new Date());
   const [view, setView] = useState<"plan" | "actual" | "annual">("plan");
   const [editing, setEditing] = useState<Record<string, string>>({});
@@ -415,7 +411,7 @@ export default function Budgets() {
             <SummaryCard
               label="Total Income"
               value={fmt(salary * 12)}
-              sub={`${year} · BND ${salary.toLocaleString("en-BN", { maximumFractionDigits: 0 })}/mo`}
+              sub={`${year} · ${fmt(salary)}/mo`}
               color="bg-emerald-50 border border-emerald-200"
             />
             <SummaryCard
@@ -615,10 +611,10 @@ export default function Budgets() {
                       <div className="flex items-center justify-between gap-3">
                         <span className="text-sm font-medium text-foreground flex-1">{cat.name}</span>
                         <div className="flex items-center gap-2">
-                          <span className="text-xs text-muted-foreground">BND</span>
+                          <span className="text-xs text-muted-foreground">{currencyLabel}</span>
                           <Input
                             type="number"
-                            step="0.01"
+                            step={inputStep}
                             min="0"
                             className="w-28 text-right h-8 text-sm"
                             value={displayVal}
@@ -639,16 +635,16 @@ export default function Budgets() {
                       <div className="grid grid-cols-[1fr_auto_auto_auto] gap-3 items-center">
                         <span className="text-sm font-medium text-foreground">{cat.name}</span>
                         <span className="w-24 text-right text-sm text-muted-foreground font-mono">
-                          {planned > 0 ? `BND ${planned.toFixed(2)}` : "—"}
+                          {planned > 0 ? fmt(planned) : "—"}
                         </span>
                         <span className="w-24 text-right text-sm font-mono text-foreground">
-                          {actual > 0 ? `-BND ${actual.toFixed(2)}` : "—"}
+                          {actual > 0 ? `−${fmt(actual)}` : "—"}
                         </span>
                         <span className={cn(
                           "w-24 text-right text-sm font-semibold font-mono",
                           isOver ? "text-destructive" : planned > 0 ? "text-emerald-700" : "text-muted-foreground"
                         )}>
-                          {planned > 0 ? `BND ${available.toFixed(2)}` : "—"}
+                          {planned > 0 ? fmt(available) : "—"}
                         </span>
                       </div>
                     )}
@@ -658,7 +654,7 @@ export default function Budgets() {
                         <Progress value={pct} className={cn("h-1", isOver && "[&>div]:bg-destructive")} />
                         {isOver && (
                           <p className="text-xs text-destructive font-medium">
-                            BND {(actual - planned).toFixed(2)} over budget
+                            {fmt(actual - planned)} over budget
                           </p>
                         )}
                       </div>

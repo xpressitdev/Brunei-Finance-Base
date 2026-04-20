@@ -29,8 +29,10 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { useCurrency } from "@/hooks/use-currency";
 
 function DebtTimeline({ debt }: { debt: Debt }) {
+  const { fmt } = useCurrency();
   const { data: scheduleData } = useGetDebtSchedule(debt.id);
   const schedule = scheduleData?.schedule ?? [];
 
@@ -69,7 +71,7 @@ function DebtTimeline({ debt }: { debt: Debt }) {
           />
           <YAxis hide domain={[0, "auto"]} />
           <Tooltip
-            formatter={(v: number) => [`BND ${v.toLocaleString()}`, "Balance"]}
+            formatter={(v: number) => [fmt(v), "Balance"]}
             labelFormatter={(l) => (hasLabels ? `Period ${l}` : `Month ${l}`)}
           />
           <Area
@@ -96,6 +98,7 @@ const EMPTY_FORM = {
 };
 
 export default function Debts() {
+  const { fmt, currencyLabel, inputStep } = useCurrency();
   const { data: debts, isLoading, refetch } = useListDebts();
   const createMutation = useCreateDebt();
   const updateMutation = useUpdateDebt();
@@ -186,10 +189,10 @@ export default function Debts() {
         />
       </div>
       <div className="space-y-2">
-        <Label>Outstanding Balance (BND)</Label>
+        <Label>Outstanding Balance ({currencyLabel})</Label>
         <Input
           type="number"
-          step="0.01"
+          step={inputStep}
           value={formData.outstandingBalance}
           onChange={(e) =>
             setFormData({ ...formData, outstandingBalance: e.target.value })
@@ -199,10 +202,10 @@ export default function Debts() {
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label>Monthly Payment (BND)</Label>
+          <Label>Monthly Payment ({currencyLabel})</Label>
           <Input
             type="number"
-            step="0.01"
+            step={inputStep}
             value={formData.monthlyPayment}
             onChange={(e) =>
               setFormData({ ...formData, monthlyPayment: e.target.value })
@@ -281,7 +284,7 @@ export default function Debts() {
           <div>
             <div className="text-sm font-medium text-muted-foreground">Total Outstanding</div>
             <div className="text-2xl font-bold text-foreground">
-              BND {totalBalance.toFixed(2)}
+              {fmt(totalBalance)}
             </div>
           </div>
         </div>
@@ -294,7 +297,7 @@ export default function Debts() {
               Total Monthly Payment
             </div>
             <div className="text-2xl font-bold text-foreground">
-              BND {totalMonthly.toFixed(2)}
+              {fmt(totalMonthly)}
             </div>
           </div>
         </div>
@@ -323,13 +326,13 @@ export default function Debts() {
                       <span>
                         Balance:{" "}
                         <strong className="text-foreground">
-                          BND {parseFloat(d.outstandingBalance).toFixed(2)}
+                          {fmt(parseFloat(d.outstandingBalance))}
                         </strong>
                       </span>
                       <span>
                         Monthly:{" "}
                         <strong className="text-foreground">
-                          BND {parseFloat(d.monthlyPayment).toFixed(2)}
+                          {fmt(parseFloat(d.monthlyPayment))}
                         </strong>
                       </span>
                       {d.interestRate && (

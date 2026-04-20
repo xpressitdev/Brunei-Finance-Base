@@ -6,22 +6,27 @@ import { requireAuth, type AuthenticatedRequest } from "../lib/auth";
 
 const router: IRouter = Router();
 
+function formatProfile(profile: typeof profilesTable.$inferSelect) {
+  return {
+    id: profile.id,
+    userId: profile.userId,
+    fullName: profile.fullName,
+    currency: profile.currency,
+    locale: profile.locale ?? null,
+    payday: profile.payday,
+    monthlyIncome: profile.monthlyIncome,
+    createdAt: profile.createdAt.toISOString(),
+    updatedAt: profile.updatedAt.toISOString(),
+  };
+}
+
 router.get("/profile", requireAuth, async (req: AuthenticatedRequest, res): Promise<void> => {
   const [profile] = await db.select().from(profilesTable).where(eq(profilesTable.userId, req.userId!)).limit(1);
   if (!profile) {
     res.status(404).json({ error: "Profile not found" });
     return;
   }
-  res.json({
-    id: profile.id,
-    userId: profile.userId,
-    fullName: profile.fullName,
-    currency: profile.currency,
-    payday: profile.payday,
-    monthlyIncome: profile.monthlyIncome,
-    createdAt: profile.createdAt.toISOString(),
-    updatedAt: profile.updatedAt.toISOString(),
-  });
+  res.json(formatProfile(profile));
 });
 
 router.put("/profile", requireAuth, async (req: AuthenticatedRequest, res): Promise<void> => {
@@ -36,6 +41,7 @@ router.put("/profile", requireAuth, async (req: AuthenticatedRequest, res): Prom
   if (parsed.data.payday != null) updateData.payday = parsed.data.payday;
   if (parsed.data.monthlyIncome != null) updateData.monthlyIncome = parsed.data.monthlyIncome;
   if (parsed.data.currency != null) updateData.currency = parsed.data.currency;
+  if (parsed.data.locale !== undefined) updateData.locale = parsed.data.locale;
 
   const [updated] = await db.update(profilesTable).set(updateData).where(eq(profilesTable.userId, req.userId!)).returning();
   if (!updated) {
@@ -43,16 +49,7 @@ router.put("/profile", requireAuth, async (req: AuthenticatedRequest, res): Prom
     return;
   }
 
-  res.json({
-    id: updated.id,
-    userId: updated.userId,
-    fullName: updated.fullName,
-    currency: updated.currency,
-    payday: updated.payday,
-    monthlyIncome: updated.monthlyIncome,
-    createdAt: updated.createdAt.toISOString(),
-    updatedAt: updated.updatedAt.toISOString(),
-  });
+  res.json(formatProfile(updated));
 });
 
 export default router;

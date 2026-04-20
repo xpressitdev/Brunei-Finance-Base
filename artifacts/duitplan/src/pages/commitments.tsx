@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
+import { useCurrency } from "@/hooks/use-currency";
 import { useListCommitments, useCreateCommitment, useDeleteCommitment } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +17,7 @@ import { TrialExpiredPrompt } from "@/components/subscription/TrialExpiredPrompt
 import { isTrialExpiredError } from "@/lib/trialExpired";
 
 export default function Commitments() {
+  const { fmt, inputStep, currencyLabel } = useCurrency();
   const [, setLocation] = useLocation();
   const { data: commitments, isLoading, refetch } = useListCommitments();
   const createMutation = useCreateCommitment();
@@ -94,10 +96,10 @@ export default function Commitments() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Amount</Label>
+                <Label>Amount ({currencyLabel})</Label>
                 <Input 
                   type="number" 
-                  step="0.01" 
+                  step={inputStep} 
                   value={formData.amount} 
                   onChange={(e) => setFormData({...formData, amount: e.target.value})}
                   required
@@ -128,7 +130,7 @@ export default function Commitments() {
           </div>
           <div>
             <div className="text-sm font-medium text-muted-foreground">Total Fixed Commitments</div>
-            <div className="text-2xl font-bold text-foreground">${totalCommitments.toFixed(2)}</div>
+            <div className="text-2xl font-bold text-foreground">{fmt(totalCommitments)}</div>
           </div>
         </div>
       </div>
@@ -149,7 +151,7 @@ export default function Commitments() {
               <h3 className="font-semibold text-lg pr-8">{c.label}</h3>
               {c.dueDay && <p className="text-sm text-muted-foreground">Due on day {c.dueDay}</p>}
             </div>
-            <div className="text-2xl font-bold mt-auto">${c.amount}</div>
+            <div className="text-2xl font-bold mt-auto">{fmt(parseFloat(c.amount))}</div>
           </div>
         ))}
         {(!commitments || commitments.length === 0) && (

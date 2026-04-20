@@ -1,0 +1,98 @@
+Task: Implement Phase 2.1 and Phase 2.3 from ROADMAP.md — Multi-currency support and region-aware date/number formats
+Read ROADMAP.md for full context. Implement sections 2.1 and 2.3 together. Do NOT touch Phase 2.2 (i18n/translation) — that's a separate task.
+This is an architectural change that touches every monetary display in the app. Proceed carefully.
+
+Step 1: Build the formatting utility
+Create a central module (e.g., src/utils/formatting.ts or equivalent) that exports:
+
+formatCurrency(amount: number, currency: string, locale?: string): string — uses Intl.NumberFormat with style: 'currency'. Must handle BND, MYR, IDR at minimum. Must respect the currency's natural decimal rules (IDR uses 0 decimals, BND/MYR use 2).
+formatNumber(value: number, locale?: string): string — locale-aware thousand separators.
+formatDate(date: Date | string, locale?: string): string — uses DD/MM/YYYY for en-MY, en-ID, ms-MY, id-ID locales.
+formatDateTime(date, locale?) and formatRelativeTime(date, locale?) for the timestamps added in Phase 1.4.
+
+All functions must have sensible fallbacks if locale is undefined.
+
+Step 2: Add currency to user profile
+
+Add a currency field to the user model/profile (string, default "BND" for existing users so nothing breaks for the current user).
+Add a locale field (default "en-BN" for existing users).
+Write a migration or data fix that backfills these fields for any existing user records with the defaults above.
+
+
+Step 3: IP-based geolocation on first login / signup
+
+When a new user signs up OR an existing user logs in with currency still null/unset, call https://ipapi.co/json/ (no auth required) to detect their country.
+Map country to currency + locale:
+
+BN → BND / en-BN
+MY → MYR / en-MY (we'll add ms-MY after Phase 2.2)
+ID → IDR / id-ID
+Any other country → USD / en-US as safe fallback
+
+
+Fallback chain if IP lookup fails: use navigator.language to guess locale, map to nearest supported currency, then fallback to USD/en-US.
+Never block app load on this call — if it takes >2 seconds or errors, proceed with fallback.
+Cache the result so we don't re-call on every page load.
+
+
+Step 4: Settings page — currency and locale dropdowns
+
+Add a "Currency" dropdown showing: BND (Brunei Dollar), MYR (Malaysian Ringgit), IDR (Indonesian Rupiah), USD (US Dollar).
+Add a "Region / Locale" dropdown showing: Brunei, Malaysia, Indonesia, Other.
+Changes save immediately and the UI updates without requiring a page reload.
+Show a small info tooltip: "This changes how amounts are displayed. It does not convert your existing data."
+
+
+Step 5: Refactor every monetary display
+
+Search the codebase for every hardcoded "BND" string, every $ or RM symbol, and every raw .toFixed(2) on a money value.
+Replace all of them with calls to formatCurrency(amount, user.currency, user.locale).
+Pages that must be audited (do not skip any):
+
+Dashboard (all 5 overview cards, Recent Transactions, Financing Summary, Spending by Category)
+Expense Tracker (Month Income, transaction list, category totals)
+Accounts (all balance displays)
+Transactions (amount column, filters, totals)
+Budgets / Cash Flow Plan (all amounts)
+Commitments (all amounts)
+Debts (balances, monthly payments, payoff amounts)
+Goals (target amounts, progress)
+Net Worth (all line items and totals)
+Upload / Import (parsed amounts preview)
+Insights (all 6 cards — Savings Rate, DTI, etc.)
+Premium / pricing page — show price in user's currency (BND 10 base; for now just display a converted estimate, real regional pricing comes in Phase 4.2)
+AI chat responses — ensure DuitPlan AI outputs amounts using the formatter
+
+
+
+
+Step 6: Refactor dates
+
+Replace all toLocaleDateString() calls and raw date formatting with formatDate(date, user.locale).
+The "Last updated" timestamps from Phase 1.4 should use formatRelativeTime.
+
+
+Out of scope — do NOT touch:
+
+Translation of any UI strings (that's Phase 2.2)
+Real FX rate conversions between currencies (just format in the chosen currency; actual conversion comes later)
+Regional pricing tiers on Premium page (Phase 4.2)
+
+
+Verification before stopping:
+
+Change currency in Settings to MYR → every page reloads with RM prefix, 2 decimals, comma thousand separator (e.g., RM 5,769.36).
+Change currency to IDR → every page shows Rp prefix, 0 decimals, dot as thousand separator (e.g., Rp 5.769). This is the most commonly-broken one — test it carefully.
+Change currency back to BND → everything returns to BND 5,769.36.
+Dates on Transactions page show as 21/04/2026 not 4/21/2026.
+Simulate IP geo failure (disable network briefly or mock the call to throw) → app still loads, falls back to browser locale.
+Create a new test user → currency/locale is auto-detected and saved.
+AI chat: ask "how much did I spend this month?" → amount in response uses the correct formatter.
+
+Stop and report back:
+
+Total number of files changed
+Any places where you found monetary values that were harder to refactor than expected (e.g., embedded in templates, in AI prompts, in PDF export)
+Whether the IDR zero-decimal case caused any downstream bugs (it often does — rounding, display width, chart axis labels)
+
+Do NOT proceed to Phase 2.2. Stop here.

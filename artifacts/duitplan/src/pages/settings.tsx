@@ -6,13 +6,18 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, User, Tag, Settings as SettingsIcon } from "lucide-react";
+import { Plus, User, Tag, Globe, Info } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
+import { SUPPORTED_CURRENCIES, SUPPORTED_LOCALES } from "@/lib/formatting";
+import { useCurrency } from "@/hooks/use-currency";
 
 export default function Settings() {
+  const { inputStep } = useCurrency();
   const { data: profile, isLoading: profileLoading, refetch: refetchProfile } = useGetProfile();
   const { data: categories, isLoading: categoriesLoading, refetch: refetchCategories } = useListCategories();
-  
+  const queryClient = useQueryClient();
+
   const updateProfileMutation = useUpdateProfile();
   const createCategoryMutation = useCreateCategory();
   const { toast } = useToast();
@@ -22,6 +27,9 @@ export default function Settings() {
     monthlyIncome: "",
     payday: "",
   });
+
+  const [currency, setCurrency] = useState("BND");
+  const [locale, setLocale] = useState("en-BN");
 
   const [newCatName, setNewCatName] = useState("");
   const [newCatKind, setNewCatKind] = useState("expense");
@@ -33,6 +41,8 @@ export default function Settings() {
         monthlyIncome: profile.monthlyIncome || "",
         payday: profile.payday?.toString() || "",
       });
+      setCurrency(profile.currency || "BND");
+      setLocale(profile.locale || "en-BN");
     }
   }, [profile]);
 
@@ -43,13 +53,28 @@ export default function Settings() {
         data: {
           fullName: formData.fullName,
           monthlyIncome: formData.monthlyIncome,
-          payday: formData.payday ? parseInt(formData.payday, 10) : undefined
+          payday: formData.payday ? parseInt(formData.payday, 10) : undefined,
         }
       });
       toast({ title: "Profile updated successfully" });
       refetchProfile();
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
     } catch (err) {
       toast({ title: "Failed to update profile", variant: "destructive" });
+    }
+  };
+
+  const handleSaveCurrency = async () => {
+    try {
+      await updateProfileMutation.mutateAsync({
+        data: { currency, locale }
+      });
+      toast({ title: "Region settings saved. All displays updated." });
+      refetchProfile();
+      // Invalidate auth/me so useCurrency() picks up the new values everywhere
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
+    } catch (err) {
+      toast({ title: "Failed to save region settings", variant: "destructive" });
     }
   };
 
@@ -58,10 +83,7 @@ export default function Settings() {
     if (!newCatName) return;
     try {
       await createCategoryMutation.mutateAsync({
-        data: {
-          name: newCatName,
-          kind: newCatKind
-        }
+        data: { name: newCatName, kind: newCatKind }
       });
       setNewCatName("");
       toast({ title: "Category added" });
@@ -83,6 +105,7 @@ export default function Settings() {
       <Tabs defaultValue="profile" className="space-y-4">
         <TabsList>
           <TabsTrigger value="profile" className="flex gap-2"><User className="w-4 h-4"/> Profile</TabsTrigger>
+          <TabsTrigger value="region" className="flex gap-2"><Globe className="w-4 h-4"/> Currency & Region</TabsTrigger>
           <TabsTrigger value="categories" className="flex gap-2"><Tag className="w-4 h-4"/> Categories</TabsTrigger>
         </TabsList>
 
@@ -96,29 +119,29 @@ export default function Settings() {
               <form onSubmit={handleUpdateProfile} className="space-y-6 max-w-xl">
                 <div className="space-y-2">
                   <Label>Full Name</Label>
-                  <Input 
-                    value={formData.fullName} 
-                    onChange={(e) => setFormData({...formData, fullName: e.target.value})} 
+                  <Input
+                    value={formData.fullName}
+                    onChange={(e) => setFormData({...formData, fullName: e.target.value})}
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>Monthly Income (BND)</Label>
-                    <Input 
-                      type="number" 
-                      step="0.01" 
-                      value={formData.monthlyIncome} 
-                      onChange={(e) => setFormData({...formData, monthlyIncome: e.target.value})} 
+                    <Label>Monthly Income ({currency})</Label>
+                    <Input
+                      type="number"
+                      step={inputStep}
+                      value={formData.monthlyIncome}
+                      onChange={(e) => setFormData({...formData, monthlyIncome: e.target.value})}
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>Payday (1-31)</Label>
-                    <Input 
-                      type="number" 
-                      min="1" 
-                      max="31" 
-                      value={formData.payday} 
-                      onChange={(e) => setFormData({...formData, payday: e.target.value})} 
+                    <Label>Payday (1–31)</Label>
+                    <Input
+                      type="number"
+                      min="1"
+                      max="31"
+                      value={formData.payday}
+                      onChange={(e) => setFormData({...formData, payday: e.target.value})}
                     />
                   </div>
                 </div>
@@ -126,6 +149,55 @@ export default function Settings() {
                   {updateProfileMutation.isPending ? "Saving..." : "Save Changes"}
                 </Button>
               </form>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="region">
+          <Card>
+            <CardHeader>
+              <CardTitle>Currency &amp; Region</CardTitle>
+              <CardDescription>
+                Choose how amounts and dates are displayed throughout the app.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6 max-w-xl">
+              <div className="flex items-start gap-2 rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800">
+                <Info className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                <span>This changes how amounts are displayed. It does not convert your existing data.</span>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Currency</Label>
+                <Select value={currency} onValueChange={setCurrency}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SUPPORTED_CURRENCIES.map((c) => (
+                      <SelectItem key={c.code} value={c.code}>{c.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Region / Locale</Label>
+                <Select value={locale} onValueChange={setLocale}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SUPPORTED_LOCALES.map((l) => (
+                      <SelectItem key={l.code} value={l.code}>{l.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <Button onClick={handleSaveCurrency} disabled={updateProfileMutation.isPending}>
+                {updateProfileMutation.isPending ? "Saving..." : "Save Region Settings"}
+              </Button>
             </CardContent>
           </Card>
         </TabsContent>
@@ -140,9 +212,9 @@ export default function Settings() {
               <form onSubmit={handleAddCategory} className="flex items-end gap-4">
                 <div className="space-y-2 flex-1">
                   <Label>Name</Label>
-                  <Input 
-                    value={newCatName} 
-                    onChange={(e) => setNewCatName(e.target.value)} 
+                  <Input
+                    value={newCatName}
+                    onChange={(e) => setNewCatName(e.target.value)}
                     placeholder="e.g. Travel, Gym"
                     required
                   />
