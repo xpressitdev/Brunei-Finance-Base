@@ -44,7 +44,7 @@ lib/
 
 Tables in `lib/db/src/schema/`:
 - `users` — email/password auth, onboarding status
-- `profiles` — fullName, currency (BND), payday, monthlyIncome
+- `profiles` — fullName, currency (BND), region (BN), locale (en-BN), language (en), payday, monthlyIncome
 - `accounts` — bank accounts
 - `categories` — 15 default spending categories (seeded)
 - `commitments` — monthly recurring obligations (rent, bills, etc.)
@@ -88,9 +88,23 @@ All routes under `/api`:
 - `/storage/uploads/request-url` — POST: returns presigned GCS URL for receipt image uploads
 - `/storage/objects/*` — GET: serves uploaded objects from object storage
 
+## Phase 2 — Multi-Region Architecture (In Progress)
+
+DuitPlan is being extended to serve BN/MY/ID regional subdomains with fixed per-region currency and locale.
+
+**Phase 2 Prompt 1 (complete):**
+- `artifacts/duitplan/src/config/regions.ts` — REGIONS map, RegionCode type, getRegionByCode/getCurrencyByRegion/getLocaleByRegion helpers
+- `artifacts/duitplan/src/utils/formatting.ts` — formatCurrency, formatNumber, formatDate, formatDateTime, formatRelativeTime (all via Intl APIs, NaN-safe)
+- `artifacts/duitplan/src/utils/formatting.test.ts` — 10 vitest unit tests, all passing
+- DB: profiles table has region/locale/language fields (default BN/en-BN/en, all existing rows backfilled)
+- Test runner: `pnpm --filter @workspace/duitplan test`
+
+**Phase 2 Prompt 2 (planned):** Subdomain hostname detection — resolve region from Host header
+**Phase 2 Prompt 3 (planned):** Wire formatters into all pages — replace hardcoded BND displays
+
 ## Phases Completed
 
-- **Phase 1 (Current)**: App structure, Auth, Onboarding wizard, Dashboard shell, Prisma schema
+- **Phase 1 (Complete)**: App structure, Auth, Onboarding wizard, Dashboard shell, Prisma schema
   - Authentication: email/password with session cookies
   - Onboarding: 5-step wizard (salary, payday, commitments, debts, categories)
   - Dashboard: summary cards, spending by category chart (Recharts), recent transactions, insights

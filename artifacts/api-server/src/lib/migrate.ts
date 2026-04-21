@@ -23,6 +23,13 @@ export async function runStartupMigrations(): Promise<void> {
     await client.query(`
       DELETE FROM subscription_plans WHERE id = '9bae83c8-878b-40ad-bfcc-5b1fbcbc5fa9';
     `);
+    await client.query(`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS region text NOT NULL DEFAULT 'BN';`);
+    await client.query(`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS locale text NOT NULL DEFAULT 'en-BN';`);
+    await client.query(`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS language text NOT NULL DEFAULT 'en';`);
+    await client.query(`
+      UPDATE profiles SET region = 'BN', locale = 'en-BN', language = 'en'
+      WHERE region IS NULL OR region = '';
+    `);
     logger.info("Startup migrations applied");
   } catch (err) {
     logger.error({ err }, "Startup migration failed — aborting server start");

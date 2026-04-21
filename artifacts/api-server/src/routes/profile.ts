@@ -17,6 +17,9 @@ router.get("/profile", requireAuth, async (req: AuthenticatedRequest, res): Prom
     userId: profile.userId,
     fullName: profile.fullName,
     currency: profile.currency,
+    region: profile.region,
+    locale: profile.locale,
+    language: profile.language,
     payday: profile.payday,
     monthlyIncome: profile.monthlyIncome,
     createdAt: profile.createdAt.toISOString(),
@@ -36,6 +39,9 @@ router.put("/profile", requireAuth, async (req: AuthenticatedRequest, res): Prom
   if (parsed.data.payday != null) updateData.payday = parsed.data.payday;
   if (parsed.data.monthlyIncome != null) updateData.monthlyIncome = parsed.data.monthlyIncome;
   if (parsed.data.currency != null) updateData.currency = parsed.data.currency;
+  if ((parsed.data as Record<string, unknown>).region != null) updateData.region = (parsed.data as Record<string, unknown>).region;
+  if ((parsed.data as Record<string, unknown>).locale != null) updateData.locale = (parsed.data as Record<string, unknown>).locale;
+  if ((parsed.data as Record<string, unknown>).language != null) updateData.language = (parsed.data as Record<string, unknown>).language;
 
   const [updated] = await db.update(profilesTable).set(updateData).where(eq(profilesTable.userId, req.userId!)).returning();
   if (!updated) {
@@ -48,6 +54,9 @@ router.put("/profile", requireAuth, async (req: AuthenticatedRequest, res): Prom
     userId: updated.userId,
     fullName: updated.fullName,
     currency: updated.currency,
+    region: updated.region,
+    locale: updated.locale,
+    language: updated.language,
     payday: updated.payday,
     monthlyIncome: updated.monthlyIncome,
     createdAt: updated.createdAt.toISOString(),
