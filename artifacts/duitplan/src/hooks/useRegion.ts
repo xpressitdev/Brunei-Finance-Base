@@ -2,6 +2,7 @@ import { useGetProfile } from "@workspace/api-client-react";
 import { getRegionByCode, DEFAULT_REGION } from "@/config/regions";
 import type { RegionConfig } from "@/config/regions";
 import { formatCurrency as _formatCurrency, formatDate as _formatDate, formatNumber as _formatNumber, formatMonthYear as _formatMonthYear, formatMonthShort as _formatMonthShort } from "@/utils/formatting";
+import { useDevRegionContext, isDevEnvironment } from "@/lib/devRegion";
 
 export interface RegionFormatters {
   region: RegionConfig;
@@ -16,7 +17,10 @@ export interface RegionFormatters {
 
 export function useRegion(): RegionFormatters {
   const { data: profile } = useGetProfile();
-  const regionCode = (profile?.region as string) ?? DEFAULT_REGION;
+  const { devRegion } = useDevRegionContext();
+
+  const profileRegion = (profile?.region as string) ?? DEFAULT_REGION;
+  const regionCode = (isDevEnvironment() && devRegion) ? devRegion : profileRegion;
   const region = getRegionByCode(regionCode);
 
   const formatCurrency = (amount: number | string | null | undefined): string => {

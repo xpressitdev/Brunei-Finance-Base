@@ -1,0 +1,73 @@
+🌙 Prompt for Replit Agent: Set up region testing
+
+Task: Add development-only region testing support to DuitPlan
+Before proceeding with Phase 2 Prompt 5 (i18n), we need to verify that Phase 2 Prompts 1-3 work correctly across all three regions (BN, MY, ID). Currently, only the BN region is reachable because there's no way to simulate being on my.duitplan.com or id.duitplan.com from the development preview URL.
+This task adds two testing mechanisms: (1) a dev-only URL query parameter override, and (2) two additional seed test users pre-configured for MY and ID regions.
+
+Step 1: Dev-only region override via URL query parameter
+
+In the region detection logic built in Phase 2 Prompt 2, add support for a ?region=MY, ?region=ID, or ?region=BN query parameter.
+This override must ONLY work when:
+
+process.env.NODE_ENV !== 'production', OR
+window.location.hostname.includes('replit.app') or window.location.hostname.includes('localhost')
+
+
+When the override is active, the region should persist for the duration of the session (store in sessionStorage under key dev_region_override).
+When the override is cleared (by visiting ?region= with no value, or manually clearing sessionStorage), the app returns to normal hostname-based detection.
+Log to console: [DEV] Region override active: MY (etc.) so it's obvious when the override is in effect.
+In production (duitplan.com, my.duitplan.com, id.duitplan.com), this override MUST be completely inert — the ?region= parameter is ignored and hostname detection is the only source of truth.
+
+
+Step 2: Create two seed test users for MY and ID regions
+
+Create two new test user accounts via a seeding script or direct DB insert:
+
+User 1: email test-my@duitplan.dev, password TestMY2026!, region MY, currency MYR, locale ms-MY, language en (keep English so we can test currency/locale without needing translations yet)
+User 2: email test-id@duitplan.dev, password TestID2026!, region ID, currency IDR, locale id-ID, language en
+
+
+Give each user some realistic seed data:
+
+A monthly salary amount in their region's currency: MYR 7,500 for the MY user, IDR 12,000,000 for the ID user
+3-5 example transactions spanning different categories (food, transport, entertainment, utilities)
+1 example debt (for DTI card rendering)
+1 example goal
+1 example budget
+
+
+The seed data should be repeatable — running the seed script twice should not create duplicate users or transactions.
+
+
+Step 3: Add a small dev-only region indicator
+
+When the dev region override is active OR the user is not in production, show a small, unobtrusive indicator in a corner of the app (bottom-right, for example) with text like: DEV: region=MY | currency=MYR | locale=ms-MY.
+Style it muted — small font, gray text, semi-transparent background. Do NOT make it prominent.
+This indicator must NEVER appear in production, regardless of any URL parameter.
+
+
+Out of scope — do NOT do any of the following:
+
+Do NOT wire up real subdomains or DNS.
+Do NOT add a user-facing region switcher in Settings.
+Do NOT modify any existing page layouts beyond adding the dev indicator.
+Do NOT start Phase 2 Prompt 5 (i18n).
+
+
+Verification before reporting complete:
+
+Visit <preview URL>/?region=MY while logged in as Hakem → the app renders with MYR currency everywhere (Dashboard, Expense Tracker, Accounts, Insights, etc.).
+Visit <preview URL>/?region=ID → renders with IDR currency, 0 decimal places, Indonesian number formatting (dots as thousand separators, e.g., Rp 1.000.000).
+Visit <preview URL>/?region=BN → back to BND, 2 decimal places.
+Log out, log in as test-my@duitplan.dev → app defaults to MY region with seeded MYR data (salary 7,500, transactions in MYR). No URL param needed; the user's region field drives it.
+Same for test-id@duitplan.dev → IDR with seeded data.
+Dev indicator appears in corner showing current region.
+The indicator and ?region= parameter are both confirmed to be inert when simulated in production mode.
+
+
+Report back with:
+
+Credentials for the two seed users (so Hakem can log in as each to test manually)
+A short screenshot or description of each region's Dashboard (BN, MY, ID) so we can verify the refactor worked
+Any display bugs discovered during testing (especially IDR zero-decimal cases and chart axis labels)
+Files changed

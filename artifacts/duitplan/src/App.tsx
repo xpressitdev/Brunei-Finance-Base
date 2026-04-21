@@ -5,6 +5,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { SubscriptionProvider } from "@/lib/subscription";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { DevRegionProvider } from "@/lib/devRegion";
+import { DevRegionIndicator } from "@/components/DevRegionIndicator";
 
 // Pages
 import Landing from "@/pages/landing";
@@ -104,12 +106,15 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-          <AuthProvider>
-            <Router />
-          </AuthProvider>
-        </WouterRouter>
-        <Toaster />
+        <DevRegionProvider>
+          <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+            <AuthProvider>
+              <Router />
+            </AuthProvider>
+          </WouterRouter>
+          <Toaster />
+          <DevRegionIndicator />
+        </DevRegionProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );

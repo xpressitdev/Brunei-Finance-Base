@@ -7,6 +7,9 @@ import {
   profilesTable,
   commitmentsTable,
   debtsTable,
+  transactionsTable,
+  goalsTable,
+  monthlyBudgetsTable,
 } from "@workspace/db";
 import { count, eq } from "drizzle-orm";
 import { logger } from "./logger";
@@ -47,6 +50,7 @@ const PLANS = [
   },
 ];
 
+// ── Hakem (BN region) ─────────────────────────────────────────────────────────
 const HAKEM_USER_ID = "48cdc97e-088c-456b-bcd0-c88b526a6d60";
 
 const HAKEM_USER = {
@@ -61,6 +65,9 @@ const HAKEM_PROFILE = {
   userId: HAKEM_USER_ID,
   fullName: "Hakem Shah",
   currency: "BND",
+  region: "BN",
+  locale: "en-BN",
+  language: "en",
   payday: 22,
   monthlyIncome: "5026.62",
 };
@@ -97,7 +104,13 @@ const HAKEM_DEBTS = [
 
 async function seedHakemData() {
   const existing = await db.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.email, HAKEM_USER.email));
-  if (existing.length > 0) return;
+  if (existing.length > 0) {
+    // Ensure region fields are populated on existing profile
+    await db.update(profilesTable)
+      .set({ region: "BN", locale: "en-BN", language: "en", currency: "BND" })
+      .where(eq(profilesTable.userId, HAKEM_USER_ID));
+    return;
+  }
 
   await db.insert(usersTable).values(HAKEM_USER).onConflictDoNothing();
   await db.insert(profilesTable).values(HAKEM_PROFILE).onConflictDoNothing();
@@ -105,6 +118,152 @@ async function seedHakemData() {
   await db.insert(debtsTable).values(HAKEM_DEBTS).onConflictDoNothing();
 
   logger.info("Seeded Hakem's account data");
+}
+
+// ── Test MY user ──────────────────────────────────────────────────────────────
+const TEST_MY_USER_ID = "c1a2b3c4-d5e6-7890-abcd-111111111101";
+const TEST_MY_PROFILE_ID = "c1a2b3c4-d5e6-7890-abcd-111111111102";
+
+const TEST_MY_USER = {
+  id: TEST_MY_USER_ID,
+  email: "test-my@duitplan.dev",
+  passwordHash: "$2b$12$ljN3hWqZMbwH48zaeo87U.irjthGpwE4rx.sNRMZq2H.J/5e1qdra",
+  onboardingCompleted: true,
+};
+
+const TEST_MY_PROFILE = {
+  id: TEST_MY_PROFILE_ID,
+  userId: TEST_MY_USER_ID,
+  fullName: "Test User (MY)",
+  currency: "MYR",
+  region: "MY",
+  locale: "ms-MY",
+  language: "en",
+  payday: 25,
+  monthlyIncome: "7500.00",
+};
+
+const TEST_MY_TRANSACTIONS = [
+  { id: "a1111111-0001-0000-0000-000000000001", userId: TEST_MY_USER_ID, date: new Date("2026-04-15"), amount: "7500.00", type: "income", description: "Monthly Salary", categoryId: null, source: "manual" },
+  { id: "a1111111-0001-0000-0000-000000000002", userId: TEST_MY_USER_ID, date: new Date("2026-04-05"), amount: "185.50", type: "expense", description: "TM Unifi bill", categoryId: "6f0ea787-4c36-48e1-ab94-a342cadb1c2a", source: "manual" },
+  { id: "a1111111-0001-0000-0000-000000000003", userId: TEST_MY_USER_ID, date: new Date("2026-04-08"), amount: "320.00", type: "expense", description: "Grocery run – Jaya Grocer", categoryId: "0580956b-de53-4219-ac43-989a137fda1e", source: "manual" },
+  { id: "a1111111-0001-0000-0000-000000000004", userId: TEST_MY_USER_ID, date: new Date("2026-04-10"), amount: "88.00", type: "expense", description: "Grab rides – week", categoryId: "30670755-a27e-48cb-b7aa-9cec03bf3e40", source: "manual" },
+  { id: "a1111111-0001-0000-0000-000000000005", userId: TEST_MY_USER_ID, date: new Date("2026-04-14"), amount: "55.00", type: "expense", description: "GSC Cinema – weekend outing", categoryId: "81c97cae-46bc-4fdb-b03d-39e36a36101c", source: "manual" },
+];
+
+const TEST_MY_DEBT = {
+  id: "a1111111-0002-0000-0000-000000000001",
+  userId: TEST_MY_USER_ID,
+  debtType: "personal_loan",
+  lender: "Maybank Personal Financing",
+  outstandingBalance: "28500.00",
+  monthlyPayment: "650.00",
+};
+
+const TEST_MY_GOAL = {
+  id: "a1111111-0003-0000-0000-000000000001",
+  userId: TEST_MY_USER_ID,
+  title: "Emergency Fund 6 Months",
+  category: "emergency",
+  targetAmount: "45000.00",
+  savedAmount: "12000.00",
+  deadline: "2027-12-31",
+};
+
+const TEST_MY_BUDGET = {
+  id: "a1111111-0004-0000-0000-000000000001",
+  userId: TEST_MY_USER_ID,
+  categoryId: "0580956b-de53-4219-ac43-989a137fda1e",
+  month: "2026-04",
+  plannedAmount: "400.00",
+  actualAmount: "320.00",
+};
+
+async function seedTestMyData() {
+  const existing = await db.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.email, TEST_MY_USER.email));
+  if (existing.length > 0) return;
+
+  await db.insert(usersTable).values(TEST_MY_USER).onConflictDoNothing();
+  await db.insert(profilesTable).values(TEST_MY_PROFILE).onConflictDoNothing();
+  await db.insert(transactionsTable).values(TEST_MY_TRANSACTIONS).onConflictDoNothing();
+  await db.insert(debtsTable).values(TEST_MY_DEBT).onConflictDoNothing();
+  await db.insert(goalsTable).values(TEST_MY_GOAL).onConflictDoNothing();
+  await db.insert(monthlyBudgetsTable).values(TEST_MY_BUDGET).onConflictDoNothing();
+
+  logger.info("Seeded test-my@duitplan.dev account");
+}
+
+// ── Test ID user ──────────────────────────────────────────────────────────────
+const TEST_ID_USER_ID = "d2b3c4d5-e6f7-8901-bcde-222222222201";
+const TEST_ID_PROFILE_ID = "d2b3c4d5-e6f7-8901-bcde-222222222202";
+
+const TEST_ID_USER = {
+  id: TEST_ID_USER_ID,
+  email: "test-id@duitplan.dev",
+  passwordHash: "$2b$12$EMFKJU3fuvedDU8Rd7xOXOR8zfqTjFlyrEEnw5iTt6pLw9TEEdelC",
+  onboardingCompleted: true,
+};
+
+const TEST_ID_PROFILE = {
+  id: TEST_ID_PROFILE_ID,
+  userId: TEST_ID_USER_ID,
+  fullName: "Test User (ID)",
+  currency: "IDR",
+  region: "ID",
+  locale: "id-ID",
+  language: "en",
+  payday: 25,
+  monthlyIncome: "12000000.00",
+};
+
+const TEST_ID_TRANSACTIONS = [
+  { id: "b2222222-0001-0000-0000-000000000001", userId: TEST_ID_USER_ID, date: new Date("2026-04-25"), amount: "12000000.00", type: "income", description: "Gaji Bulanan", categoryId: null, source: "manual" },
+  { id: "b2222222-0001-0000-0000-000000000002", userId: TEST_ID_USER_ID, date: new Date("2026-04-05"), amount: "450000.00", type: "expense", description: "Tagihan Listrik & Internet", categoryId: "6f0ea787-4c36-48e1-ab94-a342cadb1c2a", source: "manual" },
+  { id: "b2222222-0001-0000-0000-000000000003", userId: TEST_ID_USER_ID, date: new Date("2026-04-09"), amount: "850000.00", type: "expense", description: "Belanja di Superindo", categoryId: "0580956b-de53-4219-ac43-989a137fda1e", source: "manual" },
+  { id: "b2222222-0001-0000-0000-000000000004", userId: TEST_ID_USER_ID, date: new Date("2026-04-11"), amount: "320000.00", type: "expense", description: "Ojek online – seminggu", categoryId: "30670755-a27e-48cb-b7aa-9cec03bf3e40", source: "manual" },
+  { id: "b2222222-0001-0000-0000-000000000005", userId: TEST_ID_USER_ID, date: new Date("2026-04-16"), amount: "180000.00", type: "expense", description: "Bioskop CGV akhir pekan", categoryId: "81c97cae-46bc-4fdb-b03d-39e36a36101c", source: "manual" },
+];
+
+const TEST_ID_DEBT = {
+  id: "b2222222-0002-0000-0000-000000000001",
+  userId: TEST_ID_USER_ID,
+  debtType: "personal_loan",
+  lender: "KTA Bank Mandiri",
+  outstandingBalance: "75000000.00",
+  monthlyPayment: "2100000.00",
+};
+
+const TEST_ID_GOAL = {
+  id: "b2222222-0003-0000-0000-000000000001",
+  userId: TEST_ID_USER_ID,
+  title: "Dana Darurat 6 Bulan",
+  category: "emergency",
+  targetAmount: "72000000.00",
+  savedAmount: "18000000.00",
+  deadline: "2027-12-31",
+};
+
+const TEST_ID_BUDGET = {
+  id: "b2222222-0004-0000-0000-000000000001",
+  userId: TEST_ID_USER_ID,
+  categoryId: "0580956b-de53-4219-ac43-989a137fda1e",
+  month: "2026-04",
+  plannedAmount: "1000000.00",
+  actualAmount: "850000.00",
+};
+
+async function seedTestIdData() {
+  const existing = await db.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.email, TEST_ID_USER.email));
+  if (existing.length > 0) return;
+
+  await db.insert(usersTable).values(TEST_ID_USER).onConflictDoNothing();
+  await db.insert(profilesTable).values(TEST_ID_PROFILE).onConflictDoNothing();
+  await db.insert(transactionsTable).values(TEST_ID_TRANSACTIONS).onConflictDoNothing();
+  await db.insert(debtsTable).values(TEST_ID_DEBT).onConflictDoNothing();
+  await db.insert(goalsTable).values(TEST_ID_GOAL).onConflictDoNothing();
+  await db.insert(monthlyBudgetsTable).values(TEST_ID_BUDGET).onConflictDoNothing();
+
+  logger.info("Seeded test-id@duitplan.dev account");
 }
 
 async function ensureSessionsTable() {
@@ -142,6 +301,8 @@ export async function seedIfEmpty() {
     }
 
     await seedHakemData();
+    await seedTestMyData();
+    await seedTestIdData();
   } catch (err) {
     logger.error({ err }, "Seed failed — continuing startup");
   }
