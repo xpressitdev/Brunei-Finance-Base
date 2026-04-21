@@ -21,6 +21,7 @@ import {
 import { Wallet, Plus, ArrowRight, Pencil } from "lucide-react";
 import { TrialExpiredPrompt } from "@/components/subscription/TrialExpiredPrompt";
 import { isTrialExpiredError } from "@/lib/trialExpired";
+import { useRegion } from "@/hooks/useRegion";
 import {
   AreaChart,
   Area,
@@ -32,6 +33,7 @@ import {
 
 function DebtTimeline({ debt }: { debt: Debt }) {
   const { data: scheduleData } = useGetDebtSchedule(debt.id);
+  const { formatCurrency, region } = useRegion();
   const schedule = scheduleData?.schedule ?? [];
 
   if (schedule.length === 0) return null;
@@ -47,7 +49,7 @@ function DebtTimeline({ debt }: { debt: Debt }) {
           ? (() => {
               const [y, mo] = debt.startDate!.split("-");
               const d = new Date(parseInt(y), parseInt(mo) - 1, 1);
-              return ` · started ${d.toLocaleDateString("en-GB", { month: "short", year: "numeric" })}`;
+              return ` · started ${d.toLocaleDateString(region.locale, { month: "short", year: "numeric" })}`;
             })()
           : ""}
       </div>
@@ -69,7 +71,7 @@ function DebtTimeline({ debt }: { debt: Debt }) {
           />
           <YAxis hide domain={[0, "auto"]} />
           <Tooltip
-            formatter={(v: number) => [`BND ${v.toLocaleString()}`, "Balance"]}
+            formatter={(v: number) => [formatCurrency(v), "Balance"]}
             labelFormatter={(l) => (hasLabels ? `Period ${l}` : `Month ${l}`)}
           />
           <Area
@@ -99,6 +101,7 @@ export default function Debts() {
   const { data: debts, isLoading, refetch } = useListDebts();
   const createMutation = useCreateDebt();
   const updateMutation = useUpdateDebt();
+  const { formatCurrency, region, decimalStep } = useRegion();
 
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingDebt, setEditingDebt] = useState<Debt | null>(null);
@@ -186,10 +189,10 @@ export default function Debts() {
         />
       </div>
       <div className="space-y-2">
-        <Label>Outstanding Balance (BND)</Label>
+        <Label>Outstanding Balance ({region.currency})</Label>
         <Input
           type="number"
-          step="0.01"
+          step={decimalStep}
           value={formData.outstandingBalance}
           onChange={(e) =>
             setFormData({ ...formData, outstandingBalance: e.target.value })
@@ -199,10 +202,10 @@ export default function Debts() {
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label>Monthly Payment (BND)</Label>
+          <Label>Monthly Payment ({region.currency})</Label>
           <Input
             type="number"
-            step="0.01"
+            step={decimalStep}
             value={formData.monthlyPayment}
             onChange={(e) =>
               setFormData({ ...formData, monthlyPayment: e.target.value })
@@ -281,7 +284,7 @@ export default function Debts() {
           <div>
             <div className="text-sm font-medium text-muted-foreground">Total Outstanding</div>
             <div className="text-2xl font-bold text-foreground">
-              BND {totalBalance.toFixed(2)}
+              {formatCurrency(totalBalance)}
             </div>
           </div>
         </div>
@@ -294,7 +297,7 @@ export default function Debts() {
               Total Monthly Payment
             </div>
             <div className="text-2xl font-bold text-foreground">
-              BND {totalMonthly.toFixed(2)}
+              {formatCurrency(totalMonthly)}
             </div>
           </div>
         </div>
@@ -323,13 +326,13 @@ export default function Debts() {
                       <span>
                         Balance:{" "}
                         <strong className="text-foreground">
-                          BND {parseFloat(d.outstandingBalance).toFixed(2)}
+                          {formatCurrency(parseFloat(d.outstandingBalance))}
                         </strong>
                       </span>
                       <span>
                         Monthly:{" "}
                         <strong className="text-foreground">
-                          BND {parseFloat(d.monthlyPayment).toFixed(2)}
+                          {formatCurrency(parseFloat(d.monthlyPayment))}
                         </strong>
                       </span>
                       {d.interestRate && (

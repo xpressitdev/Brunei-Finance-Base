@@ -9,6 +9,7 @@ import {
   AlertTriangle, ChevronRight, Loader2, FileText, CheckSquare,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useRegion } from "@/hooks/useRegion";
 import html2canvas from "html2canvas";
 
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
@@ -220,6 +221,7 @@ function renderMarkdownContent(text: string) {
 }
 
 function DiscrepancyCard({ data }: { data: DiscrepancyData }) {
+  const { formatCurrency } = useRegion();
   const delta = parseFloat(data.delta);
   const isNegative = delta < 0;
 
@@ -232,12 +234,12 @@ function DiscrepancyCard({ data }: { data: DiscrepancyData }) {
       <div className="grid grid-cols-2 gap-4 mb-3">
         <div className="rounded-lg bg-white dark:bg-background p-3 border border-amber-100 dark:border-amber-900">
           <div className="text-xs text-muted-foreground mb-1">You have</div>
-          <div className="text-xl font-bold text-foreground">BND {parseFloat(data.seen).toFixed(2)}</div>
+          <div className="text-xl font-bold text-foreground">{formatCurrency(parseFloat(data.seen))}</div>
           <div className="text-xs text-muted-foreground">From screenshot</div>
         </div>
         <div className="rounded-lg bg-white dark:bg-background p-3 border border-amber-100 dark:border-amber-900">
           <div className="text-xs text-muted-foreground mb-1">We recorded</div>
-          <div className="text-xl font-bold text-foreground">BND {parseFloat(data.recorded).toFixed(2)}</div>
+          <div className="text-xl font-bold text-foreground">{formatCurrency(parseFloat(data.recorded))}</div>
           <div className="text-xs text-muted-foreground">In DuitPlan</div>
         </div>
       </div>
@@ -246,7 +248,7 @@ function DiscrepancyCard({ data }: { data: DiscrepancyData }) {
         isNegative ? "bg-red-100 dark:bg-red-950/30" : "bg-green-100 dark:bg-green-950/30"
       )}>
         <span className="text-sm font-medium">
-          {isNegative ? "Missing" : "Extra"}: <span className={cn("font-bold", isNegative ? "text-red-700 dark:text-red-400" : "text-green-700 dark:text-green-400")}>BND {Math.abs(delta).toFixed(2)}</span>
+          {isNegative ? "Missing" : "Extra"}: <span className={cn("font-bold", isNegative ? "text-red-700 dark:text-red-400" : "text-green-700 dark:text-green-400")}>{formatCurrency(Math.abs(delta))}</span>
         </span>
         <Link href={`/accounts?account=${encodeURIComponent(data.account)}`}>
           <Button size="sm" variant="outline" className="h-7 text-xs gap-1">
@@ -278,6 +280,7 @@ function TransactionReviewCard({ uploadId }: { uploadId: string }) {
 }
 
 function MiniChart({ data }: { data: Array<{ label: string; value: number }> }) {
+  const { formatCurrency } = useRegion();
   if (!data || data.length === 0) return null;
   const max = Math.max(...data.map(d => d.value), 1);
   return (
@@ -293,7 +296,7 @@ function MiniChart({ data }: { data: Array<{ label: string; value: number }> }) 
                 style={{ width: `${(item.value / max) * 100}%` }}
               />
             </div>
-            <div className="text-xs text-white/70 w-14 text-right">BND {item.value.toFixed(0)}</div>
+            <div className="text-xs text-white/70 w-14 text-right">{formatCurrency(item.value)}</div>
           </div>
         ))}
       </div>
@@ -479,6 +482,7 @@ export default function AgentPage() {
   const [shareCardData, setShareCardData] = useState<InsightData | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { region } = useRegion();
 
   useEffect(() => {
     loadConversations();
@@ -774,7 +778,7 @@ export default function AgentPage() {
                 )}
               >
                 <div className="truncate">{convo.title}</div>
-                <div className="text-xs text-muted-foreground">{new Date(convo.updatedAt).toLocaleDateString()}</div>
+                <div className="text-xs text-muted-foreground">{new Date(convo.updatedAt).toLocaleDateString(region.locale)}</div>
               </button>
             ))}
           </div>

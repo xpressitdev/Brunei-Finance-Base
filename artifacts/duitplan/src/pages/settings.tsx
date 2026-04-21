@@ -8,8 +8,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, User, Tag, Settings as SettingsIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useRegion } from "@/hooks/useRegion";
 
 export default function Settings() {
+  const { region, decimalStep } = useRegion();
   const { data: profile, isLoading: profileLoading, refetch: refetchProfile } = useGetProfile();
   const { data: categories, isLoading: categoriesLoading, refetch: refetchCategories } = useListCategories();
   
@@ -103,10 +105,10 @@ export default function Settings() {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>Monthly Income (BND)</Label>
+                    <Label>Monthly Income ({region.currency})</Label>
                     <Input 
                       type="number" 
-                      step="0.01" 
+                      step={decimalStep} 
                       value={formData.monthlyIncome} 
                       onChange={(e) => setFormData({...formData, monthlyIncome: e.target.value})} 
                     />

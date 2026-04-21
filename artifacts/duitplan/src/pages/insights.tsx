@@ -17,9 +17,7 @@ import {
 } from "recharts";
 import { TrialExpiredPrompt } from "@/components/subscription/TrialExpiredPrompt";
 import { isTrialExpiredError } from "@/lib/trialExpired";
-
-const fmt = (v: number) =>
-  `BND ${v.toLocaleString("en-BN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+import { useRegion } from "@/hooks/useRegion";
 
 type ComputedInsights = {
   month: string;
@@ -109,6 +107,7 @@ export default function Insights() {
   const currentMonth = format(new Date(), "yyyy-MM");
   const [month, setMonth] = useState(currentMonth);
   const [trialExpiredError, setTrialExpiredError] = useState(false);
+  const { formatCurrency, formatMonthYear, formatMonthShort, region } = useRegion();
 
   const { data: computed, isLoading: computedLoading } = useComputedInsights(month);
   const { data: aiInsights, isLoading: aiLoading, refetch: refetchAi } = useAiInsights(month);
@@ -124,8 +123,8 @@ export default function Insights() {
     }
   };
 
-  const prevMonthLabel = format(subMonths(parseISO(`${month}-01`), 1), "MMM");
-  const thisMonthLabel = format(parseISO(`${month}-01`), "MMM");
+  const prevMonthLabel = formatMonthShort(subMonths(parseISO(`${month}-01`), 1));
+  const thisMonthLabel = formatMonthShort(parseISO(`${month}-01`));
 
   const st = computed?.spendingTrend;
   const sr = computed?.savingsRate;
@@ -236,14 +235,14 @@ export default function Insights() {
                 ) : (
                   <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                     <div className="flex-1 min-w-0">
-                      <p className="text-2xl font-bold">{fmt(st.thisMonth)}</p>
+                      <p className="text-2xl font-bold">{formatCurrency(st.thisMonth)}</p>
                       {st.changePct != null && (
                         <p className="text-sm text-muted-foreground mt-1">
                           {st.changePct > 0 ? "▲" : "▼"}{" "}
                           <span className={st.changePct > 0 ? "text-orange-500 font-medium" : "text-emerald-600 font-medium"}>
                             {Math.abs(st.changePct)}%
                           </span>{" "}
-                          vs {prevMonthLabel} ({fmt(st.lastMonth!)})
+                          vs {prevMonthLabel} ({formatCurrency(st.lastMonth!)})
                         </p>
                       )}
                     </div>
@@ -254,7 +253,7 @@ export default function Insights() {
                             <XAxis dataKey="label" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
                             <YAxis hide />
                             <Tooltip
-                              formatter={(v: number) => fmt(v)}
+                              formatter={(v: number) => formatCurrency(v)}
                               contentStyle={{ fontSize: 12 }}
                             />
                             <Bar dataKey="value" radius={[4, 4, 0, 0]}>
@@ -292,11 +291,11 @@ export default function Insights() {
                       <div key={a.categoryId} className="flex items-center justify-between rounded-lg bg-orange-50 dark:bg-orange-900/10 px-3 py-2">
                         <div>
                           <span className="font-medium text-sm">{a.categoryName}</span>
-                          <span className="text-xs text-muted-foreground ml-2">3-mo avg {fmt(a.avg3m)}</span>
+                          <span className="text-xs text-muted-foreground ml-2">3-mo avg {formatCurrency(a.avg3m)}</span>
                         </div>
                         <div className="text-right">
                           <span className="text-sm font-bold text-orange-600">▲ {a.pctOver}%</span>
-                          <div className="text-xs text-muted-foreground">{fmt(a.thisMonth)}</div>
+                          <div className="text-xs text-muted-foreground">{formatCurrency(a.thisMonth)}</div>
                         </div>
                       </div>
                     ))}
@@ -321,7 +320,7 @@ export default function Insights() {
                   <p className="text-sm text-muted-foreground">No recurring charges detected this month.</p>
                 ) : (
                   <div>
-                    <p className="text-2xl font-bold">{fmt(subs!.total)}</p>
+                    <p className="text-2xl font-bold">{formatCurrency(subs!.total)}</p>
                     <p className="text-sm text-muted-foreground mt-1">
                       {subs!.items.length} recurring {subs!.items.length === 1 ? "charge" : "charges"} detected this month.
                     </p>
@@ -329,7 +328,7 @@ export default function Insights() {
                       {subs!.items.slice(0, 5).map((s, i) => (
                         <div key={i} className="flex justify-between text-sm">
                           <span className="text-muted-foreground truncate max-w-[60%]">{s.merchant}</span>
-                          <span className="font-medium">{fmt(s.amount)}</span>
+                          <span className="font-medium">{formatCurrency(s.amount)}</span>
                         </div>
                       ))}
                       {subs!.items.length > 5 && (
@@ -370,7 +369,7 @@ export default function Insights() {
                           : "Spending exceeds income this month."}
                       </p>
                       <p className="text-xs text-muted-foreground mt-1">
-                        Income {fmt(sr?.income ?? 0)} · Spent {fmt(sr?.spent ?? 0)}
+                        Income {formatCurrency(sr?.income ?? 0)} · Spent {formatCurrency(sr?.spent ?? 0)}
                       </p>
                     </div>
                     <div className="w-full sm:w-40 shrink-0">
@@ -423,7 +422,7 @@ export default function Insights() {
                         : "Excellent — well within healthy debt levels."}
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      {fmt(dti.monthlyPayment)} / mo in debt payments · income {fmt(dti.income)}
+                      {formatCurrency(dti.monthlyPayment)} / mo in debt payments · income {formatCurrency(dti.income)}
                     </p>
                   </div>
                 )}
@@ -442,7 +441,7 @@ export default function Insights() {
                 {!ba || ba.total === 0 ? (
                   <div>
                     <p className="text-sm text-muted-foreground">
-                      No budgets set for {format(parseISO(`${month}-01`), "MMMM yyyy")}. Set budgets in the Cash Flow Plan to track adherence.
+                      No budgets set for {formatMonthYear(parseISO(`${month}-01`))}. Set budgets in the Cash Flow Plan to track adherence.
                     </p>
                     <div className="mt-3 opacity-25 pointer-events-none select-none">
                       <div className="flex justify-between text-xs text-muted-foreground mb-1">

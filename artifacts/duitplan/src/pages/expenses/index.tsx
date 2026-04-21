@@ -64,10 +64,7 @@ import {
 import { cn } from "@/lib/utils";
 import { TrialExpiredPrompt } from "@/components/subscription/TrialExpiredPrompt";
 import { isTrialExpiredError } from "@/lib/trialExpired";
-
-function fmt(n: number) {
-  return "BND " + n.toLocaleString("en-BN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
+import { useRegion } from "@/hooks/useRegion";
 
 function getCategoryIcon(name: string | null | undefined) {
   const n = (name ?? "").toLowerCase();
@@ -155,6 +152,7 @@ export default function Expenses() {
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+  const { formatCurrency, formatDate, formatMonthYear, region, decimalStep } = useRegion();
 
   const [currentMonth, setCurrentMonth] = useState(format(new Date(), "yyyy-MM"));
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -361,7 +359,7 @@ export default function Expenses() {
     }
   };
 
-  const monthLabel = format(new Date(currentMonth + "-01"), "MMMM yyyy");
+  const monthLabel = formatMonthYear(currentMonth + "-01");
   const isCurrentMonth = currentMonth === format(new Date(), "yyyy-MM");
 
   return (
@@ -387,17 +385,17 @@ export default function Expenses() {
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
         <div className="bg-card border rounded-xl p-4 col-span-2 sm:col-span-1">
           <p className="text-xs text-muted-foreground uppercase tracking-wide">Today</p>
-          <p className="text-2xl font-bold text-foreground mt-1">{fmt(todayTotal)}</p>
+          <p className="text-2xl font-bold text-foreground mt-1">{formatCurrency(todayTotal)}</p>
           <p className="text-xs text-muted-foreground mt-1">{todayTransactions.length} expense{todayTransactions.length !== 1 ? "s" : ""}</p>
         </div>
         <div className="bg-card border rounded-xl p-4">
           <p className="text-xs text-muted-foreground uppercase tracking-wide">Month Expenses</p>
-          <p className="text-xl font-bold text-red-500 mt-1">{fmt(totalExpenses)}</p>
+          <p className="text-xl font-bold text-red-500 mt-1">{formatCurrency(totalExpenses)}</p>
           <p className="text-xs text-muted-foreground mt-1">{expenses.length} entries</p>
         </div>
         <div className="bg-card border rounded-xl p-4">
           <p className="text-xs text-muted-foreground uppercase tracking-wide">Month Income</p>
-          <p className="text-xl font-bold text-emerald-600 mt-1">{fmt(totalIncome)}</p>
+          <p className="text-xl font-bold text-emerald-600 mt-1">{formatCurrency(totalIncome)}</p>
           <p className="text-xs text-muted-foreground mt-1">
             {incomeEntryCount} {incomeEntryCount === 1 ? "entry" : "entries"}
             {configuredSalary > 0 && income.length === 0 && (
@@ -418,14 +416,14 @@ export default function Expenses() {
         <div className="space-y-4">
           {sortedDays.map((day) => {
             const dayDate = parseISO(day);
-            const dayLabel = isToday(dayDate) ? "Today" : format(dayDate, "EEEE, d MMM");
+            const dayLabel = isToday(dayDate) ? "Today" : dayDate.toLocaleDateString(region.locale, { weekday: 'long', day: 'numeric', month: 'short' });
             const dayTotal = grouped[day].reduce((s, t) => s + parseFloat(t.amount), 0);
 
             return (
               <div key={day} className="bg-card border rounded-xl overflow-hidden">
                 <div className="flex items-center justify-between px-4 py-2.5 bg-muted/40 border-b">
                   <span className="text-sm font-semibold text-foreground">{dayLabel}</span>
-                  <span className="text-sm font-medium text-muted-foreground">{fmt(dayTotal)}</span>
+                  <span className="text-sm font-medium text-muted-foreground">{formatCurrency(dayTotal)}</span>
                 </div>
                 <div className="divide-y">
                   {grouped[day].map((t) => (
@@ -445,7 +443,7 @@ export default function Expenses() {
                         </p>
                       </div>
                       <div className="flex items-center gap-2 flex-shrink-0">
-                        <p className="text-sm font-semibold text-foreground">{fmt(parseFloat(t.amount))}</p>
+                        <p className="text-sm font-semibold text-foreground">{formatCurrency(parseFloat(t.amount))}</p>
                         <Button
                           variant="ghost"
                           size="icon"
@@ -618,12 +616,12 @@ export default function Expenses() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label>Amount (BND)</Label>
+                <Label>Amount ({region.currency})</Label>
                 <Input
                   type="number"
-                  step="0.01"
+                  step={decimalStep}
                   min="0"
-                  placeholder="0.00"
+                  placeholder={decimalStep === "1" ? "0" : "0.00"}
                   value={form.amount}
                   onChange={(e) => setForm((f) => ({ ...f, amount: e.target.value }))}
                   required
@@ -735,12 +733,12 @@ export default function Expenses() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label>Amount (BND)</Label>
+                <Label>Amount ({region.currency})</Label>
                 <Input
                   type="number"
-                  step="0.01"
+                  step={decimalStep}
                   min="0"
-                  placeholder="0.00"
+                  placeholder={decimalStep === "1" ? "0" : "0.00"}
                   value={editData.amount}
                   onChange={(e) => setEditData((d) => ({ ...d, amount: e.target.value }))}
                   required

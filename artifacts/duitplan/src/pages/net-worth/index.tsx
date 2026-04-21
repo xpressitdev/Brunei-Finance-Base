@@ -59,9 +59,9 @@ import {
 } from "lucide-react";
 import { Link } from "wouter";
 import { cn } from "@/lib/utils";
+import { useRegion } from "@/hooks/useRegion";
+import { formatMonthYear as _formatMonthYear, formatMonthShort as _formatMonthShort } from "@/utils/formatting";
 
-const MONTH_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-const MONTHS_FULL = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
 const ASSET_CATEGORIES = ["Savings", "Property", "Vehicle", "Investment", "Business", "Other"] as const;
 type AssetCategory = typeof ASSET_CATEGORIES[number];
@@ -110,20 +110,11 @@ function nextMonthStr(month: string) {
   return `${y}-${String(m + 1).padStart(2, "0")}`;
 }
 
-function monthLabel(month: string) {
+function monthLabel(month: string, locale = "en-BN") {
   const [y, m] = month.split("-").map(Number);
-  return `${MONTHS_FULL[m - 1]} ${y}`;
+  return _formatMonthYear(new Date(y, m - 1, 1), locale);
 }
 
-function fmt(n: number) {
-  return "BND " + n.toLocaleString("en-BN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
-
-function fmtCompact(n: number) {
-  if (Math.abs(n) >= 1_000_000) return "BND " + (n / 1_000_000).toFixed(1) + "M";
-  if (Math.abs(n) >= 1_000) return "BND " + (n / 1_000).toFixed(1) + "K";
-  return fmt(n);
-}
 
 function relativeTime(isoString: string | null | undefined): string {
   if (!isoString) return "No activity yet";
@@ -169,13 +160,14 @@ function emptyForm(month: string): FormState {
 type ComparisonPayload = { name: string; Assets: number; Liabilities: number };
 
 const ComparisonTooltip = ({ active, payload, label }: TooltipProps<number, string>) => {
+  const { formatCurrency } = useRegion();
   if (!active || !payload || !payload.length) return null;
   return (
     <div className="bg-card border rounded-lg p-3 shadow-lg text-sm">
       <p className="font-semibold text-foreground mb-1">{label}</p>
       {payload.map((p) => (
         <p key={p.dataKey as string} style={{ color: p.fill }} className="font-bold">
-          {p.name}: {fmt(p.value ?? 0)}
+          {p.name}: {formatCurrency(p.value ?? 0)}
         </p>
       ))}
     </div>
@@ -183,11 +175,12 @@ const ComparisonTooltip = ({ active, payload, label }: TooltipProps<number, stri
 };
 
 const LineTooltip = ({ active, payload, label }: TooltipProps<number, string>) => {
+  const { formatCurrency } = useRegion();
   if (!active || !payload || !payload.length) return null;
   return (
     <div className="bg-card border rounded-lg p-3 shadow-lg text-sm">
       <p className="font-semibold text-foreground mb-1">{label}</p>
-      <p className="text-primary font-bold">{fmt(payload[0].value ?? 0)}</p>
+      <p className="text-primary font-bold">{formatCurrency(payload[0].value ?? 0)}</p>
     </div>
   );
 };
@@ -195,6 +188,13 @@ const LineTooltip = ({ active, payload, label }: TooltipProps<number, string>) =
 export default function NetWorth() {
   const [selectedMonth, setSelectedMonth] = useState(currentMonth());
   const today = currentMonth();
+  const { formatCurrency, region, decimalStep } = useRegion();
+
+  function fmtCompact(n: number) {
+    if (Math.abs(n) >= 1_000_000) return formatCurrency(n / 1_000_000) + "M";
+    if (Math.abs(n) >= 1_000) return formatCurrency(n / 1_000) + "K";
+    return formatCurrency(n);
+  }
 
   const { data: currentAssets = [], refetch: refetchCurrent } = useListAssets(
     { month: selectedMonth },
@@ -251,7 +251,8 @@ export default function NetWorth() {
     const monthAssets = ((trendResults[i]?.data as AssetEntry[] | undefined) ?? []);
     const total = monthAssets.reduce((s, a) => s + parseFloat(a.value), 0);
     const [, mo] = m.split("-");
-    return { month: MONTH_SHORT[parseInt(mo) - 1], value: total, fullMonth: m };
+    const shortMonth = _formatMonthShort(new Date(parseInt(m.split("-")[0]), parseInt(mo) - 1, 1), region.locale);
+    return { month: shortMonth, value: total, fullMonth: m };
   });
 
   const openCreate = () => {
@@ -334,7 +335,7 @@ export default function NetWorth() {
             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setSelectedMonth((m) => prevMonthStr(m))}>
               <ChevronLeft className="w-4 h-4" />
             </Button>
-            <span className="text-sm font-semibold w-36 text-center">{monthLabel(selectedMonth)}</span>
+            <span className="text-sm font-semibold w-36 text-center">{monthLabel(selectedMonth, region.locale)}</span>
             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setSelectedMonth((m) => nextMonthStr(m))} disabled={selectedMonth >= today}>
               <ChevronRight className="w-4 h-4" />
             </Button>
@@ -350,15 +351,15 @@ export default function NetWorth() {
         {/* Total Assets */}
         <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-5">
           <p className="text-xs font-semibold text-emerald-700 uppercase tracking-wide mb-1">Total Assets</p>
-          <p className="text-2xl font-bold text-emerald-800">{fmt(totalAssets)}</p>
+          <p className="text-2xl font-bold text-emerald-800">{formatCurrency(totalAssets)}</p>
           <div className="mt-2 space-y-1">
             <div className="flex justify-between text-xs text-emerald-700">
               <span>Asset entries</span>
-              <span className="font-medium">{fmt(totalAssetEntries)}</span>
+              <span className="font-medium">{formatCurrency(totalAssetEntries)}</span>
             </div>
             <div className="flex justify-between text-xs text-emerald-700">
               <span>Account balances</span>
-              <span className="font-medium">{fmt(totalAccountBalance)}</span>
+              <span className="font-medium">{formatCurrency(totalAccountBalance)}</span>
             </div>
           </div>
         </div>
@@ -366,7 +367,7 @@ export default function NetWorth() {
         {/* Total Liabilities */}
         <div className="bg-red-50 border border-red-200 rounded-xl p-5">
           <p className="text-xs font-semibold text-red-700 uppercase tracking-wide mb-1">Total Liabilities</p>
-          <p className="text-2xl font-bold text-red-800">{fmt(totalLiabilities)}</p>
+          <p className="text-2xl font-bold text-red-800">{formatCurrency(totalLiabilities)}</p>
           <div className="mt-2">
             <p className="text-xs text-red-700">{debts.length} debt{debts.length !== 1 ? "s" : ""} outstanding</p>
           </div>
@@ -381,10 +382,10 @@ export default function NetWorth() {
             Net Worth
           </p>
           <p className={cn("text-3xl font-extrabold", netWorthPositive ? "text-emerald-700" : "text-red-700")}>
-            {fmt(netWorth)}
+            {formatCurrency(netWorth)}
           </p>
           <p className="text-xs text-muted-foreground mt-2">
-            {fmt(totalAssets)} − {fmt(totalLiabilities)}
+            {formatCurrency(totalAssets)} − {formatCurrency(totalLiabilities)}
           </p>
         </div>
       </div>
@@ -462,12 +463,12 @@ export default function NetWorth() {
                     <span className="text-sm font-medium text-foreground">{a.name}</span>
                     {a.bankName && <span className="text-xs text-muted-foreground ml-2">{a.bankName}</span>}
                   </div>
-                  <span className="text-sm font-semibold text-emerald-700">{fmt(parseFloat(a.balance ?? "0"))}</span>
+                  <span className="text-sm font-semibold text-emerald-700">{formatCurrency(parseFloat(a.balance ?? "0"))}</span>
                 </div>
               ))}
               <div className="bg-emerald-50 px-5 py-2 flex justify-between items-center">
                 <span className="text-xs font-medium text-emerald-800">Total Account Balances</span>
-                <span className="text-sm font-bold text-emerald-800">{fmt(totalAccountBalance)}</span>
+                <span className="text-sm font-bold text-emerald-800">{formatCurrency(totalAccountBalance)}</span>
               </div>
             </>
           )}
@@ -478,13 +479,13 @@ export default function NetWorth() {
         <div className="flex items-center gap-2">
           <TrendingUp className="w-4 h-4 text-blue-600" />
           <h2 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">
-            Asset Entries — {monthLabel(selectedMonth)}
+            Asset Entries — {monthLabel(selectedMonth, region.locale)}
           </h2>
         </div>
 
         {assets.length === 0 ? (
           <div className="bg-card border rounded-xl p-10 text-center">
-            <p className="text-muted-foreground text-sm">No asset entries for {monthLabel(selectedMonth)}.</p>
+            <p className="text-muted-foreground text-sm">No asset entries for {monthLabel(selectedMonth, region.locale)}.</p>
             <Button variant="outline" className="mt-4 gap-2" onClick={openCreate}>
               <Plus className="w-4 h-4" />
               Add your first asset entry
@@ -502,7 +503,7 @@ export default function NetWorth() {
                     <span className="font-semibold text-foreground">{cat}</span>
                     <span className="text-xs text-muted-foreground">({catAssets.length})</span>
                   </div>
-                  <span className="text-sm font-bold text-foreground">{fmt(subtotal)}</span>
+                  <span className="text-sm font-bold text-foreground">{formatCurrency(subtotal)}</span>
                 </div>
                 <div className="divide-y">
                   {catAssets.map((asset) => (
@@ -510,10 +511,10 @@ export default function NetWorth() {
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-foreground truncate">{asset.name}</p>
                         {asset.month !== selectedMonth && (
-                          <p className="text-xs text-muted-foreground">Value from {monthLabel(asset.month)}</p>
+                          <p className="text-xs text-muted-foreground">Value from {monthLabel(asset.month, region.locale)}</p>
                         )}
                       </div>
-                      <span className="text-sm font-semibold text-foreground">{fmt(parseFloat(asset.value))}</span>
+                      <span className="text-sm font-semibold text-foreground">{formatCurrency(parseFloat(asset.value))}</span>
                       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground" onClick={() => openEdit(asset)}>
                           <Pencil className="w-3.5 h-3.5" />
@@ -533,7 +534,7 @@ export default function NetWorth() {
         {assets.length > 0 && (
           <div className="bg-blue-50 border border-blue-200 rounded-xl px-5 py-3 flex justify-between items-center">
             <span className="text-xs font-medium text-blue-800">Total Asset Entries</span>
-            <span className="text-sm font-bold text-blue-800">{fmt(totalAssetEntries)}</span>
+            <span className="text-sm font-bold text-blue-800">{formatCurrency(totalAssetEntries)}</span>
           </div>
         )}
       </div>
@@ -571,13 +572,13 @@ export default function NetWorth() {
                     </span>
                   </div>
                   <span className="text-sm font-semibold text-red-700">
-                    {fmt(parseFloat(d.outstandingBalance ?? "0"))}
+                    {formatCurrency(parseFloat(d.outstandingBalance ?? "0"))}
                   </span>
                 </div>
               ))}
               <div className="bg-red-50 px-5 py-2 flex justify-between items-center">
                 <span className="text-xs font-medium text-red-800">Total Outstanding</span>
-                <span className="text-sm font-bold text-red-800">{fmt(totalLiabilities)}</span>
+                <span className="text-sm font-bold text-red-800">{formatCurrency(totalLiabilities)}</span>
               </div>
             </>
           )}
@@ -611,8 +612,8 @@ export default function NetWorth() {
               <Input placeholder='e.g. "My Honda Civic", "Rimba property"' value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />
             </div>
             <div className="space-y-1.5">
-              <Label>Value (BND)</Label>
-              <Input type="number" step="0.01" min="0" placeholder="0.00" value={form.value} onFocus={(e) => e.target.select()} onChange={(e) => setForm((f) => ({ ...f, value: e.target.value }))} />
+              <Label>Value ({region.currency})</Label>
+              <Input type="number" step={decimalStep} min="0" placeholder={decimalStep === "1" ? "0" : "0.00"} value={form.value} onFocus={(e) => e.target.select()} onChange={(e) => setForm((f) => ({ ...f, value: e.target.value }))} />
             </div>
             <div className="space-y-1.5">
               <Label>Month</Label>

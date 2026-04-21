@@ -31,6 +31,7 @@ import {
 import { Trash2, Plus, Search, Receipt, TrendingUp, TrendingDown, Pencil, Info } from "lucide-react";
 import { TrialExpiredPrompt } from "@/components/subscription/TrialExpiredPrompt";
 import { isTrialExpiredError } from "@/lib/trialExpired";
+import { useRegion } from "@/hooks/useRegion";
 
 type TransactionItem = {
   id: string;
@@ -46,6 +47,7 @@ type TransactionItem = {
 export default function Transactions() {
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
+  const { formatCurrency, formatDate, formatMonthYear, region, decimalStep } = useRegion();
   const searchString = useSearch();
   const queryMonth = new URLSearchParams(searchString).get("month");
   const [month, setMonth] = useState(queryMonth && /^\d{4}-\d{2}$/.test(queryMonth) ? queryMonth : "");
@@ -213,7 +215,7 @@ export default function Transactions() {
                   <Label>Amount</Label>
                   <Input 
                     type="number" 
-                    step="0.01" 
+                    step={decimalStep} 
                     value={formData.amount} 
                     onChange={(e) => setFormData({...formData, amount: e.target.value})}
                     required
@@ -293,7 +295,7 @@ export default function Transactions() {
                 <Label>Amount</Label>
                 <Input 
                   type="number" 
-                  step="0.01" 
+                  step={decimalStep} 
                   value={editData.amount} 
                   onChange={(e) => setEditData({...editData, amount: e.target.value})}
                   required
@@ -432,7 +434,7 @@ export default function Transactions() {
             <h3 className="font-semibold text-lg mb-1">No transactions found</h3>
             <p className="text-muted-foreground mb-4">
               {month
-                ? `No transactions for ${format(new Date(month + "-01"), "MMMM yyyy")}. Imported transactions may be in a different month.`
+                ? `No transactions for ${formatMonthYear(month + "-01")}. Imported transactions may be in a different month.`
                 : "No transactions yet. Import a bank statement or add one manually."}
             </p>
             {month && (
@@ -455,7 +457,7 @@ export default function Transactions() {
                   <div>
                     <div className="font-medium text-foreground">{tx.description}</div>
                     <div className="text-sm text-muted-foreground flex items-center gap-2 flex-wrap">
-                      {format(new Date(tx.date), "MMM d, yyyy")}
+                      {formatDate(tx.date)}
                       <span>&bull;</span>
                       <span className="bg-muted px-2 py-0.5 rounded-full text-xs">{tx.categoryName || 'Uncategorized'}</span>
                       {tx.accountName && (
@@ -466,7 +468,7 @@ export default function Transactions() {
                 </div>
                 <div className="flex items-center gap-4">
                   <div className={`font-semibold ${tx.type === 'credit' ? 'text-emerald-600' : 'text-red-500'}`}>
-                    {tx.type === 'credit' ? '+' : '−'}BND {Number(tx.amount).toFixed(2)}
+                    {tx.type === 'credit' ? '+' : '−'}{formatCurrency(Number(tx.amount))}
                   </div>
                   <div className="flex gap-1">
                     <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => openEdit(tx)}>

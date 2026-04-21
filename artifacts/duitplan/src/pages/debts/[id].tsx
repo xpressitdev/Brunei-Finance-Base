@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useParams, Link, useLocation } from "wouter";
 import { useListDebts, useDeleteDebt } from "@workspace/api-client-react";
 import { isTrialExpiredError } from "@/lib/trialExpired";
+import { useRegion } from "@/hooks/useRegion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -74,6 +75,7 @@ export default function DebtDetail() {
   const [, setLocation] = useLocation();
   const { data: debts, isLoading } = useListDebts();
   const deleteMutation = useDeleteDebt();
+  const { formatCurrency, region, decimalStep } = useRegion();
 
   const [extraPayment, setExtraPayment] = useState("");
   const [scenario, setScenario] = useState<{
@@ -167,13 +169,13 @@ export default function DebtDetail() {
             <div className="flex justify-between items-center py-2 border-b">
               <span className="text-muted-foreground">Outstanding Balance</span>
               <span className="font-bold text-lg">
-                BND {parseFloat(debt.outstandingBalance).toFixed(2)}
+                {formatCurrency(parseFloat(debt.outstandingBalance))}
               </span>
             </div>
             <div className="flex justify-between items-center py-2 border-b">
               <span className="text-muted-foreground">Monthly Payment</span>
               <span className="font-bold text-lg">
-                BND {parseFloat(debt.monthlyPayment).toFixed(2)}
+                {formatCurrency(parseFloat(debt.monthlyPayment))}
               </span>
             </div>
             {debt.interestRate && (
@@ -189,7 +191,7 @@ export default function DebtDetail() {
                   {(() => {
                     const [y, m] = debt.startDate!.split("-");
                     const d = new Date(parseInt(y), parseInt(m) - 1, 1);
-                    return d.toLocaleDateString("en-GB", { year: "numeric", month: "short" });
+                    return d.toLocaleDateString(region.locale, { year: "numeric", month: "short" });
                   })()}
                 </span>
               </div>
@@ -206,13 +208,13 @@ export default function DebtDetail() {
           <CardContent className="p-6">
             <form onSubmit={handleSimulate} className="space-y-4">
               <div className="space-y-2">
-                <Label>Extra Monthly Payment (BND)</Label>
+                <Label>Extra Monthly Payment ({region.currency})</Label>
                 <div className="flex gap-2">
                   <Input
                     type="number"
-                    step="0.01"
-                    min="0.01"
-                    placeholder="e.g. 50.00"
+                    step={decimalStep}
+                    min={decimalStep}
+                    placeholder={decimalStep === "1" ? "e.g. 50" : "e.g. 50.00"}
                     value={extraPayment}
                     onChange={(e) => setExtraPayment(e.target.value)}
                     required
@@ -239,7 +241,7 @@ export default function DebtDetail() {
                     Interest Saved
                   </span>
                   <span className="font-bold text-green-600">
-                    BND {scenario.totalInterestSaved.toFixed(2)}
+                    {formatCurrency(scenario.totalInterestSaved)}
                   </span>
                 </div>
                 <div className="pt-3 border-t flex items-center gap-3">
@@ -251,7 +253,7 @@ export default function DebtDetail() {
                       Save {scenario.estimatedMonthsSaved} months
                     </div>
                     <div className="text-xs text-muted-foreground">
-                      by adding BND {scenario.extraMonthlyPayment} extra each month.
+                      by adding {formatCurrency(parseFloat(scenario.extraMonthlyPayment))} extra each month.
                     </div>
                   </div>
                 </div>
@@ -283,14 +285,12 @@ export default function DebtDetail() {
                   tick={{ fontSize: 12 }}
                 />
                 <YAxis
-                  tickFormatter={(v) => `BND ${v.toLocaleString()}`}
+                  tickFormatter={(v) => formatCurrency(v)}
                   tick={{ fontSize: 11 }}
                   width={90}
                 />
                 <Tooltip
-                  formatter={(value: number) => [
-                    `BND ${value.toLocaleString(undefined, { minimumFractionDigits: 2 })}`,
-                  ]}
+                  formatter={(value: number) => [formatCurrency(value)]}
                   labelFormatter={(label) => `Month ${label}`}
                 />
                 <Legend />
@@ -313,7 +313,7 @@ export default function DebtDetail() {
               </LineChart>
             </ResponsiveContainer>
             <p className="text-xs text-muted-foreground text-center mt-2">
-              X-axis: Months elapsed &nbsp;·&nbsp; Y-axis: Outstanding balance (BND)
+              X-axis: Months elapsed &nbsp;·&nbsp; Y-axis: Outstanding balance ({region.currency})
             </p>
           </CardContent>
         </Card>

@@ -14,9 +14,11 @@ import {
 import { Trash2, Plus, CalendarDays } from "lucide-react";
 import { TrialExpiredPrompt } from "@/components/subscription/TrialExpiredPrompt";
 import { isTrialExpiredError } from "@/lib/trialExpired";
+import { useRegion } from "@/hooks/useRegion";
 
 export default function Commitments() {
   const [, setLocation] = useLocation();
+  const { formatCurrency, decimalStep } = useRegion();
   const { data: commitments, isLoading, refetch } = useListCommitments();
   const createMutation = useCreateCommitment();
   const deleteMutation = useDeleteCommitment();
@@ -97,7 +99,7 @@ export default function Commitments() {
                 <Label>Amount</Label>
                 <Input 
                   type="number" 
-                  step="0.01" 
+                  step={decimalStep} 
                   value={formData.amount} 
                   onChange={(e) => setFormData({...formData, amount: e.target.value})}
                   required
@@ -128,7 +130,7 @@ export default function Commitments() {
           </div>
           <div>
             <div className="text-sm font-medium text-muted-foreground">Total Fixed Commitments</div>
-            <div className="text-2xl font-bold text-foreground">${totalCommitments.toFixed(2)}</div>
+            <div className="text-2xl font-bold text-foreground">{formatCurrency(totalCommitments)}</div>
           </div>
         </div>
       </div>
@@ -149,7 +151,7 @@ export default function Commitments() {
               <h3 className="font-semibold text-lg pr-8">{c.label}</h3>
               {c.dueDay && <p className="text-sm text-muted-foreground">Due on day {c.dueDay}</p>}
             </div>
-            <div className="text-2xl font-bold mt-auto">${c.amount}</div>
+            <div className="text-2xl font-bold mt-auto">{formatCurrency(parseFloat(c.amount))}</div>
           </div>
         ))}
         {(!commitments || commitments.length === 0) && (

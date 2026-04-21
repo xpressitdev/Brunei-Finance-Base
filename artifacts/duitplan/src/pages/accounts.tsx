@@ -43,6 +43,7 @@ import {
 import { Building2, Plus, Pencil, Trash2, Upload, Wallet, PiggyBank, Landmark, TrendingUp, Lock, BarChart2 } from "lucide-react";
 import { Link } from "wouter";
 import { cn } from "@/lib/utils";
+import { useRegion } from "@/hooks/useRegion";
 
 const ACCOUNT_TYPES = [
   { value: "cash", label: "Cash in Hand", icon: Wallet, color: "bg-emerald-100 text-emerald-800" },
@@ -72,26 +73,11 @@ function getTypeInfo(type: string) {
   return ACCOUNT_TYPES.find(t => t.value === type) ?? ACCOUNT_TYPES[ACCOUNT_TYPES.length - 1];
 }
 
-function fmt(val: string | number) {
-  return `BND ${Number(val || 0).toLocaleString("en-BN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-}
-
 function fmtShort(val: number) {
   if (Math.abs(val) >= 1000) {
     return `${(val / 1000).toFixed(1)}k`;
   }
   return val.toFixed(0);
-}
-
-function fmtDate(dateStr: string, days: number) {
-  const d = new Date(dateStr + "T00:00:00");
-  if (days <= 7) {
-    return d.toLocaleDateString("en-BN", { weekday: "short" });
-  }
-  if (days <= 30) {
-    return d.toLocaleDateString("en-BN", { month: "short", day: "numeric" });
-  }
-  return d.toLocaleDateString("en-BN", { month: "short", day: "numeric" });
 }
 
 type FormState = {
@@ -115,6 +101,7 @@ function AccountForm({
   saving: boolean;
 }) {
   const [form, setForm] = useState<FormState>(initial);
+  const { region, decimalStep } = useRegion();
   const set = (k: keyof FormState, v: string) => setForm(prev => ({ ...prev, [k]: v }));
 
   return (
@@ -158,18 +145,18 @@ function AccountForm({
       </div>
 
       <div className="space-y-1.5">
-        <Label>Current balance (BND)</Label>
+        <Label>Current balance ({region.currency})</Label>
         <div className="relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm font-medium">BND</span>
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm font-medium">{region.currency}</span>
           <Input
             type="number"
-            step="0.01"
+            step={decimalStep}
             min="0"
             className="pl-14 text-right font-mono"
             value={form.balance}
             onChange={e => set("balance", e.target.value)}
             onFocus={e => e.target.select()}
-            placeholder="e.g. 5000.00"
+            placeholder={decimalStep === "1" ? "e.g. 5000" : "e.g. 5000.00"}
           />
         </div>
         <p className="text-xs text-muted-foreground">Enter the current amount in your account today.</p>
@@ -190,7 +177,16 @@ function AccountForm({
 
 function BalanceHistoryChart({ account }: { account: Account }) {
   const [days, setDays] = useState(30);
+  const { formatCurrency, region } = useRegion();
   const { data: history = [], isLoading } = useGetAccountBalanceHistory(account.id, { days });
+
+  function fmtDate(dateStr: string, periodDays: number) {
+    const d = new Date(dateStr + "T00:00:00");
+    if (periodDays <= 7) {
+      return d.toLocaleDateString(region.locale, { weekday: "short" });
+    }
+    return d.toLocaleDateString(region.locale, { month: "short", day: "numeric" });
+  }
 
   const minBal = history.length > 0 ? Math.min(...history.map(p => p.balance)) : 0;
   const maxBal = history.length > 0 ? Math.max(...history.map(p => p.balance)) : 0;
@@ -256,7 +252,7 @@ function BalanceHistoryChart({ account }: { account: Account }) {
                 width={42}
               />
               <Tooltip
-                formatter={(value: number) => [fmt(value), "Balance"]}
+                formatter={(value: number) => [formatCurrency(value), "Balance"]}
                 labelFormatter={(label) => `Date: ${label}`}
                 contentStyle={{
                   background: "hsl(var(--card))",
@@ -280,13 +276,13 @@ function BalanceHistoryChart({ account }: { account: Account }) {
 
       <div className="flex justify-between text-xs text-muted-foreground border-t pt-3">
         <span>
-          Lowest: <span className="font-medium text-foreground">{fmt(minBal)}</span>
+          Lowest: <span className="font-medium text-foreground">{formatCurrency(minBal)}</span>
         </span>
         <span>
-          Highest: <span className="font-medium text-foreground">{fmt(maxBal)}</span>
+          Highest: <span className="font-medium text-foreground">{formatCurrency(maxBal)}</span>
         </span>
         <span>
-          Current: <span className="font-semibold text-foreground">{fmt(account.balance)}</span>
+          Current: <span className="font-semibold text-foreground">{formatCurrency(account.balance)}</span>
         </span>
       </div>
     </div>
@@ -295,6 +291,7 @@ function BalanceHistoryChart({ account }: { account: Account }) {
 
 export default function Accounts() {
   const qc = useQueryClient();
+  const { formatCurrency } = useRegion();
   const { data: accounts = [], isLoading } = useListAccounts();
   const createMut = useCreateAccount();
   const updateMut = useUpdateAccount();
@@ -391,7 +388,7 @@ export default function Accounts() {
           <Building2 className="w-4 h-4 text-primary" />
         </CardHeader>
         <CardContent className="px-5 pb-5">
-          <div className="text-3xl font-bold text-primary">{fmt(totalBalance)}</div>
+          <div className="text-3xl font-bold text-primary">{formatCurrency(totalBalance)}</div>
           <p className="text-xs text-muted-foreground mt-1">
             {accounts.length === 0
               ? "No accounts yet"
@@ -437,7 +434,7 @@ export default function Accounts() {
                   </div>
 
                   {/* Balance */}
-                  <div className="text-2xl font-bold">{fmt(account.balance)}</div>
+                  <div className="text-2xl font-bold">{formatCurrency(account.balance)}</div>
 
                   {/* Actions */}
                   <div className="flex items-center gap-2 pt-1 border-t">

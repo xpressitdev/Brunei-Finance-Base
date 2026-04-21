@@ -59,6 +59,31 @@ export function formatDateTime(date: Date | string | number, locale?: string): s
 }
 
 /**
+ * Formats a date as a locale-aware "Month Year" string (e.g. "April 2026", "April 2026").
+ * Returns "—" for invalid dates.
+ */
+export function formatMonthYear(date: Date | string | number, locale?: string): string {
+  const d = date instanceof Date ? date : new Date(date);
+  if (!isValidDate(d)) return PLACEHOLDER;
+  return new Intl.DateTimeFormat(locale ?? 'en-US', {
+    month: 'long',
+    year: 'numeric',
+  }).format(d);
+}
+
+/**
+ * Formats a date as a locale-aware short month name (e.g. "Apr", "Apr").
+ * Returns "—" for invalid dates.
+ */
+export function formatMonthShort(date: Date | string | number, locale?: string): string {
+  const d = date instanceof Date ? date : new Date(date);
+  if (!isValidDate(d)) return PLACEHOLDER;
+  return new Intl.DateTimeFormat(locale ?? 'en-US', {
+    month: 'short',
+  }).format(d);
+}
+
+/**
  * Formats a date as a locale-aware relative time string using Intl.RelativeTimeFormat,
  * e.g. "2 hours ago", "3 days ago". Falls back to date-fns for English when the
  * Intl API is unavailable. Returns "—" for invalid dates.

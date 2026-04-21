@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Target, Plus, Pencil, Trash2, CheckCircle2 } from "lucide-react";
+import { useRegion } from "@/hooks/useRegion";
 
 const CATEGORIES = [
   { value: "savings", label: "Savings" },
@@ -49,10 +50,6 @@ const CATEGORY_COLORS: Record<string, string> = {
   custom: "bg-gray-100 text-gray-800",
 };
 
-function fmt(val: string | number) {
-  return "BND " + parseFloat(String(val)).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-}
-
 const emptyForm = {
   title: "",
   category: "savings",
@@ -63,6 +60,7 @@ const emptyForm = {
 };
 
 export default function Goals() {
+  const { formatCurrency, region } = useRegion();
   const { data: goals, isLoading, refetch } = useListGoals();
   const createMutation = useCreateGoal();
   const updateMutation = useUpdateGoal();
@@ -169,13 +167,13 @@ export default function Goals() {
         />
         <SummaryCard
           label="Total Target"
-          value={fmt(totalTarget)}
+          value={formatCurrency(totalTarget)}
           sub="combined target"
           color="text-foreground"
         />
         <SummaryCard
           label="Total Saved"
-          value={fmt(totalSaved)}
+          value={formatCurrency(totalSaved)}
           sub={totalTarget > 0 ? `${((totalSaved / totalTarget) * 100).toFixed(1)}% of target` : "—"}
           color="text-emerald-600"
         />
@@ -247,12 +245,12 @@ export default function Goals() {
                 <div className="space-y-1">
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Saved</span>
-                    <span className="font-medium">{fmt(saved)} <span className="text-muted-foreground">/ {fmt(target)}</span></span>
+                    <span className="font-medium">{formatCurrency(saved)} <span className="text-muted-foreground">/ {formatCurrency(target)}</span></span>
                   </div>
                   <Progress value={pct} className="h-2" />
                   <div className="flex justify-between text-xs text-muted-foreground">
                     <span>{pct.toFixed(1)}% complete</span>
-                    {!done && <span>{fmt(target - saved)} remaining</span>}
+                    {!done && <span>{formatCurrency(target - saved)} remaining</span>}
                     {done && <span className="text-emerald-600 font-medium">Goal reached!</span>}
                   </div>
                 </div>
@@ -291,20 +289,22 @@ export default function Goals() {
 }
 
 function DeadlineBadge({ deadline, done }: { deadline: string; done: boolean }) {
+  const { formatDate } = useRegion();
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const target = new Date(deadline);
   target.setHours(0, 0, 0, 0);
   const diffMs = target.getTime() - today.getTime();
   const daysLeft = Math.ceil(diffMs / 86400000);
+  const displayDate = formatDate(deadline);
 
   if (done) {
-    return <p>Target date: <span className="text-foreground font-medium">{deadline}</span></p>;
+    return <p>Target date: <span className="text-foreground font-medium">{displayDate}</span></p>;
   }
   if (daysLeft < 0) {
     return (
       <p>
-        Target date: <span className="text-foreground font-medium">{deadline}</span>
+        Target date: <span className="text-foreground font-medium">{displayDate}</span>
         {" "}<span className="text-red-600 font-medium">({Math.abs(daysLeft)} day{Math.abs(daysLeft) !== 1 ? "s" : ""} overdue)</span>
       </p>
     );
@@ -312,14 +312,14 @@ function DeadlineBadge({ deadline, done }: { deadline: string; done: boolean }) 
   if (daysLeft === 0) {
     return (
       <p>
-        Target date: <span className="text-foreground font-medium">{deadline}</span>
+        Target date: <span className="text-foreground font-medium">{displayDate}</span>
         {" "}<span className="text-amber-600 font-medium">(due today)</span>
       </p>
     );
   }
   return (
     <p>
-      Target date: <span className="text-foreground font-medium">{deadline}</span>
+      Target date: <span className="text-foreground font-medium">{displayDate}</span>
       {" "}<span className="text-muted-foreground">({daysLeft} day{daysLeft !== 1 ? "s" : ""} left)</span>
     </p>
   );
@@ -348,8 +348,10 @@ function GoalForm({
   loading: boolean;
   submitLabel: string;
 }) {
+  const { region, decimalStep } = useRegion();
   const set = (key: keyof typeof emptyForm) => (val: string) => onChange({ ...form, [key]: val });
   const setE = (key: keyof typeof emptyForm) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => onChange({ ...form, [key]: e.target.value });
+  const amountPlaceholder = decimalStep === "1" ? "0" : "0.00";
 
   return (
     <form onSubmit={onSubmit} className="space-y-4">
@@ -372,12 +374,12 @@ function GoalForm({
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label>Target Amount (BND)</Label>
-          <Input type="number" step="0.01" min="0" value={form.targetAmount} onChange={setE("targetAmount")} placeholder="0.00" required />
+          <Label>Target Amount ({region.currency})</Label>
+          <Input type="number" step={decimalStep} min="0" value={form.targetAmount} onChange={setE("targetAmount")} placeholder={amountPlaceholder} required />
         </div>
         <div className="space-y-2">
-          <Label>Amount Saved (BND)</Label>
-          <Input type="number" step="0.01" min="0" value={form.savedAmount} onChange={setE("savedAmount")} placeholder="0.00" />
+          <Label>Amount Saved ({region.currency})</Label>
+          <Input type="number" step={decimalStep} min="0" value={form.savedAmount} onChange={setE("savedAmount")} placeholder={amountPlaceholder} />
         </div>
       </div>
       <div className="space-y-2">

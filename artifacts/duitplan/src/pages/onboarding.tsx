@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowRight, ArrowLeft, Check, Plus, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useRegion } from "@/hooks/useRegion";
 
 const TOTAL_STEPS = 6;
 
@@ -71,6 +72,7 @@ type SelectedDebt = { id: string; label: string; debtType: string; monthlyPaymen
 export default function Onboarding() {
   const [step, setStep] = useState(1);
   const [, setLocation] = useLocation();
+  const { region, decimalStep } = useRegion();
   const { data: user } = useGetMe({ query: { enabled: true } });
 
   const [monthlyIncome, setMonthlyIncome] = useState("");
@@ -252,14 +254,14 @@ export default function Onboarding() {
                   <div className="space-y-2">
                     <Label htmlFor="income" className="text-sm font-medium">Monthly Salary</Label>
                     <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-muted-foreground">BND</span>
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-muted-foreground">{region.currency}</span>
                       <Input
                         id="income"
                         type="number"
-                        step="0.01"
+                        step={decimalStep}
                         min="0"
                         className="pl-14 h-12 text-lg font-semibold"
-                        placeholder="0.00"
+                        placeholder={decimalStep === "1" ? "0" : "0.00"}
                         value={monthlyIncome}
                         onChange={(e) => setMonthlyIncome(e.target.value)}
                       />
@@ -342,16 +344,16 @@ export default function Onboarding() {
 
                 {selectedCommitments.length > 0 && (
                   <div className="border rounded-xl bg-muted/20 p-4 mb-4 space-y-3">
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Enter monthly amounts (BND)</p>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Enter monthly amounts ({region.currency})</p>
                     {selectedCommitments.map(c => (
                       <div key={c.id} className="flex items-center gap-3">
                         <span className="text-sm flex-1 font-medium">{c.label}</span>
                         <div className="relative w-36">
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">BND</span>
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">{region.currency}</span>
                           <Input
                             type="number"
-                            step="0.01"
-                            placeholder="0.00"
+                            step={decimalStep}
+                            placeholder={decimalStep === "1" ? "0" : "0.00"}
                             className="pl-12 h-9 text-sm"
                             value={c.amount}
                             onChange={e => updateCommitmentAmount(c.id, e.target.value)}
@@ -372,8 +374,8 @@ export default function Onboarding() {
                       <Input placeholder="e.g. Gym membership" value={customCommitment.label} onChange={e => setCustomCommitment({ ...customCommitment, label: e.target.value })} className="h-9" />
                     </div>
                     <div className="w-32 space-y-1">
-                      <Label className="text-xs">BND/month</Label>
-                      <Input type="number" placeholder="0.00" value={customCommitment.amount} onChange={e => setCustomCommitment({ ...customCommitment, amount: e.target.value })} className="h-9" />
+                      <Label className="text-xs">{region.currency}/month</Label>
+                      <Input type="number" step={decimalStep} placeholder={decimalStep === "1" ? "0" : "0.00"} value={customCommitment.amount} onChange={e => setCustomCommitment({ ...customCommitment, amount: e.target.value })} className="h-9" />
                     </div>
                     <Button size="sm" onClick={addCustomCommitment} disabled={!customCommitment.label}>Add</Button>
                     <Button size="sm" variant="ghost" onClick={() => setShowCustomCommitment(false)}>Cancel</Button>
@@ -424,16 +426,16 @@ export default function Onboarding() {
 
                 {selectedExpenses.length > 0 && (
                   <div className="border rounded-xl bg-muted/20 p-4 mb-4 space-y-3">
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Estimated monthly amount (BND)</p>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Estimated monthly amount ({region.currency})</p>
                     {selectedExpenses.map(e => (
                       <div key={e.id} className="flex items-center gap-3">
                         <span className="text-sm flex-1 font-medium">{e.label}</span>
                         <div className="relative w-36">
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">BND</span>
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">{region.currency}</span>
                           <Input
                             type="number"
-                            step="0.01"
-                            placeholder="0.00"
+                            step={decimalStep}
+                            placeholder={decimalStep === "1" ? "0" : "0.00"}
                             className="pl-12 h-9 text-sm"
                             value={e.amount}
                             onChange={ev => updateExpenseAmount(e.id, ev.target.value)}
@@ -501,11 +503,11 @@ export default function Onboarding() {
                         </div>
                         <div className="grid grid-cols-2 gap-3">
                           <div className="space-y-1">
-                            <Label className="text-xs text-muted-foreground">Monthly Payment (BND)</Label>
+                            <Label className="text-xs text-muted-foreground">Monthly Payment ({region.currency})</Label>
                             <Input
                               type="number"
-                              step="0.01"
-                              placeholder="e.g. 450.00"
+                              step={decimalStep}
+                              placeholder={decimalStep === "1" ? "e.g. 450" : "e.g. 450.00"}
                               className="h-9 text-sm"
                               value={d.monthlyPayment}
                               onChange={e => updateDebt(d.id, "monthlyPayment", e.target.value)}
@@ -515,8 +517,8 @@ export default function Onboarding() {
                             <Label className="text-xs text-muted-foreground">Outstanding Balance (optional)</Label>
                             <Input
                               type="number"
-                              step="0.01"
-                              placeholder="e.g. 18,500.00"
+                              step={decimalStep}
+                              placeholder={decimalStep === "1" ? "e.g. 18500" : "e.g. 18,500.00"}
                               className="h-9 text-sm"
                               value={d.outstandingBalance}
                               onChange={e => updateDebt(d.id, "outstandingBalance", e.target.value)}

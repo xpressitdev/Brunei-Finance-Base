@@ -8,11 +8,9 @@ import { Link } from "wouter";
 import { Wallet, ArrowDownRight, CreditCard, Activity, ArrowRight, Upload, Flame, Trophy, Landmark, ArrowUpRight } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { useRegion } from "@/hooks/useRegion";
 
 const COLORS = ["#15a06e", "#0ea5e9", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4", "#84cc16", "#f97316"];
-
-const fmt = (val?: string | number) =>
-  `BND ${Number(val || 0).toLocaleString("en-BN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 type GamificationSummary = {
   streak: { current: number; longest: number };
@@ -43,6 +41,7 @@ function useCheckAchievements() {
 
 export default function Dashboard() {
   const currentMonth = format(new Date(), "yyyy-MM");
+  const { formatCurrency, formatDate, formatMonthYear, region } = useRegion();
 
   const { data: summary, isLoading: summaryLoading } = useGetDashboardSummary({ month: currentMonth });
   const { data: spending, isLoading: spendingLoading } = useGetSpendingByCategory({ month: currentMonth });
@@ -84,7 +83,7 @@ export default function Dashboard() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Overview</h1>
-          <p className="text-muted-foreground">{format(new Date(), "MMMM yyyy")}</p>
+          <p className="text-muted-foreground">{formatMonthYear(new Date())}</p>
         </div>
         <div className="flex gap-2">
           <Link href="/upload">
@@ -106,11 +105,11 @@ export default function Dashboard() {
             <Wallet className="w-4 h-4 text-primary/60" />
           </CardHeader>
           <CardContent className="px-5 pb-5">
-            <div className="text-2xl font-bold">{fmt(summary?.monthlyIncome)}</div>
+            <div className="text-2xl font-bold">{formatCurrency(summary?.monthlyIncome)}</div>
             {summary?.actualIncomeThisMonth !== undefined && (
               <div className="mt-1.5 flex items-center gap-1 text-xs text-emerald-600">
                 <ArrowUpRight className="w-3 h-3" />
-                <span className="font-medium">{fmt(summary.actualIncomeThisMonth)}</span>
+                <span className="font-medium">{formatCurrency(summary.actualIncomeThisMonth)}</span>
                 <span className="text-muted-foreground">received</span>
               </div>
             )}
@@ -123,7 +122,7 @@ export default function Dashboard() {
             <CreditCard className="w-4 h-4 text-orange-500/70" />
           </CardHeader>
           <CardContent className="px-5 pb-5">
-            <div className="text-2xl font-bold">{fmt(summary?.totalCommitments)}</div>
+            <div className="text-2xl font-bold">{formatCurrency(summary?.totalCommitments)}</div>
           </CardContent>
         </Card>
 
@@ -133,7 +132,7 @@ export default function Dashboard() {
             <Landmark className="w-4 h-4 text-rose-500/70" />
           </CardHeader>
           <CardContent className="px-5 pb-5">
-            <div className="text-2xl font-bold">{fmt(summary?.totalDebtMonthlyPayment)}</div>
+            <div className="text-2xl font-bold">{formatCurrency(summary?.totalDebtMonthlyPayment)}</div>
             <p className="text-xs text-muted-foreground mt-1">Loan monthly payments</p>
           </CardContent>
         </Card>
@@ -144,7 +143,7 @@ export default function Dashboard() {
             <ArrowDownRight className="w-4 h-4 text-destructive/60" />
           </CardHeader>
           <CardContent className="px-5 pb-5">
-            <div className="text-2xl font-bold">{fmt(summary?.totalSpent)}</div>
+            <div className="text-2xl font-bold">{formatCurrency(summary?.totalSpent)}</div>
           </CardContent>
         </Card>
 
@@ -154,19 +153,19 @@ export default function Dashboard() {
             <Activity className="w-4 h-4 text-primary" />
           </CardHeader>
           <CardContent className="px-5 pb-5">
-            <div className="text-2xl font-bold text-primary">{fmt(summary?.remaining)}</div>
+            <div className="text-2xl font-bold text-primary">{formatCurrency(summary?.remaining)}</div>
             <div className="mt-2 space-y-1 border-t pt-2">
               <div className="flex justify-between text-xs text-muted-foreground">
                 <span>Commitments</span>
-                <span>-{fmt(summary?.totalCommitments)}</span>
+                <span>-{formatCurrency(summary?.totalCommitments)}</span>
               </div>
               <div className="flex justify-between text-xs text-muted-foreground">
                 <span>Debt Repayments</span>
-                <span>-{fmt(summary?.totalDebtPayments)}</span>
+                <span>-{formatCurrency(summary?.totalDebtPayments)}</span>
               </div>
               <div className="flex justify-between text-xs text-muted-foreground">
                 <span>Spending</span>
-                <span>-{fmt(summary?.totalSpent)}</span>
+                <span>-{formatCurrency(summary?.totalSpent)}</span>
               </div>
             </div>
           </CardContent>
@@ -256,7 +255,7 @@ export default function Dashboard() {
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
-                    <Tooltip formatter={(value: any) => `BND ${Number(value).toFixed(2)}`} />
+                    <Tooltip formatter={(value: any) => formatCurrency(Number(value))} />
                     <Legend iconType="circle" iconSize={8} />
                   </PieChart>
                 </ResponsiveContainer>
@@ -294,7 +293,7 @@ export default function Dashboard() {
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-muted-foreground">Monthly Payment</span>
-                  <span className="font-semibold">{fmt(summary?.totalDebtMonthlyPayment)}</span>
+                  <span className="font-semibold">{formatCurrency(summary?.totalDebtMonthlyPayment)}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-muted-foreground">Debt-to-Income</span>
@@ -324,14 +323,14 @@ export default function Dashboard() {
                       <div>
                         <p className="font-medium text-sm leading-tight">{tx.description}</p>
                         <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1 flex-wrap">
-                          {format(new Date(tx.date), "d MMM")} &bull; {tx.categoryName || "Uncategorised"}
+                          {formatDate(tx.date)} &bull; {tx.categoryName || "Uncategorised"}
                           {tx.accountName && (
                             <span className="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full text-xs leading-none">{tx.accountName}</span>
                           )}
                         </p>
                       </div>
                       <span className={`font-semibold text-sm ${tx.type === "credit" ? "text-emerald-600" : "text-red-500"}`}>
-                        {tx.type === "credit" ? "+" : "−"}BND {Number(tx.amount).toFixed(2)}
+                        {tx.type === "credit" ? "+" : "−"}{formatCurrency(Number(tx.amount))}
                       </span>
                     </div>
                   ))}

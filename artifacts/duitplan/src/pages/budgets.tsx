@@ -28,14 +28,7 @@ import {
 import { cn } from "@/lib/utils";
 import { TrialExpiredPrompt } from "@/components/subscription/TrialExpiredPrompt";
 import { isTrialExpiredError } from "@/lib/trialExpired";
-
-function fmt(n: number) {
-  return "BND " + n.toLocaleString("en-BN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
-
-function fmtShort(n: number) {
-  return n.toLocaleString("en-BN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
+import { useRegion } from "@/hooks/useRegion";
 
 function SummaryCard({ label, value, sub, color }: { label: string; value: string; sub?: string; color?: string }) {
   return (
@@ -60,6 +53,7 @@ function AnnualView({
   commitments: Array<{ id: string; label: string; amount: string }>;
   categories: Array<{ id: string; name: string; kind: string }>;
 }) {
+  const { formatCurrency } = useRegion();
   const months = MONTH_LABELS.map((_, i) => `${year}-${String(i + 1).padStart(2, "0")}`);
   const expenseCats = categories.filter(c => c.kind === "expense");
 
@@ -131,11 +125,11 @@ function AnnualView({
             </td>
             {MONTH_LABELS.map((_, i) => (
               <td key={i} className={cellCls}>
-                <span className="text-emerald-700">{fmtShort(salary)}</span>
+                <span className="text-emerald-700">{formatCurrency(salary)}</span>
               </td>
             ))}
             <td className={cn(cellCls, "bg-emerald-50 font-bold text-emerald-800")}>
-              {fmtShort(totalIncomeYear)}
+              {formatCurrency(totalIncomeYear)}
             </td>
           </tr>
           <tr className="bg-emerald-50 border-b-2 border-emerald-200">
@@ -144,11 +138,11 @@ function AnnualView({
             </td>
             {MONTH_LABELS.map((_, i) => (
               <td key={i} className={cn(cellCls, "font-bold text-emerald-800")}>
-                {fmtShort(salary)}
+                {formatCurrency(salary)}
               </td>
             ))}
             <td className={cn(cellCls, "font-bold text-emerald-800 bg-emerald-100")}>
-              {fmtShort(totalIncomeYear)}
+              {formatCurrency(totalIncomeYear)}
             </td>
           </tr>
 
@@ -175,11 +169,11 @@ function AnnualView({
               </td>
               {MONTH_LABELS.map((_, i) => (
                 <td key={i} className={cellCls}>
-                  <span className="text-orange-700">{fmtShort(parseFloat(c.amount))}</span>
+                  <span className="text-orange-700">{formatCurrency(parseFloat(c.amount))}</span>
                 </td>
               ))}
               <td className={cn(cellCls, "bg-orange-50 font-semibold text-orange-800")}>
-                {fmtShort(parseFloat(c.amount) * 12)}
+                {formatCurrency(parseFloat(c.amount) * 12)}
               </td>
             </tr>
           ))}
@@ -189,11 +183,11 @@ function AnnualView({
             </td>
             {MONTH_LABELS.map((_, i) => (
               <td key={i} className={cn(cellCls, "font-bold text-orange-800")}>
-                {fmtShort(commitments.reduce((s, c) => s + parseFloat(c.amount), 0))}
+                {formatCurrency(commitments.reduce((s, c) => s + parseFloat(c.amount), 0))}
               </td>
             ))}
             <td className={cn(cellCls, "font-bold text-orange-800 bg-orange-100")}>
-              {fmtShort(totalFixedYear)}
+              {formatCurrency(totalFixedYear)}
             </td>
           </tr>
 
@@ -219,12 +213,12 @@ function AnnualView({
                   const planned = parseFloat(bm[cat.id]?.plannedAmount ?? "0");
                   return (
                     <td key={i} className={cn(cellCls, planned === 0 && zeroCls)}>
-                      {planned === 0 ? "—" : fmtShort(planned)}
+                      {planned === 0 ? "—" : formatCurrency(planned)}
                     </td>
                   );
                 })}
                 <td className={cn(cellCls, "bg-blue-50 font-semibold text-blue-800", yearTotal === 0 && zeroCls)}>
-                  {yearTotal === 0 ? "—" : fmtShort(yearTotal)}
+                  {yearTotal === 0 ? "—" : formatCurrency(yearTotal)}
                 </td>
               </tr>
             );
@@ -237,12 +231,12 @@ function AnnualView({
               const monthTotal = expenseCats.reduce((s, cat) => s + parseFloat(bm[cat.id]?.plannedAmount ?? "0"), 0);
               return (
                 <td key={i} className={cn(cellCls, "font-bold text-blue-800")}>
-                  {monthTotal === 0 ? <span className={zeroCls}>—</span> : fmtShort(monthTotal)}
+                  {monthTotal === 0 ? <span className={zeroCls}>—</span> : formatCurrency(monthTotal)}
                 </td>
               );
             })}
             <td className={cn(cellCls, "font-bold text-blue-800 bg-blue-100")}>
-              {fmtShort(totalVariableYear)}
+              {formatCurrency(totalVariableYear)}
             </td>
           </tr>
 
@@ -267,14 +261,14 @@ function AnnualView({
                     cellCls, "font-bold text-sm",
                     pool < 0 ? "text-red-700" : "text-emerald-700"
                   )}>
-                    {fmtShort(pool)}
+                    {formatCurrency(pool)}
                   </td>
                 ))}
                 <td className={cn(
                   cellCls, "font-extrabold text-sm",
                   totalPoolYear < 0 ? "text-red-800 bg-red-100" : "text-emerald-800 bg-emerald-100"
                 )}>
-                  {fmtShort(totalPoolYear)}
+                  {formatCurrency(totalPoolYear)}
                 </td>
               </tr>
             );
@@ -292,9 +286,10 @@ export default function Budgets() {
   const [showAccountsPanel, setShowAccountsPanel] = useState(true);
 
   const month = format(activeDate, "yyyy-MM");
-  const monthLabel = format(activeDate, "MMMM yyyy");
   const year = activeDate.getFullYear();
 
+  const { formatCurrency, formatMonthYear, region, decimalStep } = useRegion();
+  const monthLabel = formatMonthYear(activeDate);
   const { data: profile } = useGetProfile();
   const { data: commitments } = useListCommitments();
   const { data: budgets, refetch } = useListBudgets({ month });
@@ -414,25 +409,25 @@ export default function Budgets() {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <SummaryCard
               label="Total Income"
-              value={fmt(salary * 12)}
-              sub={`${year} · BND ${salary.toLocaleString("en-BN", { maximumFractionDigits: 0 })}/mo`}
+              value={formatCurrency(salary * 12)}
+              sub={`${year} · ${formatCurrency(salary)}/mo`}
               color="bg-emerald-50 border border-emerald-200"
             />
             <SummaryCard
               label="Total Fixed"
-              value={fmt(totalCommitments * 12)}
+              value={formatCurrency(totalCommitments * 12)}
               sub={`${(commitments ?? []).length} commitments × 12`}
               color="bg-orange-50 border border-orange-200"
             />
             <SummaryCard
               label="Income / mo"
-              value={fmt(salary)}
+              value={formatCurrency(salary)}
               sub="Monthly salary"
               color="bg-white border"
             />
             <SummaryCard
               label="Fixed / mo"
-              value={fmt(totalCommitments)}
+              value={formatCurrency(totalCommitments)}
               sub="Monthly commitments"
               color="bg-white border"
             />
@@ -454,33 +449,33 @@ export default function Budgets() {
             {view === "plan" ? (
               <SummaryCard
                 label="Monthly Income"
-                value={fmt(salary)}
+                value={formatCurrency(salary)}
                 sub={profile?.fullName ? `Gaji ${profile.fullName.split(" ")[0]}` : "From profile"}
                 color="bg-emerald-50 border border-emerald-200"
               />
             ) : (
               <SummaryCard
                 label="Account Balances"
-                value={fmt(totalAccountBalance)}
+                value={formatCurrency(totalAccountBalance)}
                 sub={`${accounts.length} account${accounts.length !== 1 ? "s" : ""}`}
                 color="bg-emerald-50 border border-emerald-200"
               />
             )}
             <SummaryCard
               label="Fixed Commitments"
-              value={fmt(totalCommitments)}
+              value={formatCurrency(totalCommitments)}
               sub={`${(commitments ?? []).length} items`}
               color="bg-orange-50 border border-orange-200"
             />
             <SummaryCard
               label={view === "plan" ? "Total Budgeted" : "Actually Spent"}
-              value={view === "plan" ? fmt(totalPlanned) : fmt(totalActual)}
-              sub={view === "actual" && totalActual > totalPlanned ? "Over plan" : `of ${fmt(totalPlanned)} planned`}
+              value={view === "plan" ? formatCurrency(totalPlanned) : formatCurrency(totalActual)}
+              sub={view === "actual" && totalActual > totalPlanned ? "Over plan" : `of ${formatCurrency(totalPlanned)} planned`}
               color="bg-blue-50 border border-blue-200"
             />
             <SummaryCard
               label={view === "plan" ? "Available Pool" : "Ready to Assign"}
-              value={fmt(view === "plan" ? pool : readyToAssign)}
+              value={formatCurrency(view === "plan" ? pool : readyToAssign)}
               sub={
                 view === "plan"
                   ? pool < 0 ? "Over-committed!" : "After all deductions"
@@ -507,11 +502,11 @@ export default function Budgets() {
                     <p className="font-semibold text-foreground">Monthly Salary / Gaji</p>
                     <p className="text-xs text-muted-foreground">Payday: {profile?.payday ? `${profile.payday}th of the month` : "—"}</p>
                   </div>
-                  <span className="font-bold text-emerald-700 text-lg">{fmt(salary)}</span>
+                  <span className="font-bold text-emerald-700 text-lg">{formatCurrency(salary)}</span>
                 </div>
                 <div className="bg-emerald-50 px-5 py-2 flex justify-between items-center border-t border-emerald-100">
                   <span className="text-xs font-medium text-emerald-800">Total Income</span>
-                  <span className="text-sm font-bold text-emerald-800">{fmt(salary)}</span>
+                  <span className="text-sm font-bold text-emerald-800">{formatCurrency(salary)}</span>
                 </div>
               </div>
             </section>
@@ -541,14 +536,14 @@ export default function Budgets() {
                             <span className="text-sm font-medium text-foreground">{a.name}</span>
                             {a.bankName && <span className="text-xs text-muted-foreground ml-2">{a.bankName}</span>}
                           </div>
-                          <span className="font-semibold text-emerald-700 text-sm">{fmt(parseFloat(a.balance ?? "0"))}</span>
+                          <span className="font-semibold text-emerald-700 text-sm">{formatCurrency(parseFloat(a.balance ?? "0"))}</span>
                         </div>
                       ))}
                     </>
                   )}
                   <div className="bg-emerald-50 px-5 py-2 flex justify-between items-center border-t border-emerald-100">
                     <span className="text-xs font-medium text-emerald-800">Total Cash</span>
-                    <span className="text-sm font-bold text-emerald-800">{fmt(totalAccountBalance)}</span>
+                    <span className="text-sm font-bold text-emerald-800">{formatCurrency(totalAccountBalance)}</span>
                   </div>
                 </div>
               )}
@@ -569,12 +564,12 @@ export default function Budgets() {
               {(commitments ?? []).map(c => (
                 <div key={c.id} className="flex items-center justify-between px-5 py-3.5">
                   <span className="text-sm font-medium text-foreground">{c.label}</span>
-                  <span className="text-sm font-semibold text-orange-700">{fmt(parseFloat(c.amount))}</span>
+                  <span className="text-sm font-semibold text-orange-700">{formatCurrency(parseFloat(c.amount))}</span>
                 </div>
               ))}
               <div className="bg-orange-50 px-5 py-2 flex justify-between items-center">
                 <span className="text-xs font-medium text-orange-800">Total Fixed</span>
-                <span className="text-sm font-bold text-orange-800">{fmt(totalCommitments)}</span>
+                <span className="text-sm font-bold text-orange-800">{formatCurrency(totalCommitments)}</span>
               </div>
             </div>
           </section>
@@ -615,14 +610,14 @@ export default function Budgets() {
                       <div className="flex items-center justify-between gap-3">
                         <span className="text-sm font-medium text-foreground flex-1">{cat.name}</span>
                         <div className="flex items-center gap-2">
-                          <span className="text-xs text-muted-foreground">BND</span>
+                          <span className="text-xs text-muted-foreground">{region.currency}</span>
                           <Input
                             type="number"
-                            step="0.01"
+                            step={decimalStep}
                             min="0"
                             className="w-28 text-right h-8 text-sm"
                             value={displayVal}
-                            placeholder="0.00"
+                            placeholder={decimalStep === "1" ? "0" : "0.00"}
                             onChange={e => setEditing(prev => ({ ...prev, [cat.id]: e.target.value }))}
                             onBlur={() => { if (editVal !== undefined) handleSave(cat.id); }}
                             onKeyDown={e => { if (e.key === "Enter") handleSave(cat.id); }}
@@ -639,16 +634,16 @@ export default function Budgets() {
                       <div className="grid grid-cols-[1fr_auto_auto_auto] gap-3 items-center">
                         <span className="text-sm font-medium text-foreground">{cat.name}</span>
                         <span className="w-24 text-right text-sm text-muted-foreground font-mono">
-                          {planned > 0 ? `BND ${planned.toFixed(2)}` : "—"}
+                          {planned > 0 ? formatCurrency(planned) : "—"}
                         </span>
                         <span className="w-24 text-right text-sm font-mono text-foreground">
-                          {actual > 0 ? `-BND ${actual.toFixed(2)}` : "—"}
+                          {actual > 0 ? `-${formatCurrency(actual)}` : "—"}
                         </span>
                         <span className={cn(
                           "w-24 text-right text-sm font-semibold font-mono",
                           isOver ? "text-destructive" : planned > 0 ? "text-emerald-700" : "text-muted-foreground"
                         )}>
-                          {planned > 0 ? `BND ${available.toFixed(2)}` : "—"}
+                          {planned > 0 ? formatCurrency(available) : "—"}
                         </span>
                       </div>
                     )}
@@ -658,7 +653,7 @@ export default function Budgets() {
                         <Progress value={pct} className={cn("h-1", isOver && "[&>div]:bg-destructive")} />
                         {isOver && (
                           <p className="text-xs text-destructive font-medium">
-                            BND {(actual - planned).toFixed(2)} over budget
+                            {formatCurrency(actual - planned)} over budget
                           </p>
                         )}
                       </div>
@@ -671,15 +666,15 @@ export default function Budgets() {
                 {view === "plan" ? (
                   <>
                     <span className="text-xs font-medium text-blue-800">Total Budgeted</span>
-                    <span className="text-sm font-bold text-blue-800">{fmt(totalPlanned)}</span>
+                    <span className="text-sm font-bold text-blue-800">{formatCurrency(totalPlanned)}</span>
                   </>
                 ) : (
                   <div className="grid grid-cols-[1fr_auto_auto_auto] gap-3 w-full text-xs font-bold text-blue-800">
                     <span>Total</span>
-                    <span className="w-24 text-right">{fmt(totalPlanned)}</span>
-                    <span className="w-24 text-right">{fmt(totalActual)}</span>
+                    <span className="w-24 text-right">{formatCurrency(totalPlanned)}</span>
+                    <span className="w-24 text-right">{formatCurrency(totalActual)}</span>
                     <span className={cn("w-24 text-right", (totalPlanned - totalActual) < 0 ? "text-destructive" : "text-emerald-700")}>
-                      {fmt(totalPlanned - totalActual)}
+                      {formatCurrency(totalPlanned - totalActual)}
                     </span>
                   </div>
                 )}
@@ -701,12 +696,12 @@ export default function Budgets() {
                     Available Pool
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {fmt(salary)} income − {fmt(totalCommitments)} commitments − {fmt(totalPlanned)} budgeted
+                    {formatCurrency(salary)} income − {formatCurrency(totalCommitments)} commitments − {formatCurrency(totalPlanned)} budgeted
                   </p>
                 </div>
               </div>
               <span className={cn("text-2xl font-extrabold", pool < 0 ? "text-red-700" : "text-emerald-700")}>
-                {fmt(pool)}
+                {formatCurrency(pool)}
               </span>
             </div>
             ) : (
@@ -722,21 +717,21 @@ export default function Budgets() {
                   </p>
                 </div>
                 <span className={cn("text-2xl font-extrabold", readyToAssign < 0 ? "text-red-700" : "text-emerald-700")}>
-                  {fmt(readyToAssign)}
+                  {formatCurrency(readyToAssign)}
                 </span>
               </div>
               <div className="space-y-1 text-xs text-muted-foreground border-t pt-3">
                 <div className="flex justify-between">
                   <span>Total Account Balances</span>
-                  <span className="font-medium text-emerald-700">{fmt(totalAccountBalance)}</span>
+                  <span className="font-medium text-emerald-700">{formatCurrency(totalAccountBalance)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>− Fixed Commitments</span>
-                  <span className="font-medium text-orange-700">−{fmt(totalCommitments)}</span>
+                  <span className="font-medium text-orange-700">−{formatCurrency(totalCommitments)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>− Assigned to Categories</span>
-                  <span className="font-medium text-blue-700">−{fmt(totalPlanned)}</span>
+                  <span className="font-medium text-blue-700">−{formatCurrency(totalPlanned)}</span>
                 </div>
               </div>
             </div>
