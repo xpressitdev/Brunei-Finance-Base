@@ -28,7 +28,9 @@ export async function runStartupMigrations(): Promise<void> {
     await client.query(`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS language text NOT NULL DEFAULT 'en';`);
     await client.query(`
       UPDATE profiles SET region = 'BN', locale = 'en-BN', language = 'en'
-      WHERE region IS NULL OR region = '';
+      WHERE (region IS NULL OR region = '')
+         OR (locale IS NULL OR locale = '')
+         OR (language IS NULL OR language = '');
     `);
     logger.info("Startup migrations applied");
   } catch (err) {

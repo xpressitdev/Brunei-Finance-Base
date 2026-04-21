@@ -38,21 +38,28 @@ router.post("/auth/register", async (req, res): Promise<void> => {
     userId,
     fullName,
     currency: "BND",
+    region: "BN",
+    locale: "en-BN",
+    language: "en",
     payday: 1,
     monthlyIncome: "0",
   });
 
   req.session.userId = userId;
 
+  const now = new Date().toISOString();
   const profile = {
     id: profileId,
     userId,
     fullName,
     currency: "BND",
+    region: "BN",
+    locale: "en-BN",
+    language: "en",
     payday: 1,
     monthlyIncome: "0",
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    createdAt: now,
+    updatedAt: now,
   };
 
   res.status(201).json({
@@ -94,6 +101,9 @@ router.post("/auth/login", async (req, res): Promise<void> => {
         userId: profile.userId,
         fullName: profile.fullName,
         currency: profile.currency,
+        region: profile.region,
+        locale: profile.locale,
+        language: profile.language,
         payday: profile.payday,
         monthlyIncome: profile.monthlyIncome,
         createdAt: profile.createdAt.toISOString(),
@@ -127,6 +137,9 @@ router.get("/auth/me", requireAuth, async (req: AuthenticatedRequest, res): Prom
       userId: profile.userId,
       fullName: profile.fullName,
       currency: profile.currency,
+      region: profile.region,
+      locale: profile.locale,
+      language: profile.language,
       payday: profile.payday,
       monthlyIncome: profile.monthlyIncome,
       createdAt: profile.createdAt.toISOString(),

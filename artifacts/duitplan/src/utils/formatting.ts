@@ -2,10 +2,14 @@ import { formatDistanceToNow } from 'date-fns';
 
 const PLACEHOLDER = '—';
 
+function isValidDate(d: Date): boolean {
+  return !isNaN(d.getTime());
+}
+
 /**
  * Formats a monetary amount using Intl.NumberFormat with style: 'currency'.
  * Decimal places are determined by the currency's CLDR data (2 for BND/MYR, 0 for IDR, etc.).
- * Returns "—" for NaN or non-finite values.
+ * Returns "—" for NaN, non-finite, or invalid values.
  */
 export function formatCurrency(amount: number, currency: string, locale?: string): string {
   if (!isFinite(amount) || isNaN(amount)) return PLACEHOLDER;
@@ -26,9 +30,11 @@ export function formatNumber(value: number, locale?: string): string {
 
 /**
  * Formats a date as DD/MM/YYYY using Intl.DateTimeFormat.
+ * Returns "—" for invalid dates.
  */
 export function formatDate(date: Date | string | number, locale?: string): string {
   const d = date instanceof Date ? date : new Date(date);
+  if (!isValidDate(d)) return PLACEHOLDER;
   return new Intl.DateTimeFormat(locale ?? 'en-US', {
     day: '2-digit',
     month: '2-digit',
@@ -38,9 +44,11 @@ export function formatDate(date: Date | string | number, locale?: string): strin
 
 /**
  * Formats a date as a full date-time string using Intl.DateTimeFormat.
+ * Returns "—" for invalid dates.
  */
 export function formatDateTime(date: Date | string | number, locale?: string): string {
   const d = date instanceof Date ? date : new Date(date);
+  if (!isValidDate(d)) return PLACEHOLDER;
   return new Intl.DateTimeFormat(locale ?? 'en-US', {
     day: '2-digit',
     month: '2-digit',
@@ -53,10 +61,12 @@ export function formatDateTime(date: Date | string | number, locale?: string): s
 /**
  * Formats a date as a locale-aware relative time string using Intl.RelativeTimeFormat,
  * e.g. "2 hours ago", "3 days ago". Falls back to date-fns for English when the
- * Intl API is unavailable.
+ * Intl API is unavailable. Returns "—" for invalid dates.
  */
 export function formatRelativeTime(date: Date | string | number, locale?: string): string {
   const d = date instanceof Date ? date : new Date(date);
+  if (!isValidDate(d)) return PLACEHOLDER;
+
   const nowMs = Date.now();
   const diffMs = d.getTime() - nowMs;
   const diffSec = Math.round(diffMs / 1000);
