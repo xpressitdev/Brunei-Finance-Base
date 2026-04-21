@@ -15,4 +15,10 @@ export interface UpdateProfileBody {
   monthlyIncome?: string | null;
   /** @nullable */
   currency?: string | null;
+  /** @nullable */
+  region?: string | null;
+  /** @nullable */
+  locale?: string | null;
+  /** @nullable */
+  language?: string | null;
 }

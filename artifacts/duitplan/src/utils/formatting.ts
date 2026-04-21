@@ -3,26 +3,15 @@ import { formatDistanceToNow } from 'date-fns';
 const PLACEHOLDER = '—';
 
 /**
- * ISO 4217 currencies that have 0 minor units (no decimal places).
- * Used to correct the fraction digits passed to Intl.NumberFormat, since
- * some Node/ICU versions do not apply this rule automatically for all currencies.
- */
-const ZERO_DECIMAL_CURRENCIES = new Set(['IDR', 'JPY', 'KRW', 'VND', 'BIF', 'GNF', 'MGA', 'PYG', 'RWF', 'UGX', 'XAF', 'XOF', 'XPF']);
-
-/**
- * Formats a monetary amount using Intl.NumberFormat.
- * Decimal rules are determined by the currency: IDR (and other zero-decimal
- * currencies) show 0 decimal places; BND, MYR, USD etc. show 2.
+ * Formats a monetary amount using Intl.NumberFormat with style: 'currency'.
+ * Decimal places are determined by the currency's CLDR data (2 for BND/MYR, 0 for IDR, etc.).
  * Returns "—" for NaN or non-finite values.
  */
 export function formatCurrency(amount: number, currency: string, locale?: string): string {
   if (!isFinite(amount) || isNaN(amount)) return PLACEHOLDER;
-  const fractionDigits = ZERO_DECIMAL_CURRENCIES.has(currency.toUpperCase()) ? 0 : 2;
   return new Intl.NumberFormat(locale ?? 'en-US', {
     style: 'currency',
     currency,
-    minimumFractionDigits: fractionDigits,
-    maximumFractionDigits: fractionDigits,
   }).format(amount);
 }
 
@@ -62,10 +51,43 @@ export function formatDateTime(date: Date | string | number, locale?: string): s
 }
 
 /**
- * Formats a date as a relative time string, e.g. "2 hours ago", "3 days ago".
- * Uses date-fns formatDistanceToNow for natural language output.
+ * Formats a date as a locale-aware relative time string using Intl.RelativeTimeFormat,
+ * e.g. "2 hours ago", "3 days ago". Falls back to date-fns for English when the
+ * Intl API is unavailable.
  */
-export function formatRelativeTime(date: Date | string | number, _locale?: string): string {
+export function formatRelativeTime(date: Date | string | number, locale?: string): string {
   const d = date instanceof Date ? date : new Date(date);
-  return formatDistanceToNow(d, { addSuffix: true });
+  const nowMs = Date.now();
+  const diffMs = d.getTime() - nowMs;
+  const diffSec = Math.round(diffMs / 1000);
+  const absSec = Math.abs(diffSec);
+
+  let value: number;
+  let unit: Intl.RelativeTimeFormatUnit;
+
+  if (absSec < 60) {
+    value = diffSec;
+    unit = 'second';
+  } else if (absSec < 3600) {
+    value = Math.round(diffSec / 60);
+    unit = 'minute';
+  } else if (absSec < 86400) {
+    value = Math.round(diffSec / 3600);
+    unit = 'hour';
+  } else if (absSec < 86400 * 30) {
+    value = Math.round(diffSec / 86400);
+    unit = 'day';
+  } else if (absSec < 86400 * 365) {
+    value = Math.round(diffSec / (86400 * 30));
+    unit = 'month';
+  } else {
+    value = Math.round(diffSec / (86400 * 365));
+    unit = 'year';
+  }
+
+  try {
+    return new Intl.RelativeTimeFormat(locale ?? 'en-US', { numeric: 'auto' }).format(value, unit);
+  } catch {
+    return formatDistanceToNow(d, { addSuffix: true });
+  }
 }

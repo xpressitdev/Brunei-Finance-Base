@@ -11,6 +11,9 @@ export interface Profile {
   userId: string;
   fullName: string;
   currency: string;
+  region: string;
+  locale: string;
+  language: string;
   payday: number;
   monthlyIncome: string;
   createdAt: string;

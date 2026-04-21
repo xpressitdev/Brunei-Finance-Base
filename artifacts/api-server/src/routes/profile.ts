@@ -39,9 +39,9 @@ router.put("/profile", requireAuth, async (req: AuthenticatedRequest, res): Prom
   if (parsed.data.payday != null) updateData.payday = parsed.data.payday;
   if (parsed.data.monthlyIncome != null) updateData.monthlyIncome = parsed.data.monthlyIncome;
   if (parsed.data.currency != null) updateData.currency = parsed.data.currency;
-  if ((parsed.data as Record<string, unknown>).region != null) updateData.region = (parsed.data as Record<string, unknown>).region;
-  if ((parsed.data as Record<string, unknown>).locale != null) updateData.locale = (parsed.data as Record<string, unknown>).locale;
-  if ((parsed.data as Record<string, unknown>).language != null) updateData.language = (parsed.data as Record<string, unknown>).language;
+  if (parsed.data.region != null) updateData.region = parsed.data.region;
+  if (parsed.data.locale != null) updateData.locale = parsed.data.locale;
+  if (parsed.data.language != null) updateData.language = parsed.data.language;
 
   const [updated] = await db.update(profilesTable).set(updateData).where(eq(profilesTable.userId, req.userId!)).returning();
   if (!updated) {

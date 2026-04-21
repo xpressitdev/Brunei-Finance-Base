@@ -42,6 +42,9 @@ export const LoginResponse = zod.object({
         userId: zod.string(),
         fullName: zod.string(),
         currency: zod.string(),
+        region: zod.string(),
+        locale: zod.string(),
+        language: zod.string(),
         payday: zod.number(),
         monthlyIncome: zod.string(),
         createdAt: zod.string(),
@@ -64,6 +67,9 @@ export const GetMeResponse = zod.object({
       userId: zod.string(),
       fullName: zod.string(),
       currency: zod.string(),
+      region: zod.string(),
+      locale: zod.string(),
+      language: zod.string(),
       payday: zod.number(),
       monthlyIncome: zod.string(),
       createdAt: zod.string(),
@@ -80,6 +86,9 @@ export const GetProfileResponse = zod.object({
   userId: zod.string(),
   fullName: zod.string(),
   currency: zod.string(),
+  region: zod.string(),
+  locale: zod.string(),
+  language: zod.string(),
   payday: zod.number(),
   monthlyIncome: zod.string(),
   createdAt: zod.string(),
@@ -94,6 +103,9 @@ export const UpdateProfileBody = zod.object({
   payday: zod.number().nullish(),
   monthlyIncome: zod.string().nullish(),
   currency: zod.string().nullish(),
+  region: zod.string().nullish(),
+  locale: zod.string().nullish(),
+  language: zod.string().nullish(),
 });
 
 export const UpdateProfileResponse = zod.object({
@@ -101,6 +113,9 @@ export const UpdateProfileResponse = zod.object({
   userId: zod.string(),
   fullName: zod.string(),
   currency: zod.string(),
+  region: zod.string(),
+  locale: zod.string(),
+  language: zod.string(),
   payday: zod.number(),
   monthlyIncome: zod.string(),
   createdAt: zod.string(),
@@ -639,7 +654,7 @@ export const GetSpendingByCategoryQueryParams = zod.object({
 export const GetSpendingByCategoryResponseItem = zod.object({
   categoryId: zod.string().nullish(),
   categoryName: zod.string(),
-  totalSpent: zod.string(),
+  totalSpent: zod.number(),
   percentage: zod.number(),
 });
 export const GetSpendingByCategoryResponse = zod.array(
