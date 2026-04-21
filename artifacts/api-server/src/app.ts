@@ -6,6 +6,7 @@ import pinoHttp from "pino-http";
 import router from "./routes";
 import { logger } from "./lib/logger";
 import { pool } from "@workspace/db";
+import { regionMiddleware } from "./lib/region";
 
 declare global {
   namespace Express {
@@ -74,6 +75,8 @@ app.use(
   })
 );
 app.use(express.urlencoded({ extended: true }));
+
+app.use(regionMiddleware);
 
 app.use("/api", router);
 
