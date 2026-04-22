@@ -25,7 +25,7 @@ export function useRegion(): RegionFormatters {
 
   const formatCurrency = (amount: number | string | null | undefined): string => {
     const n = typeof amount === "string" ? parseFloat(amount) : (amount ?? 0);
-    return _formatCurrency(isNaN(n) ? 0 : n, region.currency, region.locale);
+    return _formatCurrency(isNaN(n) ? 0 : n, region.currency, region.locale, region.decimals);
   };
 
   const formatDate = (date: Date | string | number | null | undefined): string => {
@@ -48,8 +48,7 @@ export function useRegion(): RegionFormatters {
     return _formatNumber(value, region.locale);
   };
 
-  const isZeroDecimal = region.currency === "IDR";
-  const decimalStep = isZeroDecimal ? "1" : "0.01";
+  const decimalStep = region.decimals === 0 ? "1" : "0.01";
   const currencyStep = decimalStep;
 
   return { region, formatCurrency, formatDate, formatMonthYear, formatMonthShort, formatNumber, decimalStep, currencyStep };

@@ -1,4 +1,4 @@
-import { Switch, Route, Router as WouterRouter } from "wouter";
+import { Switch, Route, Router as WouterRouter, Redirect } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -23,7 +23,6 @@ import Upload from "@/pages/upload";
 import ReviewImport from "@/pages/review";
 import Insights from "@/pages/insights";
 import Settings from "@/pages/settings";
-import Premium from "@/pages/premium";
 import Achievements from "@/pages/achievements";
 import Goals from "@/pages/goals";
 import NetWorth from "@/pages/net-worth";
@@ -87,7 +86,7 @@ function Router() {
       <ProtectedRoute path="/upload/:id/review" component={ReviewImport} />
       <ProtectedRoute path="/insights" component={Insights} />
       <ProtectedRoute path="/settings" component={Settings} />
-      <ProtectedRoute path="/premium" component={Premium} />
+      <Route path="/premium"><Redirect to="/dashboard" /></Route>
       <ProtectedRoute path="/achievements" component={Achievements} />
       <ProtectedRoute path="/goals" component={Goals} />
       <ProtectedRoute path="/net-worth" component={NetWorth} />

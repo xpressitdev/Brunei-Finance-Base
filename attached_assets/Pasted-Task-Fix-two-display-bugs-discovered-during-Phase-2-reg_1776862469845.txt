@@ -1,0 +1,65 @@
+Task: Fix two display bugs discovered during Phase 2 region testing
+
+Bug 1: IDR showing trailing ,00 decimals
+The Indonesian region is displaying amounts as Rp 12.000.000,00 — the thousand separators (dots) and decimal separator (comma) are correct for Indonesian locale, but IDR is a zero-decimal currency and should not show the ,00 at the end.
+Expected: Rp 12.000.000
+Actual: Rp 12.000.000,00
+Confirmed working correctly:
+
+MYR displays as RM 7,500.00 (comma thousand separator, 2 decimals) ✓
+BND displays as BND 5,769.36 (comma thousand separator, 2 decimals) ✓
+
+So the bug is isolated to IDR only. The root cause is likely that formatCurrency is passing explicit minimumFractionDigits: 2 or maximumFractionDigits: 2 options that override the currency's native decimal settings. When Intl.NumberFormat is used with style: 'currency', the currency code itself should determine decimal places (IDR = 0, BND/MYR = 2).
+Fix:
+
+In src/utils/formatting.ts, remove any hardcoded minimumFractionDigits or maximumFractionDigits options from formatCurrency. Let Intl.NumberFormat derive decimals from the currency code.
+Do not add currency-specific conditionals either — the fix is to trust the Intl API, not to special-case IDR.
+Update/add unit tests:
+
+formatCurrency(75000000, 'IDR', 'id-ID') should return "Rp 75.000.000" (no trailing ,00).
+formatCurrency(5769.36, 'MYR', 'ms-MY') should return a string containing "7,500.00"-style formatting (2 decimals preserved — this is already working, just regression-guard it).
+formatCurrency(5769.36, 'BND', 'en-BN') should return a string ending in .36 (2 decimals preserved — regression guard).
+
+
+
+Verification: log in as the test-id@duitplan.dev user. Every IDR amount in the app should now display without trailing decimals. Then log in as the test-my@duitplan.dev user and confirm MYR still displays with 2 decimals (regression check).
+
+Bug 2: Premium tab and trial banner are misleading
+Two related issues discovered during testing:
+
+The Premium page displays "BND 10/month" regardless of user's region.
+The trial banner at the top of every page says "Subscribe for BND 10/month to keep access" — also hardcoded BND, and shown to MY/ID users who are supposed to see prices in their own currency.
+
+However, before fixing the currency on these surfaces: we've decided the entire Premium/trial UX is premature. There is no real free tier, no feature gating, and the listed "premium features" are all currently available to every user. The trial counts down but nothing happens when it expires. This is confusing to users and creates a fake urgency.
+Decision: remove the Premium tab and trial banner entirely for now. Real monetization will be built properly in a future phase (Phase 4 of the roadmap) after Zakat calculator and bank parsers are done.
+Fix:
+
+Remove the "Premium" link from the sidebar navigation (all regions).
+Make the /premium route redirect to /dashboard — do NOT delete the page file, just unlink it from navigation and redirect the route. We'll return to it in Phase 4.
+Remove the trial banner component from the top of every page entirely. Do NOT just hide it with CSS — remove the component invocation so it stops rendering and calculating countdown logic.
+Do NOT delete the underlying trial/subscription data model or any related database tables. Only the UI surfaces are removed. The backend stays intact for future use.
+
+
+Out of scope:
+
+Do NOT build a real free tier.
+Do NOT build regional pricing (deferred to Phase 4.2).
+Do NOT fix the "BIBD or Baiduri statement" empty-state copy on the Dashboard — that's a separate region-aware copy task for later.
+Do NOT touch any other page beyond the sidebar navigation, premium route, and banner component.
+
+
+Verification:
+
+As IDR test user: every amount shows Rp X.XXX.XXX with no trailing ,00.
+As MYR test user: amounts still show RM X,XXX.XX with 2 decimals preserved (regression check).
+As BND test user: amounts still show BND X,XXX.XX with 2 decimals preserved (regression check).
+No "Premium" link in sidebar for any user in any region.
+Visiting /premium directly redirects to /dashboard.
+No trial banner at the top of any page, in any region.
+Unit tests pass.
+
+Report back with:
+
+Which files were modified
+Confirmation of the test results above
+Screenshots (or descriptions) of the Dashboard for each region after the fix

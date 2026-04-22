@@ -7,12 +7,13 @@ export interface RegionConfig {
   locale: string;
   language: string;
   timezone: string;
+  decimals: number;
 }
 
 export const REGIONS: Record<RegionCode, RegionConfig> = {
-  BN: { code: 'BN', name: 'Brunei',    currency: 'BND', locale: 'en-BN', language: 'en', timezone: 'Asia/Brunei' },
-  MY: { code: 'MY', name: 'Malaysia',  currency: 'MYR', locale: 'ms-MY', language: 'ms', timezone: 'Asia/Kuala_Lumpur' },
-  ID: { code: 'ID', name: 'Indonesia', currency: 'IDR', locale: 'id-ID', language: 'id', timezone: 'Asia/Jakarta' },
+  BN: { code: 'BN', name: 'Brunei',    currency: 'BND', locale: 'en-BN', language: 'en', timezone: 'Asia/Brunei',       decimals: 2 },
+  MY: { code: 'MY', name: 'Malaysia',  currency: 'MYR', locale: 'ms-MY', language: 'ms', timezone: 'Asia/Kuala_Lumpur', decimals: 2 },
+  ID: { code: 'ID', name: 'Indonesia', currency: 'IDR', locale: 'id-ID', language: 'id', timezone: 'Asia/Jakarta',      decimals: 0 },
 };
 
 export const DEFAULT_REGION: RegionCode = 'BN';

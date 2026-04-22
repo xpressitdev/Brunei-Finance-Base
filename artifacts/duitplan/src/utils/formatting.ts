@@ -8,15 +8,27 @@ function isValidDate(d: Date): boolean {
 
 /**
  * Formats a monetary amount using Intl.NumberFormat with style: 'currency'.
- * Decimal places are determined by the currency's CLDR data (2 for BND/MYR, 0 for IDR, etc.).
+ *
+ * By default, decimal places are derived from the Intl API for the given
+ * currency and locale. Pass `fractionDigits` to override — for example when
+ * the REGIONS config specifies a different canonical decimal count (e.g. IDR = 0).
+ * There is no currency-specific logic inside this function.
+ *
  * Returns "—" for NaN, non-finite, or invalid values.
  */
-export function formatCurrency(amount: number, currency: string, locale?: string): string {
+export function formatCurrency(
+  amount: number,
+  currency: string,
+  locale?: string,
+  fractionDigits?: number,
+): string {
   if (!isFinite(amount) || isNaN(amount)) return PLACEHOLDER;
-  return new Intl.NumberFormat(locale ?? 'en-US', {
-    style: 'currency',
-    currency,
-  }).format(amount);
+  const opts: Intl.NumberFormatOptions = { style: 'currency', currency };
+  if (fractionDigits !== undefined) {
+    opts.minimumFractionDigits = fractionDigits;
+    opts.maximumFractionDigits = fractionDigits;
+  }
+  return new Intl.NumberFormat(locale ?? 'en-US', opts).format(amount);
 }
 
 /**
@@ -59,7 +71,7 @@ export function formatDateTime(date: Date | string | number, locale?: string): s
 }
 
 /**
- * Formats a date as a locale-aware "Month Year" string (e.g. "April 2026", "April 2026").
+ * Formats a date as a locale-aware "Month Year" string (e.g. "April 2026").
  * Returns "—" for invalid dates.
  */
 export function formatMonthYear(date: Date | string | number, locale?: string): string {
@@ -72,7 +84,7 @@ export function formatMonthYear(date: Date | string | number, locale?: string): 
 }
 
 /**
- * Formats a date as a locale-aware short month name (e.g. "Apr", "Apr").
+ * Formats a date as a locale-aware short month name (e.g. "Apr").
  * Returns "—" for invalid dates.
  */
 export function formatMonthShort(date: Date | string | number, locale?: string): string {
