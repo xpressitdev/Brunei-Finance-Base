@@ -55,7 +55,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (!user.onboardingCompleted) {
           setLocation("/onboarding");
         } else {
-          setLocation("/expenses");
+          setLocation("/dashboard");
         }
       } else if (!user.onboardingCompleted && location !== "/onboarding") {
         setLocation("/onboarding");

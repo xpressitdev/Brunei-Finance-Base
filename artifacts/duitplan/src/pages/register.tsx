@@ -48,7 +48,7 @@ export default function Register() {
             <Input 
               id="fullName" 
               type="text" 
-              placeholder="Awangku Ahmad" 
+              placeholder="Ahmad Faizal" 
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               required 

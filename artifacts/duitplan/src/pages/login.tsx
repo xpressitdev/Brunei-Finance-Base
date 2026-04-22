@@ -21,7 +21,7 @@ export default function Login() {
       const response = await loginMutation.mutateAsync({ data: { email, password } });
       // The auth context will handle redirecting after refetch, but we can force it here
       // actually, just reload the page to let auth context pick it up, or call a re-check
-      window.location.href = "/expenses";
+      window.location.href = "/dashboard";
     } catch (err: any) {
       setError(err?.error || "Invalid email or password");
     }

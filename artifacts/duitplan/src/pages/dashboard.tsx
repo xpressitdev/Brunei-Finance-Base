@@ -9,6 +9,18 @@ import { Wallet, ArrowDownRight, CreditCard, Activity, ArrowRight, Upload, Flame
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useRegion } from "@/hooks/useRegion";
+import { cn } from "@/lib/utils";
+
+const REMAINING_MESSAGES = {
+  "dashboard.remaining.green": (amount: string) =>
+    `You're on track. ${amount} left for the rest of the month.`,
+  "dashboard.remaining.amber": (amount: string) =>
+    `Tight this month — ${amount} left after commitments and spending.`,
+  "dashboard.remaining.red": (amount: string) =>
+    `You're over budget by ${amount}. Check your commitments or recent spending.`,
+} as const;
+
+type ColorState = "green" | "amber" | "red";
 
 const COLORS = ["#15a06e", "#0ea5e9", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4", "#84cc16", "#f97316"];
 
@@ -97,80 +109,132 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Summary cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-        <Card className="shadow-sm border-muted">
-          <CardHeader className="flex flex-row items-center justify-between pb-2 pt-4 px-5">
-            <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Monthly Salary</CardTitle>
-            <Wallet className="w-4 h-4 text-primary/60" />
-          </CardHeader>
-          <CardContent className="px-5 pb-5">
-            <div className="text-2xl font-bold">{formatCurrency(summary?.monthlyIncome)}</div>
-            {summary?.actualIncomeThisMonth !== undefined && (
-              <div className="mt-1.5 flex items-center gap-1 text-xs text-emerald-600">
-                <ArrowUpRight className="w-3 h-3" />
-                <span className="font-medium">{formatCurrency(summary.actualIncomeThisMonth)}</span>
-                <span className="text-muted-foreground">received</span>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+      {/* KPI section — hero Remaining + 4 compact secondaries */}
+      {(() => {
+        const income = parseFloat(String(summary?.monthlyIncome ?? 0));
+        const remaining = parseFloat(String(summary?.remaining ?? 0));
+        const remainingPct = income > 0 ? (remaining / income) * 100 : 0;
+        const colorState: ColorState =
+          remaining < 0 ? "red" : remainingPct <= 15 ? "amber" : "green";
 
-        <Card className="shadow-sm border-muted">
-          <CardHeader className="flex flex-row items-center justify-between pb-2 pt-4 px-5">
-            <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Fixed Commitments</CardTitle>
-            <CreditCard className="w-4 h-4 text-orange-500/70" />
-          </CardHeader>
-          <CardContent className="px-5 pb-5">
-            <div className="text-2xl font-bold">{formatCurrency(summary?.totalCommitments)}</div>
-          </CardContent>
-        </Card>
+        const heroStyles: Record<ColorState, { card: string; number: string; message: string; icon: string }> = {
+          green: {
+            card:    "border-emerald-200 bg-emerald-50/60",
+            number:  "text-emerald-700",
+            message: "text-emerald-700/80",
+            icon:    "text-emerald-500",
+          },
+          amber: {
+            card:    "border-amber-200 bg-amber-50/60",
+            number:  "text-amber-700",
+            message: "text-amber-700/80",
+            icon:    "text-amber-500",
+          },
+          red: {
+            card:    "border-rose-200 bg-rose-50/60",
+            number:  "text-rose-700",
+            message: "text-rose-700/80",
+            icon:    "text-rose-500",
+          },
+        };
+        const s = heroStyles[colorState];
 
-        <Card className="shadow-sm border-muted">
-          <CardHeader className="flex flex-row items-center justify-between pb-2 pt-4 px-5">
-            <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Liabilities</CardTitle>
-            <Landmark className="w-4 h-4 text-rose-500/70" />
-          </CardHeader>
-          <CardContent className="px-5 pb-5">
-            <div className="text-2xl font-bold">{formatCurrency(summary?.totalDebtMonthlyPayment)}</div>
-            <p className="text-xs text-muted-foreground mt-1">Loan monthly payments</p>
-          </CardContent>
-        </Card>
+        const heroMessage =
+          colorState === "green"
+            ? REMAINING_MESSAGES["dashboard.remaining.green"](formatCurrency(remaining))
+            : colorState === "amber"
+            ? REMAINING_MESSAGES["dashboard.remaining.amber"](formatCurrency(remaining))
+            : REMAINING_MESSAGES["dashboard.remaining.red"](formatCurrency(Math.abs(remaining)));
 
-        <Card className="shadow-sm border-muted">
-          <CardHeader className="flex flex-row items-center justify-between pb-2 pt-4 px-5">
-            <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Total Spent</CardTitle>
-            <ArrowDownRight className="w-4 h-4 text-destructive/60" />
-          </CardHeader>
-          <CardContent className="px-5 pb-5">
-            <div className="text-2xl font-bold">{formatCurrency(summary?.totalSpent)}</div>
-          </CardContent>
-        </Card>
+        return (
+          <div className="space-y-4">
+            {/* Hero card — Remaining */}
+            <Card className={cn("shadow-sm", s.card)}>
+              <CardContent className="px-6 pt-6 pb-6">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+                      Remaining This Month
+                    </p>
+                    <div className={cn("text-5xl font-bold leading-none tracking-tight", s.number)}>
+                      {formatCurrency(remaining)}
+                    </div>
+                    <p className={cn("mt-3 text-sm leading-snug", s.message)}>
+                      {heroMessage}
+                    </p>
+                  </div>
+                  <Activity className={cn("w-7 h-7 flex-shrink-0 mt-1", s.icon)} />
+                </div>
+                <div className="mt-4 pt-4 border-t border-black/5 grid grid-cols-3 gap-3 text-xs text-muted-foreground">
+                  <div>
+                    <span className="block font-medium">Commitments</span>
+                    <span>−{formatCurrency(summary?.totalCommitments)}</span>
+                  </div>
+                  <div>
+                    <span className="block font-medium">Debt repayments</span>
+                    <span>−{formatCurrency(summary?.totalDebtPayments)}</span>
+                  </div>
+                  <div>
+                    <span className="block font-medium">Spending</span>
+                    <span>−{formatCurrency(summary?.totalSpent)}</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
-        <Card className="shadow-sm border-primary/20 bg-primary/5">
-          <CardHeader className="flex flex-row items-center justify-between pb-2 pt-4 px-5">
-            <CardTitle className="text-xs font-medium text-primary uppercase tracking-wider">Remaining</CardTitle>
-            <Activity className="w-4 h-4 text-primary" />
-          </CardHeader>
-          <CardContent className="px-5 pb-5">
-            <div className="text-2xl font-bold text-primary">{formatCurrency(summary?.remaining)}</div>
-            <div className="mt-2 space-y-1 border-t pt-2">
-              <div className="flex justify-between text-xs text-muted-foreground">
-                <span>Commitments</span>
-                <span>-{formatCurrency(summary?.totalCommitments)}</span>
-              </div>
-              <div className="flex justify-between text-xs text-muted-foreground">
-                <span>Debt Repayments</span>
-                <span>-{formatCurrency(summary?.totalDebtPayments)}</span>
-              </div>
-              <div className="flex justify-between text-xs text-muted-foreground">
-                <span>Spending</span>
-                <span>-{formatCurrency(summary?.totalSpent)}</span>
-              </div>
+            {/* Secondary compact cards */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <Card className="shadow-sm border-muted">
+                <CardHeader className="flex flex-row items-center justify-between pb-1 pt-3 px-4">
+                  <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Monthly Salary</CardTitle>
+                  <Wallet className="w-3.5 h-3.5 text-primary/60 flex-shrink-0" />
+                </CardHeader>
+                <CardContent className="px-4 pb-4">
+                  <div className="text-xl font-bold leading-tight">{formatCurrency(summary?.monthlyIncome)}</div>
+                  {summary?.actualIncomeThisMonth !== undefined && (
+                    <div className="mt-1 flex items-center gap-1 text-xs text-emerald-600">
+                      <ArrowUpRight className="w-3 h-3" />
+                      <span className="font-medium">{formatCurrency(summary.actualIncomeThisMonth)}</span>
+                      <span className="text-muted-foreground">received</span>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card className="shadow-sm border-muted">
+                <CardHeader className="flex flex-row items-center justify-between pb-1 pt-3 px-4">
+                  <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Fixed Commitments</CardTitle>
+                  <CreditCard className="w-3.5 h-3.5 text-orange-500/70 flex-shrink-0" />
+                </CardHeader>
+                <CardContent className="px-4 pb-4">
+                  <div className="text-xl font-bold leading-tight">{formatCurrency(summary?.totalCommitments)}</div>
+                </CardContent>
+              </Card>
+
+              <Card className="shadow-sm border-muted">
+                <CardHeader className="flex flex-row items-center justify-between pb-1 pt-3 px-4">
+                  <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Liabilities</CardTitle>
+                  <Landmark className="w-3.5 h-3.5 text-rose-500/70 flex-shrink-0" />
+                </CardHeader>
+                <CardContent className="px-4 pb-4">
+                  <div className="text-xl font-bold leading-tight">{formatCurrency(summary?.totalDebtMonthlyPayment)}</div>
+                  <p className="text-xs text-muted-foreground mt-0.5">Monthly payments</p>
+                </CardContent>
+              </Card>
+
+              <Card className="shadow-sm border-muted">
+                <CardHeader className="flex flex-row items-center justify-between pb-1 pt-3 px-4">
+                  <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Total Spent</CardTitle>
+                  <ArrowDownRight className="w-3.5 h-3.5 text-destructive/60 flex-shrink-0" />
+                </CardHeader>
+                <CardContent className="px-4 pb-4">
+                  <div className="text-xl font-bold leading-tight">{formatCurrency(summary?.totalSpent)}</div>
+                </CardContent>
+              </Card>
             </div>
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+        );
+      })()}
 
       {/* Gamification row */}
       {gamification && (

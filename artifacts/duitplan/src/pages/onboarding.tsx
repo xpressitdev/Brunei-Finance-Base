@@ -182,7 +182,8 @@ export default function Onboarding() {
     }
   };
 
-  const firstName = user?.profile?.fullName?.split(" ")[0] || "there";
+  const rawFirstName = user?.profile?.fullName?.split(" ")[0]?.trim() ?? "";
+  const firstName = rawFirstName || null;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-primary/5 to-background flex flex-col items-center justify-center p-4">
@@ -216,7 +217,9 @@ export default function Onboarding() {
                 <div className="w-20 h-20 rounded-2xl bg-primary flex items-center justify-center mx-auto mb-6 shadow-md">
                   <span className="text-white font-bold text-3xl">D</span>
                 </div>
-                <h1 className="text-3xl font-bold mb-3">Selamat datang, {firstName}!</h1>
+                <h1 className="text-3xl font-bold mb-3">
+                  {firstName ? `Selamat datang, ${firstName}!` : "Selamat datang!"}
+                </h1>
                 <p className="text-lg text-muted-foreground mb-2 max-w-md mx-auto">
                   Welcome to DuitPlan — your Brunei personal finance assistant.
                 </p>

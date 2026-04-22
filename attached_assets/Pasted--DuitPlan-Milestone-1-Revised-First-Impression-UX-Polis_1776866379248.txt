@@ -1,0 +1,118 @@
+# DuitPlan — Milestone 1 (Revised): First-Impression UX Polish
+
+## Context
+
+This milestone was proposed by a fresh-user perspective review of the app. The original proposal had 4 changes, but Change 3 (pricing copy) is dropped because we removed the Premium/trial system during Phase 2. The remaining 3 changes are all valid first-impression wins and have been updated to work with the multi-region architecture built in Phase 2.
+
+Three changes, all frontend/routing — no schema changes, no new backend logic. Work through them in order, show a diff before committing each, and verify each one across all three regions (BN, MY, ID) using the test users created in Phase 2:
+
+- Hakem's own account (BN region, BND currency)
+- `test-my@duitplan.dev` (MY region, MYR currency)
+- `test-id@duitplan.dev` (ID region, IDR currency)
+
+---
+
+## Change 1 — Make Dashboard the default landing page after login
+
+A logged-in user currently lands on the Expense Tracker page. The Dashboard is the higher-value landing surface — it shows Remaining budget, goal progress, and monthly performance at a glance. The "aha moment" for a user is seeing their Remaining budget number.
+
+**Requirements:**
+- After successful login, redirect the user to `/dashboard` instead of `/expense-tracker` (check the post-auth redirect logic to find where this is set).
+- Same for users finishing onboarding: the final "You're all set" CTA should route to `/dashboard`.
+- Expense Tracker remains accessible from the sidebar — just not the landing page.
+
+**Acceptance:** Log in as any of the 3 test users → land on Dashboard. Complete onboarding with a new test account → land on Dashboard.
+
+---
+
+## Change 2 — Make "Remaining" the hero number on the Dashboard
+
+Right now the Dashboard shows five equal-weight KPI cards (Monthly Salary, Fixed Commitments, Liabilities, Total Spent, Remaining). A user's eye doesn't know where to look first. Restructure the KPI row so "Remaining" is clearly the headline number.
+
+**Requirements:**
+
+**Hero card — "Remaining":**
+- Full-width card at the top of the KPI row
+- Large number (~2x the font size of other KPIs) displayed using `formatCurrency(remaining, user.currency, user.locale)` — do NOT hardcode BND, use the region formatter
+- Color state based on percentage of monthly salary:
+  - **Green** if Remaining > 15% of monthly salary
+  - **Amber** if Remaining is between 0% and 15% of salary
+  - **Red** if Remaining is negative
+- One-line plain-language interpretation below the number, localized to the user's currency via formatter:
+  - Green: *"You're on track. [formatted amount] left for the rest of the month."*
+  - Amber: *"Tight this month — [formatted amount] left after commitments and spending."*
+  - Red: *"You're over budget by [formatted amount]. Check your commitments or recent spending."*
+
+**Secondary row — 4 compact cards:**
+- Monthly Salary, Fixed Commitments, Liabilities, Total Spent
+- Each roughly half the current card size
+- Same data, same calculations — just smaller visual weight
+
+**Critical constraints:**
+- Do not change any underlying calculations — this is purely visual hierarchy
+- Use the existing color palette — apply green/amber/red only to the hero number + its text, not repainting whole cards
+- Mobile responsive: on phone widths, the hero card still reads as the headline, the 4 secondary cards stack below in a 2x2 grid
+- The text strings (the "You're on track" messages) should be wrapped in translation keys for future i18n — do not hardcode them such that Phase 2 Prompt 5 will have to redo the work. Use temporary English-only keys like `dashboard.remaining.green`, `dashboard.remaining.amber`, `dashboard.remaining.red`.
+
+**Acceptance:**
+- BN user's Dashboard: hero shows `BND X,XXX.XX` with color state + message
+- MY user's Dashboard: hero shows `RM X,XXX.XX` with color state + message
+- ID user's Dashboard: hero shows `Rp X.XXX.XXX` (zero decimals) with color state + message
+- All three messages use the correct currency in the interpolated text
+- Mobile view: hero card still dominant, 4 secondary cards readable in 2x2
+
+---
+
+## Change 3 — Fix the "Selamat datang, Awangku!" greeting
+
+The onboarding welcome screen currently greets users as *"Selamat datang, Awangku!"* regardless of who's logging in. "Awangku" is a Brunei-Malay honorific for young men — it's hardcoded and wrong for most users (and entirely wrong in the Malaysian and Indonesian contexts).
+
+**Requirements:**
+- Read the user's first name from the user model (check the field name — likely `firstName` or `first_name`).
+- First-name parsing: take only the first token before any space. So "Siti Nurul Aisyah" → "Siti", "Ahmad Faizal" → "Ahmad".
+- If the full name was entered, greet as **"Selamat datang, [FirstName]!"**
+- If no name was entered (empty or null), fall back to **"Selamat datang!"** — just the greeting, no name.
+- **Do NOT use "Awangku" anywhere as a default.** Search the codebase for all hardcoded references to "Awangku" and replace with the dynamic logic.
+
+**Region note:** "Selamat datang" is correct across Brunei Malay, Malaysian Malay, and Indonesian. All three regions can keep this exact phrase — no localization needed for this specific greeting. This is a happy coincidence that works in our favor.
+
+**Acceptance:**
+- Sign up as "Siti Nurul" → "Selamat datang, Siti!"
+- Sign up as "Ahmad" (single name) → "Selamat datang, Ahmad!"
+- Sign up with only an email, no name → "Selamat datang!"
+- Log in as any of the 3 test users → no "Awangku" anywhere
+
+---
+
+## Things to preserve
+
+- Don't touch the onboarding step sequence or form fields
+- Don't change any existing calculations for Remaining, Savings Rate, etc.
+- Don't modify any database schemas or migrations
+- Don't re-introduce the Premium tab or trial banner (both were removed earlier in Phase 2 — this milestone does NOT undo that work)
+- Keep the existing color palette
+- All monetary displays must continue to use `formatCurrency` via the region formatter — no hardcoded currency strings
+
+## After you're done
+
+1. Run the app and walk through these flows:
+   - Sign up new account → complete onboarding → verify "Selamat datang, [FirstName]!" → verify landing on Dashboard
+   - Log in as Hakem (BN) → verify hero Remaining card in BND with color state
+   - Log in as `test-my@duitplan.dev` → verify hero Remaining card in MYR
+   - Log in as `test-id@duitplan.dev` → verify hero Remaining card in IDR
+   - Resize browser to mobile width → verify hero card and secondary cards still readable
+2. Report back with:
+   - Summary of what changed in each of the 3 changes
+   - Files modified
+   - Screenshots (or descriptions) of the Dashboard hero state in all 3 regions
+   - Any edge cases encountered
+   - Confirmation that nothing from Phase 2 (region formatters, Premium removal, test users) was regressed
+
+---
+
+## Why this milestone now
+
+- **Zero data risk** — no schema changes, no calculation changes
+- **High first-impression value** — these are the 3 things a brand-new user will feel in their first 60 seconds
+- **Complements Phase 2** — forces every monetary display in the new hero card to use the formatter, proving out the plumbing
+- **Natural break** before the bigger i18n extraction work (Phase 2 Prompt 5)
