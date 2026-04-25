@@ -6,7 +6,7 @@
     "delete": "Padam",
     "loading": "Memuatkan...",
     "optional": "(pilihan)",
-    "addTransaction": "Tambah Urus Niaga",
+    "addTransaction": "Tambah Transaksi",
     "importStatement": "Import Penyata",
     "expense": "Perbelanjaan",
     "income": "Pendapatan",
@@ -32,7 +32,7 @@
       "spending": "Perbelanjaan",
       "monthlySalary": "Gaji Bulanan",
       "fixedCommitments": "Komitmen Tetap",
-      "liabilities": "Liabiliti",
+      "liabilities": "Tanggungan",
       "totalSpent": "Jumlah Dibelanjakan",
       "received": "diterima",
       "monthlyPayments": "Bayaran bulanan"
@@ -44,7 +44,7 @@
     },
     "gamification": {
       "dayStreak": "Hari berturut-turut",
-      "logToStart": "Log urus niaga untuk bermula",
+      "logToStart": "Log transaksi untuk bermula",
       "thisMonth": "Bulan Ini",
       "done": "✓ Selesai!",
       "viewAllBadges": "Lihat semua lencana",
@@ -54,7 +54,7 @@
     "chart": {
       "spendingByCategory": "Perbelanjaan Mengikut Kategori",
       "noSpendingData": "Belum ada data perbelanjaan",
-      "noSpendingHint": "Muat naik penyata BIBD atau Baiduri anda, atau tambah urus niaga secara manual."
+      "noSpendingHint": "Muat naik penyata BIBD atau Baiduri anda, atau tambah transaksi secara manual."
     },
     "financing": {
       "title": "Ringkasan Pembiayaan",
@@ -63,16 +63,16 @@
       "manage": "Urus Pembiayaan"
     },
     "recentTransactions": {
-      "title": "Urus Niaga Terbaru",
+      "title": "Transaksi Terbaru",
       "uncategorised": "Tidak dikategorikan",
-      "noTransactions": "Belum ada urus niaga direkodkan.",
+      "noTransactions": "Belum ada transaksi direkodkan.",
       "importHint": "Cuba import penyata BIBD atau Baiduri anda.",
-      "viewAll": "Lihat semua urus niaga"
+      "viewAll": "Lihat semua transaksi"
     }
   },
   "expenseTracker": {
     "title": "Penjejak Perbelanjaan",
-    "subtitle": "Jejak setiap urus niaga",
+    "subtitle": "Jejak setiap transaksi",
     "today": "Hari ini",
     "receipt": "Resit",
     "uncategorised": "Tidak dikategorikan",
@@ -112,7 +112,7 @@
       "save": "Simpan Perbelanjaan"
     },
     "editDialog": {
-      "title": "Edit Urus Niaga",
+      "title": "Edit Transaksi",
       "expense": "Perbelanjaan",
       "income": "Pendapatan",
       "typeChangeWarning": "Menukar dari {{from}} ke {{to}} akan membalikkan pelarasan baki pada akaun yang dipautkan. Pastikan ini adalah tindakan yang disengajakan.",
@@ -138,24 +138,24 @@
     }
   },
   "transactions": {
-    "title": "Urus Niaga",
+    "title": "Transaksi",
     "subtitle": "Urus pendapatan dan perbelanjaan anda.",
     "loading": "Memuatkan...",
-    "confirmDelete": "Adakah anda pasti mahu memadam urus niaga ini?",
+    "confirmDelete": "Adakah anda pasti mahu memadam transaksi ini?",
     "uncategorized": "Tidak dikategorikan",
     "filters": {
       "allMonths": "Semua bulan",
       "allAccounts": "Semua akaun",
       "allTypes": "Semua jenis",
       "clear": "Kosongkan",
-      "searchPlaceholder": "Cari penerangan..."
+      "searchPlaceholder": "Cari keterangan..."
     },
     "typeLabel": {
       "expense": "Perbelanjaan",
       "income": "Pendapatan"
     },
     "addDialog": {
-      "title": "Tambah Urus Niaga",
+      "title": "Tambah Transaksi",
       "date": "Tarikh",
       "description": "Penerangan",
       "amount": "Jumlah",
@@ -171,7 +171,7 @@
       "saving": "Menyimpan..."
     },
     "editDialog": {
-      "title": "Edit Urus Niaga",
+      "title": "Edit Transaksi",
       "save": "Simpan Perubahan",
       "saving": "Menyimpan...",
       "expense": "Perbelanjaan",
@@ -185,10 +185,10 @@
       "uncategorized": "Tidak dikategorikan"
     },
     "empty": {
-      "noTransactions": "Tiada urus niaga dijumpai",
-      "noTransactionsForMonth": "Tiada urus niaga untuk {{month}}. Urus niaga yang diimport mungkin berada dalam bulan yang berbeza.",
-      "noTransactionsGeneral": "Belum ada urus niaga. Import penyata bank atau tambah satu secara manual.",
-      "viewAll": "Lihat semua urus niaga"
+      "noTransactions": "Tiada transaksi dijumpai",
+      "noTransactionsForMonth": "Tiada transaksi untuk {{month}}. Transaksi yang diimport mungkin berada dalam bulan yang berbeza.",
+      "noTransactionsGeneral": "Belum ada transaksi. Import penyata bank atau tambah satu secara manual.",
+      "viewAll": "Lihat semua transaksi"
     }
   },
   "settings": {
@@ -206,7 +206,7 @@
     },
     "categories": {
       "title": "Kategori Tersuai",
-      "description": "Tambah kategori baharu untuk menyusun urus niaga anda.",
+      "description": "Tambah kategori baharu untuk menyusun transaksi anda.",
       "nameLabel": "Nama",
       "namePlaceholder": "cth. Perjalanan, Gim",
       "typeLabel": "Jenis",
