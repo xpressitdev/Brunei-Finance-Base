@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useRegister } from "@workspace/api-client-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function Register() {
+  const { t } = useTranslation();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -21,7 +23,7 @@ export default function Register() {
       await registerMutation.mutateAsync({ data: { fullName, email, password } });
       window.location.href = "/onboarding";
     } catch (err: any) {
-      setError(err?.error || "Registration failed");
+      setError(err?.error || t('auth.errors.registrationFailed'));
     }
   };
 
@@ -33,8 +35,8 @@ export default function Register() {
       </Link>
       
       <div className="w-full max-w-md bg-white rounded-2xl shadow-sm border p-8">
-        <h1 className="text-2xl font-semibold mb-2 text-center">Create an account</h1>
-        <p className="text-muted-foreground mb-8 text-center">Start your journey to financial clarity</p>
+        <h1 className="text-2xl font-semibold mb-2 text-center">{t('auth.register.title')}</h1>
+        <p className="text-muted-foreground mb-8 text-center">{t('auth.register.subtitle')}</p>
         
         {error && (
           <Alert variant="destructive" className="mb-6">
@@ -44,18 +46,18 @@ export default function Register() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="fullName">Full Name</Label>
+            <Label htmlFor="fullName">{t('auth.register.fullNameLabel')}</Label>
             <Input 
               id="fullName" 
               type="text" 
-              placeholder="Ahmad Faizal" 
+              placeholder={t('auth.register.fullNamePlaceholder')}
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               required 
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">{t('auth.register.emailLabel')}</Label>
             <Input 
               id="email" 
               type="email" 
@@ -66,7 +68,7 @@ export default function Register() {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password">{t('auth.register.passwordLabel')}</Label>
             <Input 
               id="password" 
               type="password" 
@@ -81,12 +83,15 @@ export default function Register() {
             className="w-full h-11 text-base mt-2" 
             disabled={registerMutation.isPending}
           >
-            {registerMutation.isPending ? "Creating account..." : "Create Account"}
+            {registerMutation.isPending ? t('auth.register.creating') : t('auth.register.submit')}
           </Button>
         </form>
 
         <div className="mt-8 text-center text-sm text-muted-foreground">
-          Already have an account? <Link href="/login"><span className="text-primary font-medium hover:underline cursor-pointer">Sign in</span></Link>
+          {t('auth.register.hasAccount')}{' '}
+          <Link href="/login">
+            <span className="text-primary font-medium hover:underline cursor-pointer">{t('auth.register.signIn')}</span>
+          </Link>
         </div>
       </div>
     </div>

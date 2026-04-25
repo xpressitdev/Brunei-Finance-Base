@@ -776,5 +776,232 @@
       "fewBadges": "You're making great progress. A few more badges to go!",
       "manyBadges": "Excellent work. You're building strong financial habits."
     }
+  },
+  "auth": {
+    "signOut": "Sign Out",
+    "login": {
+      "title": "Welcome back",
+      "subtitle": "Enter your details to sign in to your account",
+      "emailLabel": "Email",
+      "passwordLabel": "Password",
+      "signingIn": "Signing in...",
+      "submit": "Sign In",
+      "noAccount": "Don't have an account?",
+      "signUp": "Sign up"
+    },
+    "register": {
+      "title": "Create an account",
+      "subtitle": "Start your journey to financial clarity",
+      "fullNameLabel": "Full Name",
+      "fullNamePlaceholder": "Ahmad Faizal",
+      "emailLabel": "Email",
+      "passwordLabel": "Password",
+      "creating": "Creating account...",
+      "submit": "Create Account",
+      "hasAccount": "Already have an account?",
+      "signIn": "Sign in"
+    },
+    "errors": {
+      "invalidCredentials": "Invalid email or password",
+      "registrationFailed": "Registration failed"
+    }
+  },
+  "landing": {
+    "header": {
+      "signIn": "Sign In",
+      "getStarted": "Get Started Free"
+    },
+    "hero": {
+      "badge": "For everyone who cares about their gaji",
+      "headline": "Understand your gaji clearly.",
+      "subheadline": "Track your salary, manage your commitments, and stay on top of your loans — without the stress.",
+      "tagline": "Auto-parses your bank statements. AI-powered.",
+      "ctaStart": "Start Planning Free",
+      "ctaSignIn": "Sign In"
+    },
+    "features": {
+      "title": "Everything you need to manage your gaji",
+      "subtitle": "Simple, practical, and built around how money works in Southeast Asia.",
+      "card1": {
+        "title": "Guided setup in minutes",
+        "desc": "Our onboarding walks you through your salary, bills, and loans using locally-relevant presets. No blank forms — just select and confirm."
+      },
+      "card2": {
+        "title": "Import your bank statements",
+        "desc": "Upload a PDF statement or share a screenshot from your mobile banking app. We extract the transactions and categorise them automatically."
+      },
+      "card3": {
+        "title": "Loan & debt planner",
+        "desc": "Track your car loan, house financing, or personal loans. See your total monthly obligations and simulate paying off debt faster."
+      }
+    },
+    "steps": {
+      "title": "How it works",
+      "step1": {
+        "title": "Set up your salary",
+        "desc": "Enter your monthly take-home pay and payday. We'll calculate your spending room from there."
+      },
+      "step2": {
+        "title": "Add your commitments",
+        "desc": "Select your car loan, rent, utilities, and other fixed bills from our preset list."
+      },
+      "step3": {
+        "title": "Import or add transactions",
+        "desc": "Upload your bank statement or add transactions manually. Review and confirm before saving."
+      }
+    },
+    "cta": {
+      "title": "Start understanding your money today.",
+      "subtitle": "Free to use. No credit card required. Just your salary and a few minutes.",
+      "button": "Create a Free Account"
+    },
+    "footer": {
+      "tagline": "Personal finance for Southeast Asia. © {{year}} DuitPlan."
+    }
+  },
+  "onboarding": {
+    "stepOf": "Step {{step}} of {{total}}",
+    "back": "Back",
+    "continue": "Continue",
+    "welcome": {
+      "title": "Selamat datang, {{name}}!",
+      "titleNoName": "Selamat datang!",
+      "subtitle": "Welcome to DuitPlan — your personal finance assistant.",
+      "hint": "We'll guide you through a quick setup so your dashboard feels right from day one. Takes about 2 minutes.",
+      "pillar1": "Your salary & payday",
+      "pillar2": "Monthly bills & loans",
+      "pillar3": "Your money goals",
+      "begin": "Let's Begin"
+    },
+    "income": {
+      "title": "Your salary & payday",
+      "subtitle": "This helps us calculate your monthly budget accurately.",
+      "salaryLabel": "Monthly Salary",
+      "salaryHint": "Enter your take-home (nett) salary.",
+      "paydayLabel": "Payday — which day of the month?",
+      "otherDay": "Other day:"
+    },
+    "commitments": {
+      "title": "Monthly fixed commitments",
+      "subtitle": "Select the ones that apply to you, then enter the monthly amount.",
+      "amountHeader": "Enter monthly amounts ({{currency}})",
+      "addCustom": "Add a custom commitment",
+      "customLabel": "Label",
+      "customPlaceholder": "e.g. Gym membership",
+      "customAmount": "{{currency}}/month",
+      "add": "Add",
+      "cancel": "Cancel"
+    },
+    "expenses": {
+      "title": "Typical monthly spending",
+      "subtitle": "Estimate how much you usually spend in each category. You can refine these after uploading your bank statement.",
+      "amountHeader": "Estimated monthly amount ({{currency}})",
+      "roughEstimateHint": "💡 Not sure of the exact amounts? Rough estimates are fine — you can update them after importing your bank statement."
+    },
+    "loans": {
+      "title": "Loans & financing",
+      "subtitle": "Select any active loans or financing. We'll track your payoff progress.",
+      "monthlyPaymentLabel": "Monthly Payment ({{currency}})",
+      "outstandingLabel": "Outstanding Balance (optional)",
+      "noLoans": "No active loans? That's great! You can skip this step."
+    },
+    "goals": {
+      "title": "What matters most to you?",
+      "subtitle": "Choose what you'd like DuitPlan to help you with. You can pick more than one.",
+      "almostDone": "🎉 You're almost done!",
+      "almostDoneHint": "Your financial foundation is set. Next, try uploading your bank statement screenshot to get real transaction data instantly.",
+      "saving": "Saving...",
+      "finish": "Go to Dashboard →"
+    },
+    "commitmentPresets": {
+      "car_loan": "Car Loan",
+      "personal_loan": "Personal Loan",
+      "house_financing": "House Financing",
+      "rent": "Rent",
+      "utilities": "Utilities",
+      "internet_phone": "Internet / Phone",
+      "insurance_takaful": "Insurance / Takaful",
+      "family_support": "Family Support",
+      "school_fees": "School Fees",
+      "credit_card": "Credit Card",
+      "childcare": "Childcare",
+      "subscription": "Subscriptions"
+    },
+    "expensePresets": {
+      "groceries": "Groceries",
+      "eating_out": "Eating Out",
+      "fuel": "Fuel",
+      "transport": "Transport",
+      "shopping": "Shopping",
+      "entertainment": "Entertainment",
+      "health": "Health",
+      "education": "Education",
+      "savings": "Savings",
+      "emergency": "Emergency Fund"
+    },
+    "debtPresets": {
+      "car_loan": "Car Loan",
+      "personal_financing": "Personal Financing",
+      "house_financing": "House Financing",
+      "credit_card": "Credit Card",
+      "other_debt": "Other Debt"
+    },
+    "goalOptions": {
+      "savings": {
+        "label": "Build savings every month",
+        "desc": "I want to set aside money regularly"
+      },
+      "debt": {
+        "label": "Pay off debt faster",
+        "desc": "I want to clear my loans sooner"
+      },
+      "spending": {
+        "label": "Control my spending",
+        "desc": "I want to stay within budget"
+      }
+    }
+  },
+  "agent": {
+    "title": "DuitPlan AI",
+    "subtitle": "Your financial assistant",
+    "newChat": "New Chat",
+    "noConversations": "No conversations yet",
+    "emptyState": {
+      "title": "DuitPlan AI",
+      "subtitle": "Your personal finance assistant. Upload receipts, check balances, ask questions, and get smart insights about your money.",
+      "prompt1": "How much did I spend this month?",
+      "prompt2": "Analyze this receipt",
+      "prompt3": "What's my biggest spending category?",
+      "prompt4": "Give me tips to save more money"
+    },
+    "emptyConversation": "Start the conversation — ask a question or attach a receipt or bank statement screenshot.",
+    "inputPlaceholder": "Ask DuitPlan AI anything...",
+    "inputPlaceholderNew": "Start a conversation...",
+    "uploadHintUploading": "Uploading files to secure storage...",
+    "uploadHint": "Attach receipts or bank screenshots for automatic analysis · Max 10 MB per file",
+    "discrepancy": {
+      "title": "Balance Discrepancy",
+      "youHave": "You have",
+      "weRecorded": "We recorded",
+      "fromScreenshot": "From screenshot",
+      "inApp": "In DuitPlan",
+      "missing": "Missing",
+      "extra": "Extra",
+      "reconcile": "Reconcile now"
+    },
+    "transactionReview": {
+      "title": "Transactions Staged for Review",
+      "subtitle": "The transactions extracted from your document have been saved as pending. Review and confirm each one before they are added to your records.",
+      "button": "Review extracted transactions"
+    },
+    "spendingBreakdown": "Spending Breakdown",
+    "shareModal": {
+      "title": "Share your insight",
+      "download": "Download",
+      "copy": "Copy",
+      "copying": "Copying..."
+    },
+    "shareInsight": "Share insight",
+    "share": "Share"
   }
 }

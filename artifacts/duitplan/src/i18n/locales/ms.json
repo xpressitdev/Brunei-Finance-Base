@@ -776,5 +776,232 @@
       "fewBadges": "Anda membuat kemajuan yang baik. Beberapa lagi lencana!",
       "manyBadges": "Kerja cemerlang. Anda sedang membina tabiat kewangan yang kukuh."
     }
+  },
+  "auth": {
+    "signOut": "Log Keluar",
+    "login": {
+      "title": "Selamat kembali",
+      "subtitle": "Masukkan maklumat anda untuk log masuk ke akaun anda",
+      "emailLabel": "E-mel",
+      "passwordLabel": "Kata Laluan",
+      "signingIn": "Log masuk...",
+      "submit": "Log Masuk",
+      "noAccount": "Tiada akaun?",
+      "signUp": "Daftar"
+    },
+    "register": {
+      "title": "Cipta akaun",
+      "subtitle": "Mulakan perjalanan anda menuju kewangan yang lebih jelas",
+      "fullNameLabel": "Nama Penuh",
+      "fullNamePlaceholder": "Ahmad Faizal",
+      "emailLabel": "E-mel",
+      "passwordLabel": "Kata Laluan",
+      "creating": "Mencipta akaun...",
+      "submit": "Cipta Akaun",
+      "hasAccount": "Sudah ada akaun?",
+      "signIn": "Log masuk"
+    },
+    "errors": {
+      "invalidCredentials": "E-mel atau kata laluan tidak sah",
+      "registrationFailed": "Pendaftaran gagal"
+    }
+  },
+  "landing": {
+    "header": {
+      "signIn": "Log Masuk",
+      "getStarted": "Mulakan Percuma"
+    },
+    "hero": {
+      "badge": "Untuk semua yang ambil berat tentang gaji mereka",
+      "headline": "Fahami gaji anda dengan jelas.",
+      "subheadline": "Jejak gaji anda, urus komitmen, dan pantau pinjaman — tanpa tekanan.",
+      "tagline": "Auto-hurai penyata bank anda. Dikuasai AI.",
+      "ctaStart": "Mula Rancang Percuma",
+      "ctaSignIn": "Log Masuk"
+    },
+    "features": {
+      "title": "Semua yang anda perlukan untuk urus gaji",
+      "subtitle": "Mudah, praktikal, dan dibina mengikut cara wang bekerja di Asia Tenggara.",
+      "card1": {
+        "title": "Persediaan terpandu dalam beberapa minit",
+        "desc": "Proses onboarding kami membimbing anda melalui gaji, bil, dan pinjaman menggunakan preset tempatan. Tiada borang kosong — pilih dan sahkan sahaja."
+      },
+      "card2": {
+        "title": "Import penyata bank anda",
+        "desc": "Muat naik penyata PDF atau kongsi tangkapan skrin dari aplikasi perbankan mudah alih anda. Kami ekstrak transaksi dan kategorikan secara automatik."
+      },
+      "card3": {
+        "title": "Perancang pinjaman & hutang",
+        "desc": "Jejak pinjaman kereta, pembiayaan rumah, atau pinjaman peribadi anda. Lihat jumlah obligasi bulanan dan simulasi bayar balik hutang lebih cepat."
+      }
+    },
+    "steps": {
+      "title": "Cara ia berfungsi",
+      "step1": {
+        "title": "Tetapkan gaji anda",
+        "desc": "Masukkan gaji bersih bulanan dan hari gaji anda. Kami akan kira ruang perbelanjaan anda dari situ."
+      },
+      "step2": {
+        "title": "Tambah komitmen anda",
+        "desc": "Pilih pinjaman kereta, sewa, utiliti, dan bil tetap lain dari senarai preset kami."
+      },
+      "step3": {
+        "title": "Import atau tambah transaksi",
+        "desc": "Muat naik penyata bank anda atau tambah transaksi secara manual. Semak dan sahkan sebelum menyimpan."
+      }
+    },
+    "cta": {
+      "title": "Mula faham wang anda hari ini.",
+      "subtitle": "Percuma. Tiada kad kredit diperlukan. Hanya gaji anda dan beberapa minit.",
+      "button": "Cipta Akaun Percuma"
+    },
+    "footer": {
+      "tagline": "Kewangan peribadi untuk Asia Tenggara. © {{year}} DuitPlan."
+    }
+  },
+  "onboarding": {
+    "stepOf": "Langkah {{step}} daripada {{total}}",
+    "back": "Kembali",
+    "continue": "Teruskan",
+    "welcome": {
+      "title": "Selamat datang, {{name}}!",
+      "titleNoName": "Selamat datang!",
+      "subtitle": "Selamat datang ke DuitPlan — pembantu kewangan peribadi anda.",
+      "hint": "Kami akan membimbing anda melalui persediaan ringkas supaya papan pemuka anda terasa tepat dari hari pertama. Mengambil masa kira-kira 2 minit.",
+      "pillar1": "Gaji & hari gaji anda",
+      "pillar2": "Bil & pinjaman bulanan",
+      "pillar3": "Matlamat wang anda",
+      "begin": "Jom Mula"
+    },
+    "income": {
+      "title": "Gaji & hari gaji anda",
+      "subtitle": "Ini membantu kami mengira bajet bulanan anda dengan tepat.",
+      "salaryLabel": "Gaji Bulanan",
+      "salaryHint": "Masukkan gaji bersih (take-home) anda.",
+      "paydayLabel": "Hari gaji — hari yang mana dalam bulan?",
+      "otherDay": "Hari lain:"
+    },
+    "commitments": {
+      "title": "Komitmen tetap bulanan",
+      "subtitle": "Pilih yang berkenaan dengan anda, kemudian masukkan jumlah bulanan.",
+      "amountHeader": "Masukkan jumlah bulanan ({{currency}})",
+      "addCustom": "Tambah komitmen tersuai",
+      "customLabel": "Label",
+      "customPlaceholder": "cth. Yuran gim",
+      "customAmount": "{{currency}}/bulan",
+      "add": "Tambah",
+      "cancel": "Batal"
+    },
+    "expenses": {
+      "title": "Perbelanjaan bulanan biasa",
+      "subtitle": "Anggarkan berapa banyak yang biasa anda belanjakan dalam setiap kategori. Anda boleh semak semula selepas memuat naik penyata bank anda.",
+      "amountHeader": "Anggaran jumlah bulanan ({{currency}})",
+      "roughEstimateHint": "💡 Tidak pasti jumlah yang tepat? Anggaran kasar sudah memadai — anda boleh kemaskini selepas mengimport penyata bank anda."
+    },
+    "loans": {
+      "title": "Pinjaman & pembiayaan",
+      "subtitle": "Pilih mana-mana pinjaman atau pembiayaan aktif. Kami akan jejak kemajuan bayaran balik anda.",
+      "monthlyPaymentLabel": "Bayaran Bulanan ({{currency}})",
+      "outstandingLabel": "Baki Tertunggak (pilihan)",
+      "noLoans": "Tiada pinjaman aktif? Bagus! Anda boleh langkau langkah ini."
+    },
+    "goals": {
+      "title": "Apa yang paling penting bagi anda?",
+      "subtitle": "Pilih apa yang anda mahu DuitPlan bantu. Anda boleh pilih lebih daripada satu.",
+      "almostDone": "🎉 Anda hampir selesai!",
+      "almostDoneHint": "Asas kewangan anda sudah ditetapkan. Seterusnya, cuba muat naik tangkapan skrin penyata bank anda untuk mendapatkan data transaksi sebenar dengan segera.",
+      "saving": "Menyimpan...",
+      "finish": "Ke Papan Pemuka →"
+    },
+    "commitmentPresets": {
+      "car_loan": "Pinjaman Kereta",
+      "personal_loan": "Pinjaman Peribadi",
+      "house_financing": "Pembiayaan Rumah",
+      "rent": "Sewa",
+      "utilities": "Utiliti",
+      "internet_phone": "Internet / Telefon",
+      "insurance_takaful": "Insurans / Takaful",
+      "family_support": "Sokongan Keluarga",
+      "school_fees": "Yuran Sekolah",
+      "credit_card": "Kad Kredit",
+      "childcare": "Penjagaan Kanak-kanak",
+      "subscription": "Langganan"
+    },
+    "expensePresets": {
+      "groceries": "Barang Runcit",
+      "eating_out": "Makan Luar",
+      "fuel": "Minyak",
+      "transport": "Pengangkutan",
+      "shopping": "Membeli-belah",
+      "entertainment": "Hiburan",
+      "health": "Kesihatan",
+      "education": "Pendidikan",
+      "savings": "Simpanan",
+      "emergency": "Dana Kecemasan"
+    },
+    "debtPresets": {
+      "car_loan": "Pinjaman Kereta",
+      "personal_financing": "Pembiayaan Peribadi",
+      "house_financing": "Pembiayaan Rumah",
+      "credit_card": "Kad Kredit",
+      "other_debt": "Hutang Lain"
+    },
+    "goalOptions": {
+      "savings": {
+        "label": "Bina simpanan setiap bulan",
+        "desc": "Saya mahu ketepikan wang secara berkala"
+      },
+      "debt": {
+        "label": "Bayar hutang lebih cepat",
+        "desc": "Saya mahu jelaskan pinjaman lebih awal"
+      },
+      "spending": {
+        "label": "Kawal perbelanjaan saya",
+        "desc": "Saya mahu kekal dalam bajet"
+      }
+    }
+  },
+  "agent": {
+    "title": "DuitPlan AI",
+    "subtitle": "Pembantu kewangan anda",
+    "newChat": "Sembang Baharu",
+    "noConversations": "Tiada perbualan lagi",
+    "emptyState": {
+      "title": "DuitPlan AI",
+      "subtitle": "Pembantu kewangan peribadi anda. Muat naik resit, semak baki, tanya soalan, dan dapatkan wawasan pintar tentang wang anda.",
+      "prompt1": "Berapa banyak yang saya belanjakan bulan ini?",
+      "prompt2": "Analisa resit ini",
+      "prompt3": "Apakah kategori perbelanjaan terbesar saya?",
+      "prompt4": "Beri saya tips untuk jimat lebih banyak wang"
+    },
+    "emptyConversation": "Mulakan perbualan — tanya soalan atau lampirkan resit atau tangkapan skrin penyata bank.",
+    "inputPlaceholder": "Tanya DuitPlan AI apa-apa saja...",
+    "inputPlaceholderNew": "Mulakan perbualan...",
+    "uploadHintUploading": "Memuat naik fail ke storan selamat...",
+    "uploadHint": "Lampirkan resit atau tangkapan skrin bank untuk analisis automatik · Maks 10 MB setiap fail",
+    "discrepancy": {
+      "title": "Percanggahan Baki",
+      "youHave": "Anda ada",
+      "weRecorded": "Kami rekodkan",
+      "fromScreenshot": "Dari tangkapan skrin",
+      "inApp": "Dalam DuitPlan",
+      "missing": "Kurang",
+      "extra": "Lebih",
+      "reconcile": "Selesaikan sekarang"
+    },
+    "transactionReview": {
+      "title": "Transaksi Menunggu Semakan",
+      "subtitle": "Transaksi yang diekstrak dari dokumen anda telah disimpan sebagai tertangguh. Semak dan sahkan setiap satu sebelum ditambah ke rekod anda.",
+      "button": "Semak transaksi yang diekstrak"
+    },
+    "spendingBreakdown": "Pecahan Perbelanjaan",
+    "shareModal": {
+      "title": "Kongsi wawasan anda",
+      "download": "Muat Turun",
+      "copy": "Salin",
+      "copying": "Menyalin..."
+    },
+    "shareInsight": "Kongsi wawasan",
+    "share": "Kongsi"
   }
 }

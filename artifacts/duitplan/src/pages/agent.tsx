@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Link } from "wouter";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -221,6 +222,7 @@ function renderMarkdownContent(text: string) {
 }
 
 function DiscrepancyCard({ data }: { data: DiscrepancyData }) {
+  const { t } = useTranslation();
   const { formatCurrency } = useRegion();
   const delta = parseFloat(data.delta);
   const isNegative = delta < 0;
@@ -229,18 +231,18 @@ function DiscrepancyCard({ data }: { data: DiscrepancyData }) {
     <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-4 dark:bg-amber-950/20 dark:border-amber-800">
       <div className="flex items-center gap-2 mb-3">
         <AlertTriangle className="w-5 h-5 text-amber-600" />
-        <span className="font-semibold text-amber-800 dark:text-amber-300">Balance Discrepancy — {data.account}</span>
+        <span className="font-semibold text-amber-800 dark:text-amber-300">{t('agent.discrepancy.title')} — {data.account}</span>
       </div>
       <div className="grid grid-cols-2 gap-4 mb-3">
         <div className="rounded-lg bg-white dark:bg-background p-3 border border-amber-100 dark:border-amber-900">
-          <div className="text-xs text-muted-foreground mb-1">You have</div>
+          <div className="text-xs text-muted-foreground mb-1">{t('agent.discrepancy.youHave')}</div>
           <div className="text-xl font-bold text-foreground">{formatCurrency(parseFloat(data.seen))}</div>
-          <div className="text-xs text-muted-foreground">From screenshot</div>
+          <div className="text-xs text-muted-foreground">{t('agent.discrepancy.fromScreenshot')}</div>
         </div>
         <div className="rounded-lg bg-white dark:bg-background p-3 border border-amber-100 dark:border-amber-900">
-          <div className="text-xs text-muted-foreground mb-1">We recorded</div>
+          <div className="text-xs text-muted-foreground mb-1">{t('agent.discrepancy.weRecorded')}</div>
           <div className="text-xl font-bold text-foreground">{formatCurrency(parseFloat(data.recorded))}</div>
-          <div className="text-xs text-muted-foreground">In DuitPlan</div>
+          <div className="text-xs text-muted-foreground">{t('agent.discrepancy.inApp')}</div>
         </div>
       </div>
       <div className={cn(
@@ -248,11 +250,14 @@ function DiscrepancyCard({ data }: { data: DiscrepancyData }) {
         isNegative ? "bg-red-100 dark:bg-red-950/30" : "bg-green-100 dark:bg-green-950/30"
       )}>
         <span className="text-sm font-medium">
-          {isNegative ? "Missing" : "Extra"}: <span className={cn("font-bold", isNegative ? "text-red-700 dark:text-red-400" : "text-green-700 dark:text-green-400")}>{formatCurrency(Math.abs(delta))}</span>
+          {isNegative ? t('agent.discrepancy.missing') : t('agent.discrepancy.extra')}:{' '}
+          <span className={cn("font-bold", isNegative ? "text-red-700 dark:text-red-400" : "text-green-700 dark:text-green-400")}>
+            {formatCurrency(Math.abs(delta))}
+          </span>
         </span>
         <Link href={`/accounts?account=${encodeURIComponent(data.account)}`}>
           <Button size="sm" variant="outline" className="h-7 text-xs gap-1">
-            Reconcile now <ChevronRight className="w-3 h-3" />
+            {t('agent.discrepancy.reconcile')} <ChevronRight className="w-3 h-3" />
           </Button>
         </Link>
       </div>
@@ -261,18 +266,19 @@ function DiscrepancyCard({ data }: { data: DiscrepancyData }) {
 }
 
 function TransactionReviewCard({ uploadId }: { uploadId: string }) {
+  const { t } = useTranslation();
   return (
     <div className="mt-3 rounded-xl border border-blue-200 bg-blue-50 p-4 dark:bg-blue-950/20 dark:border-blue-800">
       <div className="flex items-center gap-2 mb-2">
         <CheckSquare className="w-5 h-5 text-blue-600" />
-        <span className="font-semibold text-blue-800 dark:text-blue-300">Transactions Staged for Review</span>
+        <span className="font-semibold text-blue-800 dark:text-blue-300">{t('agent.transactionReview.title')}</span>
       </div>
       <p className="text-sm text-blue-700 dark:text-blue-400 mb-3">
-        The transactions extracted from your document have been saved as pending. Review and confirm each one before they are added to your records.
+        {t('agent.transactionReview.subtitle')}
       </p>
       <Link href={`/upload/${uploadId}/review`}>
         <Button size="sm" className="gap-1 bg-blue-600 hover:bg-blue-700 text-white">
-          Review extracted transactions <ChevronRight className="w-3 h-3" />
+          {t('agent.transactionReview.button')} <ChevronRight className="w-3 h-3" />
         </Button>
       </Link>
     </div>
@@ -280,12 +286,13 @@ function TransactionReviewCard({ uploadId }: { uploadId: string }) {
 }
 
 function MiniChart({ data }: { data: Array<{ label: string; value: number }> }) {
+  const { t } = useTranslation();
   const { formatCurrency } = useRegion();
   if (!data || data.length === 0) return null;
   const max = Math.max(...data.map(d => d.value), 1);
   return (
     <div className="mt-4">
-      <div className="text-xs text-white/60 mb-2">Spending Breakdown</div>
+      <div className="text-xs text-white/60 mb-2">{t('agent.spendingBreakdown')}</div>
       <div className="space-y-1.5">
         {data.slice(0, 4).map((item, i) => (
           <div key={i} className="flex items-center gap-2">
@@ -305,6 +312,7 @@ function MiniChart({ data }: { data: Array<{ label: string; value: number }> }) 
 }
 
 function ShareCardModal({ insight, onClose }: { insight: InsightData; onClose: () => void }) {
+  const { t } = useTranslation();
   const cardRef = useRef<HTMLDivElement>(null);
   const [copying, setCopying] = useState(false);
 
@@ -337,7 +345,7 @@ function ShareCardModal({ insight, onClose }: { insight: InsightData; onClose: (
     <Dialog open onOpenChange={onClose}>
       <DialogContent className="max-w-sm">
         <DialogHeader>
-          <DialogTitle>Share your insight</DialogTitle>
+          <DialogTitle>{t('agent.shareModal.title')}</DialogTitle>
         </DialogHeader>
         <div
           ref={cardRef}
@@ -375,10 +383,10 @@ function ShareCardModal({ insight, onClose }: { insight: InsightData; onClose: (
 
         <div className="flex gap-2 mt-2">
           <Button variant="outline" className="flex-1 gap-2" onClick={handleDownload}>
-            <Download className="w-4 h-4" /> Download
+            <Download className="w-4 h-4" /> {t('agent.shareModal.download')}
           </Button>
           <Button variant="outline" className="flex-1 gap-2" onClick={handleCopy} disabled={copying}>
-            <Copy className="w-4 h-4" /> {copying ? "Copying..." : "Copy"}
+            <Copy className="w-4 h-4" /> {copying ? t('agent.shareModal.copying') : t('agent.shareModal.copy')}
           </Button>
         </div>
       </DialogContent>
@@ -387,6 +395,7 @@ function ShareCardModal({ insight, onClose }: { insight: InsightData; onClose: (
 }
 
 function MessageBubble({ message, onShare }: { message: Message; onShare?: (id: string) => void }) {
+  const { t } = useTranslation();
   const isUser = message.role === "user";
   const discrepancy = !isUser ? parseDiscrepancy(message.content) : null;
   const insight = !isUser ? parseInsight(message.content) : null;
@@ -451,7 +460,7 @@ function MessageBubble({ message, onShare }: { message: Message; onShare?: (id: 
             </div>
             {onShare && !message.isStreaming && (
               <Button size="sm" variant="outline" className="gap-1 h-8 text-xs shrink-0" onClick={() => onShare(message.id)}>
-                <Share2 className="w-3 h-3" /> Share
+                <Share2 className="w-3 h-3" /> {t('agent.share')}
               </Button>
             )}
           </div>
@@ -462,7 +471,7 @@ function MessageBubble({ message, onShare }: { message: Message; onShare?: (id: 
             onClick={() => onShare(message.id)}
             className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
           >
-            <Share2 className="w-3 h-3" /> Share insight
+            <Share2 className="w-3 h-3" /> {t('agent.shareInsight')}
           </button>
         )}
       </div>
@@ -471,6 +480,7 @@ function MessageBubble({ message, onShare }: { message: Message; onShare?: (id: 
 }
 
 export default function AgentPage() {
+  const { t } = useTranslation();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -754,18 +764,25 @@ export default function AgentPage() {
   const activeConversation = conversations.find(c => c.id === activeConversationId);
   const anyUploading = pendingAttachments.some(a => a.uploading);
 
+  const suggestedPrompts = [
+    t('agent.emptyState.prompt1'),
+    t('agent.emptyState.prompt2'),
+    t('agent.emptyState.prompt3'),
+    t('agent.emptyState.prompt4'),
+  ];
+
   return (
     <div className="flex h-[calc(100dvh-64px)] md:h-screen -m-4 md:-m-8">
       <div className="hidden md:flex w-64 flex-col border-r bg-muted/20">
         <div className="p-4 border-b">
           <Button className="w-full gap-2" onClick={() => createNewConversation()}>
-            <Plus className="w-4 h-4" /> New Chat
+            <Plus className="w-4 h-4" /> {t('agent.newChat')}
           </Button>
         </div>
         <ScrollArea className="flex-1">
           <div className="p-2 space-y-1">
             {conversations.length === 0 ? (
-              <p className="text-xs text-muted-foreground text-center py-8">No conversations yet</p>
+              <p className="text-xs text-muted-foreground text-center py-8">{t('agent.noConversations')}</p>
             ) : conversations.map(convo => (
               <button
                 key={convo.id}
@@ -791,9 +808,9 @@ export default function AgentPage() {
             <Bot className="w-4 h-4 text-primary" />
           </div>
           <div>
-            <div className="font-semibold text-sm">DuitPlan AI</div>
+            <div className="font-semibold text-sm">{t('agent.title')}</div>
             <div className="text-xs text-muted-foreground">
-              {activeConversation?.title || "Your financial assistant"}
+              {activeConversation?.title || t('agent.subtitle')}
             </div>
           </div>
           <div className="ml-auto flex gap-2">
@@ -809,17 +826,12 @@ export default function AgentPage() {
               <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
                 <Bot className="w-8 h-8 text-primary" />
               </div>
-              <h2 className="text-xl font-bold mb-2">DuitPlan AI</h2>
+              <h2 className="text-xl font-bold mb-2">{t('agent.emptyState.title')}</h2>
               <p className="text-muted-foreground text-sm mb-6">
-                Your personal finance assistant. Upload receipts, check balances, ask questions, and get smart insights about your money.
+                {t('agent.emptyState.subtitle')}
               </p>
               <div className="grid grid-cols-1 gap-2 w-full">
-                {[
-                  "How much did I spend this month?",
-                  "Analyze this receipt",
-                  "What's my biggest spending category?",
-                  "Give me tips to save more money",
-                ].map((prompt) => (
+                {suggestedPrompts.map((prompt) => (
                   <button
                     key={prompt}
                     onClick={() => setInputText(prompt)}
@@ -836,7 +848,7 @@ export default function AgentPage() {
             </div>
           ) : messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center py-20">
-              <p className="text-muted-foreground text-sm">Start the conversation — ask a question or attach a receipt or bank statement screenshot.</p>
+              <p className="text-muted-foreground text-sm">{t('agent.emptyConversation')}</p>
             </div>
           ) : (
             <div className="space-y-6 pb-4">
@@ -913,7 +925,6 @@ export default function AgentPage() {
               className="h-10 w-10 shrink-0"
               onClick={() => { setFileError(""); fileInputRef.current?.click(); }}
               disabled={isSending}
-              title="Attach images or PDFs (max 10 MB each)"
             >
               <Paperclip className="w-4 h-4" />
             </Button>
@@ -921,7 +932,7 @@ export default function AgentPage() {
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder={activeConversationId ? "Ask DuitPlan AI anything..." : "Start a conversation..."}
+              placeholder={activeConversationId ? t('agent.inputPlaceholder') : t('agent.inputPlaceholderNew')}
               className="min-h-[44px] max-h-32 resize-none rounded-xl py-2.5"
               rows={1}
               disabled={isSending}
@@ -931,13 +942,12 @@ export default function AgentPage() {
               size="icon"
               onClick={handleSend}
               disabled={isSending || anyUploading || (!inputText.trim() && pendingAttachments.length === 0)}
-              title={anyUploading ? "Uploading files..." : "Send"}
             >
               {isSending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
             </Button>
           </div>
           <p className="text-xs text-muted-foreground mt-2 text-center">
-            {anyUploading ? "Uploading files to secure storage..." : "Attach receipts or bank screenshots for automatic analysis · Max 10 MB per file"}
+            {anyUploading ? t('agent.uploadHintUploading') : t('agent.uploadHint')}
           </p>
         </div>
       </div>

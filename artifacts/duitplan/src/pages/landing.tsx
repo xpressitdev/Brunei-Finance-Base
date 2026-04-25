@@ -1,8 +1,11 @@
 import { Link } from "wouter";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, ShieldCheck, Upload, CreditCard } from "lucide-react";
 
 export default function Landing() {
+  const { t } = useTranslation();
+
   return (
     <div className="min-h-screen bg-background flex flex-col font-sans">
       {/* Header */}
@@ -13,10 +16,10 @@ export default function Landing() {
         </div>
         <nav className="flex items-center gap-3">
           <Link href="/login">
-            <Button variant="ghost" className="hidden sm:inline-flex">Sign In</Button>
+            <Button variant="ghost" className="hidden sm:inline-flex">{t('landing.header.signIn')}</Button>
           </Link>
           <Link href="/register">
-            <Button>Get Started Free</Button>
+            <Button>{t('landing.header.getStarted')}</Button>
           </Link>
         </nav>
       </header>
@@ -25,26 +28,33 @@ export default function Landing() {
         {/* Hero */}
         <section className="px-6 py-20 md:py-32 flex flex-col items-center text-center max-w-4xl mx-auto">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-8">
-            🇧🇳 Built for Brunei salaried professionals
+            {t('landing.hero.badge')}
           </div>
           <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-foreground mb-6">
-            Understand your <span className="text-primary">gaji</span> clearly.
+            {(() => {
+              const headline = t('landing.hero.headline');
+              const parts = headline.split('gaji');
+              if (parts.length >= 2) {
+                return <>{parts[0]}<span className="text-primary">gaji</span>{parts.slice(1).join('gaji')}</>;
+              }
+              return headline;
+            })()}
           </h1>
           <p className="text-xl text-muted-foreground mb-4 max-w-2xl">
-            DuitPlan is a personal finance assistant designed for Brunei. Track your salary, manage your commitments, and stay on top of your loans — without the stress.
+            {t('landing.hero.subheadline')}
           </p>
           <p className="text-sm text-muted-foreground mb-10">
-            Works with BIBD and Baiduri bank statements. Currency in BND.
+            {t('landing.hero.tagline')}
           </p>
           <div className="flex flex-col sm:flex-row gap-4">
             <Link href="/register">
               <Button size="lg" className="w-full sm:w-auto h-14 px-8 text-base rounded-xl">
-                Start Planning Free <ArrowRight className="ml-2 w-5 h-5" />
+                {t('landing.hero.ctaStart')} <ArrowRight className="ml-2 w-5 h-5" />
               </Button>
             </Link>
             <Link href="/login">
               <Button size="lg" variant="outline" className="w-full sm:w-auto h-14 px-8 text-base rounded-xl bg-white">
-                Sign In
+                {t('landing.hero.ctaSignIn')}
               </Button>
             </Link>
           </div>
@@ -54,35 +64,35 @@ export default function Landing() {
         <section className="px-6 py-20 bg-muted/40 border-t">
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-14">
-              <h2 className="text-3xl font-bold mb-3">Everything a Brunei salary earner needs</h2>
-              <p className="text-muted-foreground max-w-xl mx-auto">Simple, practical, and built around how money actually works in Brunei.</p>
+              <h2 className="text-3xl font-bold mb-3">{t('landing.features.title')}</h2>
+              <p className="text-muted-foreground max-w-xl mx-auto">{t('landing.features.subtitle')}</p>
             </div>
             <div className="grid md:grid-cols-3 gap-6">
               <div className="bg-white p-8 rounded-2xl border shadow-sm flex flex-col items-start">
                 <div className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-5">
                   <ShieldCheck className="w-6 h-6" />
                 </div>
-                <h3 className="text-lg font-semibold mb-2">Guided setup in minutes</h3>
+                <h3 className="text-lg font-semibold mb-2">{t('landing.features.card1.title')}</h3>
                 <p className="text-muted-foreground text-sm leading-relaxed">
-                  Our onboarding walks you through your salary, bills, and loans using Brunei-relevant presets. No blank forms — just select and confirm.
+                  {t('landing.features.card1.desc')}
                 </p>
               </div>
               <div className="bg-white p-8 rounded-2xl border shadow-sm flex flex-col items-start">
                 <div className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-5">
                   <Upload className="w-6 h-6" />
                 </div>
-                <h3 className="text-lg font-semibold mb-2">Import from BIBD & Baiduri</h3>
+                <h3 className="text-lg font-semibold mb-2">{t('landing.features.card2.title')}</h3>
                 <p className="text-muted-foreground text-sm leading-relaxed">
-                  Upload a PDF statement or share a screenshot from your mobile banking app. We extract the transactions and categorise them automatically.
+                  {t('landing.features.card2.desc')}
                 </p>
               </div>
               <div className="bg-white p-8 rounded-2xl border shadow-sm flex flex-col items-start">
                 <div className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-5">
                   <CreditCard className="w-6 h-6" />
                 </div>
-                <h3 className="text-lg font-semibold mb-2">Loan & debt planner</h3>
+                <h3 className="text-lg font-semibold mb-2">{t('landing.features.card3.title')}</h3>
                 <p className="text-muted-foreground text-sm leading-relaxed">
-                  Track your car loan, house financing, or personal loans. See your total monthly obligations and simulate paying off debt faster.
+                  {t('landing.features.card3.desc')}
                 </p>
               </div>
             </div>
@@ -93,14 +103,14 @@ export default function Landing() {
         <section className="px-6 py-20 border-t">
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-14">
-              <h2 className="text-3xl font-bold mb-3">How it works</h2>
+              <h2 className="text-3xl font-bold mb-3">{t('landing.steps.title')}</h2>
             </div>
             <div className="grid sm:grid-cols-3 gap-8">
-              {[
-                { num: "1", title: "Set up your salary", desc: "Enter your monthly take-home pay and payday. We'll calculate your spending room from there." },
-                { num: "2", title: "Add your commitments", desc: "Select your car loan, rent, utilities, and other fixed bills from our Brunei-relevant preset list." },
-                { num: "3", title: "Import or add transactions", desc: "Upload your BIBD/Baiduri statement or add transactions manually. Review and confirm before saving." },
-              ].map(step => (
+              {([
+                { num: "1", title: t('landing.steps.step1.title'), desc: t('landing.steps.step1.desc') },
+                { num: "2", title: t('landing.steps.step2.title'), desc: t('landing.steps.step2.desc') },
+                { num: "3", title: t('landing.steps.step3.title'), desc: t('landing.steps.step3.desc') },
+              ] as const).map(step => (
                 <div key={step.num} className="text-center">
                   <div className="w-12 h-12 rounded-full bg-primary text-white font-bold text-lg flex items-center justify-center mx-auto mb-4">
                     {step.num}
@@ -116,13 +126,13 @@ export default function Landing() {
         {/* CTA banner */}
         <section className="px-6 py-16 bg-primary text-white">
           <div className="max-w-2xl mx-auto text-center">
-            <h2 className="text-3xl font-bold mb-4">Start understanding your money today.</h2>
+            <h2 className="text-3xl font-bold mb-4">{t('landing.cta.title')}</h2>
             <p className="text-primary-foreground/80 mb-8">
-              Free to use. No credit card required. Just your salary and a few minutes.
+              {t('landing.cta.subtitle')}
             </p>
             <Link href="/register">
               <Button size="lg" variant="secondary" className="px-8 h-12 text-base rounded-xl">
-                Create a Free Account <ArrowRight className="ml-2 w-5 h-5" />
+                {t('landing.cta.button')} <ArrowRight className="ml-2 w-5 h-5" />
               </Button>
             </Link>
           </div>
@@ -135,7 +145,9 @@ export default function Landing() {
             <div className="w-6 h-6 rounded bg-primary flex items-center justify-center text-white font-bold text-xs">D</div>
             <span className="font-semibold text-sm">DuitPlan</span>
           </div>
-          <p className="text-sm text-muted-foreground">Built for Brunei professionals. Currency: BND. &copy; {new Date().getFullYear()} DuitPlan.</p>
+          <p className="text-sm text-muted-foreground">
+            {t('landing.footer.tagline', { year: new Date().getFullYear() })}
+          </p>
         </div>
       </footer>
     </div>

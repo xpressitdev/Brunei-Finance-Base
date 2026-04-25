@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
+import { useTranslation } from "react-i18next";
 import {
   useCompleteOnboarding,
   useUpdateProfile,
@@ -17,48 +18,48 @@ import { useRegion } from "@/hooks/useRegion";
 
 const TOTAL_STEPS = 6;
 
-// ── Presets ───────────────────────────────────────────────────────────────────
+// ── Preset definitions (id + icon only; labels come from i18n) ───────────────
 
 const COMMITMENT_PRESETS = [
-  { id: "car_loan", label: "Car Loan", icon: "🚗" },
-  { id: "personal_loan", label: "Personal Loan", icon: "💰" },
-  { id: "house_financing", label: "House Financing", icon: "🏠" },
-  { id: "rent", label: "Rent", icon: "🏢" },
-  { id: "utilities", label: "Utilities", icon: "💡" },
-  { id: "internet_phone", label: "Internet / Phone", icon: "📱" },
-  { id: "insurance_takaful", label: "Insurance / Takaful", icon: "🛡️" },
-  { id: "family_support", label: "Family Support", icon: "👨‍👩‍👧" },
-  { id: "school_fees", label: "School Fees", icon: "📚" },
-  { id: "credit_card", label: "Credit Card", icon: "💳" },
-  { id: "childcare", label: "Childcare", icon: "👶" },
-  { id: "subscription", label: "Subscriptions", icon: "📺" },
+  { id: "car_loan", icon: "🚗" },
+  { id: "personal_loan", icon: "💰" },
+  { id: "house_financing", icon: "🏠" },
+  { id: "rent", icon: "🏢" },
+  { id: "utilities", icon: "💡" },
+  { id: "internet_phone", icon: "📱" },
+  { id: "insurance_takaful", icon: "🛡️" },
+  { id: "family_support", icon: "👨‍👩‍👧" },
+  { id: "school_fees", icon: "📚" },
+  { id: "credit_card", icon: "💳" },
+  { id: "childcare", icon: "👶" },
+  { id: "subscription", icon: "📺" },
 ];
 
 const EXPENSE_PRESETS = [
-  { id: "groceries", label: "Groceries", icon: "🛒" },
-  { id: "eating_out", label: "Eating Out", icon: "🍜" },
-  { id: "fuel", label: "Fuel", icon: "⛽" },
-  { id: "transport", label: "Transport", icon: "🚌" },
-  { id: "shopping", label: "Shopping", icon: "🛍️" },
-  { id: "entertainment", label: "Entertainment", icon: "🎬" },
-  { id: "health", label: "Health", icon: "💊" },
-  { id: "education", label: "Education", icon: "📖" },
-  { id: "savings", label: "Savings", icon: "🏦" },
-  { id: "emergency", label: "Emergency Fund", icon: "🆘" },
+  { id: "groceries", icon: "🛒" },
+  { id: "eating_out", icon: "🍜" },
+  { id: "fuel", icon: "⛽" },
+  { id: "transport", icon: "🚌" },
+  { id: "shopping", icon: "🛍️" },
+  { id: "entertainment", icon: "🎬" },
+  { id: "health", icon: "💊" },
+  { id: "education", icon: "📖" },
+  { id: "savings", icon: "🏦" },
+  { id: "emergency", icon: "🆘" },
 ];
 
 const DEBT_PRESETS = [
-  { id: "car_loan", label: "Car Loan", icon: "🚗", debtType: "car_loan" },
-  { id: "personal_financing", label: "Personal Financing", icon: "💰", debtType: "personal_loan" },
-  { id: "house_financing", label: "House Financing", icon: "🏠", debtType: "mortgage" },
-  { id: "credit_card", label: "Credit Card", icon: "💳", debtType: "credit_card" },
-  { id: "other_debt", label: "Other Debt", icon: "📋", debtType: "other" },
+  { id: "car_loan", icon: "🚗", debtType: "car_loan" },
+  { id: "personal_financing", icon: "💰", debtType: "personal_loan" },
+  { id: "house_financing", icon: "🏠", debtType: "mortgage" },
+  { id: "credit_card", icon: "💳", debtType: "credit_card" },
+  { id: "other_debt", icon: "📋", debtType: "other" },
 ];
 
-const GOAL_OPTIONS = [
-  { id: "savings", label: "Build savings every month", desc: "I want to set aside money regularly", icon: "🏦" },
-  { id: "debt", label: "Pay off debt faster", desc: "I want to clear my loans sooner", icon: "📉" },
-  { id: "spending", label: "Control my spending", desc: "I want to stay within budget", icon: "🎯" },
+const GOAL_IDS = [
+  { id: "savings", icon: "🏦" },
+  { id: "debt", icon: "📉" },
+  { id: "spending", icon: "🎯" },
 ];
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -70,6 +71,7 @@ type SelectedDebt = { id: string; label: string; debtType: string; monthlyPaymen
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function Onboarding() {
+  const { t } = useTranslation();
   const [step, setStep] = useState(1);
   const [, setLocation] = useLocation();
   const { region, decimalStep } = useRegion();
@@ -99,7 +101,8 @@ export default function Onboarding() {
     if (exists) {
       setSelectedCommitments(selectedCommitments.filter(c => c.id !== preset.id));
     } else {
-      setSelectedCommitments([...selectedCommitments, { id: preset.id, label: preset.label, amount: "" }]);
+      const label = t(`onboarding.commitmentPresets.${preset.id}`);
+      setSelectedCommitments([...selectedCommitments, { id: preset.id, label, amount: "" }]);
     }
   };
 
@@ -120,7 +123,8 @@ export default function Onboarding() {
     if (exists) {
       setSelectedExpenses(selectedExpenses.filter(e => e.id !== preset.id));
     } else {
-      setSelectedExpenses([...selectedExpenses, { id: preset.id, label: preset.label, amount: "" }]);
+      const label = t(`onboarding.expensePresets.${preset.id}`);
+      setSelectedExpenses([...selectedExpenses, { id: preset.id, label, amount: "" }]);
     }
   };
 
@@ -133,7 +137,8 @@ export default function Onboarding() {
     if (exists) {
       setSelectedDebts(selectedDebts.filter(d => d.id !== preset.id));
     } else {
-      setSelectedDebts([...selectedDebts, { id: preset.id, label: preset.label, debtType: preset.debtType, monthlyPayment: "", outstandingBalance: "" }]);
+      const label = t(`onboarding.debtPresets.${preset.id}`);
+      setSelectedDebts([...selectedDebts, { id: preset.id, label, debtType: preset.debtType, monthlyPayment: "", outstandingBalance: "" }]);
     }
   };
 
@@ -202,7 +207,9 @@ export default function Onboarding() {
               />
             ))}
           </div>
-          <span className="text-xs font-medium text-muted-foreground">Step {step} of {TOTAL_STEPS}</span>
+          <span className="text-xs font-medium text-muted-foreground">
+            {t('onboarding.stepOf', { step, total: TOTAL_STEPS })}
+          </span>
         </div>
 
         <Card className="border-0 shadow-lg overflow-hidden bg-white">
@@ -218,30 +225,32 @@ export default function Onboarding() {
                   <span className="text-white font-bold text-3xl">D</span>
                 </div>
                 <h1 className="text-3xl font-bold mb-3">
-                  {firstName ? `Selamat datang, ${firstName}!` : "Selamat datang!"}
+                  {firstName
+                    ? t('onboarding.welcome.title', { name: firstName })
+                    : t('onboarding.welcome.titleNoName')}
                 </h1>
                 <p className="text-lg text-muted-foreground mb-2 max-w-md mx-auto">
-                  Welcome to DuitPlan — your Brunei personal finance assistant.
+                  {t('onboarding.welcome.subtitle')}
                 </p>
                 <p className="text-sm text-muted-foreground mb-10 max-w-md mx-auto">
-                  We'll guide you through a quick setup so your dashboard feels right from day one. Takes about 2 minutes.
+                  {t('onboarding.welcome.hint')}
                 </p>
                 <div className="grid grid-cols-3 gap-4 text-center text-sm text-muted-foreground mb-10">
                   <div className="p-3 rounded-xl bg-muted/40">
                     <div className="text-xl mb-1">💵</div>
-                    <div>Your salary & payday</div>
+                    <div>{t('onboarding.welcome.pillar1')}</div>
                   </div>
                   <div className="p-3 rounded-xl bg-muted/40">
                     <div className="text-xl mb-1">📋</div>
-                    <div>Monthly bills & loans</div>
+                    <div>{t('onboarding.welcome.pillar2')}</div>
                   </div>
                   <div className="p-3 rounded-xl bg-muted/40">
                     <div className="text-xl mb-1">🎯</div>
-                    <div>Your money goals</div>
+                    <div>{t('onboarding.welcome.pillar3')}</div>
                   </div>
                 </div>
                 <Button size="lg" className="w-full sm:w-auto sm:mx-auto px-10 h-12" onClick={handleNext}>
-                  Let's Begin <ArrowRight className="ml-2 w-4 h-4" />
+                  {t('onboarding.welcome.begin')} <ArrowRight className="ml-2 w-4 h-4" />
                 </Button>
               </div>
             )}
@@ -250,12 +259,12 @@ export default function Onboarding() {
             {step === 2 && (
               <div className="flex-1 flex flex-col">
                 <div className="mb-8">
-                  <h2 className="text-2xl font-bold mb-2">Your salary & payday</h2>
-                  <p className="text-muted-foreground">This helps us calculate your monthly budget accurately.</p>
+                  <h2 className="text-2xl font-bold mb-2">{t('onboarding.income.title')}</h2>
+                  <p className="text-muted-foreground">{t('onboarding.income.subtitle')}</p>
                 </div>
                 <div className="space-y-6 max-w-sm">
                   <div className="space-y-2">
-                    <Label htmlFor="income" className="text-sm font-medium">Monthly Salary</Label>
+                    <Label htmlFor="income" className="text-sm font-medium">{t('onboarding.income.salaryLabel')}</Label>
                     <div className="relative">
                       <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-muted-foreground">{region.currency}</span>
                       <Input
@@ -269,11 +278,11 @@ export default function Onboarding() {
                         onChange={(e) => setMonthlyIncome(e.target.value)}
                       />
                     </div>
-                    <p className="text-xs text-muted-foreground">Enter your take-home (nett) salary in Brunei Dollars.</p>
+                    <p className="text-xs text-muted-foreground">{t('onboarding.income.salaryHint')}</p>
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-sm font-medium">Payday — which day of the month?</Label>
+                    <Label className="text-sm font-medium">{t('onboarding.income.paydayLabel')}</Label>
                     <div className="grid grid-cols-4 gap-2">
                       {[1, 15, 25, 28].map(day => (
                         <button
@@ -292,7 +301,7 @@ export default function Onboarding() {
                       ))}
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-muted-foreground">Other day:</span>
+                      <span className="text-xs text-muted-foreground">{t('onboarding.income.otherDay')}</span>
                       <Input
                         type="number"
                         min="1"
@@ -306,9 +315,9 @@ export default function Onboarding() {
                   </div>
                 </div>
                 <div className="mt-auto pt-8 flex justify-between">
-                  <Button variant="outline" onClick={handleBack}><ArrowLeft className="mr-2 w-4 h-4" /> Back</Button>
+                  <Button variant="outline" onClick={handleBack}><ArrowLeft className="mr-2 w-4 h-4" /> {t('onboarding.back')}</Button>
                   <Button onClick={handleNext} disabled={!monthlyIncome}>
-                    Continue <ArrowRight className="ml-2 w-4 h-4" />
+                    {t('onboarding.continue')} <ArrowRight className="ml-2 w-4 h-4" />
                   </Button>
                 </div>
               </div>
@@ -318,13 +327,14 @@ export default function Onboarding() {
             {step === 3 && (
               <div className="flex-1 flex flex-col">
                 <div className="mb-6">
-                  <h2 className="text-2xl font-bold mb-2">Monthly fixed commitments</h2>
-                  <p className="text-muted-foreground">Select the ones that apply to you, then enter the monthly amount.</p>
+                  <h2 className="text-2xl font-bold mb-2">{t('onboarding.commitments.title')}</h2>
+                  <p className="text-muted-foreground">{t('onboarding.commitments.subtitle')}</p>
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
                   {COMMITMENT_PRESETS.map(preset => {
                     const selected = selectedCommitments.find(c => c.id === preset.id);
+                    const label = t(`onboarding.commitmentPresets.${preset.id}`);
                     return (
                       <button
                         key={preset.id}
@@ -338,7 +348,7 @@ export default function Onboarding() {
                         )}
                       >
                         <div className="text-xl mb-1">{preset.icon}</div>
-                        <div className={cn("font-medium text-xs", selected ? "text-primary" : "text-foreground")}>{preset.label}</div>
+                        <div className={cn("font-medium text-xs", selected ? "text-primary" : "text-foreground")}>{label}</div>
                         {selected && <Check className="w-3 h-3 text-primary mt-1" />}
                       </button>
                     );
@@ -347,7 +357,9 @@ export default function Onboarding() {
 
                 {selectedCommitments.length > 0 && (
                   <div className="border rounded-xl bg-muted/20 p-4 mb-4 space-y-3">
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Enter monthly amounts ({region.currency})</p>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                      {t('onboarding.commitments.amountHeader', { currency: region.currency })}
+                    </p>
                     {selectedCommitments.map(c => (
                       <div key={c.id} className="flex items-center gap-3">
                         <span className="text-sm flex-1 font-medium">{c.label}</span>
@@ -373,25 +385,30 @@ export default function Onboarding() {
                 {showCustomCommitment ? (
                   <div className="flex gap-2 items-end mb-2">
                     <div className="flex-1 space-y-1">
-                      <Label className="text-xs">Label</Label>
-                      <Input placeholder="e.g. Gym membership" value={customCommitment.label} onChange={e => setCustomCommitment({ ...customCommitment, label: e.target.value })} className="h-9" />
+                      <Label className="text-xs">{t('onboarding.commitments.customLabel')}</Label>
+                      <Input
+                        placeholder={t('onboarding.commitments.customPlaceholder')}
+                        value={customCommitment.label}
+                        onChange={e => setCustomCommitment({ ...customCommitment, label: e.target.value })}
+                        className="h-9"
+                      />
                     </div>
                     <div className="w-32 space-y-1">
-                      <Label className="text-xs">{region.currency}/month</Label>
+                      <Label className="text-xs">{t('onboarding.commitments.customAmount', { currency: region.currency })}</Label>
                       <Input type="number" step={decimalStep} placeholder={decimalStep === "1" ? "0" : "0.00"} value={customCommitment.amount} onChange={e => setCustomCommitment({ ...customCommitment, amount: e.target.value })} className="h-9" />
                     </div>
-                    <Button size="sm" onClick={addCustomCommitment} disabled={!customCommitment.label}>Add</Button>
-                    <Button size="sm" variant="ghost" onClick={() => setShowCustomCommitment(false)}>Cancel</Button>
+                    <Button size="sm" onClick={addCustomCommitment} disabled={!customCommitment.label}>{t('onboarding.commitments.add')}</Button>
+                    <Button size="sm" variant="ghost" onClick={() => setShowCustomCommitment(false)}>{t('onboarding.commitments.cancel')}</Button>
                   </div>
                 ) : (
                   <button onClick={() => setShowCustomCommitment(true)} className="flex items-center gap-2 text-sm text-primary hover:underline mb-2">
-                    <Plus className="w-4 h-4" /> Add a custom commitment
+                    <Plus className="w-4 h-4" /> {t('onboarding.commitments.addCustom')}
                   </button>
                 )}
 
                 <div className="mt-auto pt-6 flex justify-between">
-                  <Button variant="outline" onClick={handleBack}><ArrowLeft className="mr-2 w-4 h-4" /> Back</Button>
-                  <Button onClick={handleNext}>Continue <ArrowRight className="ml-2 w-4 h-4" /></Button>
+                  <Button variant="outline" onClick={handleBack}><ArrowLeft className="mr-2 w-4 h-4" /> {t('onboarding.back')}</Button>
+                  <Button onClick={handleNext}>{t('onboarding.continue')} <ArrowRight className="ml-2 w-4 h-4" /></Button>
                 </div>
               </div>
             )}
@@ -400,13 +417,14 @@ export default function Onboarding() {
             {step === 4 && (
               <div className="flex-1 flex flex-col">
                 <div className="mb-6">
-                  <h2 className="text-2xl font-bold mb-2">Typical monthly spending</h2>
-                  <p className="text-muted-foreground">Estimate how much you usually spend in each category. You can refine these after uploading your bank statement.</p>
+                  <h2 className="text-2xl font-bold mb-2">{t('onboarding.expenses.title')}</h2>
+                  <p className="text-muted-foreground">{t('onboarding.expenses.subtitle')}</p>
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
                   {EXPENSE_PRESETS.map(preset => {
                     const selected = selectedExpenses.find(e => e.id === preset.id);
+                    const label = t(`onboarding.expensePresets.${preset.id}`);
                     return (
                       <button
                         key={preset.id}
@@ -420,7 +438,7 @@ export default function Onboarding() {
                         )}
                       >
                         <div className="text-xl mb-1">{preset.icon}</div>
-                        <div className={cn("font-medium text-xs", selected ? "text-primary" : "text-foreground")}>{preset.label}</div>
+                        <div className={cn("font-medium text-xs", selected ? "text-primary" : "text-foreground")}>{label}</div>
                         {selected && <Check className="w-3 h-3 text-primary mt-1" />}
                       </button>
                     );
@@ -429,7 +447,9 @@ export default function Onboarding() {
 
                 {selectedExpenses.length > 0 && (
                   <div className="border rounded-xl bg-muted/20 p-4 mb-4 space-y-3">
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Estimated monthly amount ({region.currency})</p>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                      {t('onboarding.expenses.amountHeader', { currency: region.currency })}
+                    </p>
                     {selectedExpenses.map(e => (
                       <div key={e.id} className="flex items-center gap-3">
                         <span className="text-sm flex-1 font-medium">{e.label}</span>
@@ -453,12 +473,12 @@ export default function Onboarding() {
                 )}
 
                 <p className="text-xs text-muted-foreground">
-                  💡 Not sure of the exact amounts? Rough estimates are fine — you can update them after importing your bank statement.
+                  {t('onboarding.expenses.roughEstimateHint')}
                 </p>
 
                 <div className="mt-auto pt-6 flex justify-between">
-                  <Button variant="outline" onClick={handleBack}><ArrowLeft className="mr-2 w-4 h-4" /> Back</Button>
-                  <Button onClick={handleNext}>Continue <ArrowRight className="ml-2 w-4 h-4" /></Button>
+                  <Button variant="outline" onClick={handleBack}><ArrowLeft className="mr-2 w-4 h-4" /> {t('onboarding.back')}</Button>
+                  <Button onClick={handleNext}>{t('onboarding.continue')} <ArrowRight className="ml-2 w-4 h-4" /></Button>
                 </div>
               </div>
             )}
@@ -467,13 +487,14 @@ export default function Onboarding() {
             {step === 5 && (
               <div className="flex-1 flex flex-col">
                 <div className="mb-6">
-                  <h2 className="text-2xl font-bold mb-2">Loans & financing</h2>
-                  <p className="text-muted-foreground">Select any active loans or financing. We'll track your payoff progress.</p>
+                  <h2 className="text-2xl font-bold mb-2">{t('onboarding.loans.title')}</h2>
+                  <p className="text-muted-foreground">{t('onboarding.loans.subtitle')}</p>
                 </div>
 
                 <div className="flex flex-wrap gap-2 mb-5">
                   {DEBT_PRESETS.map(preset => {
                     const selected = selectedDebts.find(d => d.id === preset.id);
+                    const label = t(`onboarding.debtPresets.${preset.id}`);
                     return (
                       <button
                         key={preset.id}
@@ -487,7 +508,7 @@ export default function Onboarding() {
                         )}
                       >
                         <span>{preset.icon}</span>
-                        {preset.label}
+                        {label}
                         {selected && <Check className="w-3 h-3" />}
                       </button>
                     );
@@ -506,7 +527,9 @@ export default function Onboarding() {
                         </div>
                         <div className="grid grid-cols-2 gap-3">
                           <div className="space-y-1">
-                            <Label className="text-xs text-muted-foreground">Monthly Payment ({region.currency})</Label>
+                            <Label className="text-xs text-muted-foreground">
+                              {t('onboarding.loans.monthlyPaymentLabel', { currency: region.currency })}
+                            </Label>
                             <Input
                               type="number"
                               step={decimalStep}
@@ -517,7 +540,9 @@ export default function Onboarding() {
                             />
                           </div>
                           <div className="space-y-1">
-                            <Label className="text-xs text-muted-foreground">Outstanding Balance (optional)</Label>
+                            <Label className="text-xs text-muted-foreground">
+                              {t('onboarding.loans.outstandingLabel')}
+                            </Label>
                             <Input
                               type="number"
                               step={decimalStep}
@@ -535,13 +560,13 @@ export default function Onboarding() {
 
                 {selectedDebts.length === 0 && (
                   <div className="text-sm text-muted-foreground bg-muted/30 rounded-xl p-4 mb-4">
-                    No active loans? That's great! You can skip this step.
+                    {t('onboarding.loans.noLoans')}
                   </div>
                 )}
 
                 <div className="mt-auto pt-6 flex justify-between">
-                  <Button variant="outline" onClick={handleBack}><ArrowLeft className="mr-2 w-4 h-4" /> Back</Button>
-                  <Button onClick={handleNext}>Continue <ArrowRight className="ml-2 w-4 h-4" /></Button>
+                  <Button variant="outline" onClick={handleBack}><ArrowLeft className="mr-2 w-4 h-4" /> {t('onboarding.back')}</Button>
+                  <Button onClick={handleNext}>{t('onboarding.continue')} <ArrowRight className="ml-2 w-4 h-4" /></Button>
                 </div>
               </div>
             )}
@@ -550,12 +575,12 @@ export default function Onboarding() {
             {step === 6 && (
               <div className="flex-1 flex flex-col">
                 <div className="mb-6">
-                  <h2 className="text-2xl font-bold mb-2">What matters most to you?</h2>
-                  <p className="text-muted-foreground">Choose what you'd like DuitPlan to help you with. You can pick more than one.</p>
+                  <h2 className="text-2xl font-bold mb-2">{t('onboarding.goals.title')}</h2>
+                  <p className="text-muted-foreground">{t('onboarding.goals.subtitle')}</p>
                 </div>
 
                 <div className="space-y-3 mb-8">
-                  {GOAL_OPTIONS.map(goal => {
+                  {GOAL_IDS.map(goal => {
                     const selected = selectedGoals.includes(goal.id);
                     return (
                       <button
@@ -569,8 +594,12 @@ export default function Onboarding() {
                       >
                         <span className="text-2xl">{goal.icon}</span>
                         <div className="flex-1">
-                          <div className={cn("font-semibold text-sm", selected ? "text-primary" : "text-foreground")}>{goal.label}</div>
-                          <div className="text-xs text-muted-foreground mt-0.5">{goal.desc}</div>
+                          <div className={cn("font-semibold text-sm", selected ? "text-primary" : "text-foreground")}>
+                            {t(`onboarding.goalOptions.${goal.id}.label`)}
+                          </div>
+                          <div className="text-xs text-muted-foreground mt-0.5">
+                            {t(`onboarding.goalOptions.${goal.id}.desc`)}
+                          </div>
                         </div>
                         {selected && <Check className="w-5 h-5 text-primary shrink-0 mt-0.5" />}
                       </button>
@@ -579,20 +608,20 @@ export default function Onboarding() {
                 </div>
 
                 <div className="rounded-xl bg-primary/5 border border-primary/20 p-4 mb-6">
-                  <p className="text-sm font-medium text-primary mb-1">🎉 You're almost done!</p>
+                  <p className="text-sm font-medium text-primary mb-1">{t('onboarding.goals.almostDone')}</p>
                   <p className="text-xs text-muted-foreground">
-                    Your financial foundation is set. Next, try uploading your BIBD or Baiduri bank statement screenshot to get real transaction data instantly.
+                    {t('onboarding.goals.almostDoneHint')}
                   </p>
                 </div>
 
                 <div className="mt-auto flex justify-between gap-3">
-                  <Button variant="outline" onClick={handleBack}><ArrowLeft className="mr-2 w-4 h-4" /> Back</Button>
+                  <Button variant="outline" onClick={handleBack}><ArrowLeft className="mr-2 w-4 h-4" /> {t('onboarding.back')}</Button>
                   <Button
                     onClick={handleComplete}
                     disabled={completeOnboardingMutation.isPending}
                     className="flex-1 sm:flex-none"
                   >
-                    {completeOnboardingMutation.isPending ? "Saving..." : "Go to Dashboard →"}
+                    {completeOnboardingMutation.isPending ? t('onboarding.goals.saving') : t('onboarding.goals.finish')}
                   </Button>
                 </div>
               </div>

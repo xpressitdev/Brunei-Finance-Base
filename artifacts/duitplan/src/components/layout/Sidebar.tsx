@@ -76,7 +76,7 @@ export function Sidebar() {
             </div>
           </div>
           <Button variant="outline" className="w-full justify-start" onClick={() => logout()}>
-            Sign out
+            {t('auth.signOut')}
           </Button>
         </div>
       </div>

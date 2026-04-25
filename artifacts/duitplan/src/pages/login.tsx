@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useLogin } from "@workspace/api-client-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useAuth } from "@/lib/auth";
 
 export default function Login() {
+  const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -18,12 +19,10 @@ export default function Login() {
     e.preventDefault();
     setError("");
     try {
-      const response = await loginMutation.mutateAsync({ data: { email, password } });
-      // The auth context will handle redirecting after refetch, but we can force it here
-      // actually, just reload the page to let auth context pick it up, or call a re-check
+      await loginMutation.mutateAsync({ data: { email, password } });
       window.location.href = "/dashboard";
     } catch (err: any) {
-      setError(err?.error || "Invalid email or password");
+      setError(err?.error || t('auth.errors.invalidCredentials'));
     }
   };
 
@@ -35,8 +34,8 @@ export default function Login() {
       </Link>
       
       <div className="w-full max-w-md bg-white rounded-2xl shadow-sm border p-8">
-        <h1 className="text-2xl font-semibold mb-2 text-center">Welcome back</h1>
-        <p className="text-muted-foreground mb-8 text-center">Enter your details to sign in to your account</p>
+        <h1 className="text-2xl font-semibold mb-2 text-center">{t('auth.login.title')}</h1>
+        <p className="text-muted-foreground mb-8 text-center">{t('auth.login.subtitle')}</p>
         
         {error && (
           <Alert variant="destructive" className="mb-6">
@@ -46,7 +45,7 @@ export default function Login() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">{t('auth.login.emailLabel')}</Label>
             <Input 
               id="email" 
               type="email" 
@@ -58,7 +57,7 @@ export default function Login() {
           </div>
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{t('auth.login.passwordLabel')}</Label>
             </div>
             <Input 
               id="password" 
@@ -73,12 +72,15 @@ export default function Login() {
             className="w-full h-11 text-base mt-2" 
             disabled={loginMutation.isPending}
           >
-            {loginMutation.isPending ? "Signing in..." : "Sign In"}
+            {loginMutation.isPending ? t('auth.login.signingIn') : t('auth.login.submit')}
           </Button>
         </form>
 
         <div className="mt-8 text-center text-sm text-muted-foreground">
-          Don't have an account? <Link href="/register"><span className="text-primary font-medium hover:underline cursor-pointer">Sign up</span></Link>
+          {t('auth.login.noAccount')}{' '}
+          <Link href="/register">
+            <span className="text-primary font-medium hover:underline cursor-pointer">{t('auth.login.signUp')}</span>
+          </Link>
         </div>
       </div>
     </div>

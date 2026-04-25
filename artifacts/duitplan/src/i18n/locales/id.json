@@ -120,7 +120,7 @@
       "amount": "Jumlah ({{currency}})",
       "descriptionLabel": "Deskripsi",
       "descriptionPlaceholder": "Anda membelanjakan apa?",
-      "merchant": "Merchant (opsional)",
+      "merchant": "Pedagang (opsional)",
       "merchantPlaceholder": "Nama toko atau vendor",
       "account": "Rekening",
       "noAccount": "Tidak ada rekening",
@@ -776,5 +776,232 @@
       "fewBadges": "Anda membuat kemajuan yang baik. Tinggal beberapa lencana lagi!",
       "manyBadges": "Kerja bagus. Anda sedang membangun kebiasaan keuangan yang kuat."
     }
+  },
+  "auth": {
+    "signOut": "Keluar",
+    "login": {
+      "title": "Selamat kembali",
+      "subtitle": "Masukkan detail Anda untuk masuk ke akun Anda",
+      "emailLabel": "Email",
+      "passwordLabel": "Kata Sandi",
+      "signingIn": "Masuk...",
+      "submit": "Masuk",
+      "noAccount": "Belum punya akun?",
+      "signUp": "Daftar"
+    },
+    "register": {
+      "title": "Buat akun",
+      "subtitle": "Mulailah perjalanan Anda menuju keuangan yang lebih jelas",
+      "fullNameLabel": "Nama Lengkap",
+      "fullNamePlaceholder": "Ahmad Faizal",
+      "emailLabel": "Email",
+      "passwordLabel": "Kata Sandi",
+      "creating": "Membuat akun...",
+      "submit": "Buat Akun",
+      "hasAccount": "Sudah punya akun?",
+      "signIn": "Masuk"
+    },
+    "errors": {
+      "invalidCredentials": "Email atau kata sandi tidak valid",
+      "registrationFailed": "Pendaftaran gagal"
+    }
+  },
+  "landing": {
+    "header": {
+      "signIn": "Masuk",
+      "getStarted": "Mulai Gratis"
+    },
+    "hero": {
+      "badge": "Untuk siapa saja yang peduli dengan gajinya",
+      "headline": "Pahami gajimu dengan jelas.",
+      "subheadline": "Lacak gaji Anda, kelola komitmen, dan pantau pinjaman — tanpa stres.",
+      "tagline": "Auto-baca rekening bank Anda. Didukung AI.",
+      "ctaStart": "Mulai Rencanakan Gratis",
+      "ctaSignIn": "Masuk"
+    },
+    "features": {
+      "title": "Semua yang Anda butuhkan untuk mengatur gaji",
+      "subtitle": "Sederhana, praktis, dan dibangun sesuai cara uang bekerja di Asia Tenggara.",
+      "card1": {
+        "title": "Pengaturan terpandu dalam hitungan menit",
+        "desc": "Onboarding kami memandu Anda melalui gaji, tagihan, dan pinjaman menggunakan preset yang relevan. Tanpa formulir kosong — pilih dan konfirmasi saja."
+      },
+      "card2": {
+        "title": "Impor rekening bank Anda",
+        "desc": "Unggah PDF rekening atau bagikan tangkapan layar dari aplikasi mobile banking Anda. Kami mengekstrak transaksi dan mengategorikannya secara otomatis."
+      },
+      "card3": {
+        "title": "Perencana pinjaman & utang",
+        "desc": "Lacak kredit kendaraan, KPR, atau pinjaman pribadi Anda. Lihat total kewajiban bulanan dan simulasikan pelunasan utang lebih cepat."
+      }
+    },
+    "steps": {
+      "title": "Cara kerjanya",
+      "step1": {
+        "title": "Atur gaji Anda",
+        "desc": "Masukkan gaji bersih bulanan dan tanggal gajian Anda. Kami akan menghitung ruang pengeluaran Anda dari sana."
+      },
+      "step2": {
+        "title": "Tambahkan komitmen Anda",
+        "desc": "Pilih kredit kendaraan, sewa, utilitas, dan tagihan tetap lainnya dari daftar preset kami."
+      },
+      "step3": {
+        "title": "Impor atau tambah transaksi",
+        "desc": "Unggah rekening bank Anda atau tambahkan transaksi secara manual. Tinjau dan konfirmasi sebelum menyimpan."
+      }
+    },
+    "cta": {
+      "title": "Mulai pahami uang Anda hari ini.",
+      "subtitle": "Gratis. Tanpa kartu kredit. Cukup gaji Anda dan beberapa menit.",
+      "button": "Buat Akun Gratis"
+    },
+    "footer": {
+      "tagline": "Keuangan pribadi untuk Asia Tenggara. © {{year}} DuitPlan."
+    }
+  },
+  "onboarding": {
+    "stepOf": "Langkah {{step}} dari {{total}}",
+    "back": "Kembali",
+    "continue": "Lanjutkan",
+    "welcome": {
+      "title": "Selamat datang, {{name}}!",
+      "titleNoName": "Selamat datang!",
+      "subtitle": "Selamat datang di DuitPlan — asisten keuangan pribadi Anda.",
+      "hint": "Kami akan memandu Anda melalui pengaturan singkat agar dashboard Anda terasa tepat sejak hari pertama. Sekitar 2 menit.",
+      "pillar1": "Gaji & tanggal gajian Anda",
+      "pillar2": "Tagihan & pinjaman bulanan",
+      "pillar3": "Tujuan keuangan Anda",
+      "begin": "Ayo Mulai"
+    },
+    "income": {
+      "title": "Gaji & tanggal gajian Anda",
+      "subtitle": "Ini membantu kami menghitung anggaran bulanan Anda dengan akurat.",
+      "salaryLabel": "Gaji Bulanan",
+      "salaryHint": "Masukkan gaji bersih (take-home) Anda.",
+      "paydayLabel": "Tanggal gajian — tanggal berapa dalam sebulan?",
+      "otherDay": "Tanggal lain:"
+    },
+    "commitments": {
+      "title": "Komitmen tetap bulanan",
+      "subtitle": "Pilih yang berlaku untuk Anda, lalu masukkan jumlah bulanannya.",
+      "amountHeader": "Masukkan jumlah bulanan ({{currency}})",
+      "addCustom": "Tambah komitmen kustom",
+      "customLabel": "Label",
+      "customPlaceholder": "mis. Iuran gym",
+      "customAmount": "{{currency}}/bulan",
+      "add": "Tambah",
+      "cancel": "Batal"
+    },
+    "expenses": {
+      "title": "Pengeluaran bulanan biasa",
+      "subtitle": "Perkirakan berapa banyak yang biasa Anda keluarkan di setiap kategori. Anda bisa menyempurnakannya setelah mengunggah rekening bank.",
+      "amountHeader": "Perkiraan jumlah bulanan ({{currency}})",
+      "roughEstimateHint": "💡 Tidak yakin jumlah pastinya? Perkiraan kasar sudah cukup — Anda bisa memperbaruinya setelah mengimpor rekening bank."
+    },
+    "loans": {
+      "title": "Pinjaman & pembiayaan",
+      "subtitle": "Pilih pinjaman atau pembiayaan aktif Anda. Kami akan melacak kemajuan pelunasannya.",
+      "monthlyPaymentLabel": "Pembayaran Bulanan ({{currency}})",
+      "outstandingLabel": "Saldo Tunggakan (opsional)",
+      "noLoans": "Tidak ada pinjaman aktif? Bagus! Anda bisa melewati langkah ini."
+    },
+    "goals": {
+      "title": "Apa yang paling penting bagi Anda?",
+      "subtitle": "Pilih apa yang ingin Anda capai dengan DuitPlan. Boleh pilih lebih dari satu.",
+      "almostDone": "🎉 Hampir selesai!",
+      "almostDoneHint": "Fondasi keuangan Anda sudah ditetapkan. Selanjutnya, coba unggah tangkapan layar rekening bank Anda untuk mendapatkan data transaksi nyata seketika.",
+      "saving": "Menyimpan...",
+      "finish": "Ke Dashboard →"
+    },
+    "commitmentPresets": {
+      "car_loan": "Kredit Kendaraan",
+      "personal_loan": "Pinjaman Pribadi",
+      "house_financing": "KPR",
+      "rent": "Sewa",
+      "utilities": "Utilitas",
+      "internet_phone": "Internet / Telepon",
+      "insurance_takaful": "Asuransi / Takaful",
+      "family_support": "Dukungan Keluarga",
+      "school_fees": "Biaya Sekolah",
+      "credit_card": "Kartu Kredit",
+      "childcare": "Penitipan Anak",
+      "subscription": "Langganan"
+    },
+    "expensePresets": {
+      "groceries": "Belanja Kebutuhan",
+      "eating_out": "Makan di Luar",
+      "fuel": "Bensin",
+      "transport": "Transportasi",
+      "shopping": "Belanja",
+      "entertainment": "Hiburan",
+      "health": "Kesehatan",
+      "education": "Pendidikan",
+      "savings": "Tabungan",
+      "emergency": "Dana Darurat"
+    },
+    "debtPresets": {
+      "car_loan": "Kredit Kendaraan",
+      "personal_financing": "Pembiayaan Pribadi",
+      "house_financing": "KPR",
+      "credit_card": "Kartu Kredit",
+      "other_debt": "Utang Lainnya"
+    },
+    "goalOptions": {
+      "savings": {
+        "label": "Bangun tabungan setiap bulan",
+        "desc": "Saya ingin menyisihkan uang secara rutin"
+      },
+      "debt": {
+        "label": "Lunasi utang lebih cepat",
+        "desc": "Saya ingin menyelesaikan pinjaman lebih awal"
+      },
+      "spending": {
+        "label": "Kendalikan pengeluaran",
+        "desc": "Saya ingin tetap dalam anggaran"
+      }
+    }
+  },
+  "agent": {
+    "title": "DuitPlan AI",
+    "subtitle": "Asisten keuangan Anda",
+    "newChat": "Obrolan Baru",
+    "noConversations": "Belum ada obrolan",
+    "emptyState": {
+      "title": "DuitPlan AI",
+      "subtitle": "Asisten keuangan pribadi Anda. Unggah kwitansi, cek saldo, ajukan pertanyaan, dan dapatkan wawasan cerdas tentang uang Anda.",
+      "prompt1": "Berapa banyak yang saya keluarkan bulan ini?",
+      "prompt2": "Analisis kwitansi ini",
+      "prompt3": "Apa kategori pengeluaran terbesar saya?",
+      "prompt4": "Beri saya tips untuk lebih hemat"
+    },
+    "emptyConversation": "Mulai percakapan — ajukan pertanyaan atau lampirkan kwitansi atau tangkapan layar rekening bank.",
+    "inputPlaceholder": "Tanya DuitPlan AI apa saja...",
+    "inputPlaceholderNew": "Mulai percakapan...",
+    "uploadHintUploading": "Mengunggah file ke penyimpanan aman...",
+    "uploadHint": "Lampirkan kwitansi atau tangkapan layar bank untuk analisis otomatis · Maks 10 MB per file",
+    "discrepancy": {
+      "title": "Ketidaksesuaian Saldo",
+      "youHave": "Anda punya",
+      "weRecorded": "Kami catat",
+      "fromScreenshot": "Dari tangkapan layar",
+      "inApp": "Di DuitPlan",
+      "missing": "Kurang",
+      "extra": "Lebih",
+      "reconcile": "Selesaikan sekarang"
+    },
+    "transactionReview": {
+      "title": "Transaksi Menunggu Tinjauan",
+      "subtitle": "Transaksi yang diekstrak dari dokumen Anda telah disimpan sebagai tertunda. Tinjau dan konfirmasi setiap transaksi sebelum ditambahkan ke catatan Anda.",
+      "button": "Tinjau transaksi yang diekstrak"
+    },
+    "spendingBreakdown": "Rincian Pengeluaran",
+    "shareModal": {
+      "title": "Bagikan wawasan Anda",
+      "download": "Unduh",
+      "copy": "Salin",
+      "copying": "Menyalin..."
+    },
+    "shareInsight": "Bagikan wawasan",
+    "share": "Bagikan"
   }
 }
