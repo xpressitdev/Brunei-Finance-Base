@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { format, subMonths, parseISO } from "date-fns";
 import { useQuery } from "@tanstack/react-query";
 import { useGenerateInsights } from "@workspace/api-client-react";
@@ -13,7 +14,7 @@ import {
 } from "lucide-react";
 import {
   BarChart, Bar, Cell, XAxis, YAxis, Tooltip,
-  ResponsiveContainer, ReferenceLine,
+  ResponsiveContainer,
 } from "recharts";
 import { TrialExpiredPrompt } from "@/components/subscription/TrialExpiredPrompt";
 import { isTrialExpiredError } from "@/lib/trialExpired";
@@ -104,10 +105,11 @@ function InsightSkeleton() {
 }
 
 export default function Insights() {
+  const { t } = useTranslation();
   const currentMonth = format(new Date(), "yyyy-MM");
   const [month, setMonth] = useState(currentMonth);
   const [trialExpiredError, setTrialExpiredError] = useState(false);
-  const { formatCurrency, formatMonthYear, formatMonthShort, region } = useRegion();
+  const { formatCurrency, formatMonthYear, formatMonthShort } = useRegion();
 
   const { data: computed, isLoading: computedLoading } = useComputedInsights(month);
   const { data: aiInsights, isLoading: aiLoading, refetch: refetchAi } = useAiInsights(month);
@@ -167,8 +169,8 @@ export default function Insights() {
     <div className="space-y-6 animate-in fade-in duration-500 max-w-4xl mx-auto">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-foreground tracking-tight">Insights</h1>
-          <p className="text-muted-foreground">Deep analysis of your spending habits.</p>
+          <h1 className="text-3xl font-bold text-foreground tracking-tight">{t("insights.title")}</h1>
+          <p className="text-muted-foreground">{t("insights.subtitle")}</p>
         </div>
         <div className="flex items-center gap-3">
           <Input
@@ -179,8 +181,8 @@ export default function Insights() {
           />
           <Button onClick={handleGenerate} disabled={generateMutation.isPending}>
             {generateMutation.isPending
-              ? <><RefreshCw className="w-4 h-4 mr-2 animate-spin" />Analyzing...</>
-              : <><Sparkles className="w-4 h-4 mr-2" />AI Summary</>
+              ? <><RefreshCw className="w-4 h-4 mr-2 animate-spin" />{t("insights.analyzing")}</>
+              : <><Sparkles className="w-4 h-4 mr-2" />{t("insights.aiSummary")}</>
             }
           </Button>
         </div>
@@ -190,7 +192,7 @@ export default function Insights() {
 
       <div>
         <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3 flex items-center gap-2">
-          <Zap className="w-4 h-4" /> Data Insights
+          <Zap className="w-4 h-4" /> {t("insights.sections.dataInsights")}
         </h2>
 
         {computedLoading ? (
@@ -210,14 +212,14 @@ export default function Insights() {
                     ? <TrendingUp className="w-5 h-5 text-orange-500" />
                     : <TrendingDown className="w-5 h-5 text-emerald-500" />
                   }
-                  Spending Trend
+                  {t("insights.cards.spendingTrend")}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 {!st?.hasData ? (
                   <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                     <p className="text-muted-foreground text-sm flex-1">
-                      We need at least 2 months of data to show spending trends.
+                      {t("insights.spendingTrend.needMoreData")}
                     </p>
                     <div className="h-20 w-full sm:w-48 shrink-0 opacity-25 pointer-events-none select-none">
                       <ResponsiveContainer width="100%" height="100%">
@@ -242,7 +244,10 @@ export default function Insights() {
                           <span className={st.changePct > 0 ? "text-orange-500 font-medium" : "text-emerald-600 font-medium"}>
                             {Math.abs(st.changePct)}%
                           </span>{" "}
-                          vs {prevMonthLabel} ({formatCurrency(st.lastMonth!)})
+                          {t("insights.spendingTrend.vsLastMonth", {
+                            month: prevMonthLabel,
+                            amount: formatCurrency(st.lastMonth!)
+                          })}
                         </p>
                       )}
                     </div>
@@ -277,21 +282,23 @@ export default function Insights() {
               <CardHeader className="pb-2">
                 <CardTitle className="flex items-center gap-2 text-base">
                   <SeverityIcon s={anomalySeverity} />
-                  Category Anomalies
+                  {t("insights.cards.categoryAnomalies")}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 {!st?.hasData ? (
-                  <p className="text-muted-foreground text-sm">Not enough history to detect anomalies — check back after 2+ months of data.</p>
+                  <p className="text-muted-foreground text-sm">{t("insights.anomalies.notEnoughHistory")}</p>
                 ) : anomalies.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No unusual spending detected this month — all categories are within normal range.</p>
+                  <p className="text-sm text-muted-foreground">{t("insights.anomalies.noAnomalies")}</p>
                 ) : (
                   <div className="space-y-2">
                     {anomalies.slice(0, 3).map(a => (
                       <div key={a.categoryId} className="flex items-center justify-between rounded-lg bg-orange-50 dark:bg-orange-900/10 px-3 py-2">
                         <div>
                           <span className="font-medium text-sm">{a.categoryName}</span>
-                          <span className="text-xs text-muted-foreground ml-2">3-mo avg {formatCurrency(a.avg3m)}</span>
+                          <span className="text-xs text-muted-foreground ml-2">
+                            {t("insights.anomalies.avg3m", { amount: formatCurrency(a.avg3m) })}
+                          </span>
                         </div>
                         <div className="text-right">
                           <span className="text-sm font-bold text-orange-600">▲ {a.pctOver}%</span>
@@ -300,7 +307,9 @@ export default function Insights() {
                       </div>
                     ))}
                     {anomalies.length > 3 && (
-                      <p className="text-xs text-muted-foreground">{anomalies.length - 3} more {anomalies.length - 3 === 1 ? "category" : "categories"} above usual.</p>
+                      <p className="text-xs text-muted-foreground">
+                        {t("insights.anomalies.moreCategories", { count: anomalies.length - 3 })}
+                      </p>
                     )}
                   </div>
                 )}
@@ -312,17 +321,17 @@ export default function Insights() {
               <CardHeader className="pb-2">
                 <CardTitle className="flex items-center gap-2 text-base">
                   <Repeat className="w-5 h-5 text-violet-500" />
-                  Subscription Creep
+                  {t("insights.cards.subscriptionCreep")}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 {(subs?.items.length ?? 0) === 0 ? (
-                  <p className="text-sm text-muted-foreground">No recurring charges detected this month.</p>
+                  <p className="text-sm text-muted-foreground">{t("insights.subscriptions.noCharges")}</p>
                 ) : (
                   <div>
                     <p className="text-2xl font-bold">{formatCurrency(subs!.total)}</p>
                     <p className="text-sm text-muted-foreground mt-1">
-                      {subs!.items.length} recurring {subs!.items.length === 1 ? "charge" : "charges"} detected this month.
+                      {t("insights.subscriptions.chargesDetected", { count: subs!.items.length })}
                     </p>
                     <div className="mt-3 space-y-1">
                       {subs!.items.slice(0, 5).map((s, i) => (
@@ -332,7 +341,9 @@ export default function Insights() {
                         </div>
                       ))}
                       {subs!.items.length > 5 && (
-                        <p className="text-xs text-muted-foreground">+{subs!.items.length - 5} more</p>
+                        <p className="text-xs text-muted-foreground">
+                          {t("insights.subscriptions.more", { count: subs!.items.length - 5 })}
+                        </p>
                       )}
                     </div>
                   </div>
@@ -345,37 +356,38 @@ export default function Insights() {
               <CardHeader className="pb-2">
                 <CardTitle className="flex items-center gap-2 text-base">
                   <PiggyBank className="w-5 h-5 text-emerald-500" />
-                  Savings Rate
+                  {t("insights.cards.savingsRate")}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 {sr?.income === 0 && (sr?.spent ?? 0) === 0 ? (
-                  <p className="text-sm text-muted-foreground">Configure your salary in Settings to see your savings rate.</p>
+                  <p className="text-sm text-muted-foreground">{t("insights.savingsRate.configureSalary")}</p>
                 ) : sr?.income === 0 && (sr?.spent ?? 0) > 0 ? (
-                  <p className="text-sm text-muted-foreground">Spending exceeds income this month.</p>
+                  <p className="text-sm text-muted-foreground">{t("insights.savingsRate.spendingExceedsIncome")}</p>
                 ) : (
                   <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                     <div className="flex-1 min-w-0">
-                      <p className="text-2xl font-bold">
-                        {`${sr?.rate ?? 0}%`}
-                      </p>
+                      <p className="text-2xl font-bold">{`${sr?.rate ?? 0}%`}</p>
                       <p className="text-sm text-muted-foreground mt-1">
                         {sr?.rate != null && sr.rate >= 20
-                          ? "Excellent — above the 20% healthy benchmark."
+                          ? t("insights.savingsRate.excellent")
                           : sr?.rate != null && sr.rate >= 10
-                          ? "On track. Aim for 20%+ for long-term security."
+                          ? t("insights.savingsRate.onTrack")
                           : sr?.rate != null && sr.rate >= 0
-                          ? `Saving ${sr.rate}% this month. Healthy range: 20%+.`
-                          : "Spending exceeds income this month."}
+                          ? t("insights.savingsRate.saving", { rate: sr.rate })
+                          : t("insights.savingsRate.spendingExceedsIncome")}
                       </p>
                       <p className="text-xs text-muted-foreground mt-1">
-                        Income {formatCurrency(sr?.income ?? 0)} · Spent {formatCurrency(sr?.spent ?? 0)}
+                        {t("insights.savingsRate.incomeLegend", {
+                          income: formatCurrency(sr?.income ?? 0),
+                          spent: formatCurrency(sr?.spent ?? 0)
+                        })}
                       </p>
                     </div>
                     <div className="w-full sm:w-40 shrink-0">
                       <div className="flex justify-between text-xs text-muted-foreground mb-1">
-                        <span>Saved</span>
-                        <span className="font-medium">{sr?.rate != null ? `${Math.max(0, sr.rate)}%` : "0%"} / 20%</span>
+                        <span>{t("insights.savingsRate.saved")}</span>
+                        <span className="font-medium">{sr?.rate != null ? `${Math.max(0, sr.rate)}%` : "0%"} {t("insights.savingsRate.benchmark")}</span>
                       </div>
                       <div className="h-3 bg-muted rounded-full overflow-hidden">
                         <div
@@ -401,28 +413,31 @@ export default function Insights() {
               <CardHeader className="pb-2">
                 <CardTitle className="flex items-center gap-2 text-base">
                   <Scale className="w-5 h-5 text-blue-500" />
-                  Debt-to-Income Ratio
+                  {t("insights.cards.dti")}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 {dti?.income === 0 ? (
-                  <p className="text-sm text-muted-foreground">Configure your income in Settings to calculate DTI.</p>
+                  <p className="text-sm text-muted-foreground">{t("insights.dti.configureIncome")}</p>
                 ) : dti?.ratio == null ? (
-                  <p className="text-sm text-muted-foreground">No debt payments recorded.</p>
+                  <p className="text-sm text-muted-foreground">{t("insights.dti.noDebtPayments")}</p>
                 ) : (
                   <div>
                     <p className="text-2xl font-bold">{dti.ratio}%</p>
                     <p className="text-sm text-muted-foreground mt-1">
                       {dti.ratio > 43
-                        ? "High — lenders typically reject loans above 43% DTI. Focus on debt reduction."
+                        ? t("insights.dti.high")
                         : dti.ratio > 36
-                        ? "Moderate — aim to get below 36% for better financial flexibility."
+                        ? t("insights.dti.moderate")
                         : dti.ratio > 20
-                        ? "Manageable — within acceptable range."
-                        : "Excellent — well within healthy debt levels."}
+                        ? t("insights.dti.manageable")
+                        : t("insights.dti.excellent")}
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      {formatCurrency(dti.monthlyPayment)} / mo in debt payments · income {formatCurrency(dti.income)}
+                      {t("insights.dti.breakdown", {
+                        payment: formatCurrency(dti.monthlyPayment),
+                        income: formatCurrency(dti.income)
+                      })}
                     </p>
                   </div>
                 )}
@@ -434,23 +449,24 @@ export default function Insights() {
               <CardHeader className="pb-2">
                 <CardTitle className="flex items-center gap-2 text-base">
                   <LayoutGrid className="w-5 h-5 text-violet-500" />
-                  Budget Adherence
+                  {t("insights.cards.budgetAdherence")}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 {!ba || ba.total === 0 ? (
                   <div>
                     <p className="text-sm text-muted-foreground">
-                      No budgets set for {formatMonthYear(parseISO(`${month}-01`))}. Set budgets in the Cash Flow Plan to track adherence.
+                      {t("insights.budgetAdherence.noBudgets", { month: formatMonthYear(parseISO(`${month}-01`)) })}
                     </p>
                     <div className="mt-3 opacity-25 pointer-events-none select-none">
                       <div className="flex justify-between text-xs text-muted-foreground mb-1">
-                        <span>On track</span><span>— / — budgets</span>
+                        <span>{t("insights.budgetAdherence.onTrackLabel")}</span>
+                        <span>{t("insights.budgetAdherence.empty")}</span>
                       </div>
                       <div className="h-2 bg-muted rounded-full overflow-hidden">
                         <div className="h-full w-0 rounded-full bg-blue-400" />
                       </div>
-                      <p className="text-xs text-muted-foreground mt-1">0% of budgets on track</p>
+                      <p className="text-xs text-muted-foreground mt-1">{t("insights.budgetAdherence.emptyPct")}</p>
                     </div>
                   </div>
                 ) : (
@@ -460,10 +476,10 @@ export default function Insights() {
                     </p>
                     <p className="text-sm text-muted-foreground mt-1">
                       {ba.pct === 100
-                        ? "All budgets on track — great discipline!"
+                        ? t("insights.budgetAdherence.allOnTrack")
                         : ba.onTrack === 0
-                        ? "All budgets over-spent this month."
-                        : `${ba.onTrack} on track, ${ba.overBudget} over-budget.`}
+                        ? t("insights.budgetAdherence.allOverSpent")
+                        : t("insights.budgetAdherence.mixed", { onTrack: ba.onTrack, overBudget: ba.overBudget })}
                     </p>
                     <div className="mt-3 h-2 bg-muted rounded-full overflow-hidden">
                       <div
@@ -471,7 +487,9 @@ export default function Insights() {
                         style={{ width: `${ba.pct ?? 0}%` }}
                       />
                     </div>
-                    <p className="text-xs text-muted-foreground mt-1">{ba.pct ?? 0}% of budgets on track</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {t("insights.budgetAdherence.pctOnTrack", { pct: ba.pct ?? 0 })}
+                    </p>
                   </div>
                 )}
               </CardContent>
@@ -485,7 +503,7 @@ export default function Insights() {
       {(aiInsights && aiInsights.length > 0) && (
         <div>
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3 flex items-center gap-2">
-            <Sparkles className="w-4 h-4" /> AI Analysis
+            <Sparkles className="w-4 h-4" /> {t("insights.sections.aiAnalysis")}
           </h2>
           <div className="grid gap-4">
             {generateMutation.isPending
@@ -512,7 +530,7 @@ export default function Insights() {
         <div className="bg-muted/30 border border-dashed rounded-xl p-6 text-center">
           <Lightbulb className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
           <p className="text-sm text-muted-foreground">
-            Click <strong>AI Summary</strong> above to get a personalised AI analysis of your spending patterns.
+            {t("insights.aiEmpty")}
           </p>
         </div>
       )}

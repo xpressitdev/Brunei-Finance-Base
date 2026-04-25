@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useParams, Link, useLocation } from "wouter";
 import { useListDebts, useDeleteDebt } from "@workspace/api-client-react";
 import { isTrialExpiredError } from "@/lib/trialExpired";
@@ -71,6 +72,7 @@ function mergeCurves(
 }
 
 export default function DebtDetail() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
   const { data: debts, isLoading } = useListDebts();
@@ -99,9 +101,7 @@ export default function DebtDetail() {
     const rate = debt.interestRate ? parseFloat(debt.interestRate) / 100 / 12 : 0;
 
     if (rate > 0 && basePayment <= balance * rate) {
-      alert(
-        "Warning: your base monthly payment does not cover the monthly interest. The loan balance will never decrease. Please increase your monthly payment."
-      );
+      alert(t("debts.detail.simulator.payoffWarning"));
       return;
     }
 
@@ -129,7 +129,7 @@ export default function DebtDetail() {
   };
 
   const handleDelete = async () => {
-    if (confirm("Are you sure you want to delete this debt?")) {
+    if (confirm(t("debts.detail.confirmDelete"))) {
       try {
         await deleteMutation.mutateAsync({ id: id! });
         setLocation("/debts");
@@ -139,8 +139,8 @@ export default function DebtDetail() {
     }
   };
 
-  if (isLoading) return <div className="p-8">Loading...</div>;
-  if (!debt) return <div className="p-8">Debt not found</div>;
+  if (isLoading) return <div className="p-8">{t("debts.loading")}</div>;
+  if (!debt) return <div className="p-8">{t("debts.detail.notFound")}</div>;
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500 max-w-4xl mx-auto">
@@ -151,7 +151,7 @@ export default function DebtDetail() {
           </Button>
         </Link>
         <h1 className="text-3xl font-bold text-foreground tracking-tight">
-          {debt.lender} Detail
+          {debt.lender}
         </h1>
         <div className="ml-auto">
           <Button variant="destructive" size="icon" onClick={handleDelete}>
@@ -163,30 +163,30 @@ export default function DebtDetail() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <CardTitle>Current Status</CardTitle>
+            <CardTitle>{t("debts.detail.currentStatus")}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex justify-between items-center py-2 border-b">
-              <span className="text-muted-foreground">Outstanding Balance</span>
+              <span className="text-muted-foreground">{t("debts.detail.outstandingBalance")}</span>
               <span className="font-bold text-lg">
                 {formatCurrency(parseFloat(debt.outstandingBalance))}
               </span>
             </div>
             <div className="flex justify-between items-center py-2 border-b">
-              <span className="text-muted-foreground">Monthly Payment</span>
+              <span className="text-muted-foreground">{t("debts.detail.monthlyPayment")}</span>
               <span className="font-bold text-lg">
                 {formatCurrency(parseFloat(debt.monthlyPayment))}
               </span>
             </div>
             {debt.interestRate && (
               <div className="flex justify-between items-center py-2 border-b">
-                <span className="text-muted-foreground">Interest Rate</span>
+                <span className="text-muted-foreground">{t("debts.detail.interestRate")}</span>
                 <span className="font-bold text-lg">{debt.interestRate}% p.a.</span>
               </div>
             )}
             {debt.startDate && (
               <div className="flex justify-between items-center py-2 border-b">
-                <span className="text-muted-foreground">Start Date</span>
+                <span className="text-muted-foreground">{t("debts.detail.startDate")}</span>
                 <span className="font-bold text-lg">
                   {(() => {
                     const [y, m] = debt.startDate!.split("-");
@@ -202,13 +202,13 @@ export default function DebtDetail() {
         <Card className="border-primary/20 shadow-md">
           <CardHeader className="bg-primary/5 border-b border-primary/10">
             <CardTitle className="text-primary flex items-center gap-2">
-              <TrendingDown className="w-5 h-5" /> Payoff Simulator
+              <TrendingDown className="w-5 h-5" /> {t("debts.detail.simulator.title")}
             </CardTitle>
           </CardHeader>
           <CardContent className="p-6">
             <form onSubmit={handleSimulate} className="space-y-4">
               <div className="space-y-2">
-                <Label>Extra Monthly Payment ({region.currency})</Label>
+                <Label>{t("debts.detail.simulator.extraPaymentLabel", { currency: region.currency })}</Label>
                 <div className="flex gap-2">
                   <Input
                     type="number"
@@ -219,7 +219,7 @@ export default function DebtDetail() {
                     onChange={(e) => setExtraPayment(e.target.value)}
                     required
                   />
-                  <Button type="submit">Simulate</Button>
+                  <Button type="submit">{t("debts.detail.simulator.simulate")}</Button>
                 </div>
               </div>
             </form>
@@ -228,17 +228,17 @@ export default function DebtDetail() {
               <div className="mt-6 space-y-3 p-4 bg-muted/40 rounded-xl border">
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-medium text-muted-foreground">
-                    Original Timeline
+                    {t("debts.detail.simulator.originalTimeline")}
                   </span>
                   <span className="font-bold">{scenario.basePayoffMonths} months</span>
                 </div>
                 <div className="flex justify-between items-center text-primary">
-                  <span className="text-sm font-medium">New Timeline</span>
+                  <span className="text-sm font-medium">{t("debts.detail.simulator.newTimeline")}</span>
                   <span className="font-bold">{scenario.newPayoffMonths} months</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-medium text-muted-foreground">
-                    Interest Saved
+                    {t("debts.detail.simulator.interestSaved")}
                   </span>
                   <span className="font-bold text-green-600">
                     {formatCurrency(scenario.totalInterestSaved)}
@@ -250,10 +250,10 @@ export default function DebtDetail() {
                   </div>
                   <div>
                     <div className="font-bold text-lg text-primary">
-                      Save {scenario.estimatedMonthsSaved} months
+                      {t("debts.detail.simulator.monthsSaved", { months: scenario.estimatedMonthsSaved })}
                     </div>
                     <div className="text-xs text-muted-foreground">
-                      by adding {formatCurrency(parseFloat(scenario.extraMonthlyPayment))} extra each month.
+                      {t("debts.detail.simulator.monthsSavedSub", { amount: formatCurrency(parseFloat(scenario.extraMonthlyPayment)) })}
                     </div>
                   </div>
                 </div>
@@ -266,7 +266,7 @@ export default function DebtDetail() {
       {scenario && (
         <Card>
           <CardHeader>
-            <CardTitle>Payoff Curve Comparison</CardTitle>
+            <CardTitle>{t("debts.detail.chart.title")}</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={320}>
@@ -278,7 +278,7 @@ export default function DebtDetail() {
                 <XAxis
                   dataKey="month"
                   label={{
-                    value: "Months",
+                    value: t("debts.detail.chart.xLabel"),
                     position: "insideBottomRight",
                     offset: -8,
                   }}
@@ -291,13 +291,13 @@ export default function DebtDetail() {
                 />
                 <Tooltip
                   formatter={(value: number) => [formatCurrency(value)]}
-                  labelFormatter={(label) => `Month ${label}`}
+                  labelFormatter={(label) => t("debts.detail.chart.monthLabel", { n: label })}
                 />
                 <Legend />
                 <Line
                   type="monotone"
                   dataKey="standard"
-                  name="Standard Payoff"
+                  name={t("debts.detail.chart.standardPayoff")}
                   stroke="#ef4444"
                   strokeWidth={2}
                   dot={false}
@@ -305,7 +305,7 @@ export default function DebtDetail() {
                 <Line
                   type="monotone"
                   dataKey="accelerated"
-                  name="Accelerated Payoff"
+                  name={t("debts.detail.chart.acceleratedPayoff")}
                   stroke="#22c55e"
                   strokeWidth={2}
                   dot={false}
@@ -313,7 +313,7 @@ export default function DebtDetail() {
               </LineChart>
             </ResponsiveContainer>
             <p className="text-xs text-muted-foreground text-center mt-2">
-              X-axis: Months elapsed &nbsp;·&nbsp; Y-axis: Outstanding balance ({region.currency})
+              {t("debts.detail.chart.caption", { currency: region.currency })}
             </p>
           </CardContent>
         </Card>

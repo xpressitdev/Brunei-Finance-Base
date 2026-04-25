@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useLocation } from "wouter";
 import { useListCommitments, useCreateCommitment, useDeleteCommitment } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,7 @@ import { isTrialExpiredError } from "@/lib/trialExpired";
 import { useRegion } from "@/hooks/useRegion";
 
 export default function Commitments() {
+  const { t } = useTranslation();
   const [, setLocation] = useLocation();
   const { formatCurrency, decimalStep } = useRegion();
   const { data: commitments, isLoading, refetch } = useListCommitments();
@@ -53,7 +55,7 @@ export default function Commitments() {
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm("Are you sure?")) {
+    if (confirm(t("commitments.confirmDelete"))) {
       try {
         await deleteMutation.mutateAsync({ id });
         refetch();
@@ -65,30 +67,30 @@ export default function Commitments() {
 
   const totalCommitments = commitments?.reduce((acc, curr) => acc + parseFloat(curr.amount), 0) || 0;
 
-  if (isLoading) return <div className="p-8">Loading...</div>;
+  if (isLoading) return <div className="p-8">{t("commitments.loading")}</div>;
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-foreground tracking-tight">Commitments</h1>
-          <p className="text-muted-foreground">Fixed monthly expenses you can't avoid.</p>
+          <h1 className="text-3xl font-bold text-foreground tracking-tight">{t("commitments.title")}</h1>
+          <p className="text-muted-foreground">{t("commitments.subtitle")}</p>
         </div>
         
         <Dialog open={isAddOpen} onOpenChange={(open) => { setIsAddOpen(open); if (!open) setTrialExpiredError(false); }}>
           <DialogTrigger asChild>
-            <Button><Plus className="w-4 h-4 mr-2" /> Add Commitment</Button>
+            <Button><Plus className="w-4 h-4 mr-2" /> {t("commitments.addButton")}</Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Add Monthly Commitment</DialogTitle>
+              <DialogTitle>{t("commitments.addDialog.title")}</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleAdd} className="space-y-4">
               {trialExpiredError && (
                 <TrialExpiredPrompt action="add commitments" />
               )}
               <div className="space-y-2">
-                <Label>Label</Label>
+                <Label>{t("commitments.addDialog.labelField")}</Label>
                 <Input 
                   value={formData.label} 
                   onChange={(e) => setFormData({...formData, label: e.target.value})}
@@ -96,7 +98,7 @@ export default function Commitments() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Amount</Label>
+                <Label>{t("commitments.addDialog.amountField")}</Label>
                 <Input 
                   type="number" 
                   step={decimalStep} 
@@ -106,7 +108,7 @@ export default function Commitments() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Due Day (1-31, Optional)</Label>
+                <Label>{t("commitments.addDialog.dueDayField")}</Label>
                 <Input 
                   type="number" 
                   min="1" 
@@ -116,7 +118,7 @@ export default function Commitments() {
                 />
               </div>
               <Button type="submit" className="w-full" disabled={createMutation.isPending}>
-                {createMutation.isPending ? "Saving..." : "Save"}
+                {createMutation.isPending ? t("common.saving") : t("common.save")}
               </Button>
             </form>
           </DialogContent>
@@ -129,7 +131,7 @@ export default function Commitments() {
             <CalendarDays className="w-6 h-6" />
           </div>
           <div>
-            <div className="text-sm font-medium text-muted-foreground">Total Fixed Commitments</div>
+            <div className="text-sm font-medium text-muted-foreground">{t("commitments.totalFixed")}</div>
             <div className="text-2xl font-bold text-foreground">{formatCurrency(totalCommitments)}</div>
           </div>
         </div>
@@ -149,14 +151,14 @@ export default function Commitments() {
             
             <div>
               <h3 className="font-semibold text-lg pr-8">{c.label}</h3>
-              {c.dueDay && <p className="text-sm text-muted-foreground">Due on day {c.dueDay}</p>}
+              {c.dueDay && <p className="text-sm text-muted-foreground">{t("commitments.dueDay", { day: c.dueDay })}</p>}
             </div>
             <div className="text-2xl font-bold mt-auto">{formatCurrency(parseFloat(c.amount))}</div>
           </div>
         ))}
         {(!commitments || commitments.length === 0) && (
           <div className="col-span-full py-12 text-center text-muted-foreground border-2 border-dashed rounded-xl">
-            No commitments added yet.
+            {t("commitments.empty")}
           </div>
         )}
       </div>

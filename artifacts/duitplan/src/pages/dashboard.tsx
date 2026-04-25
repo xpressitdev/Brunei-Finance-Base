@@ -392,7 +392,7 @@ export default function Dashboard() {
                       <div>
                         <p className="font-medium text-sm leading-tight">{tx.description}</p>
                         <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1 flex-wrap">
-                          {formatDate(tx.date)} &bull; {tx.categoryName || t("dashboard.recentTransactions.uncategorised")}
+                          {formatDate(tx.date)} &bull; {tx.categoryName || t("dashboard.recentTransactions.uncategorized")}
                           {tx.accountName && (
                             <span className="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full text-xs leading-none">{tx.accountName}</span>
                           )}

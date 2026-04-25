@@ -1,5 +1,6 @@
 import { useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useTranslation } from "react-i18next";
+import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { Flame, Trophy } from "lucide-react";
@@ -41,6 +42,7 @@ function useCheckAchievements() {
 }
 
 export default function Achievements() {
+  const { t } = useTranslation();
   const { data, isLoading, refetch } = useGamification();
   const checkMutation = useCheckAchievements();
 
@@ -69,9 +71,9 @@ export default function Achievements() {
   return (
     <div className="space-y-8 animate-in fade-in duration-500 max-w-4xl mx-auto">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Achievements</h1>
+        <h1 className="text-3xl font-bold tracking-tight">{t("achievements.title")}</h1>
         <p className="text-muted-foreground">
-          {totalUnlocked} of {totalAvailable} badges earned. Keep going!
+          {t("achievements.subtitle", { earned: totalUnlocked, total: totalAvailable })}
         </p>
       </div>
 
@@ -84,9 +86,9 @@ export default function Achievements() {
             </div>
             <div>
               <div className="text-3xl font-bold text-primary">{streak.current}</div>
-              <div className="text-xs text-muted-foreground uppercase tracking-wide">Day Streak</div>
+              <div className="text-xs text-muted-foreground uppercase tracking-wide">{t("achievements.streak.label")}</div>
               {streak.longest > 0 && (
-                <div className="text-xs text-muted-foreground">Best: {streak.longest} days</div>
+                <div className="text-xs text-muted-foreground">{t("achievements.streak.best", { count: streak.longest })}</div>
               )}
             </div>
           </CardContent>
@@ -99,8 +101,8 @@ export default function Achievements() {
             </div>
             <div>
               <div className="text-3xl font-bold">{totalUnlocked}</div>
-              <div className="text-xs text-muted-foreground uppercase tracking-wide">Badges Earned</div>
-              <div className="text-xs text-muted-foreground">{totalAvailable - totalUnlocked} remaining</div>
+              <div className="text-xs text-muted-foreground uppercase tracking-wide">{t("achievements.badges.label")}</div>
+              <div className="text-xs text-muted-foreground">{t("achievements.badges.remaining", { count: totalAvailable - totalUnlocked })}</div>
             </div>
           </CardContent>
         </Card>
@@ -109,7 +111,7 @@ export default function Achievements() {
           <CardContent className="pt-6 space-y-3">
             <div className="flex items-start justify-between gap-2">
               <div>
-                <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">This Month's Challenge</div>
+                <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">{t("achievements.challenge.label")}</div>
                 <div className="font-semibold text-sm leading-tight">{monthlyChallenge.title}</div>
               </div>
               {challengeDone && <span className="text-xl">✅</span>}
@@ -117,7 +119,7 @@ export default function Achievements() {
             <Progress value={challengePct} className="h-2" />
             <div className="text-xs text-muted-foreground">
               {monthlyChallenge.progress} / {monthlyChallenge.target} {monthlyChallenge.unit}
-              {challengeDone && " — Completed!"}
+              {challengeDone && t("achievements.challenge.completed")}
             </div>
           </CardContent>
         </Card>
@@ -126,7 +128,7 @@ export default function Achievements() {
       {/* Milestones */}
       <div>
         <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-          <Trophy className="w-5 h-5 text-primary" /> Milestones
+          <Trophy className="w-5 h-5 text-primary" /> {t("achievements.milestones")}
         </h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {milestones.map(a => (
@@ -148,11 +150,11 @@ export default function Achievements() {
               </div>
               {a.unlocked && a.unlockedAt && (
                 <div className="text-xs text-primary font-medium mt-auto">
-                  ✓ Earned {new Date(a.unlockedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
+                  {t("achievements.earned", { date: new Date(a.unlockedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" }) })}
                 </div>
               )}
               {!a.unlocked && (
-                <div className="text-xs text-muted-foreground mt-auto">🔒 Locked</div>
+                <div className="text-xs text-muted-foreground mt-auto">{t("achievements.locked")}</div>
               )}
             </div>
           ))}
@@ -162,7 +164,7 @@ export default function Achievements() {
       {/* Habits */}
       <div>
         <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-          <span className="text-xl">🌱</span> Habit Badges
+          <span className="text-xl">🌱</span> {t("achievements.habitBadges")}
         </h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {habits.map(a => (
@@ -184,11 +186,11 @@ export default function Achievements() {
               </div>
               {a.unlocked && a.unlockedAt && (
                 <div className="text-xs text-primary font-medium mt-auto">
-                  ✓ Earned {new Date(a.unlockedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
+                  {t("achievements.earned", { date: new Date(a.unlockedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" }) })}
                 </div>
               )}
               {!a.unlocked && (
-                <div className="text-xs text-muted-foreground mt-auto">🔒 Locked</div>
+                <div className="text-xs text-muted-foreground mt-auto">{t("achievements.locked")}</div>
               )}
             </div>
           ))}
@@ -199,15 +201,15 @@ export default function Achievements() {
       <div className="rounded-xl bg-primary/5 border border-primary/20 p-5">
         <p className="text-sm font-medium text-primary mb-1">
           {streak.current > 0
-            ? `🔥 You're on a ${streak.current}-day streak — keep it up!`
-            : "📝 Start logging transactions to build your streak."}
+            ? t("achievements.reinforcement.streakActive", { count: streak.current })
+            : t("achievements.reinforcement.noStreak")}
         </p>
         <p className="text-xs text-muted-foreground">
           {totalUnlocked === 0
-            ? "Complete your first action to earn a badge. Try logging a transaction or setting up a budget."
+            ? t("achievements.reinforcement.zeroBadges")
             : totalUnlocked < 5
-            ? "You're making great progress. A few more badges to go!"
-            : "Excellent work. You're building strong financial habits."}
+            ? t("achievements.reinforcement.fewBadges")
+            : t("achievements.reinforcement.manyBadges")}
         </p>
       </div>
     </div>

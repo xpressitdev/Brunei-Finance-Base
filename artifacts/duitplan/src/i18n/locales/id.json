@@ -16,7 +16,6 @@
     "category": "Kategori",
     "account": "Rekening",
     "noAccount": "Tidak ada rekening",
-    "uncategorised": "Tanpa kategori",
     "uncategorized": "Tanpa kategori",
     "saveChanges": "Simpan Perubahan",
     "revert": "Kembalikan"
@@ -64,7 +63,7 @@
     },
     "recentTransactions": {
       "title": "Transaksi Terbaru",
-      "uncategorised": "Tanpa kategori",
+      "uncategorized": "Tanpa kategori",
       "noTransactions": "Belum ada transaksi yang dicatat.",
       "importHint": "Coba impor rekening BIBD atau Baiduri Anda.",
       "viewAll": "Lihat semua transaksi"
@@ -75,7 +74,7 @@
     "subtitle": "Lacak semua transaksi",
     "today": "Hari ini",
     "receipt": "Kwitansi",
-    "uncategorised": "Tanpa kategori",
+    "uncategorized": "Tanpa kategori",
     "summary": {
       "today": "Hari ini",
       "monthExpenses": "Pengeluaran Bulan Ini",
@@ -127,7 +126,7 @@
       "noAccount": "Tidak ada rekening",
       "category": "Kategori",
       "selectCategory": "Pilih kategori",
-      "uncategorised": "Tanpa kategori",
+      "uncategorized": "Tanpa kategori",
       "save": "Simpan Perubahan"
     },
     "deleteDialog": {
@@ -192,6 +191,8 @@
     }
   },
   "settings": {
+    "title": "Pengaturan",
+    "subtitle": "Kelola profil dan preferensi aplikasi Anda.",
     "tabs": {
       "profile": "Profil",
       "categories": "Kategori",
@@ -221,6 +222,503 @@
       "en": "English",
       "ms": "Bahasa Melayu",
       "id": "Bahasa Indonesia"
+    },
+    "toasts": {
+      "profileUpdated": "Profil berhasil diperbarui",
+      "profileFailed": "Gagal memperbarui profil",
+      "categoryAdded": "Kategori ditambahkan",
+      "categoryFailed": "Gagal menambahkan kategori"
+    }
+  },
+  "accounts": {
+    "title": "Rekening",
+    "subtitle": "Lacak uang tunai Anda di semua rekening dan dompet.",
+    "addButton": "Tambah Rekening",
+    "totalBalance": "Total Saldo",
+    "noAccounts": "Belum ada rekening",
+    "noAccountsSub": "Tambahkan rekening bank, tabungan, dan dompet tunai untuk melacak saldo Anda.",
+    "addFirstAccount": "Tambah rekening pertama Anda",
+    "acrossAccounts_one": "Di {{count}} rekening",
+    "acrossAccounts_other": "Di {{count}} rekening",
+    "importStatement": "Impor Rekening",
+    "types": {
+      "cash": "Uang Tunai",
+      "savings": "Rekening Tabungan",
+      "current": "Rekening Giro",
+      "investment": "Investasi",
+      "fixed_deposit": "Deposito",
+      "other": "Lainnya"
+    },
+    "periods": {
+      "7": "7 hari",
+      "30": "30 hari",
+      "90": "90 hari"
+    },
+    "addDialog": {
+      "title": "Tambah Rekening",
+      "nameLabel": "Nama rekening",
+      "namePlaceholder": "mis. Tabungan BIBD, Dompet Tunai",
+      "typeLabel": "Jenis rekening",
+      "bankLabel": "Bank / Lembaga",
+      "balanceLabel": "Saldo saat ini ({{currency}})",
+      "balanceHint": "Masukkan jumlah saldo rekening Anda saat ini.",
+      "save": "Simpan Rekening"
+    },
+    "editDialog": {
+      "title": "Edit Rekening"
+    },
+    "deleteDialog": {
+      "title": "Hapus Rekening",
+      "description": "Yakin ingin menghapus {{name}}? Transaksi yang terhubung ke rekening ini tidak akan ikut terhapus.",
+      "confirm": "Hapus"
+    },
+    "history": {
+      "dialogTitle": "Riwayat Saldo — {{name}}",
+      "subtitle": "Snapshot saldo harian berdasarkan riwayat transaksi",
+      "loading": "Memuat grafik…",
+      "noData": "Tidak ada data",
+      "lowest": "Terendah",
+      "highest": "Tertinggi",
+      "current": "Saat ini"
+    }
+  },
+  "budgets": {
+    "title": "Rencana Arus Kas",
+    "subtitle": "Rencanakan pendapatan dan pengeluaran Anda setiap bulan.",
+    "views": {
+      "plan": "Rencana Proyeksi",
+      "actual": "Aktual vs Rencana",
+      "annual": "Laporan Tahunan"
+    },
+    "annual": {
+      "cashFlowReport": "Laporan Arus Kas",
+      "annualTotal": "Total Tahunan",
+      "netIncome": "Pendapatan Bersih",
+      "salaryRow": "Gaji",
+      "totalNetIncome": "Total Pendapatan Bersih",
+      "fixedCommitments": "Komitmen Tetap",
+      "noCommitments": "Belum ada komitmen.",
+      "totalFixed": "Total Tetap",
+      "variableBudgets": "Anggaran Variabel",
+      "totalVariable": "Total Variabel",
+      "availablePool": "Dana Tersedia",
+      "summary": {
+        "totalIncome": "Total Pendapatan",
+        "totalFixed": "Total Tetap",
+        "incomePerMonth": "Pendapatan / bulan",
+        "fixedPerMonth": "Tetap / bulan",
+        "monthlySalary": "Gaji bulanan",
+        "monthlyCommitments": "Komitmen bulanan"
+      }
+    },
+    "summary": {
+      "monthlyIncome": "Pendapatan Bulanan",
+      "accountBalances": "Saldo Rekening",
+      "fixedCommitments": "Komitmen Tetap",
+      "totalBudgeted": "Total Dianggarkan",
+      "actuallySpent": "Aktual Terpakai",
+      "availablePool": "Dana Tersedia",
+      "readyToAssign": "Siap Dialokasikan",
+      "fromProfile": "Dari profil",
+      "overCommitted": "Komitmen berlebih!",
+      "afterDeductions": "Setelah semua potongan",
+      "overAssigned": "Alokasi berlebih!",
+      "unallocatedCash": "Uang tunai belum dialokasikan",
+      "ofPlanned": "dari {{amount}} yang direncanakan",
+      "overPlan": "Melebihi rencana",
+      "items": "{{count}} item",
+      "commitmentsX12": "{{count}} komitmen × 12"
+    },
+    "income": {
+      "sectionTitle": "Pendapatan",
+      "monthlySalary": "Gaji Bulanan",
+      "payday": "Tanggal Gajian: tanggal {{day}}",
+      "paydayMissing": "—",
+      "totalIncome": "Total Pendapatan"
+    },
+    "accountBalances": {
+      "sectionTitle": "Saldo Rekening",
+      "noAccounts": "Belum ada rekening.",
+      "noAccountsCta": "Tambahkan rekening Anda",
+      "noAccountsHint": "untuk menggunakan anggaran gaya YNAB.",
+      "totalCash": "Total Tunai"
+    },
+    "commitments": {
+      "sectionTitle": "Komitmen Tetap",
+      "noCommitments": "Belum ada komitmen. Tambahkan di halaman Komitmen.",
+      "totalFixed": "Total Tetap"
+    },
+    "variableBudget": {
+      "sectionTitle": "Anggaran Variabel",
+      "actualSectionTitle": "Anggaran Kategori — Aktual (YNAB)",
+      "colCategory": "Kategori",
+      "colAssigned": "Dialokasikan",
+      "colActivity": "Aktivitas",
+      "colAvailable": "Tersedia",
+      "colTotal": "Total",
+      "overBudget": "{{amount}} melebihi anggaran",
+      "totalBudgeted": "Total Dianggarkan"
+    },
+    "pool": {
+      "availablePool": "Dana Tersedia",
+      "readyToAssign": "Siap Dialokasikan",
+      "totalAccountBalances": "Total Saldo Rekening",
+      "minusFixedCommitments": "− Komitmen Tetap",
+      "minusAssigned": "− Dialokasikan ke Kategori"
+    }
+  },
+  "commitments": {
+    "title": "Komitmen",
+    "subtitle": "Pengeluaran tetap bulanan yang tidak bisa dihindari.",
+    "addButton": "Tambah Komitmen",
+    "totalFixed": "Total Komitmen Tetap",
+    "empty": "Belum ada komitmen.",
+    "dueDay": "Jatuh tempo tanggal {{day}}",
+    "loading": "Memuat...",
+    "confirmDelete": "Apakah Anda yakin?",
+    "addDialog": {
+      "title": "Tambah Komitmen Bulanan",
+      "labelField": "Label",
+      "amountField": "Jumlah",
+      "dueDayField": "Tanggal Jatuh Tempo (1-31, Opsional)"
+    }
+  },
+  "debts": {
+    "title": "Utang",
+    "subtitle": "Lacak pinjaman Anda dan rencanakan pelunasannya.",
+    "addButton": "Tambah Utang",
+    "empty": "Belum ada utang.",
+    "loading": "Memuat...",
+    "totalOutstanding": "Total Tunggakan",
+    "totalMonthlyPayment": "Total Pembayaran Bulanan",
+    "balanceLabel": "Saldo:",
+    "monthlyLabel": "Bulanan:",
+    "rateLabel": "Suku bunga:",
+    "simulatePayoff": "Simulasi Pelunasan",
+    "lastUpdated": "Diperbarui {{time}}",
+    "noActivity": "Belum ada aktivitas",
+    "timeline": "Garis waktu saldo — {{months}} bulan hingga lunas",
+    "timelineStarted": "mulai {{date}}",
+    "confirmDelete": "Apakah Anda yakin?",
+    "addDialog": {
+      "title": "Tambah Utang",
+      "lenderLabel": "Pemberi Pinjaman / Nama Bank",
+      "balanceLabel": "Saldo Tunggakan ({{currency}})",
+      "monthlyPaymentLabel": "Pembayaran Bulanan ({{currency}})",
+      "interestRateLabel": "Suku Bunga (% p.a.)",
+      "startDateLabel": "Tanggal Mulai Utang"
+    },
+    "editDialog": {
+      "title": "Edit Utang"
+    },
+    "debtTypes": {
+      "home_loan": "KPR",
+      "car_loan": "Kredit Kendaraan",
+      "personal_loan": "Pinjaman Pribadi",
+      "credit_card": "Kartu Kredit",
+      "student_loan": "Pinjaman Pendidikan",
+      "other": "Lainnya"
+    },
+    "detail": {
+      "currentStatus": "Status Saat Ini",
+      "outstandingBalance": "Saldo Tunggakan",
+      "monthlyPayment": "Pembayaran Bulanan",
+      "interestRate": "Suku Bunga",
+      "startDate": "Tanggal Mulai",
+      "notFound": "Utang tidak ditemukan",
+      "confirmDelete": "Yakin ingin menghapus utang ini?",
+      "simulator": {
+        "title": "Simulator Pelunasan",
+        "extraPaymentLabel": "Pembayaran Bulanan Tambahan ({{currency}})",
+        "simulate": "Simulasikan",
+        "originalTimeline": "Timeline Asli",
+        "newTimeline": "Timeline Baru",
+        "interestSaved": "Bunga Tersimpan",
+        "monthsSaved": "Hemat {{months}} bulan",
+        "monthsSavedSub": "dengan menambah {{amount}} ekstra setiap bulan.",
+        "payoffWarning": "Peringatan: pembayaran bulanan dasar Anda tidak cukup untuk menutupi bunga bulanan. Saldo pinjaman tidak akan berkurang. Harap tingkatkan pembayaran bulanan Anda."
+      },
+      "chart": {
+        "title": "Perbandingan Kurva Pelunasan",
+        "xLabel": "Bulan",
+        "monthLabel": "Bulan {{n}}",
+        "caption": "Sumbu X: Bulan berlalu · Sumbu Y: Saldo tunggakan ({{currency}})",
+        "standardPayoff": "Pelunasan Standar",
+        "acceleratedPayoff": "Pelunasan Dipercepat"
+      }
+    }
+  },
+  "goals": {
+    "title": "Tujuan Keuangan",
+    "subtitle": "Lacak target tabungan dan pencapaian Anda.",
+    "addButton": "Tambah Tujuan",
+    "loading": "Memuat...",
+    "summary": {
+      "totalGoals": "Total Tujuan",
+      "totalTarget": "Total Target",
+      "totalSaved": "Total Tersimpan",
+      "completed": "Selesai",
+      "activeGoal_one": "tujuan aktif",
+      "activeGoal_other": "tujuan aktif",
+      "combinedTarget": "target gabungan",
+      "pctOfTarget": "{{pct}}% dari target",
+      "goalReached_one": "tujuan tercapai",
+      "goalReached_other": "tujuan tercapai"
+    },
+    "empty": {
+      "title": "Belum ada tujuan",
+      "subtitle": "Tetapkan tujuan keuangan pertama Anda untuk memulai."
+    },
+    "card": {
+      "saved": "Tersimpan",
+      "pctComplete": "{{pct}}% selesai",
+      "remaining": "{{amount}} lagi",
+      "goalReached": "Tujuan tercapai!"
+    },
+    "targetDate": {
+      "label": "Tanggal target:",
+      "overdue_one": "({{count}} hari terlambat)",
+      "overdue_other": "({{count}} hari terlambat)",
+      "dueToday": "(hari ini)",
+      "daysLeft_one": "({{count}} hari lagi)",
+      "daysLeft_other": "({{count}} hari lagi)"
+    },
+    "deleteDialog": {
+      "title": "Hapus tujuan?",
+      "description": "Ini akan menghapus \"{{title}}\" secara permanen. Tindakan ini tidak bisa dibatalkan."
+    },
+    "addDialog": {
+      "title": "Tambah Tujuan Keuangan",
+      "titleLabel": "Judul Tujuan",
+      "titlePlaceholder": "mis. Dana Darurat",
+      "categoryLabel": "Kategori",
+      "targetAmountLabel": "Jumlah Target ({{currency}})",
+      "savedAmountLabel": "Jumlah Tersimpan ({{currency}})",
+      "deadlineLabel": "Tanggal Target",
+      "notesLabel": "Catatan",
+      "notesPlaceholder": "Detail tambahan...",
+      "submitAdd": "Tambah Tujuan"
+    },
+    "editDialog": {
+      "title": "Edit Tujuan",
+      "submit": "Simpan Perubahan"
+    },
+    "categories": {
+      "savings": "Tabungan",
+      "emergency": "Dana Darurat",
+      "debt_payoff": "Bayar Utang",
+      "investment": "Investasi",
+      "custom": "Kustom"
+    }
+  },
+  "netWorth": {
+    "title": "Kekayaan Bersih",
+    "subtitle": "Aset − Kewajiban = Posisi keuangan bersih Anda.",
+    "lastUpdated": "Terakhir diperbarui: {{time}}",
+    "noActivity": "Belum ada aktivitas",
+    "addAsset": "Tambah Aset",
+    "summary": {
+      "totalAssets": "Total Aset",
+      "totalLiabilities": "Total Kewajiban",
+      "netWorth": "Kekayaan Bersih",
+      "assetEntries": "Entri aset",
+      "accountBalances": "Saldo rekening",
+      "debtsOutstanding_one": "{{count}} utang tunggakan",
+      "debtsOutstanding_other": "{{count}} utang tunggakan"
+    },
+    "charts": {
+      "assetsVsLiabilities": "Aset vs Kewajiban",
+      "trendTitle": "Entri Aset — Tren 12 Bulan",
+      "trendSubtitle": "Berdasarkan nilai aset yang dicatat secara manual",
+      "trendEmpty": "Tambahkan aset di beberapa bulan untuk melihat trennya."
+    },
+    "accountBalances": {
+      "sectionTitle": "Saldo Rekening",
+      "manage": "Kelola",
+      "totalAccountBalances": "Total Saldo Rekening",
+      "noAccounts": "Belum ada rekening.",
+      "addAccount": "Tambah Rekening"
+    },
+    "assetEntries": {
+      "sectionTitle": "Entri Aset — {{month}}",
+      "noEntries": "Tidak ada entri aset untuk {{month}}.",
+      "addFirst": "Tambah entri aset pertama Anda",
+      "totalEntries": "Total Entri Aset",
+      "valueFrom": "Nilai dari {{month}}"
+    },
+    "liabilities": {
+      "sectionTitle": "Kewajiban",
+      "manage": "Kelola",
+      "noDebts": "Belum ada utang tercatat.",
+      "addDebt": "Tambah Utang",
+      "totalOutstanding": "Total Tunggakan"
+    },
+    "dialog": {
+      "addTitle": "Tambah Aset",
+      "editTitle": "Edit Aset",
+      "categoryLabel": "Kategori",
+      "nameLabel": "Nama",
+      "namePlaceholder": "mis. \"Honda Civic saya\", \"Properti Rimba\"",
+      "valueLabel": "Nilai ({{currency}})",
+      "monthLabel": "Bulan",
+      "saveAdd": "Tambah Aset",
+      "saveEdit": "Simpan Perubahan"
+    },
+    "assetCategories": {
+      "Savings": "Tabungan",
+      "Property": "Properti",
+      "Vehicle": "Kendaraan",
+      "Investment": "Investasi",
+      "Business": "Bisnis",
+      "Other": "Lainnya"
+    },
+    "debtTypes": {
+      "home_loan": "KPR",
+      "car_loan": "Kredit Kendaraan",
+      "personal_loan": "Pinjaman Pribadi",
+      "credit_card": "Kartu Kredit",
+      "student_loan": "Pinjaman Pendidikan",
+      "other": "Lainnya"
+    }
+  },
+  "insights": {
+    "title": "Wawasan",
+    "subtitle": "Analisis mendalam pola pengeluaran Anda.",
+    "analyzing": "Menganalisis...",
+    "aiSummary": "Ringkasan AI",
+    "sections": {
+      "dataInsights": "Wawasan Data",
+      "aiAnalysis": "Analisis AI"
+    },
+    "cards": {
+      "spendingTrend": "Tren Pengeluaran",
+      "categoryAnomalies": "Anomali Kategori",
+      "subscriptionCreep": "Penumpukan Langganan",
+      "savingsRate": "Tingkat Tabungan",
+      "dti": "Rasio Utang terhadap Pendapatan",
+      "budgetAdherence": "Kepatuhan Anggaran"
+    },
+    "spendingTrend": {
+      "needMoreData": "Kami membutuhkan setidaknya 2 bulan data untuk menampilkan tren pengeluaran.",
+      "vsLastMonth": "vs {{month}} ({{amount}})"
+    },
+    "anomalies": {
+      "notEnoughHistory": "Riwayat tidak cukup untuk mendeteksi anomali — periksa lagi setelah 2+ bulan data.",
+      "noAnomalies": "Tidak ada pengeluaran tidak biasa bulan ini — semua kategori dalam kisaran normal.",
+      "avg3m": "Rata-rata 3 bulan {{amount}}",
+      "moreCategories_one": "{{count}} kategori lagi di atas biasanya.",
+      "moreCategories_other": "{{count}} kategori lagi di atas biasanya."
+    },
+    "subscriptions": {
+      "noCharges": "Tidak ada tagihan berulang terdeteksi bulan ini.",
+      "chargesDetected_one": "{{count}} tagihan berulang terdeteksi bulan ini.",
+      "chargesDetected_other": "{{count}} tagihan berulang terdeteksi bulan ini.",
+      "more": "+{{count}} lagi"
+    },
+    "savingsRate": {
+      "configureSalary": "Atur gaji Anda di Pengaturan untuk melihat tingkat tabungan.",
+      "spendingExceedsIncome": "Pengeluaran melebihi pendapatan bulan ini.",
+      "excellent": "Luar biasa — di atas patokan 20% yang sehat.",
+      "onTrack": "Sesuai jalur. Targetkan 20%+ untuk keamanan jangka panjang.",
+      "saving": "Menabung {{rate}}% bulan ini. Kisaran sehat: 20%+.",
+      "incomeLegend": "Pendapatan {{income}} · Terpakai {{spent}}",
+      "saved": "Tersimpan",
+      "benchmark": "/ 20%"
+    },
+    "dti": {
+      "configureIncome": "Atur pendapatan Anda di Pengaturan untuk menghitung DTI.",
+      "noDebtPayments": "Tidak ada cicilan utang tercatat.",
+      "high": "Tinggi — pemberi pinjaman biasanya menolak pinjaman dengan DTI di atas 43%. Fokus pada pengurangan utang.",
+      "moderate": "Sedang — targetkan di bawah 36% untuk fleksibilitas keuangan yang lebih baik.",
+      "manageable": "Terkendali — dalam kisaran yang dapat diterima.",
+      "excellent": "Luar biasa — jauh di bawah tingkat utang yang sehat.",
+      "breakdown": "{{payment}} / bulan untuk cicilan utang · pendapatan {{income}}"
+    },
+    "budgetAdherence": {
+      "noBudgets": "Tidak ada anggaran untuk {{month}}. Tetapkan anggaran di Rencana Arus Kas untuk melacak kepatuhan.",
+      "onTrackLabel": "Sesuai jalur",
+      "allOnTrack": "Semua anggaran sesuai jalur — disiplin yang baik!",
+      "allOverSpent": "Semua anggaran melebihi batas bulan ini.",
+      "mixed": "{{onTrack}} sesuai jalur, {{overBudget}} melebihi anggaran.",
+      "pctOnTrack": "{{pct}}% anggaran sesuai jalur",
+      "empty": "— / — anggaran",
+      "emptyPct": "0% anggaran sesuai jalur"
+    },
+    "aiEmpty": "Klik Ringkasan AI di atas untuk mendapatkan analisis AI personal tentang pola pengeluaran Anda."
+  },
+  "upload": {
+    "title": "Impor Transaksi",
+    "subtitle": "Unggah PDF rekening bank atau bagikan tangkapan layar dari aplikasi perbankan mobile Anda.",
+    "card": {
+      "title": "Pilih metode impor Anda",
+      "description": "BIBD dan Baiduri didukung. Kami akan mengekstrak transaksi Anda dan menampilkan layar tinjauan sebelum konfirmasi."
+    },
+    "bankLabel": "Bank",
+    "bankPlaceholder": "Pilih bank",
+    "tabs": {
+      "screenshots": "Tangkapan Layar",
+      "pdf": "Rekening PDF"
+    },
+    "screenshots": {
+      "howToTitle": "📱 Cara menggunakan tangkapan layar",
+      "step1": "Buka aplikasi perbankan mobile {{bank}} Anda",
+      "step2": "Buka riwayat transaksi Anda",
+      "step3": "Ambil tangkapan layar daftar transaksi",
+      "step4": "Unggah di sini — kami akan membaca tanggal, merchant, dan jumlahnya",
+      "tapToAdd": "Ketuk untuk menambah tangkapan layar",
+      "formats": "JPG, PNG, atau HEIC — hingga 10 gambar",
+      "addScreenshots": "Tambah Tangkapan Layar",
+      "addMore": "Tambah lagi",
+      "ready_one": "{{count}} tangkapan layar siap diproses",
+      "ready_other": "{{count}} tangkapan layar siap diproses"
+    },
+    "pdf": {
+      "howToTitle": "📄 Mendapatkan rekening PDF Anda",
+      "dropzone": "Klik untuk mengunggah atau seret dan lepas",
+      "sizeLimit": "PDF hingga 10 MB",
+      "selectPdf": "Pilih PDF",
+      "changeFile": "Ganti File",
+      "tip": "💡 Jika mengunduh PDF tidak praktis, coba tab Tangkapan Layar — foto saja daftar transaksi dari ponsel Anda."
+    },
+    "processing": {
+      "readingScreenshots": "Membaca tangkapan layar...",
+      "parsingStatement": "Memproses rekening...",
+      "processScreenshots_one": "Proses {{count}} Tangkapan Layar",
+      "processScreenshots_other": "Proses {{count}} Tangkapan Layar",
+      "uploadAndReview": "Unggah & Tinjau Transaksi"
+    },
+    "errors": {
+      "noPdf": "Harap pilih file PDF.",
+      "noScreenshots": "Harap tambahkan setidaknya satu tangkapan layar.",
+      "uploadFailed": "Gagal mengunggah. Harap coba lagi."
+    },
+    "trustNote": "File Anda diproses dengan aman dan tidak dibagikan kepada pihak ketiga. Hanya data transaksi yang diekstrak yang disimpan — bukan file asli Anda."
+  },
+  "achievements": {
+    "title": "Pencapaian",
+    "subtitle": "{{earned}} dari {{total}} lencana diraih. Teruskan!",
+    "streak": {
+      "label": "Hari Berturut-turut",
+      "best": "Terbaik: {{count}} hari"
+    },
+    "badges": {
+      "label": "Lencana Diraih",
+      "remaining": "{{count}} lagi"
+    },
+    "challenge": {
+      "label": "Tantangan Bulan Ini",
+      "completed": "— Selesai!"
+    },
+    "milestones": "Pencapaian",
+    "habitBadges": "Lencana Kebiasaan",
+    "earned": "✓ Diraih {{date}}",
+    "locked": "🔒 Terkunci",
+    "reinforcement": {
+      "streakActive": "🔥 Anda sedang dalam streak {{count}} hari — teruskan!",
+      "noStreak": "📝 Mulai catat transaksi untuk membangun streak Anda.",
+      "zeroBadges": "Selesaikan tindakan pertama untuk mendapatkan lencana. Coba catat transaksi atau atur anggaran.",
+      "fewBadges": "Anda membuat kemajuan yang baik. Tinggal beberapa lencana lagi!",
+      "manyBadges": "Kerja bagus. Anda sedang membangun kebiasaan keuangan yang kuat."
     }
   }
 }

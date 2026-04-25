@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { formatDistanceToNow } from "date-fns";
 import { useQueries } from "@tanstack/react-query";
 import {
@@ -84,15 +85,6 @@ const CATEGORY_BG: Record<AssetCategory, string> = {
   Other: "bg-gray-50 text-gray-600",
 };
 
-const DEBT_TYPE_LABELS: Record<string, string> = {
-  home_loan: "Home Loan",
-  car_loan: "Car Loan",
-  personal_loan: "Personal Loan",
-  credit_card: "Credit Card",
-  student_loan: "Student Loan",
-  other: "Other",
-};
-
 function currentMonth() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
@@ -115,13 +107,12 @@ function monthLabel(month: string, locale = "en-BN") {
   return _formatMonthYear(new Date(y, m - 1, 1), locale);
 }
 
-
-function relativeTime(isoString: string | null | undefined): string {
-  if (!isoString) return "No activity yet";
+function relativeTime(isoString: string | null | undefined, fallback: string): string {
+  if (!isoString) return fallback;
   try {
     return formatDistanceToNow(new Date(isoString), { addSuffix: true });
   } catch {
-    return "No activity yet";
+    return fallback;
   }
 }
 
@@ -186,6 +177,7 @@ const LineTooltip = ({ active, payload, label }: TooltipProps<number, string>) =
 };
 
 export default function NetWorth() {
+  const { t } = useTranslation();
   const [selectedMonth, setSelectedMonth] = useState(currentMonth());
   const today = currentMonth();
   const { formatCurrency, region, decimalStep } = useRegion();
@@ -244,7 +236,7 @@ export default function NetWorth() {
   });
 
   const comparisonData: ComparisonPayload[] = [
-    { name: "Assets vs Liabilities", Assets: totalAssets, Liabilities: totalLiabilities },
+    { name: t("netWorth.charts.assetsVsLiabilities"), Assets: totalAssets, Liabilities: totalLiabilities },
   ];
 
   const trendData = last12.map((m, i) => {
@@ -316,18 +308,22 @@ export default function NetWorth() {
     ...(debts as Debt[]).map((d) => d.updatedAt),
   ].filter(Boolean);
   const mostRecentUpdate = allTimestamps.length > 0
-    ? allTimestamps.reduce((latest, t) => (t > latest ? t : latest))
+    ? allTimestamps.reduce((latest, ts) => (ts > latest ? ts : latest))
     : null;
+
+  const noActivityText = t("netWorth.noActivity");
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-foreground tracking-tight">Net Worth</h1>
-          <p className="text-muted-foreground">Assets − Liabilities = Your net financial position.</p>
+          <h1 className="text-3xl font-bold text-foreground tracking-tight">{t("netWorth.title")}</h1>
+          <p className="text-muted-foreground">{t("netWorth.subtitle")}</p>
           <p className="text-xs text-muted-foreground mt-1">
-            Last updated: {mostRecentUpdate ? relativeTime(mostRecentUpdate) : "No activity yet"}
+            {mostRecentUpdate
+              ? t("netWorth.lastUpdated", { time: relativeTime(mostRecentUpdate, noActivityText) })
+              : noActivityText}
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -342,7 +338,7 @@ export default function NetWorth() {
           </div>
           <Button onClick={openCreate} className="gap-2">
             <Plus className="w-4 h-4" />
-            Add Asset
+            {t("netWorth.addAsset")}
           </Button>
         </div>
       </div>
@@ -350,15 +346,15 @@ export default function NetWorth() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Total Assets */}
         <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-5">
-          <p className="text-xs font-semibold text-emerald-700 uppercase tracking-wide mb-1">Total Assets</p>
+          <p className="text-xs font-semibold text-emerald-700 uppercase tracking-wide mb-1">{t("netWorth.summary.totalAssets")}</p>
           <p className="text-2xl font-bold text-emerald-800">{formatCurrency(totalAssets)}</p>
           <div className="mt-2 space-y-1">
             <div className="flex justify-between text-xs text-emerald-700">
-              <span>Asset entries</span>
+              <span>{t("netWorth.summary.assetEntries")}</span>
               <span className="font-medium">{formatCurrency(totalAssetEntries)}</span>
             </div>
             <div className="flex justify-between text-xs text-emerald-700">
-              <span>Account balances</span>
+              <span>{t("netWorth.summary.accountBalances")}</span>
               <span className="font-medium">{formatCurrency(totalAccountBalance)}</span>
             </div>
           </div>
@@ -366,10 +362,12 @@ export default function NetWorth() {
 
         {/* Total Liabilities */}
         <div className="bg-red-50 border border-red-200 rounded-xl p-5">
-          <p className="text-xs font-semibold text-red-700 uppercase tracking-wide mb-1">Total Liabilities</p>
+          <p className="text-xs font-semibold text-red-700 uppercase tracking-wide mb-1">{t("netWorth.summary.totalLiabilities")}</p>
           <p className="text-2xl font-bold text-red-800">{formatCurrency(totalLiabilities)}</p>
           <div className="mt-2">
-            <p className="text-xs text-red-700">{debts.length} debt{debts.length !== 1 ? "s" : ""} outstanding</p>
+            <p className="text-xs text-red-700">
+              {t("netWorth.summary.debtsOutstanding", { count: debts.length })}
+            </p>
           </div>
         </div>
 
@@ -379,7 +377,7 @@ export default function NetWorth() {
           netWorthPositive ? "bg-white border-emerald-400" : "bg-red-50 border-red-400"
         )}>
           <p className={cn("text-xs font-semibold uppercase tracking-wide mb-1", netWorthPositive ? "text-emerald-700" : "text-red-700")}>
-            Net Worth
+            {t("netWorth.summary.netWorth")}
           </p>
           <p className={cn("text-3xl font-extrabold", netWorthPositive ? "text-emerald-700" : "text-red-700")}>
             {formatCurrency(netWorth)}
@@ -394,7 +392,7 @@ export default function NetWorth() {
         {/* Assets vs Liabilities comparison chart */}
         <div className="bg-card border rounded-xl p-5">
           <h2 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide mb-4">
-            Assets vs Liabilities
+            {t("netWorth.charts.assetsVsLiabilities")}
           </h2>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={comparisonData} margin={{ top: 4, right: 8, left: 0, bottom: 4 }}>
@@ -403,8 +401,8 @@ export default function NetWorth() {
               <YAxis tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} tickFormatter={(v: number) => fmtCompact(v)} width={70} />
               <Tooltip content={<ComparisonTooltip />} />
               <Legend wrapperStyle={{ fontSize: 12 }} />
-              <Bar dataKey="Assets" name="Assets" fill="hsl(142, 71%, 45%)" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="Liabilities" name="Liabilities" fill="hsl(0, 84%, 60%)" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="Assets" name={t("netWorth.summary.totalAssets")} fill="hsl(142, 71%, 45%)" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="Liabilities" name={t("netWorth.summary.totalLiabilities")} fill="hsl(0, 84%, 60%)" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -412,12 +410,12 @@ export default function NetWorth() {
         {/* 12-month asset entries trend */}
         <div className="bg-card border rounded-xl p-5">
           <h2 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide mb-1">
-            Asset Entries — 12-Month Trend
+            {t("netWorth.charts.trendTitle")}
           </h2>
-          <p className="text-xs text-muted-foreground mb-3">Based on manually recorded asset values</p>
+          <p className="text-xs text-muted-foreground mb-3">{t("netWorth.charts.trendSubtitle")}</p>
           {trendData.every((d) => d.value === 0) ? (
             <div className="flex items-center justify-center h-48 text-sm text-muted-foreground">
-              Add assets across multiple months to see the trend.
+              {t("netWorth.charts.trendEmpty")}
             </div>
           ) : (
             <ResponsiveContainer width="100%" height={200}>
@@ -433,25 +431,28 @@ export default function NetWorth() {
         </div>
       </div>
 
+      {/* Account Balances section */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Building2 className="w-4 h-4 text-emerald-600" />
-            <h2 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">Account Balances</h2>
+            <h2 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">
+              {t("netWorth.accountBalances.sectionTitle")}
+            </h2>
           </div>
           <Link href="/accounts">
             <Button variant="ghost" size="sm" className="gap-1 text-xs text-muted-foreground h-7">
-              Manage <ArrowRight className="w-3 h-3" />
+              {t("netWorth.accountBalances.manage")} <ArrowRight className="w-3 h-3" />
             </Button>
           </Link>
         </div>
         <div className="bg-card border rounded-xl overflow-hidden">
           {accounts.length === 0 ? (
             <div className="px-5 py-4 text-sm text-muted-foreground flex items-center justify-between">
-              <span>No accounts added yet.</span>
+              <span>{t("netWorth.accountBalances.noAccounts")}</span>
               <Link href="/accounts">
                 <Button variant="outline" size="sm" className="gap-1 text-xs">
-                  <Plus className="w-3 h-3" /> Add Account
+                  <Plus className="w-3 h-3" /> {t("netWorth.accountBalances.addAccount")}
                 </Button>
               </Link>
             </div>
@@ -467,7 +468,7 @@ export default function NetWorth() {
                 </div>
               ))}
               <div className="bg-emerald-50 px-5 py-2 flex justify-between items-center">
-                <span className="text-xs font-medium text-emerald-800">Total Account Balances</span>
+                <span className="text-xs font-medium text-emerald-800">{t("netWorth.accountBalances.totalAccountBalances")}</span>
                 <span className="text-sm font-bold text-emerald-800">{formatCurrency(totalAccountBalance)}</span>
               </div>
             </>
@@ -475,20 +476,23 @@ export default function NetWorth() {
         </div>
       </div>
 
+      {/* Asset Entries section */}
       <div className="space-y-4">
         <div className="flex items-center gap-2">
           <TrendingUp className="w-4 h-4 text-blue-600" />
           <h2 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">
-            Asset Entries — {monthLabel(selectedMonth, region.locale)}
+            {t("netWorth.assetEntries.sectionTitle", { month: monthLabel(selectedMonth, region.locale) })}
           </h2>
         </div>
 
         {assets.length === 0 ? (
           <div className="bg-card border rounded-xl p-10 text-center">
-            <p className="text-muted-foreground text-sm">No asset entries for {monthLabel(selectedMonth, region.locale)}.</p>
+            <p className="text-muted-foreground text-sm">
+              {t("netWorth.assetEntries.noEntries", { month: monthLabel(selectedMonth, region.locale) })}
+            </p>
             <Button variant="outline" className="mt-4 gap-2" onClick={openCreate}>
               <Plus className="w-4 h-4" />
-              Add your first asset entry
+              {t("netWorth.assetEntries.addFirst")}
             </Button>
           </div>
         ) : (
@@ -500,7 +504,7 @@ export default function NetWorth() {
                 <div className="flex items-center justify-between px-5 py-3.5 border-b bg-muted/30">
                   <div className="flex items-center gap-2.5">
                     <span className={cn("p-1.5 rounded-lg", CATEGORY_BG[cat])}>{CATEGORY_ICONS[cat]}</span>
-                    <span className="font-semibold text-foreground">{cat}</span>
+                    <span className="font-semibold text-foreground">{t(`netWorth.assetCategories.${cat}`)}</span>
                     <span className="text-xs text-muted-foreground">({catAssets.length})</span>
                   </div>
                   <span className="text-sm font-bold text-foreground">{formatCurrency(subtotal)}</span>
@@ -511,7 +515,9 @@ export default function NetWorth() {
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-foreground truncate">{asset.name}</p>
                         {asset.month !== selectedMonth && (
-                          <p className="text-xs text-muted-foreground">Value from {monthLabel(asset.month, region.locale)}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {t("netWorth.assetEntries.valueFrom", { month: monthLabel(asset.month, region.locale) })}
+                          </p>
                         )}
                       </div>
                       <span className="text-sm font-semibold text-foreground">{formatCurrency(parseFloat(asset.value))}</span>
@@ -533,31 +539,34 @@ export default function NetWorth() {
 
         {assets.length > 0 && (
           <div className="bg-blue-50 border border-blue-200 rounded-xl px-5 py-3 flex justify-between items-center">
-            <span className="text-xs font-medium text-blue-800">Total Asset Entries</span>
+            <span className="text-xs font-medium text-blue-800">{t("netWorth.assetEntries.totalEntries")}</span>
             <span className="text-sm font-bold text-blue-800">{formatCurrency(totalAssetEntries)}</span>
           </div>
         )}
       </div>
 
+      {/* Liabilities section */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <TrendingDown className="w-4 h-4 text-red-600" />
-            <h2 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">Liabilities</h2>
+            <h2 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">
+              {t("netWorth.liabilities.sectionTitle")}
+            </h2>
           </div>
           <Link href="/debts">
             <Button variant="ghost" size="sm" className="gap-1 text-xs text-muted-foreground h-7">
-              Manage <ArrowRight className="w-3 h-3" />
+              {t("netWorth.liabilities.manage")} <ArrowRight className="w-3 h-3" />
             </Button>
           </Link>
         </div>
         <div className="bg-card border rounded-xl overflow-hidden">
           {debts.length === 0 ? (
             <div className="px-5 py-4 text-sm text-muted-foreground flex items-center justify-between">
-              <span>No debts recorded yet.</span>
+              <span>{t("netWorth.liabilities.noDebts")}</span>
               <Link href="/debts">
                 <Button variant="outline" size="sm" className="gap-1 text-xs">
-                  <Plus className="w-3 h-3" /> Add Debt
+                  <Plus className="w-3 h-3" /> {t("netWorth.liabilities.addDebt")}
                 </Button>
               </Link>
             </div>
@@ -568,7 +577,7 @@ export default function NetWorth() {
                   <div>
                     <span className="text-sm font-medium text-foreground">{d.lender}</span>
                     <span className="text-xs text-muted-foreground ml-2">
-                      {DEBT_TYPE_LABELS[d.debtType] ?? d.debtType}
+                      {t(`netWorth.debtTypes.${d.debtType}`) ?? d.debtType}
                     </span>
                   </div>
                   <span className="text-sm font-semibold text-red-700">
@@ -577,7 +586,7 @@ export default function NetWorth() {
                 </div>
               ))}
               <div className="bg-red-50 px-5 py-2 flex justify-between items-center">
-                <span className="text-xs font-medium text-red-800">Total Outstanding</span>
+                <span className="text-xs font-medium text-red-800">{t("netWorth.liabilities.totalOutstanding")}</span>
                 <span className="text-sm font-bold text-red-800">{formatCurrency(totalLiabilities)}</span>
               </div>
             </>
@@ -585,14 +594,17 @@ export default function NetWorth() {
         </div>
       </div>
 
+      {/* Asset dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>{editingId ? "Edit Asset" : "Add Asset"}</DialogTitle>
+            <DialogTitle>
+              {editingId ? t("netWorth.dialog.editTitle") : t("netWorth.dialog.addTitle")}
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-1.5">
-              <Label>Category</Label>
+              <Label>{t("netWorth.dialog.categoryLabel")}</Label>
               <Select value={form.category} onValueChange={(v) => setForm((f) => ({ ...f, category: v as AssetCategory }))}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -600,7 +612,7 @@ export default function NetWorth() {
                     <SelectItem key={cat} value={cat}>
                       <div className="flex items-center gap-2">
                         <span className={cn("p-1 rounded", CATEGORY_BG[cat])}>{CATEGORY_ICONS[cat]}</span>
-                        {cat}
+                        {t(`netWorth.assetCategories.${cat}`)}
                       </div>
                     </SelectItem>
                   ))}
@@ -608,22 +620,42 @@ export default function NetWorth() {
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label>Name</Label>
-              <Input placeholder='e.g. "My Honda Civic", "Rimba property"' value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />
+              <Label>{t("netWorth.dialog.nameLabel")}</Label>
+              <Input
+                placeholder={t("netWorth.dialog.namePlaceholder")}
+                value={form.name}
+                onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+              />
             </div>
             <div className="space-y-1.5">
-              <Label>Value ({region.currency})</Label>
-              <Input type="number" step={decimalStep} min="0" placeholder={decimalStep === "1" ? "0" : "0.00"} value={form.value} onFocus={(e) => e.target.select()} onChange={(e) => setForm((f) => ({ ...f, value: e.target.value }))} />
+              <Label>{t("netWorth.dialog.valueLabel", { currency: region.currency })}</Label>
+              <Input
+                type="number"
+                step={decimalStep}
+                min="0"
+                placeholder={decimalStep === "1" ? "0" : "0.00"}
+                value={form.value}
+                onFocus={(e) => e.target.select()}
+                onChange={(e) => setForm((f) => ({ ...f, value: e.target.value }))}
+              />
             </div>
             <div className="space-y-1.5">
-              <Label>Month</Label>
-              <Input type="month" value={form.month} onChange={(e) => setForm((f) => ({ ...f, month: e.target.value }))} />
+              <Label>{t("netWorth.dialog.monthLabel")}</Label>
+              <Input
+                type="month"
+                value={form.month}
+                onChange={(e) => setForm((f) => ({ ...f, month: e.target.value }))}
+              />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>{t("common.cancel")}</Button>
             <Button onClick={handleSave} disabled={isSaving || !form.name.trim() || !form.value || !form.month}>
-              {isSaving ? "Saving..." : editingId ? "Save Changes" : "Add Asset"}
+              {isSaving
+                ? t("common.saving")
+                : editingId
+                ? t("netWorth.dialog.saveEdit")
+                : t("netWorth.dialog.saveAdd")}
             </Button>
           </DialogFooter>
         </DialogContent>

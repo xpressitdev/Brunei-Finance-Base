@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useListAccounts, useCreateAccount, useUpdateAccount, useDeleteAccount, useGetAccountBalanceHistory } from "@workspace/api-client-react";
 import type { Account } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -46,12 +47,12 @@ import { cn } from "@/lib/utils";
 import { useRegion } from "@/hooks/useRegion";
 
 const ACCOUNT_TYPES = [
-  { value: "cash", label: "Cash in Hand", icon: Wallet, color: "bg-emerald-100 text-emerald-800" },
-  { value: "savings", label: "Savings Account", icon: PiggyBank, color: "bg-blue-100 text-blue-800" },
-  { value: "current", label: "Current Account", icon: Building2, color: "bg-purple-100 text-purple-800" },
-  { value: "investment", label: "Investment", icon: TrendingUp, color: "bg-amber-100 text-amber-800" },
-  { value: "fixed_deposit", label: "Fixed Deposit", icon: Lock, color: "bg-rose-100 text-rose-800" },
-  { value: "other", label: "Other", icon: Landmark, color: "bg-gray-100 text-gray-800" },
+  { value: "cash", icon: Wallet, color: "bg-emerald-100 text-emerald-800" },
+  { value: "savings", icon: PiggyBank, color: "bg-blue-100 text-blue-800" },
+  { value: "current", icon: Building2, color: "bg-purple-100 text-purple-800" },
+  { value: "investment", icon: TrendingUp, color: "bg-amber-100 text-amber-800" },
+  { value: "fixed_deposit", icon: Lock, color: "bg-rose-100 text-rose-800" },
+  { value: "other", icon: Landmark, color: "bg-gray-100 text-gray-800" },
 ];
 
 const BANKS = [
@@ -64,9 +65,9 @@ const BANKS = [
 ];
 
 const PERIOD_OPTIONS = [
-  { label: "7 days", value: 7 },
-  { label: "30 days", value: 30 },
-  { label: "90 days", value: 90 },
+  { value: 7 },
+  { value: 30 },
+  { value: 90 },
 ];
 
 function getTypeInfo(type: string) {
@@ -100,6 +101,7 @@ function AccountForm({
   onCancel: () => void;
   saving: boolean;
 }) {
+  const { t } = useTranslation();
   const [form, setForm] = useState<FormState>(initial);
   const { region, decimalStep } = useRegion();
   const set = (k: keyof FormState, v: string) => setForm(prev => ({ ...prev, [k]: v }));
@@ -107,31 +109,33 @@ function AccountForm({
   return (
     <div className="space-y-4">
       <div className="space-y-1.5">
-        <Label>Account name</Label>
+        <Label>{t("accounts.addDialog.nameLabel")}</Label>
         <Input
           value={form.name}
           onChange={e => set("name", e.target.value)}
-          placeholder="e.g. BIBD Savings, Cash Wallet"
+          placeholder={t("accounts.addDialog.namePlaceholder")}
           autoFocus
         />
       </div>
 
       <div className="space-y-1.5">
-        <Label>Account type</Label>
+        <Label>{t("accounts.addDialog.typeLabel")}</Label>
         <Select value={form.type} onValueChange={v => set("type", v)}>
           <SelectTrigger>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {ACCOUNT_TYPES.map(t => (
-              <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+            {ACCOUNT_TYPES.map(typeOpt => (
+              <SelectItem key={typeOpt.value} value={typeOpt.value}>
+                {t(`accounts.types.${typeOpt.value}`)}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
       </div>
 
       <div className="space-y-1.5">
-        <Label>Bank / Institution</Label>
+        <Label>{t("accounts.addDialog.bankLabel")}</Label>
         <Select value={form.bankName} onValueChange={v => set("bankName", v)}>
           <SelectTrigger>
             <SelectValue />
@@ -145,7 +149,7 @@ function AccountForm({
       </div>
 
       <div className="space-y-1.5">
-        <Label>Current balance ({region.currency})</Label>
+        <Label>{t("accounts.addDialog.balanceLabel", { currency: region.currency })}</Label>
         <div className="relative">
           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm font-medium">{region.currency}</span>
           <Input
@@ -159,16 +163,16 @@ function AccountForm({
             placeholder={decimalStep === "1" ? "e.g. 5000" : "e.g. 5000.00"}
           />
         </div>
-        <p className="text-xs text-muted-foreground">Enter the current amount in your account today.</p>
+        <p className="text-xs text-muted-foreground">{t("accounts.addDialog.balanceHint")}</p>
       </div>
 
       <DialogFooter className="pt-2">
-        <Button variant="outline" onClick={onCancel} disabled={saving}>Cancel</Button>
+        <Button variant="outline" onClick={onCancel} disabled={saving}>{t("common.cancel")}</Button>
         <Button
           onClick={() => onSave(form)}
           disabled={saving || !form.name.trim()}
         >
-          {saving ? "Saving…" : "Save Account"}
+          {saving ? t("common.saving") : t("accounts.addDialog.save")}
         </Button>
       </DialogFooter>
     </div>
@@ -176,6 +180,7 @@ function AccountForm({
 }
 
 function BalanceHistoryChart({ account }: { account: Account }) {
+  const { t } = useTranslation();
   const [days, setDays] = useState(30);
   const { formatCurrency, region } = useRegion();
   const { data: history = [], isLoading } = useGetAccountBalanceHistory(account.id, { days });
@@ -206,7 +211,7 @@ function BalanceHistoryChart({ account }: { account: Account }) {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
-          Daily balance snapshots derived from transaction history
+          {t("accounts.history.subtitle")}
         </p>
         <div className="flex gap-1">
           {PERIOD_OPTIONS.map(opt => (
@@ -217,7 +222,7 @@ function BalanceHistoryChart({ account }: { account: Account }) {
               className="h-7 px-2.5 text-xs"
               onClick={() => setDays(opt.value)}
             >
-              {opt.label}
+              {t(`accounts.periods.${opt.value}`)}
             </Button>
           ))}
         </div>
@@ -225,11 +230,11 @@ function BalanceHistoryChart({ account }: { account: Account }) {
 
       {isLoading ? (
         <div className="h-56 flex items-center justify-center">
-          <div className="text-muted-foreground text-sm animate-pulse">Loading chart…</div>
+          <div className="text-muted-foreground text-sm animate-pulse">{t("accounts.history.loading")}</div>
         </div>
       ) : history.length === 0 ? (
         <div className="h-56 flex items-center justify-center rounded-xl border-2 border-dashed border-muted">
-          <p className="text-sm text-muted-foreground">No data available</p>
+          <p className="text-sm text-muted-foreground">{t("accounts.history.noData")}</p>
         </div>
       ) : (
         <div className="h-56">
@@ -276,13 +281,13 @@ function BalanceHistoryChart({ account }: { account: Account }) {
 
       <div className="flex justify-between text-xs text-muted-foreground border-t pt-3">
         <span>
-          Lowest: <span className="font-medium text-foreground">{formatCurrency(minBal)}</span>
+          {t("accounts.history.lowest")}: <span className="font-medium text-foreground">{formatCurrency(minBal)}</span>
         </span>
         <span>
-          Highest: <span className="font-medium text-foreground">{formatCurrency(maxBal)}</span>
+          {t("accounts.history.highest")}: <span className="font-medium text-foreground">{formatCurrency(maxBal)}</span>
         </span>
         <span>
-          Current: <span className="font-semibold text-foreground">{formatCurrency(account.balance)}</span>
+          {t("accounts.history.current")}: <span className="font-semibold text-foreground">{formatCurrency(account.balance)}</span>
         </span>
       </div>
     </div>
@@ -290,6 +295,7 @@ function BalanceHistoryChart({ account }: { account: Account }) {
 }
 
 export default function Accounts() {
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const { formatCurrency } = useRegion();
   const { data: accounts = [], isLoading } = useListAccounts();
@@ -373,26 +379,26 @@ export default function Accounts() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Accounts</h1>
-          <p className="text-muted-foreground">Track your actual cash across all accounts and wallets.</p>
+          <h1 className="text-3xl font-bold tracking-tight">{t("accounts.title")}</h1>
+          <p className="text-muted-foreground">{t("accounts.subtitle")}</p>
         </div>
         <Button onClick={() => setAddOpen(true)} className="gap-2">
-          <Plus className="w-4 h-4" /> Add Account
+          <Plus className="w-4 h-4" /> {t("accounts.addButton")}
         </Button>
       </div>
 
       {/* Total balance summary */}
       <Card className="border-primary/20 bg-primary/5">
         <CardHeader className="flex flex-row items-center justify-between pb-2 pt-4 px-5">
-          <CardTitle className="text-xs font-medium text-primary uppercase tracking-wider">Total Balance</CardTitle>
+          <CardTitle className="text-xs font-medium text-primary uppercase tracking-wider">{t("accounts.totalBalance")}</CardTitle>
           <Building2 className="w-4 h-4 text-primary" />
         </CardHeader>
         <CardContent className="px-5 pb-5">
           <div className="text-3xl font-bold text-primary">{formatCurrency(totalBalance)}</div>
           <p className="text-xs text-muted-foreground mt-1">
             {accounts.length === 0
-              ? "No accounts yet"
-              : `Across ${accounts.length} account${accounts.length !== 1 ? "s" : ""}`}
+              ? t("accounts.noAccounts")
+              : t("accounts.acrossAccounts", { count: accounts.length })}
           </p>
         </CardContent>
       </Card>
@@ -401,12 +407,12 @@ export default function Accounts() {
       {accounts.length === 0 ? (
         <div className="rounded-2xl border-2 border-dashed border-muted py-16 text-center">
           <div className="text-5xl mb-4">🏦</div>
-          <p className="font-semibold text-lg text-foreground mb-1">No accounts yet</p>
+          <p className="font-semibold text-lg text-foreground mb-1">{t("accounts.noAccounts")}</p>
           <p className="text-sm text-muted-foreground mb-6">
-            Add your bank accounts, savings, and cash wallets to track your actual balance.
+            {t("accounts.noAccountsSub")}
           </p>
           <Button onClick={() => setAddOpen(true)} className="gap-2">
-            <Plus className="w-4 h-4" /> Add your first account
+            <Plus className="w-4 h-4" /> {t("accounts.addFirstAccount")}
           </Button>
         </div>
       ) : (
@@ -429,7 +435,7 @@ export default function Accounts() {
                       </div>
                     </div>
                     <Badge variant="secondary" className={cn("text-xs shrink-0", typeInfo.color)}>
-                      {typeInfo.label}
+                      {t(`accounts.types.${account.type}`)}
                     </Badge>
                   </div>
 
@@ -440,7 +446,7 @@ export default function Accounts() {
                   <div className="flex items-center gap-2 pt-1 border-t">
                     <Link href="/upload" className="flex-1">
                       <Button variant="outline" size="sm" className="w-full gap-1.5 text-xs">
-                        <Upload className="w-3 h-3" /> Import Statement
+                        <Upload className="w-3 h-3" /> {t("accounts.importStatement")}
                       </Button>
                     </Link>
                     <Button
@@ -482,7 +488,7 @@ export default function Accounts() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <BarChart2 className="w-4 h-4 text-primary" />
-              Balance History — {historyAccount?.name}
+              {t("accounts.history.dialogTitle", { name: historyAccount?.name })}
             </DialogTitle>
           </DialogHeader>
           {historyAccount && <BalanceHistoryChart account={historyAccount} />}
@@ -493,7 +499,7 @@ export default function Accounts() {
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Add Account</DialogTitle>
+            <DialogTitle>{t("accounts.addDialog.title")}</DialogTitle>
           </DialogHeader>
           <AccountForm
             initial={EMPTY_FORM}
@@ -508,7 +514,7 @@ export default function Accounts() {
       <Dialog open={!!editAccount} onOpenChange={open => { if (!open) setEditAccount(null); }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Edit Account</DialogTitle>
+            <DialogTitle>{t("accounts.editDialog.title")}</DialogTitle>
           </DialogHeader>
           {editAccount && (
             <AccountForm
@@ -530,19 +536,18 @@ export default function Accounts() {
       <AlertDialog open={!!deleteAccount} onOpenChange={open => { if (!open) setDeleteAccount(null); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Account</AlertDialogTitle>
+            <AlertDialogTitle>{t("accounts.deleteDialog.title")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete <strong>{deleteAccount?.name}</strong>?
-              This will not delete any transactions linked to this account.
+              {t("accounts.deleteDialog.description", { name: deleteAccount?.name })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={handleDelete}
             >
-              Delete
+              {t("accounts.deleteDialog.confirm")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

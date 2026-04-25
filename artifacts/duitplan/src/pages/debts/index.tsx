@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { formatDistanceToNow } from "date-fns";
 import { Link, useLocation } from "wouter";
 import {
@@ -32,6 +33,7 @@ import {
 } from "recharts";
 
 function DebtTimeline({ debt }: { debt: Debt }) {
+  const { t } = useTranslation();
   const { data: scheduleData } = useGetDebtSchedule(debt.id);
   const { formatCurrency, region } = useRegion();
   const schedule = scheduleData?.schedule ?? [];
@@ -44,12 +46,12 @@ function DebtTimeline({ debt }: { debt: Debt }) {
   return (
     <div className="mt-3">
       <div className="text-xs text-muted-foreground mb-1">
-        Balance timeline — {schedule.length - 1} months to payoff
+        {t("debts.timeline", { months: schedule.length - 1 })}
         {debt.startDate
           ? (() => {
               const [y, mo] = debt.startDate!.split("-");
               const d = new Date(parseInt(y), parseInt(mo) - 1, 1);
-              return ` · started ${d.toLocaleDateString(region.locale, { month: "short", year: "numeric" })}`;
+              return ` · ${t("debts.timelineStarted", { date: d.toLocaleDateString(region.locale, { month: "short", year: "numeric" }) })}`;
             })()
           : ""}
       </div>
@@ -98,6 +100,7 @@ const EMPTY_FORM = {
 };
 
 export default function Debts() {
+  const { t } = useTranslation();
   const { data: debts, isLoading, refetch } = useListDebts();
   const createMutation = useCreateDebt();
   const updateMutation = useUpdateDebt();
@@ -173,7 +176,7 @@ export default function Debts() {
   const totalMonthly =
     debts?.reduce((acc, curr) => acc + parseFloat(curr.monthlyPayment), 0) || 0;
 
-  if (isLoading) return <div className="p-8">Loading...</div>;
+  if (isLoading) return <div className="p-8">{t("debts.loading")}</div>;
 
   const debtForm = (onSubmit: (e: React.FormEvent) => void, isPending: boolean) => (
     <form onSubmit={onSubmit} className="space-y-4">
@@ -181,7 +184,7 @@ export default function Debts() {
         <TrialExpiredPrompt action="manage debts" />
       )}
       <div className="space-y-2">
-        <Label>Lender / Bank Name</Label>
+        <Label>{t("debts.addDialog.lenderLabel")}</Label>
         <Input
           value={formData.lender}
           onChange={(e) => setFormData({ ...formData, lender: e.target.value })}
@@ -189,7 +192,7 @@ export default function Debts() {
         />
       </div>
       <div className="space-y-2">
-        <Label>Outstanding Balance ({region.currency})</Label>
+        <Label>{t("debts.addDialog.balanceLabel", { currency: region.currency })}</Label>
         <Input
           type="number"
           step={decimalStep}
@@ -202,7 +205,7 @@ export default function Debts() {
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label>Monthly Payment ({region.currency})</Label>
+          <Label>{t("debts.addDialog.monthlyPaymentLabel", { currency: region.currency })}</Label>
           <Input
             type="number"
             step={decimalStep}
@@ -214,7 +217,7 @@ export default function Debts() {
           />
         </div>
         <div className="space-y-2">
-          <Label>Interest Rate (% p.a.)</Label>
+          <Label>{t("debts.addDialog.interestRateLabel")}</Label>
           <Input
             type="number"
             step="0.01"
@@ -226,7 +229,7 @@ export default function Debts() {
         </div>
       </div>
       <div className="space-y-2">
-        <Label>Debt Start Date</Label>
+        <Label>{t("debts.addDialog.startDateLabel")}</Label>
         <Input
           type="date"
           value={formData.startDate}
@@ -234,7 +237,7 @@ export default function Debts() {
         />
       </div>
       <Button type="submit" className="w-full" disabled={isPending}>
-        {isPending ? "Saving..." : "Save"}
+        {isPending ? t("common.saving") : t("common.save")}
       </Button>
     </form>
   );
@@ -243,19 +246,19 @@ export default function Debts() {
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-foreground tracking-tight">Debts</h1>
-          <p className="text-muted-foreground">Track your loans and plan payoffs.</p>
+          <h1 className="text-3xl font-bold text-foreground tracking-tight">{t("debts.title")}</h1>
+          <p className="text-muted-foreground">{t("debts.subtitle")}</p>
         </div>
 
         <Dialog open={isAddOpen} onOpenChange={(open) => { setIsAddOpen(open); if (!open) setTrialExpiredError(false); }}>
           <DialogTrigger asChild>
             <Button>
-              <Plus className="w-4 h-4 mr-2" /> Add Debt
+              <Plus className="w-4 h-4 mr-2" /> {t("debts.addButton")}
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Add Debt</DialogTitle>
+              <DialogTitle>{t("debts.addDialog.title")}</DialogTitle>
             </DialogHeader>
             {debtForm(handleAdd, createMutation.isPending)}
           </DialogContent>
@@ -270,7 +273,7 @@ export default function Debts() {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Edit Debt</DialogTitle>
+            <DialogTitle>{t("debts.editDialog.title")}</DialogTitle>
           </DialogHeader>
           {debtForm(handleEdit, updateMutation.isPending)}
         </DialogContent>
@@ -282,7 +285,7 @@ export default function Debts() {
             <Wallet className="w-6 h-6" />
           </div>
           <div>
-            <div className="text-sm font-medium text-muted-foreground">Total Outstanding</div>
+            <div className="text-sm font-medium text-muted-foreground">{t("debts.totalOutstanding")}</div>
             <div className="text-2xl font-bold text-foreground">
               {formatCurrency(totalBalance)}
             </div>
@@ -294,7 +297,7 @@ export default function Debts() {
           </div>
           <div>
             <div className="text-sm font-medium text-muted-foreground">
-              Total Monthly Payment
+              {t("debts.totalMonthlyPayment")}
             </div>
             <div className="text-2xl font-bold text-foreground">
               {formatCurrency(totalMonthly)}
@@ -306,7 +309,7 @@ export default function Debts() {
       <div className="bg-white rounded-xl border overflow-hidden">
         {!debts || debts.length === 0 ? (
           <div className="p-12 text-center text-muted-foreground">
-            No debts added yet.
+            {t("debts.empty")}
           </div>
         ) : (
           <div className="divide-y">
@@ -318,26 +321,26 @@ export default function Debts() {
                       <h3 className="font-semibold text-lg">{d.lender}</h3>
                       <span className="text-xs text-muted-foreground">
                         {d.updatedAt
-                          ? `Last updated ${formatDistanceToNow(new Date(d.updatedAt), { addSuffix: true })}`
-                          : "No activity yet"}
+                          ? t("debts.lastUpdated", { time: formatDistanceToNow(new Date(d.updatedAt), { addSuffix: true }) })
+                          : t("debts.noActivity")}
                       </span>
                     </div>
                     <div className="text-sm text-muted-foreground mt-1 flex flex-wrap gap-4">
                       <span>
-                        Balance:{" "}
+                        {t("debts.balanceLabel")}{" "}
                         <strong className="text-foreground">
                           {formatCurrency(parseFloat(d.outstandingBalance))}
                         </strong>
                       </span>
                       <span>
-                        Monthly:{" "}
+                        {t("debts.monthlyLabel")}{" "}
                         <strong className="text-foreground">
                           {formatCurrency(parseFloat(d.monthlyPayment))}
                         </strong>
                       </span>
                       {d.interestRate && (
                         <span>
-                          Rate:{" "}
+                          {t("debts.rateLabel")}{" "}
                           <strong className="text-foreground">{d.interestRate}%</strong>
                         </span>
                       )}
@@ -355,7 +358,7 @@ export default function Debts() {
                     </Button>
                     <Link href={`/debts/${d.id}`}>
                       <Button variant="outline" className="w-full sm:w-auto">
-                        Simulate Payoff <ArrowRight className="ml-2 w-4 h-4" />
+                        {t("debts.simulatePayoff")} <ArrowRight className="ml-2 w-4 h-4" />
                       </Button>
                     </Link>
                   </div>

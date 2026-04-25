@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { format, addMonths, subMonths, addYears, subYears } from "date-fns";
 import {
   useListBudgets,
@@ -53,6 +54,7 @@ function AnnualView({
   commitments: Array<{ id: string; label: string; amount: string }>;
   categories: Array<{ id: string; name: string; kind: string }>;
 }) {
+  const { t } = useTranslation();
   const { formatCurrency } = useRegion();
   const months = MONTH_LABELS.map((_, i) => `${year}-${String(i + 1).padStart(2, "0")}`);
   const expenseCats = categories.filter(c => c.kind === "expense");
@@ -98,7 +100,7 @@ function AnnualView({
         <thead>
           <tr className="bg-gray-800 text-white">
             <th className="sticky left-0 z-10 bg-gray-800 text-left px-4 py-3 text-xs font-bold uppercase tracking-wider min-w-[180px] border-r border-gray-600">
-              Cash Flow Report
+              {t("budgets.annual.cashFlowReport")}
             </th>
             {MONTH_LABELS.map(m => (
               <th key={m} className="px-3 py-3 text-xs font-bold uppercase tracking-wider text-center min-w-[90px]">
@@ -106,7 +108,7 @@ function AnnualView({
               </th>
             ))}
             <th className="px-3 py-3 text-xs font-bold uppercase tracking-wider text-center min-w-[100px] bg-gray-700">
-              Annual Total
+              {t("budgets.annual.annualTotal")}
             </th>
           </tr>
         </thead>
@@ -114,14 +116,14 @@ function AnnualView({
           {/* ── NET INCOME ── */}
           <tr className="bg-emerald-700 text-white">
             <td className="sticky left-0 z-10 bg-emerald-700 px-4 py-2.5 text-xs font-bold uppercase tracking-wider border-r border-emerald-600">
-              Net Income
+              {t("budgets.annual.netIncome")}
             </td>
             {MONTH_LABELS.map((_, i) => <td key={i} className="px-3 py-2" />)}
             <td className="px-3 py-2" />
           </tr>
           <tr className="hover:bg-gray-50 border-b border-gray-100">
             <td className="sticky left-0 z-10 bg-white hover:bg-gray-50 px-4 py-2 text-xs font-medium border-r border-gray-100 pl-6">
-              Salary / Gaji
+              {t("budgets.annual.salaryRow")}
             </td>
             {MONTH_LABELS.map((_, i) => (
               <td key={i} className={cellCls}>
@@ -134,7 +136,7 @@ function AnnualView({
           </tr>
           <tr className="bg-emerald-50 border-b-2 border-emerald-200">
             <td className="sticky left-0 z-10 bg-emerald-50 px-4 py-2 text-xs font-bold text-emerald-800 border-r border-emerald-200">
-              Total Net Income
+              {t("budgets.annual.totalNetIncome")}
             </td>
             {MONTH_LABELS.map((_, i) => (
               <td key={i} className={cn(cellCls, "font-bold text-emerald-800")}>
@@ -149,7 +151,7 @@ function AnnualView({
           {/* ── FIXED COMMITMENTS ── */}
           <tr className="bg-orange-700 text-white">
             <td className="sticky left-0 z-10 bg-orange-700 px-4 py-2.5 text-xs font-bold uppercase tracking-wider border-r border-orange-600">
-              Fixed Commitments
+              {t("budgets.annual.fixedCommitments")}
             </td>
             {MONTH_LABELS.map((_, i) => <td key={i} className="px-3 py-2" />)}
             <td className="px-3 py-2" />
@@ -157,7 +159,7 @@ function AnnualView({
           {commitments.length === 0 && (
             <tr className="border-b border-gray-100">
               <td colSpan={14} className="px-4 py-3 text-xs text-muted-foreground">
-                No commitments added yet.
+                {t("budgets.annual.noCommitments")}
               </td>
             </tr>
           )}
@@ -179,7 +181,7 @@ function AnnualView({
           ))}
           <tr className="bg-orange-50 border-b-2 border-orange-200">
             <td className="sticky left-0 z-10 bg-orange-50 px-4 py-2 text-xs font-bold text-orange-800 border-r border-orange-200">
-              Total Fixed
+              {t("budgets.annual.totalFixed")}
             </td>
             {MONTH_LABELS.map((_, i) => (
               <td key={i} className={cn(cellCls, "font-bold text-orange-800")}>
@@ -194,7 +196,7 @@ function AnnualView({
           {/* ── VARIABLE BUDGETS ── */}
           <tr className="bg-blue-700 text-white">
             <td className="sticky left-0 z-10 bg-blue-700 px-4 py-2.5 text-xs font-bold uppercase tracking-wider border-r border-blue-600">
-              Variable Budgets
+              {t("budgets.annual.variableBudgets")}
             </td>
             {MONTH_LABELS.map((_, i) => <td key={i} className="px-3 py-2" />)}
             <td className="px-3 py-2" />
@@ -225,7 +227,7 @@ function AnnualView({
           })}
           <tr className="bg-blue-50 border-b-2 border-blue-200">
             <td className="sticky left-0 z-10 bg-blue-50 px-4 py-2 text-xs font-bold text-blue-800 border-r border-blue-200">
-              Total Variable
+              {t("budgets.annual.totalVariable")}
             </td>
             {budgetMaps.map((bm, i) => {
               const monthTotal = expenseCats.reduce((s, cat) => s + parseFloat(bm[cat.id]?.plannedAmount ?? "0"), 0);
@@ -254,7 +256,7 @@ function AnnualView({
                   "sticky left-0 z-10 px-4 py-3 text-xs font-extrabold uppercase tracking-wider border-r",
                   allPositive ? "bg-emerald-50 text-emerald-800 border-emerald-300" : "bg-red-50 text-red-800 border-red-300"
                 )}>
-                  Available Pool
+                  {t("budgets.annual.availablePool")}
                 </td>
                 {monthPools.map((pool, i) => (
                   <td key={i} className={cn(
@@ -280,6 +282,7 @@ function AnnualView({
 }
 
 export default function Budgets() {
+  const { t } = useTranslation();
   const [activeDate, setActiveDate] = useState(new Date());
   const [view, setView] = useState<"plan" | "actual" | "annual">("plan");
   const [editing, setEditing] = useState<Record<string, string>>({});
@@ -340,8 +343,8 @@ export default function Budgets() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
-          <h1 className="text-3xl font-bold text-foreground tracking-tight">Cash Flow Plan</h1>
-          <p className="text-muted-foreground">Plan your income and spending each month.</p>
+          <h1 className="text-3xl font-bold text-foreground tracking-tight">{t("budgets.title")}</h1>
+          <p className="text-muted-foreground">{t("budgets.subtitle")}</p>
         </div>
 
         {view === "annual" ? (
@@ -380,7 +383,7 @@ export default function Budgets() {
           className="rounded-full gap-1.5"
         >
           <LayoutList className="w-3.5 h-3.5" />
-          Forecast Plan
+          {t("budgets.views.plan")}
         </Button>
         <Button
           size="sm"
@@ -389,7 +392,7 @@ export default function Budgets() {
           className="rounded-full gap-1.5"
         >
           <TrendingDown className="w-3.5 h-3.5" />
-          Actual vs Plan
+          {t("budgets.views.actual")}
         </Button>
         <Button
           size="sm"
@@ -398,7 +401,7 @@ export default function Budgets() {
           className="rounded-full gap-1.5"
         >
           <Table2 className="w-3.5 h-3.5" />
-          Annual Report
+          {t("budgets.views.annual")}
         </Button>
       </div>
 
@@ -408,27 +411,27 @@ export default function Budgets() {
           {/* Annual summary header */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <SummaryCard
-              label="Total Income"
+              label={t("budgets.annual.summary.totalIncome")}
               value={formatCurrency(salary * 12)}
               sub={`${year} · ${formatCurrency(salary)}/mo`}
               color="bg-emerald-50 border border-emerald-200"
             />
             <SummaryCard
-              label="Total Fixed"
+              label={t("budgets.annual.summary.totalFixed")}
               value={formatCurrency(totalCommitments * 12)}
-              sub={`${(commitments ?? []).length} commitments × 12`}
+              sub={t("budgets.summary.commitmentsX12", { count: (commitments ?? []).length })}
               color="bg-orange-50 border border-orange-200"
             />
             <SummaryCard
-              label="Income / mo"
+              label={t("budgets.annual.summary.incomePerMonth")}
               value={formatCurrency(salary)}
-              sub="Monthly salary"
+              sub={t("budgets.annual.summary.monthlySalary")}
               color="bg-white border"
             />
             <SummaryCard
-              label="Fixed / mo"
+              label={t("budgets.annual.summary.fixedPerMonth")}
               value={formatCurrency(totalCommitments)}
-              sub="Monthly commitments"
+              sub={t("budgets.annual.summary.monthlyCommitments")}
               color="bg-white border"
             />
           </div>
@@ -448,38 +451,40 @@ export default function Budgets() {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             {view === "plan" ? (
               <SummaryCard
-                label="Monthly Income"
+                label={t("budgets.summary.monthlyIncome")}
                 value={formatCurrency(salary)}
-                sub={profile?.fullName ? `Gaji ${profile.fullName.split(" ")[0]}` : "From profile"}
+                sub={profile?.fullName ? `Gaji ${profile.fullName.split(" ")[0]}` : t("budgets.summary.fromProfile")}
                 color="bg-emerald-50 border border-emerald-200"
               />
             ) : (
               <SummaryCard
-                label="Account Balances"
+                label={t("budgets.summary.accountBalances")}
                 value={formatCurrency(totalAccountBalance)}
-                sub={`${accounts.length} account${accounts.length !== 1 ? "s" : ""}`}
+                sub={t("budgets.summary.items", { count: accounts.length })}
                 color="bg-emerald-50 border border-emerald-200"
               />
             )}
             <SummaryCard
-              label="Fixed Commitments"
+              label={t("budgets.summary.fixedCommitments")}
               value={formatCurrency(totalCommitments)}
-              sub={`${(commitments ?? []).length} items`}
+              sub={t("budgets.summary.items", { count: (commitments ?? []).length })}
               color="bg-orange-50 border border-orange-200"
             />
             <SummaryCard
-              label={view === "plan" ? "Total Budgeted" : "Actually Spent"}
+              label={view === "plan" ? t("budgets.summary.totalBudgeted") : t("budgets.summary.actuallySpent")}
               value={view === "plan" ? formatCurrency(totalPlanned) : formatCurrency(totalActual)}
-              sub={view === "actual" && totalActual > totalPlanned ? "Over plan" : `of ${formatCurrency(totalPlanned)} planned`}
+              sub={view === "actual" && totalActual > totalPlanned
+                ? t("budgets.summary.overPlan")
+                : t("budgets.summary.ofPlanned", { amount: formatCurrency(totalPlanned) })}
               color="bg-blue-50 border border-blue-200"
             />
             <SummaryCard
-              label={view === "plan" ? "Available Pool" : "Ready to Assign"}
+              label={view === "plan" ? t("budgets.summary.availablePool") : t("budgets.summary.readyToAssign")}
               value={formatCurrency(view === "plan" ? pool : readyToAssign)}
               sub={
                 view === "plan"
-                  ? pool < 0 ? "Over-committed!" : "After all deductions"
-                  : readyToAssign < 0 ? "Over-assigned!" : "Unallocated real cash"
+                  ? pool < 0 ? t("budgets.summary.overCommitted") : t("budgets.summary.afterDeductions")
+                  : readyToAssign < 0 ? t("budgets.summary.overAssigned") : t("budgets.summary.unallocatedCash")
               }
               color={
                 view === "plan"
@@ -494,18 +499,24 @@ export default function Budgets() {
             <section className="space-y-2">
               <div className="flex items-center gap-2">
                 <TrendingUp className="w-4 h-4 text-emerald-600" />
-                <h2 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">Income</h2>
+                <h2 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">
+                  {t("budgets.income.sectionTitle")}
+                </h2>
               </div>
               <div className="bg-white border rounded-xl overflow-hidden">
                 <div className="flex items-center justify-between px-5 py-4">
                   <div>
-                    <p className="font-semibold text-foreground">Monthly Salary / Gaji</p>
-                    <p className="text-xs text-muted-foreground">Payday: {profile?.payday ? `${profile.payday}th of the month` : "—"}</p>
+                    <p className="font-semibold text-foreground">{t("budgets.income.monthlySalary")}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {profile?.payday
+                        ? t("budgets.income.payday", { day: profile.payday })
+                        : t("budgets.income.paydayMissing")}
+                    </p>
                   </div>
                   <span className="font-bold text-emerald-700 text-lg">{formatCurrency(salary)}</span>
                 </div>
                 <div className="bg-emerald-50 px-5 py-2 flex justify-between items-center border-t border-emerald-100">
-                  <span className="text-xs font-medium text-emerald-800">Total Income</span>
+                  <span className="text-xs font-medium text-emerald-800">{t("budgets.income.totalIncome")}</span>
                   <span className="text-sm font-bold text-emerald-800">{formatCurrency(salary)}</span>
                 </div>
               </div>
@@ -518,7 +529,7 @@ export default function Budgets() {
               >
                 <Building2 className="w-4 h-4 text-emerald-600" />
                 <h2 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground flex-1">
-                  Account Balances
+                  {t("budgets.accountBalances.sectionTitle")}
                 </h2>
                 <ChevronDown className={cn("w-4 h-4 text-muted-foreground transition-transform", !showAccountsPanel && "-rotate-90")} />
               </button>
@@ -526,7 +537,9 @@ export default function Budgets() {
                 <div className="bg-white border rounded-xl overflow-hidden">
                   {accounts.length === 0 ? (
                     <div className="px-5 py-4 text-sm text-muted-foreground">
-                      No accounts added yet. <a href="/accounts" className="text-primary underline">Add your accounts</a> to use YNAB-style budgeting.
+                      {t("budgets.accountBalances.noAccounts")}{" "}
+                      <a href="/accounts" className="text-primary underline">{t("budgets.accountBalances.noAccountsCta")}</a>{" "}
+                      {t("budgets.accountBalances.noAccountsHint")}
                     </div>
                   ) : (
                     <>
@@ -536,15 +549,15 @@ export default function Budgets() {
                             <span className="text-sm font-medium text-foreground">{a.name}</span>
                             {a.bankName && <span className="text-xs text-muted-foreground ml-2">{a.bankName}</span>}
                           </div>
-                          <span className="font-semibold text-emerald-700 text-sm">{formatCurrency(parseFloat(a.balance ?? "0"))}</span>
+                          <span className="text-sm font-semibold text-emerald-700">{formatCurrency(parseFloat(a.balance ?? "0"))}</span>
                         </div>
                       ))}
+                      <div className="bg-emerald-50 px-5 py-2 flex justify-between items-center border-t border-emerald-100">
+                        <span className="text-xs font-medium text-emerald-800">{t("budgets.accountBalances.totalCash")}</span>
+                        <span className="text-sm font-bold text-emerald-800">{formatCurrency(totalAccountBalance)}</span>
+                      </div>
                     </>
                   )}
-                  <div className="bg-emerald-50 px-5 py-2 flex justify-between items-center border-t border-emerald-100">
-                    <span className="text-xs font-medium text-emerald-800">Total Cash</span>
-                    <span className="text-sm font-bold text-emerald-800">{formatCurrency(totalAccountBalance)}</span>
-                  </div>
                 </div>
               )}
             </section>
@@ -554,12 +567,14 @@ export default function Budgets() {
           <section className="space-y-2">
             <div className="flex items-center gap-2">
               <Lock className="w-4 h-4 text-orange-600" />
-              <h2 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">Fixed Commitments</h2>
+              <h2 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">
+                {t("budgets.commitments.sectionTitle")}
+              </h2>
               <Badge variant="secondary" className="text-xs">auto</Badge>
             </div>
             <div className="bg-white border rounded-xl overflow-hidden divide-y">
               {(commitments ?? []).length === 0 && (
-                <p className="px-5 py-4 text-sm text-muted-foreground">No commitments yet. Add them on the Commitments page.</p>
+                <p className="px-5 py-4 text-sm text-muted-foreground">{t("budgets.commitments.noCommitments")}</p>
               )}
               {(commitments ?? []).map(c => (
                 <div key={c.id} className="flex items-center justify-between px-5 py-3.5">
@@ -568,7 +583,7 @@ export default function Budgets() {
                 </div>
               ))}
               <div className="bg-orange-50 px-5 py-2 flex justify-between items-center">
-                <span className="text-xs font-medium text-orange-800">Total Fixed</span>
+                <span className="text-xs font-medium text-orange-800">{t("budgets.commitments.totalFixed")}</span>
                 <span className="text-sm font-bold text-orange-800">{formatCurrency(totalCommitments)}</span>
               </div>
             </div>
@@ -579,17 +594,19 @@ export default function Budgets() {
             <div className="flex items-center gap-2">
               <TrendingDown className="w-4 h-4 text-blue-600" />
               <h2 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">
-                {view === "plan" ? "Variable Budget" : "Category Budget — Actual (YNAB)"}
+                {view === "plan"
+                  ? t("budgets.variableBudget.sectionTitle")
+                  : t("budgets.variableBudget.actualSectionTitle")}
               </h2>
             </div>
 
             {/* YNAB-style column header for actual view */}
             {view === "actual" && (
               <div className="grid grid-cols-[1fr_auto_auto_auto] gap-3 px-5 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide border-b bg-gray-50 rounded-t-xl border">
-                <span>Category</span>
-                <span className="w-24 text-right">Assigned</span>
-                <span className="w-24 text-right">Activity</span>
-                <span className="w-24 text-right">Available</span>
+                <span>{t("budgets.variableBudget.colCategory")}</span>
+                <span className="w-24 text-right">{t("budgets.variableBudget.colAssigned")}</span>
+                <span className="w-24 text-right">{t("budgets.variableBudget.colActivity")}</span>
+                <span className="w-24 text-right">{t("budgets.variableBudget.colAvailable")}</span>
               </div>
             )}
 
@@ -630,7 +647,7 @@ export default function Budgets() {
                         </div>
                       </div>
                     ) : (
-                      /* YNAB-style row: Category | Assigned | Activity | Available */
+                      /* YNAB-style row */
                       <div className="grid grid-cols-[1fr_auto_auto_auto] gap-3 items-center">
                         <span className="text-sm font-medium text-foreground">{cat.name}</span>
                         <span className="w-24 text-right text-sm text-muted-foreground font-mono">
@@ -653,7 +670,7 @@ export default function Budgets() {
                         <Progress value={pct} className={cn("h-1", isOver && "[&>div]:bg-destructive")} />
                         {isOver && (
                           <p className="text-xs text-destructive font-medium">
-                            {formatCurrency(actual - planned)} over budget
+                            {t("budgets.variableBudget.overBudget", { amount: formatCurrency(actual - planned) })}
                           </p>
                         )}
                       </div>
@@ -665,12 +682,12 @@ export default function Budgets() {
               <div className="bg-blue-50 px-5 py-2 flex justify-between items-center">
                 {view === "plan" ? (
                   <>
-                    <span className="text-xs font-medium text-blue-800">Total Budgeted</span>
+                    <span className="text-xs font-medium text-blue-800">{t("budgets.variableBudget.totalBudgeted")}</span>
                     <span className="text-sm font-bold text-blue-800">{formatCurrency(totalPlanned)}</span>
                   </>
                 ) : (
                   <div className="grid grid-cols-[1fr_auto_auto_auto] gap-3 w-full text-xs font-bold text-blue-800">
-                    <span>Total</span>
+                    <span>{t("budgets.variableBudget.colTotal")}</span>
                     <span className="w-24 text-right">{formatCurrency(totalPlanned)}</span>
                     <span className="w-24 text-right">{formatCurrency(totalActual)}</span>
                     <span className={cn("w-24 text-right", (totalPlanned - totalActual) < 0 ? "text-destructive" : "text-emerald-700")}>
@@ -693,7 +710,7 @@ export default function Budgets() {
                 <Wallet className={cn("w-6 h-6", pool < 0 ? "text-red-600" : "text-emerald-600")} />
                 <div>
                   <p className={cn("font-bold text-base", pool < 0 ? "text-red-800" : "text-emerald-800")}>
-                    Available Pool
+                    {t("budgets.pool.availablePool")}
                   </p>
                   <p className="text-xs text-muted-foreground">
                     {formatCurrency(salary)} income − {formatCurrency(totalCommitments)} commitments − {formatCurrency(totalPlanned)} budgeted
@@ -713,7 +730,7 @@ export default function Budgets() {
                 <div className="flex items-center gap-3">
                   <Building2 className={cn("w-6 h-6", readyToAssign < 0 ? "text-red-600" : "text-emerald-600")} />
                   <p className={cn("font-bold text-base", readyToAssign < 0 ? "text-red-800" : "text-emerald-800")}>
-                    Ready to Assign
+                    {t("budgets.pool.readyToAssign")}
                   </p>
                 </div>
                 <span className={cn("text-2xl font-extrabold", readyToAssign < 0 ? "text-red-700" : "text-emerald-700")}>
@@ -722,15 +739,15 @@ export default function Budgets() {
               </div>
               <div className="space-y-1 text-xs text-muted-foreground border-t pt-3">
                 <div className="flex justify-between">
-                  <span>Total Account Balances</span>
+                  <span>{t("budgets.pool.totalAccountBalances")}</span>
                   <span className="font-medium text-emerald-700">{formatCurrency(totalAccountBalance)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>− Fixed Commitments</span>
+                  <span>{t("budgets.pool.minusFixedCommitments")}</span>
                   <span className="font-medium text-orange-700">−{formatCurrency(totalCommitments)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>− Assigned to Categories</span>
+                  <span>{t("budgets.pool.minusAssigned")}</span>
                   <span className="font-medium text-blue-700">−{formatCurrency(totalPlanned)}</span>
                 </div>
               </div>

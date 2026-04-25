@@ -16,7 +16,6 @@
     "category": "Category",
     "account": "Account",
     "noAccount": "No account",
-    "uncategorised": "Uncategorised",
     "uncategorized": "Uncategorized",
     "saveChanges": "Save Changes",
     "revert": "Revert"
@@ -64,7 +63,7 @@
     },
     "recentTransactions": {
       "title": "Recent Transactions",
-      "uncategorised": "Uncategorised",
+      "uncategorized": "Uncategorized",
       "noTransactions": "No transactions recorded yet.",
       "importHint": "Try importing your BIBD or Baiduri statement.",
       "viewAll": "View all transactions"
@@ -75,7 +74,7 @@
     "subtitle": "Track every transaction",
     "today": "Today",
     "receipt": "Receipt",
-    "uncategorised": "Uncategorised",
+    "uncategorized": "Uncategorized",
     "summary": {
       "today": "Today",
       "monthExpenses": "Month Expenses",
@@ -127,7 +126,7 @@
       "noAccount": "No account",
       "category": "Category",
       "selectCategory": "Select category",
-      "uncategorised": "Uncategorised",
+      "uncategorized": "Uncategorized",
       "save": "Save Changes"
     },
     "deleteDialog": {
@@ -192,6 +191,8 @@
     }
   },
   "settings": {
+    "title": "Settings",
+    "subtitle": "Manage your profile and app preferences.",
     "tabs": {
       "profile": "Profile",
       "categories": "Categories",
@@ -221,6 +222,503 @@
       "en": "English",
       "ms": "Bahasa Melayu",
       "id": "Bahasa Indonesia"
+    },
+    "toasts": {
+      "profileUpdated": "Profile updated successfully",
+      "profileFailed": "Failed to update profile",
+      "categoryAdded": "Category added",
+      "categoryFailed": "Failed to add category"
+    }
+  },
+  "accounts": {
+    "title": "Accounts",
+    "subtitle": "Track your actual cash across all accounts and wallets.",
+    "addButton": "Add Account",
+    "totalBalance": "Total Balance",
+    "noAccounts": "No accounts yet",
+    "noAccountsSub": "Add your bank accounts, savings, and cash wallets to track your actual balance.",
+    "addFirstAccount": "Add your first account",
+    "acrossAccounts_one": "Across {{count}} account",
+    "acrossAccounts_other": "Across {{count}} accounts",
+    "importStatement": "Import Statement",
+    "types": {
+      "cash": "Cash in Hand",
+      "savings": "Savings Account",
+      "current": "Current Account",
+      "investment": "Investment",
+      "fixed_deposit": "Fixed Deposit",
+      "other": "Other"
+    },
+    "periods": {
+      "7": "7 days",
+      "30": "30 days",
+      "90": "90 days"
+    },
+    "addDialog": {
+      "title": "Add Account",
+      "nameLabel": "Account name",
+      "namePlaceholder": "e.g. BIBD Savings, Cash Wallet",
+      "typeLabel": "Account type",
+      "bankLabel": "Bank / Institution",
+      "balanceLabel": "Current balance ({{currency}})",
+      "balanceHint": "Enter the current amount in your account today.",
+      "save": "Save Account"
+    },
+    "editDialog": {
+      "title": "Edit Account"
+    },
+    "deleteDialog": {
+      "title": "Delete Account",
+      "description": "Are you sure you want to delete {{name}}? This will not delete any transactions linked to this account.",
+      "confirm": "Delete"
+    },
+    "history": {
+      "dialogTitle": "Balance History — {{name}}",
+      "subtitle": "Daily balance snapshots derived from transaction history",
+      "loading": "Loading chart…",
+      "noData": "No data available",
+      "lowest": "Lowest",
+      "highest": "Highest",
+      "current": "Current"
+    }
+  },
+  "budgets": {
+    "title": "Cash Flow Plan",
+    "subtitle": "Plan your income and spending each month.",
+    "views": {
+      "plan": "Forecast Plan",
+      "actual": "Actual vs Plan",
+      "annual": "Annual Report"
+    },
+    "annual": {
+      "cashFlowReport": "Cash Flow Report",
+      "annualTotal": "Annual Total",
+      "netIncome": "Net Income",
+      "salaryRow": "Salary / Gaji",
+      "totalNetIncome": "Total Net Income",
+      "fixedCommitments": "Fixed Commitments",
+      "noCommitments": "No commitments added yet.",
+      "totalFixed": "Total Fixed",
+      "variableBudgets": "Variable Budgets",
+      "totalVariable": "Total Variable",
+      "availablePool": "Available Pool",
+      "summary": {
+        "totalIncome": "Total Income",
+        "totalFixed": "Total Fixed",
+        "incomePerMonth": "Income / mo",
+        "fixedPerMonth": "Fixed / mo",
+        "monthlySalary": "Monthly salary",
+        "monthlyCommitments": "Monthly commitments"
+      }
+    },
+    "summary": {
+      "monthlyIncome": "Monthly Income",
+      "accountBalances": "Account Balances",
+      "fixedCommitments": "Fixed Commitments",
+      "totalBudgeted": "Total Budgeted",
+      "actuallySpent": "Actually Spent",
+      "availablePool": "Available Pool",
+      "readyToAssign": "Ready to Assign",
+      "fromProfile": "From profile",
+      "overCommitted": "Over-committed!",
+      "afterDeductions": "After all deductions",
+      "overAssigned": "Over-assigned!",
+      "unallocatedCash": "Unallocated real cash",
+      "ofPlanned": "of {{amount}} planned",
+      "overPlan": "Over plan",
+      "items": "{{count}} items",
+      "commitmentsX12": "{{count}} commitments × 12"
+    },
+    "income": {
+      "sectionTitle": "Income",
+      "monthlySalary": "Monthly Salary / Gaji",
+      "payday": "Payday: {{day}}th of the month",
+      "paydayMissing": "—",
+      "totalIncome": "Total Income"
+    },
+    "accountBalances": {
+      "sectionTitle": "Account Balances",
+      "noAccounts": "No accounts added yet.",
+      "noAccountsCta": "Add your accounts",
+      "noAccountsHint": "to use YNAB-style budgeting.",
+      "totalCash": "Total Cash"
+    },
+    "commitments": {
+      "sectionTitle": "Fixed Commitments",
+      "noCommitments": "No commitments yet. Add them on the Commitments page.",
+      "totalFixed": "Total Fixed"
+    },
+    "variableBudget": {
+      "sectionTitle": "Variable Budget",
+      "actualSectionTitle": "Category Budget — Actual (YNAB)",
+      "colCategory": "Category",
+      "colAssigned": "Assigned",
+      "colActivity": "Activity",
+      "colAvailable": "Available",
+      "colTotal": "Total",
+      "overBudget": "{{amount}} over budget",
+      "totalBudgeted": "Total Budgeted"
+    },
+    "pool": {
+      "availablePool": "Available Pool",
+      "readyToAssign": "Ready to Assign",
+      "totalAccountBalances": "Total Account Balances",
+      "minusFixedCommitments": "− Fixed Commitments",
+      "minusAssigned": "− Assigned to Categories"
+    }
+  },
+  "commitments": {
+    "title": "Commitments",
+    "subtitle": "Fixed monthly expenses you can't avoid.",
+    "addButton": "Add Commitment",
+    "totalFixed": "Total Fixed Commitments",
+    "empty": "No commitments added yet.",
+    "dueDay": "Due on day {{day}}",
+    "loading": "Loading...",
+    "confirmDelete": "Are you sure?",
+    "addDialog": {
+      "title": "Add Monthly Commitment",
+      "labelField": "Label",
+      "amountField": "Amount",
+      "dueDayField": "Due Day (1-31, Optional)"
+    }
+  },
+  "debts": {
+    "title": "Debts",
+    "subtitle": "Track your loans and plan payoffs.",
+    "addButton": "Add Debt",
+    "empty": "No debts added yet.",
+    "loading": "Loading...",
+    "totalOutstanding": "Total Outstanding",
+    "totalMonthlyPayment": "Total Monthly Payment",
+    "balanceLabel": "Balance:",
+    "monthlyLabel": "Monthly:",
+    "rateLabel": "Rate:",
+    "simulatePayoff": "Simulate Payoff",
+    "lastUpdated": "Last updated {{time}}",
+    "noActivity": "No activity yet",
+    "timeline": "Balance timeline — {{months}} months to payoff",
+    "timelineStarted": "started {{date}}",
+    "confirmDelete": "Are you sure?",
+    "addDialog": {
+      "title": "Add Debt",
+      "lenderLabel": "Lender / Bank Name",
+      "balanceLabel": "Outstanding Balance ({{currency}})",
+      "monthlyPaymentLabel": "Monthly Payment ({{currency}})",
+      "interestRateLabel": "Interest Rate (% p.a.)",
+      "startDateLabel": "Debt Start Date"
+    },
+    "editDialog": {
+      "title": "Edit Debt"
+    },
+    "debtTypes": {
+      "home_loan": "Home Loan",
+      "car_loan": "Car Loan",
+      "personal_loan": "Personal Loan",
+      "credit_card": "Credit Card",
+      "student_loan": "Student Loan",
+      "other": "Other"
+    },
+    "detail": {
+      "currentStatus": "Current Status",
+      "outstandingBalance": "Outstanding Balance",
+      "monthlyPayment": "Monthly Payment",
+      "interestRate": "Interest Rate",
+      "startDate": "Start Date",
+      "notFound": "Debt not found",
+      "confirmDelete": "Are you sure you want to delete this debt?",
+      "simulator": {
+        "title": "Payoff Simulator",
+        "extraPaymentLabel": "Extra Monthly Payment ({{currency}})",
+        "simulate": "Simulate",
+        "originalTimeline": "Original Timeline",
+        "newTimeline": "New Timeline",
+        "interestSaved": "Interest Saved",
+        "monthsSaved": "Save {{months}} months",
+        "monthsSavedSub": "by adding {{amount}} extra each month.",
+        "payoffWarning": "Warning: your base monthly payment does not cover the monthly interest. The loan balance will never decrease. Please increase your monthly payment."
+      },
+      "chart": {
+        "title": "Payoff Curve Comparison",
+        "xLabel": "Months",
+        "monthLabel": "Month {{n}}",
+        "caption": "X-axis: Months elapsed · Y-axis: Outstanding balance ({{currency}})",
+        "standardPayoff": "Standard Payoff",
+        "acceleratedPayoff": "Accelerated Payoff"
+      }
+    }
+  },
+  "goals": {
+    "title": "Financial Goals",
+    "subtitle": "Track your savings targets and milestones.",
+    "addButton": "Add Goal",
+    "loading": "Loading...",
+    "summary": {
+      "totalGoals": "Total Goals",
+      "totalTarget": "Total Target",
+      "totalSaved": "Total Saved",
+      "completed": "Completed",
+      "activeGoal_one": "active goal",
+      "activeGoal_other": "active goals",
+      "combinedTarget": "combined target",
+      "pctOfTarget": "{{pct}}% of target",
+      "goalReached_one": "goal reached",
+      "goalReached_other": "goals reached"
+    },
+    "empty": {
+      "title": "No goals yet",
+      "subtitle": "Set your first financial goal to get started."
+    },
+    "card": {
+      "saved": "Saved",
+      "pctComplete": "{{pct}}% complete",
+      "remaining": "{{amount}} remaining",
+      "goalReached": "Goal reached!"
+    },
+    "targetDate": {
+      "label": "Target date:",
+      "overdue_one": "({{count}} day overdue)",
+      "overdue_other": "({{count}} days overdue)",
+      "dueToday": "(due today)",
+      "daysLeft_one": "({{count}} day left)",
+      "daysLeft_other": "({{count}} days left)"
+    },
+    "deleteDialog": {
+      "title": "Delete goal?",
+      "description": "This will permanently delete \"{{title}}\". This action cannot be undone."
+    },
+    "addDialog": {
+      "title": "Add Financial Goal",
+      "titleLabel": "Goal Title",
+      "titlePlaceholder": "e.g. Emergency Fund",
+      "categoryLabel": "Category",
+      "targetAmountLabel": "Target Amount ({{currency}})",
+      "savedAmountLabel": "Amount Saved ({{currency}})",
+      "deadlineLabel": "Target Date",
+      "notesLabel": "Notes",
+      "notesPlaceholder": "Any extra details...",
+      "submitAdd": "Add Goal"
+    },
+    "editDialog": {
+      "title": "Edit Goal",
+      "submit": "Save Changes"
+    },
+    "categories": {
+      "savings": "Savings",
+      "emergency": "Emergency Fund",
+      "debt_payoff": "Debt Payoff",
+      "investment": "Investment",
+      "custom": "Custom"
+    }
+  },
+  "netWorth": {
+    "title": "Net Worth",
+    "subtitle": "Assets − Liabilities = Your net financial position.",
+    "lastUpdated": "Last updated: {{time}}",
+    "noActivity": "No activity yet",
+    "addAsset": "Add Asset",
+    "summary": {
+      "totalAssets": "Total Assets",
+      "totalLiabilities": "Total Liabilities",
+      "netWorth": "Net Worth",
+      "assetEntries": "Asset entries",
+      "accountBalances": "Account balances",
+      "debtsOutstanding_one": "{{count}} debt outstanding",
+      "debtsOutstanding_other": "{{count}} debts outstanding"
+    },
+    "charts": {
+      "assetsVsLiabilities": "Assets vs Liabilities",
+      "trendTitle": "Asset Entries — 12-Month Trend",
+      "trendSubtitle": "Based on manually recorded asset values",
+      "trendEmpty": "Add assets across multiple months to see the trend."
+    },
+    "accountBalances": {
+      "sectionTitle": "Account Balances",
+      "manage": "Manage",
+      "totalAccountBalances": "Total Account Balances",
+      "noAccounts": "No accounts added yet.",
+      "addAccount": "Add Account"
+    },
+    "assetEntries": {
+      "sectionTitle": "Asset Entries — {{month}}",
+      "noEntries": "No asset entries for {{month}}.",
+      "addFirst": "Add your first asset entry",
+      "totalEntries": "Total Asset Entries",
+      "valueFrom": "Value from {{month}}"
+    },
+    "liabilities": {
+      "sectionTitle": "Liabilities",
+      "manage": "Manage",
+      "noDebts": "No debts recorded yet.",
+      "addDebt": "Add Debt",
+      "totalOutstanding": "Total Outstanding"
+    },
+    "dialog": {
+      "addTitle": "Add Asset",
+      "editTitle": "Edit Asset",
+      "categoryLabel": "Category",
+      "nameLabel": "Name",
+      "namePlaceholder": "e.g. \"My Honda Civic\", \"Rimba property\"",
+      "valueLabel": "Value ({{currency}})",
+      "monthLabel": "Month",
+      "saveAdd": "Add Asset",
+      "saveEdit": "Save Changes"
+    },
+    "assetCategories": {
+      "Savings": "Savings",
+      "Property": "Property",
+      "Vehicle": "Vehicle",
+      "Investment": "Investment",
+      "Business": "Business",
+      "Other": "Other"
+    },
+    "debtTypes": {
+      "home_loan": "Home Loan",
+      "car_loan": "Car Loan",
+      "personal_loan": "Personal Loan",
+      "credit_card": "Credit Card",
+      "student_loan": "Student Loan",
+      "other": "Other"
+    }
+  },
+  "insights": {
+    "title": "Insights",
+    "subtitle": "Deep analysis of your spending habits.",
+    "analyzing": "Analyzing...",
+    "aiSummary": "AI Summary",
+    "sections": {
+      "dataInsights": "Data Insights",
+      "aiAnalysis": "AI Analysis"
+    },
+    "cards": {
+      "spendingTrend": "Spending Trend",
+      "categoryAnomalies": "Category Anomalies",
+      "subscriptionCreep": "Subscription Creep",
+      "savingsRate": "Savings Rate",
+      "dti": "Debt-to-Income Ratio",
+      "budgetAdherence": "Budget Adherence"
+    },
+    "spendingTrend": {
+      "needMoreData": "We need at least 2 months of data to show spending trends.",
+      "vsLastMonth": "vs {{month}} ({{amount}})"
+    },
+    "anomalies": {
+      "notEnoughHistory": "Not enough history to detect anomalies — check back after 2+ months of data.",
+      "noAnomalies": "No unusual spending detected this month — all categories are within normal range.",
+      "avg3m": "3-mo avg {{amount}}",
+      "moreCategories_one": "{{count}} more category above usual.",
+      "moreCategories_other": "{{count}} more categories above usual."
+    },
+    "subscriptions": {
+      "noCharges": "No recurring charges detected this month.",
+      "chargesDetected_one": "{{count}} recurring charge detected this month.",
+      "chargesDetected_other": "{{count}} recurring charges detected this month.",
+      "more": "+{{count}} more"
+    },
+    "savingsRate": {
+      "configureSalary": "Configure your salary in Settings to see your savings rate.",
+      "spendingExceedsIncome": "Spending exceeds income this month.",
+      "excellent": "Excellent — above the 20% healthy benchmark.",
+      "onTrack": "On track. Aim for 20%+ for long-term security.",
+      "saving": "Saving {{rate}}% this month. Healthy range: 20%+.",
+      "incomeLegend": "Income {{income}} · Spent {{spent}}",
+      "saved": "Saved",
+      "benchmark": "/ 20%"
+    },
+    "dti": {
+      "configureIncome": "Configure your income in Settings to calculate DTI.",
+      "noDebtPayments": "No debt payments recorded.",
+      "high": "High — lenders typically reject loans above 43% DTI. Focus on debt reduction.",
+      "moderate": "Moderate — aim to get below 36% for better financial flexibility.",
+      "manageable": "Manageable — within acceptable range.",
+      "excellent": "Excellent — well within healthy debt levels.",
+      "breakdown": "{{payment}} / mo in debt payments · income {{income}}"
+    },
+    "budgetAdherence": {
+      "noBudgets": "No budgets set for {{month}}. Set budgets in the Cash Flow Plan to track adherence.",
+      "onTrackLabel": "On track",
+      "allOnTrack": "All budgets on track — great discipline!",
+      "allOverSpent": "All budgets over-spent this month.",
+      "mixed": "{{onTrack}} on track, {{overBudget}} over-budget.",
+      "pctOnTrack": "{{pct}}% of budgets on track",
+      "empty": "— / — budgets",
+      "emptyPct": "0% of budgets on track"
+    },
+    "aiEmpty": "Click AI Summary above to get a personalised AI analysis of your spending patterns."
+  },
+  "upload": {
+    "title": "Import Transactions",
+    "subtitle": "Upload your bank statement PDF or share screenshots from your mobile banking app.",
+    "card": {
+      "title": "Choose your import method",
+      "description": "Both BIBD and Baiduri are supported. We'll extract your transactions and show you a review screen before confirming."
+    },
+    "bankLabel": "Bank",
+    "bankPlaceholder": "Select bank",
+    "tabs": {
+      "screenshots": "Screenshots",
+      "pdf": "PDF Statement"
+    },
+    "screenshots": {
+      "howToTitle": "📱 How to use screenshots",
+      "step1": "Open your {{bank}} mobile banking app",
+      "step2": "Go to your transaction history",
+      "step3": "Take screenshots of the transaction list",
+      "step4": "Upload them here — we'll read the dates, merchants, and amounts",
+      "tapToAdd": "Tap to add screenshots",
+      "formats": "JPG, PNG, or HEIC — up to 10 images",
+      "addScreenshots": "Add Screenshots",
+      "addMore": "Add more",
+      "ready_one": "{{count}} screenshot ready to process",
+      "ready_other": "{{count}} screenshots ready to process"
+    },
+    "pdf": {
+      "howToTitle": "📄 Getting your PDF statement",
+      "dropzone": "Click to upload or drag and drop",
+      "sizeLimit": "PDF up to 10 MB",
+      "selectPdf": "Select PDF",
+      "changeFile": "Change File",
+      "tip": "💡 If PDF download isn't convenient, try the Screenshots tab — just take a photo of your transaction list from your phone."
+    },
+    "processing": {
+      "readingScreenshots": "Reading screenshots...",
+      "parsingStatement": "Parsing statement...",
+      "processScreenshots_one": "Process {{count}} Screenshot",
+      "processScreenshots_other": "Process {{count}} Screenshots",
+      "uploadAndReview": "Upload & Review Transactions"
+    },
+    "errors": {
+      "noPdf": "Please select a PDF file.",
+      "noScreenshots": "Please add at least one screenshot.",
+      "uploadFailed": "Upload failed. Please try again."
+    },
+    "trustNote": "Your files are processed securely and never shared with third parties. Only the extracted transaction data is stored — not your original files."
+  },
+  "achievements": {
+    "title": "Achievements",
+    "subtitle": "{{earned}} of {{total}} badges earned. Keep going!",
+    "streak": {
+      "label": "Day Streak",
+      "best": "Best: {{count}} days"
+    },
+    "badges": {
+      "label": "Badges Earned",
+      "remaining": "{{count}} remaining"
+    },
+    "challenge": {
+      "label": "This Month's Challenge",
+      "completed": "— Completed!"
+    },
+    "milestones": "Milestones",
+    "habitBadges": "Habit Badges",
+    "earned": "✓ Earned {{date}}",
+    "locked": "🔒 Locked",
+    "reinforcement": {
+      "streakActive": "🔥 You're on a {{count}}-day streak — keep it up!",
+      "noStreak": "📝 Start logging transactions to build your streak.",
+      "zeroBadges": "Complete your first action to earn a badge. Try logging a transaction or setting up a budget.",
+      "fewBadges": "You're making great progress. A few more badges to go!",
+      "manyBadges": "Excellent work. You're building strong financial habits."
     }
   }
 }

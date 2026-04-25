@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { useLocation } from "wouter";
 import { useUploadStatement } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,7 @@ import { TrialExpiredPrompt } from "@/components/subscription/TrialExpiredPrompt
 import { isTrialExpiredError } from "@/lib/trialExpired";
 
 export default function Upload() {
+  const { t } = useTranslation();
   const [tab, setTab] = useState<"pdf" | "screenshot">("screenshot");
   const [file, setFile] = useState<File | null>(null);
   const [screenshots, setScreenshots] = useState<File[]>([]);
@@ -46,7 +48,7 @@ export default function Upload() {
   const handleUpload = async () => {
     const uploadFile = tab === "pdf" ? file : screenshots[0] ?? null;
     if (!uploadFile) {
-      setError(tab === "pdf" ? "Please select a PDF file." : "Please add at least one screenshot.");
+      setError(tab === "pdf" ? t("upload.errors.noPdf") : t("upload.errors.noScreenshots"));
       return;
     }
 
@@ -60,7 +62,7 @@ export default function Upload() {
       if (isTrialExpiredError(err)) {
         setTrialExpiredError(true);
       } else {
-        setError("Upload failed. Please try again.");
+        setError(t("upload.errors.uploadFailed"));
       }
     }
   };
@@ -76,10 +78,8 @@ export default function Upload() {
   return (
     <div className="space-y-6 max-w-3xl mx-auto animate-in fade-in duration-500">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Import Transactions</h1>
-        <p className="text-muted-foreground mt-1">
-          Upload your bank statement PDF or share screenshots from your mobile banking app.
-        </p>
+        <h1 className="text-3xl font-bold tracking-tight">{t("upload.title")}</h1>
+        <p className="text-muted-foreground mt-1">{t("upload.subtitle")}</p>
       </div>
 
       {trialExpiredError && (
@@ -95,18 +95,16 @@ export default function Upload() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Choose your import method</CardTitle>
-          <CardDescription>
-            Both BIBD and Baiduri are supported. We'll extract your transactions and show you a review screen before confirming.
-          </CardDescription>
+          <CardTitle>{t("upload.card.title")}</CardTitle>
+          <CardDescription>{t("upload.card.description")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Bank selector */}
           <div className="space-y-2">
-            <Label>Bank</Label>
+            <Label>{t("upload.bankLabel")}</Label>
             <Select value={bankType} onValueChange={setBankType}>
               <SelectTrigger className="max-w-xs">
-                <SelectValue placeholder="Select bank" />
+                <SelectValue placeholder={t("upload.bankPlaceholder")} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="bibd">🏦 BIBD</SelectItem>
@@ -119,22 +117,22 @@ export default function Upload() {
           <Tabs value={tab} onValueChange={v => { setTab(v as "pdf" | "screenshot"); setError(""); }}>
             <TabsList className="grid w-full grid-cols-2 max-w-sm">
               <TabsTrigger value="screenshot" className="flex items-center gap-2">
-                <Image className="w-4 h-4" /> Screenshots
+                <Image className="w-4 h-4" /> {t("upload.tabs.screenshots")}
               </TabsTrigger>
               <TabsTrigger value="pdf" className="flex items-center gap-2">
-                <FileText className="w-4 h-4" /> PDF Statement
+                <FileText className="w-4 h-4" /> {t("upload.tabs.pdf")}
               </TabsTrigger>
             </TabsList>
 
             {/* ── Screenshots Tab ──────────────────────────────────────── */}
             <TabsContent value="screenshot" className="mt-4 space-y-4">
               <div className="rounded-xl bg-primary/5 border border-primary/20 p-4">
-                <p className="text-sm font-medium text-primary mb-1">📱 How to use screenshots</p>
+                <p className="text-sm font-medium text-primary mb-1">{t("upload.screenshots.howToTitle")}</p>
                 <ol className="text-xs text-muted-foreground space-y-1 list-decimal list-inside">
-                  <li>Open your {bankType === "bibd" ? "BIBD" : "Baiduri"} mobile banking app</li>
-                  <li>Go to your transaction history</li>
-                  <li>Take screenshots of the transaction list</li>
-                  <li>Upload them here — we'll read the dates, merchants, and amounts</li>
+                  <li>{t("upload.screenshots.step1", { bank: bankType === "bibd" ? "BIBD" : "Baiduri" })}</li>
+                  <li>{t("upload.screenshots.step2")}</li>
+                  <li>{t("upload.screenshots.step3")}</li>
+                  <li>{t("upload.screenshots.step4")}</li>
                 </ol>
               </div>
 
@@ -156,10 +154,10 @@ export default function Upload() {
                   <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-4">
                     <Image className="w-8 h-8" />
                   </div>
-                  <p className="font-medium mb-1">Tap to add screenshots</p>
-                  <p className="text-sm text-muted-foreground">JPG, PNG, or HEIC — up to 10 images</p>
+                  <p className="font-medium mb-1">{t("upload.screenshots.tapToAdd")}</p>
+                  <p className="text-sm text-muted-foreground">{t("upload.screenshots.formats")}</p>
                   <Button className="mt-4" variant="default" size="sm" type="button">
-                    <Plus className="w-4 h-4 mr-2" /> Add Screenshots
+                    <Plus className="w-4 h-4 mr-2" /> {t("upload.screenshots.addScreenshots")}
                   </Button>
                 </div>
               ) : (
@@ -189,13 +187,13 @@ export default function Upload() {
                         className="rounded-lg border-2 border-dashed border-border hover:border-primary hover:bg-primary/5 flex flex-col items-center justify-center gap-2 text-muted-foreground hover:text-primary transition-all aspect-[9/16]"
                       >
                         <Plus className="w-6 h-6" />
-                        <span className="text-xs">Add more</span>
+                        <span className="text-xs">{t("upload.screenshots.addMore")}</span>
                       </button>
                     )}
                   </div>
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <CheckCircle2 className="w-4 h-4 text-primary" />
-                    {screenshots.length} screenshot{screenshots.length > 1 ? "s" : ""} ready to process
+                    {t("upload.screenshots.ready", { count: screenshots.length })}
                   </div>
                 </div>
               )}
@@ -204,7 +202,7 @@ export default function Upload() {
             {/* ── PDF Tab ──────────────────────────────────────────────── */}
             <TabsContent value="pdf" className="mt-4 space-y-4">
               <div className="rounded-xl bg-muted/30 border p-4">
-                <p className="text-sm font-medium mb-1">📄 Getting your PDF statement</p>
+                <p className="text-sm font-medium mb-1">{t("upload.pdf.howToTitle")}</p>
                 <p className="text-xs text-muted-foreground">
                   {bankType === "bibd"
                     ? "Log in to BIBD Online Banking → Accounts → Statement → Download as PDF."
@@ -231,20 +229,20 @@ export default function Upload() {
                   {file ? <CheckCircle2 className="w-8 h-8 text-primary" /> : <UploadIcon className="w-8 h-8" />}
                 </div>
                 <div className="font-medium mb-1 text-sm">
-                  {file ? file.name : "Click to upload or drag and drop"}
+                  {file ? file.name : t("upload.pdf.dropzone")}
                 </div>
                 <div className="text-xs text-muted-foreground mb-4">
-                  {file ? `${(file.size / 1024 / 1024).toFixed(2)} MB` : "PDF up to 10 MB"}
+                  {file ? `${(file.size / 1024 / 1024).toFixed(2)} MB` : t("upload.pdf.sizeLimit")}
                 </div>
                 <Button asChild variant={file ? "outline" : "default"} size="sm">
                   <label htmlFor="pdf-upload" className="cursor-pointer">
-                    {file ? "Change File" : "Select PDF"}
+                    {file ? t("upload.pdf.changeFile") : t("upload.pdf.selectPdf")}
                   </label>
                 </Button>
               </div>
 
               <div className="text-xs text-muted-foreground bg-muted/30 rounded-lg p-3">
-                💡 If PDF download isn't convenient, try the Screenshots tab — just take a photo of your transaction list from your phone.
+                {t("upload.pdf.tip")}
               </div>
             </TabsContent>
           </Tabs>
@@ -255,8 +253,12 @@ export default function Upload() {
             disabled={uploadMutation.isPending || (tab === "pdf" ? !file : screenshots.length === 0)}
           >
             {uploadMutation.isPending
-              ? (tab === "screenshot" ? "Reading screenshots..." : "Parsing statement...")
-              : (tab === "screenshot" ? `Process ${screenshots.length || ""} Screenshot${screenshots.length !== 1 ? "s" : ""}` : "Upload & Review Transactions")}
+              ? (tab === "screenshot"
+                  ? t("upload.processing.readingScreenshots")
+                  : t("upload.processing.parsingStatement"))
+              : (tab === "screenshot"
+                  ? t("upload.processing.processScreenshots", { count: screenshots.length || 0 })
+                  : t("upload.processing.uploadAndReview"))}
           </Button>
         </CardContent>
       </Card>
@@ -264,7 +266,7 @@ export default function Upload() {
       {/* Trust note */}
       <div className="flex items-start gap-3 text-sm text-muted-foreground px-1">
         <span className="text-lg mt-0.5">🔒</span>
-        <p>Your files are processed securely and never shared with third parties. Only the extracted transaction data is stored — not your original files.</p>
+        <p>{t("upload.trustNote")}</p>
       </div>
     </div>
   );

@@ -53,10 +53,10 @@ export default function Settings() {
           payday: formData.payday ? parseInt(formData.payday, 10) : undefined
         }
       });
-      toast({ title: "Profile updated successfully" });
+      toast({ title: t("settings.toasts.profileUpdated") });
       refetchProfile();
     } catch (err) {
-      toast({ title: "Failed to update profile", variant: "destructive" });
+      toast({ title: t("settings.toasts.profileFailed"), variant: "destructive" });
     }
   };
 
@@ -81,10 +81,10 @@ export default function Settings() {
         }
       });
       setNewCatName("");
-      toast({ title: "Category added" });
+      toast({ title: t("settings.toasts.categoryAdded") });
       refetchCategories();
     } catch (err) {
-      toast({ title: "Failed to add category", variant: "destructive" });
+      toast({ title: t("settings.toasts.categoryFailed"), variant: "destructive" });
     }
   };
 
@@ -93,8 +93,8 @@ export default function Settings() {
   return (
     <div className="space-y-6 max-w-4xl mx-auto animate-in fade-in duration-500">
       <div>
-        <h1 className="text-3xl font-bold text-foreground tracking-tight">Settings</h1>
-        <p className="text-muted-foreground">Manage your profile and app preferences.</p>
+        <h1 className="text-3xl font-bold text-foreground tracking-tight">{t("settings.title")}</h1>
+        <p className="text-muted-foreground">{t("settings.subtitle")}</p>
       </div>
 
       <Tabs defaultValue="profile" className="space-y-4">

@@ -1,0 +1,131 @@
+🌙 Prompt 5b — i18n extraction for secondary pages
+
+Task: Phase 2 Prompt 5b — Extract i18n strings from secondary pages
+This is Prompt 5b of 3 in the i18n extraction work. Prompt 5a established i18n infrastructure and extracted strings from Dashboard, Expense Tracker, and Transactions. The translation files for Malay (ms.json) and Indonesian (id.json) have been refined since 5a — read them carefully before writing new translations to maintain consistency.
+
+Pages to extract in this prompt:
+
+Accounts (src/pages/Accounts.tsx or equivalent path)
+Budgets (src/pages/Budgets.tsx)
+Commitments (src/pages/Commitments.tsx)
+Debts (src/pages/Debts.tsx)
+Goals (src/pages/Goals.tsx)
+Net Worth (src/pages/NetWorth.tsx)
+Insights (src/pages/Insights.tsx)
+Upload (src/pages/Upload.tsx)
+Achievements (src/pages/Achievements.tsx)
+Settings (src/pages/Settings.tsx)
+
+
+Step 1: Read existing locale files first
+Before writing any new translations, open src/i18n/locales/ms.json and id.json and study the existing terminology. The user has refined these files with specific term choices that MUST be respected for consistency. In particular:
+
+Indonesian (id.json) uses "Rekening" for bank accounts, not "Akun". Maintain this convention everywhere.
+Both files use "Tanpa kategori" for "Uncategorized", not "Tidak dikategorikan". Use "Tanpa kategori" for all new translations.
+Indonesian uses "Tanggal" for date; Malay uses "Tarikh". Don't swap these.
+Indonesian uses "Pengeluaran/Pemasukan"; Malay uses "Perbelanjaan/Pendapatan". Don't mix.
+"Liabilities" was translated as "Tanggungan" in Malay and "Kewajiban" in Indonesian. If similar concepts arise on Net Worth or Debts pages, use the same terms.
+
+If you encounter a term not yet in the locale files, pick the most natural translation and apply it consistently across both files.
+
+Step 2: Pre-extraction audit
+Before touching any code, open each of the 10 pages above and list every hardcoded English string. Output this audit list to the conversation BEFORE making any code changes. The list helps verify completeness afterwards.
+Strings to include in the audit:
+
+Page titles and subtitles
+Section headers
+Card titles and labels
+Button labels (action buttons, modal triggers, sort/filter dropdowns)
+Form labels and placeholders
+Empty states
+Loading states
+Error messages
+Confirmation dialogs ("Are you sure?", etc.)
+Tooltips
+Toast notifications
+Achievement names if displayed (note: leave actual achievement content like "Debt Aware" untranslated for now — they're more like product names)
+
+Strings to NOT extract (user-generated content):
+
+Transaction descriptions
+Account names
+User-typed category names
+User-typed goal names
+Any input data
+
+
+Step 3: Clean up duplicate keys before adding more
+The current locale files have a duplicate-key issue: both "uncategorised" (British) and "uncategorized" (American) exist as separate keys with identical values. This means the codebase uses both spellings inconsistently.
+Before adding new keys:
+
+Search the codebase for all uses of t('...uncategorised') and t('...uncategorized').
+Pick uncategorized (American) as the canonical spelling.
+Update all code to use uncategorized.
+Remove the uncategorised keys from all three locale files (en.json, ms.json, id.json).
+Verify nothing breaks: switch through all three languages and check that "Tanpa kategori" / "Uncategorized" still renders correctly on Dashboard, Expense Tracker, and Transactions.
+
+Do this BEFORE proceeding to Step 4. Commit the cleanup as a separate change so it's easy to revert if it causes issues.
+
+Step 4: Extend en.json with new keys
+Following the 3-level naming convention from 5a (<page>.<section>.<element>), add new keys for the 10 pages. Examples:
+
+accounts.title, accounts.subtitle, accounts.empty.title, accounts.empty.cta
+accounts.addDialog.title, accounts.addDialog.balance, accounts.addDialog.save
+budgets.title, budgets.summary.totalBudgeted, budgets.category.overspent
+commitments.title, commitments.empty.title, commitments.recurring.label
+debts.title, debts.simulator.title, debts.payoff.monthsLabel
+goals.title, goals.progress.label, goals.target.label
+netWorth.title, netWorth.assets.title, netWorth.liabilities.title
+insights.spendingTrend.title, insights.savingsRate.benchmark, insights.budgetAdherence.onTrack
+upload.title, upload.dropzone.label, upload.parsing.status
+achievements.title, achievements.empty.title
+settings.preferences.language.label, etc.
+
+Reuse common.* keys where they already exist (e.g., common.save, common.cancel). Do NOT create duplicates of common keys.
+
+Step 5: Replace hardcoded strings in JSX
+Replace each audited string with the appropriate t('key') call. Preserve all existing logic, formatting, and component structure. Do not refactor anything beyond string replacement.
+
+Step 6: Translate to ms.json and id.json
+Add Malay and Indonesian translations for each new key. Critical guidelines:
+
+Read the existing locale files first (per Step 1) and align terminology with what's already there. Consistency matters more than reaching for synonyms.
+When uncertain about a term, prefer simpler/more common phrasing.
+For Indonesian banking-related terms, use "Rekening" not "Akun".
+Use "Tanpa kategori" not "Tidak dikategorikan".
+For interpolated values, preserve the {{variable}} syntax exactly: e.g., "Anda mempunyai {{count}} matlamat aktif".
+
+
+Step 7: Verification
+
+Switch language to English in Settings → all 10 pages render identically to before this prompt
+Switch language to Bahasa Melayu → all 10 pages render in Malay (no leftover English strings)
+Switch language to Bahasa Indonesia → all 10 pages render in Indonesian
+Test as all 3 region users (Hakem/BN, test-my, test-id) — currency formatting still works regardless of language
+Cross-reference your audit list from Step 2 — confirm each listed string is now using t()
+Verify the duplicate-key cleanup (Step 3) didn't break Dashboard/Expense Tracker/Transactions
+
+
+STRICT scope boundaries — do NOT do any of the following:
+
+Do NOT extract from Landing page, Onboarding, Auth, AI chat, or email templates (those are Prompt 5c)
+Do NOT touch the i18n config, library setup, or language switcher itself
+Do NOT modify formatCurrency, formatDate, or any formatter utility
+Do NOT redesign or restructure any of the 10 pages
+Do NOT add new features, refactor logic, or "improve" anything not explicitly listed
+Do NOT modify Dashboard, Expense Tracker, or Transactions code (those were 5a — only update them if the duplicate-key cleanup in Step 3 requires it)
+Do NOT change BIBD/Baiduri references in existing strings (logged in REGION_CONTENT_BACKLOG.md, addressed later)
+
+If you find yourself thinking "while I'm here, I'll also fix..." — stop. The previous Phase 2.1 attempt failed due to scope creep. Stay strictly in scope.
+
+Report back with:
+
+The audit list from Step 2 (per page)
+Confirmation that the duplicate-key cleanup in Step 3 succeeded — show the search results showing all uncategorised references are now uncategorized
+Total new keys added to en.json (broken down by page)
+Whether ms.json and id.json have been translated for the new keys (yes is recommended, with consistency to existing terminology)
+Verification results: confirm switching to MS or ID renders the 10 pages with no leftover English
+Any strings you weren't sure how to translate consistently — flag for native review
+Any strings that were tricky to extract (e.g., embedded in third-party libraries, dynamically generated)
+
+Stop after 5b is verified working. Do NOT proceed to 5c.
