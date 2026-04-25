@@ -1,0 +1,155 @@
+🌙 Phase 2 Prompt 5c — Final i18n extraction (landing, auth, onboarding, AI chat, emails)
+Task: Phase 2 Prompt 5c — Extract i18n strings from the remaining surfaces (landing, auth, onboarding, AI chat, emails)
+This is Prompt 5c of 3 — the final i18n extraction prompt in Phase 2. Prompts 5a and 5b extracted strings from all internal pages and added Malay/Indonesian translations. This prompt covers the remaining surfaces.
+
+Step 1: Read existing locale files first
+Open src/i18n/locales/en.json, ms.json, and id.json. Study existing terminology so new translations align:
+
+Indonesian uses "Rekening" for bank accounts, "Tanpa kategori" for uncategorized
+Malay uses "Akaun", "Tanpa kategori"
+Indonesian uses "Tanggal"; Malay uses "Tarikh"
+Indonesian uses "Pengeluaran/Pemasukan"; Malay uses "Perbelanjaan/Pendapatan"
+Existing key naming is 3-level <page>.<section>.<element> with camelCase
+
+Maintain perfect consistency. If you encounter a term not yet in the files, pick the most natural translation and apply it identically across both target languages.
+
+Surfaces to extract in this prompt:
+
+Landing page (the unauthenticated marketing page at /) — see Step 2 for special handling
+Auth flows — login page, signup page, password reset (if exists), email verification (if exists)
+Onboarding flow — every step the user walks through after signup, including the "Selamat datang, [name]!" greeting from Milestone 1
+DuitPlan AI chat — UI chrome only (see Step 3 for what's in/out of scope)
+Email templates — if any exist (welcome email, password reset email, etc.)
+Toast notifications and error messages that haven't been caught yet (auth errors, network errors, generic "Something went wrong" messages)
+The 2 stragglers from 5b cleanup: id.json expenseTracker.editDialog.merchant (currently "Merchant (opsional)" → should be "Pedagang (opsional)") and the sidebar "Sign out" button (currently hardcoded English, no i18n key yet)
+
+
+Step 2: Landing page — REWRITE to generic pan-regional, not translate as-is
+The landing page currently has Brunei-specific copy that does NOT translate well across regions. Rewrite the English source first to be pan-regional, THEN translate.
+Strategic context: The landing page is one shared surface across all three regions (BN, MY, ID subdomains). It does NOT adapt per region. We made this decision to simplify maintenance and because "duit" and "gaji" work pan-regionally as brand language.
+Specific rewrites needed:
+
+Remove the "BN" badge at the top entirely. No region badge of any kind.
+Hero badge: change from "Built for Brunei salaried professionals" to something generic like "Built for how Southeast Asia manages money" or "For everyone who cares about their gaji". Keep it short and friendly.
+Headline "Understand your gaji clearly": KEEP exactly as-is. Works in all three languages.
+Subheadline: change from "DuitPlan is a personal finance assistant designed for Brunei. Track your salary, manage your commitments, and stay on top of your loans — without the stress." to "Track your salary, manage your commitments, and stay on top of your loans — without the stress." (just remove the "designed for Brunei" claim)
+Bank reference line "Works with BIBD and Baiduri bank statements. Currency in BND.": REMOVE this line entirely. Replace with a feature-focused tagline like "Auto-parses your bank statements. AI-powered." OR just remove it without replacement. Bank-specific support belongs inside the app on the Upload page, not on the marketing landing.
+
+CTA buttons ("Get Started Free", "Start Planning Free", "Sign In") — extract as keys but keep wording. They're already pan-regional.
+All landing-page strings get extracted into landing.* keys (e.g., landing.hero.badge, landing.hero.headline, landing.hero.subheadline, landing.cta.getStarted, landing.cta.signIn). Translate to ms.json and id.json following established conventions.
+
+Step 3: AI chat — UI chrome only, NOT system prompts
+The DuitPlan AI page has both UI chrome (translatable) and AI system instructions (NOT translatable in this prompt).
+What to extract and translate:
+
+Page title ("DuitPlan AI") and subtitle/tagline
+Input placeholder ("Ask me about your finances..." or similar)
+Send button label
+Loading states ("Thinking...", "Generating response...")
+Empty state ("Ask me anything about your money", suggested prompt chips if any)
+Error states ("Failed to send", "Connection lost", retry buttons)
+Conversation actions (Clear chat, Copy, Regenerate)
+Header / branding text on the chat interface
+
+What to NOT touch:
+
+The system prompt sent to the LLM (the instructions defining what DuitPlan AI is and how it behaves) — this stays hardcoded in English in the backend. The AI's responses to user questions will naturally come back in whatever language the user typed in, and the LLM handles that automatically. We don't need to translate the system prompt to make this work.
+User-typed messages or AI responses — these are conversational content, not UI strings.
+Any backend API logic.
+
+Note on regional context for AI: The AI's system prompt currently references Brunei-specific context (BIBD, BND, etc.). Region-aware AI prompting is logged in REGION_CONTENT_BACKLOG.md for Phase 3 — do NOT address it here.
+
+Step 4: Onboarding flow
+Walk through the onboarding sequence as a new test user would:
+
+Welcome screen ("Selamat datang, [FirstName]!" — note: this greeting works in all 3 languages identically, so the only translatable part is fallback text and any explanatory subtext, not "Selamat datang" itself)
+Each step's title, description, form labels, button text
+Progress indicators ("Step 2 of 4", etc.)
+Final "You're all set!" CTA
+
+Extract everything into onboarding.* keys (e.g., onboarding.welcome.title, onboarding.step1.salaryLabel, onboarding.complete.cta).
+
+Step 5: Auth flows
+Extract from login, signup, and any password-reset surfaces:
+
+Page titles and headings
+Form labels (Email, Password, Confirm Password, Full Name, etc.)
+Form placeholders
+Validation errors ("Email is required", "Password must be at least 8 characters", "Passwords don't match")
+API errors ("Invalid credentials", "Email already in use", "Account not found")
+Submit button labels ("Sign In", "Create Account", "Send Reset Link")
+Auxiliary links ("Forgot password?", "Already have an account?", "Don't have an account?")
+Success messages ("Check your email", "Account created successfully")
+The sidebar "Sign out" button (logged from 5b cleanup as a missed string)
+
+Use auth.* keys (e.g., auth.login.title, auth.signup.emailLabel, auth.errors.invalidCredentials, auth.signOut).
+
+Step 6: Email templates (if any)
+If the project sends transactional emails (welcome, password reset, verification, etc.), extract their content. Email i18n typically involves a slightly different mechanism than UI i18n — the user's language field at the time of sending should determine which template variant is used.
+If no email templates exist yet, skip this step and note it in your report.
+
+Step 7: Cleanup the 2 stragglers from 5b
+Quick fixes:
+
+id.json expenseTracker.editDialog.merchant: change "Merchant (opsional)" to "Pedagang (opsional)". (5b cleanup did this for addDialog but missed editDialog.)
+Sidebar "Sign out" button: extract as auth.signOut key. Translate: ms.json → "Log Keluar", id.json → "Keluar".
+
+
+Step 8: Translate to ms.json and id.json
+Translate every new key for both languages. Maintain consistency with established terminology.
+Special attention for landing page translations:
+
+The pan-regional rewrites in English need natural Malay and Indonesian equivalents — don't literally translate, write them naturally.
+Suggested for hero badge: MS "Untuk semua yang ambil berat tentang gaji mereka" / ID "Untuk siapa saja yang peduli dengan gaji mereka"
+Headline "Understand your gaji clearly" → MS "Fahami gaji anda dengan jelas" / ID "Pahami gajimu dengan jelas"
+Subheadline → translate naturally per language
+
+For auth and onboarding, use friendly tone but not overly casual. Examples of register:
+
+MS "Daftar masuk" (Sign in), "Cipta akaun" (Create account), "Lupa kata laluan?" (Forgot password?)
+ID "Masuk" (Sign in), "Buat akun" (Create account) — note: "akun" is fine for the user account concept; "rekening" is only for bank accounts
+
+For AI chat UI:
+
+MS "Tanya saya tentang kewangan anda..." (Ask me about your finances...)
+ID "Tanya saya tentang keuangan kamu..." or "Tanya soal keuangan kamu..."
+
+
+STRICT scope boundaries — do NOT do any of the following:
+
+Do NOT translate the AI chat's system prompt or any backend AI instructions
+Do NOT modify AI logic, prompt engineering, or model configuration
+Do NOT touch BIBD/Baiduri references inside the internal app (logged in backlog, addressed in Phase 3.2 bank parsers)
+Do NOT modify the i18n config, library, or language switcher
+Do NOT add a real free-tier or pricing system (Premium was removed earlier; no resurrection)
+Do NOT modify formatCurrency, formatDate, or any formatter
+Do NOT redesign or restructure pages — string replacement only
+Do NOT make additional translation refinements to keys already extracted in 5a/5b unless explicitly listed in Step 7
+
+If you find additional missed strings during this work, list them in your report rather than fixing them. We'll batch them after.
+
+Verification before reporting complete:
+
+Visit landing page (/ while logged out) in English → renders the pan-regional rewrite, no "Brunei", no "BIBD", no "BND" hardcoded references.
+Switch language to Bahasa Melayu via Settings → log out → visit landing page → renders in Malay.
+Same check in Bahasa Indonesia.
+Sign up flow as a new user → onboarding renders in current language → "Selamat datang, [FirstName]!" still works.
+Login page renders in all 3 languages.
+Visit DuitPlan AI page → all UI chrome translates; type a question and confirm AI still responds (system prompt unchanged).
+Sign out button in sidebar shows in current language.
+The 5b stragglers are fixed: editDialog merchant label is "Pedagang (opsional)" in Indonesian.
+No regressions on previously-extracted pages (Dashboard, Expense Tracker, Transactions, Accounts, Budgets, Commitments, Debts, Goals, Net Worth, Insights, Upload, Achievements, Settings).
+
+
+Report back with:
+
+Pre-extraction audit list (per surface)
+Confirmation of landing page rewrites (paste before/after of changed lines)
+List of files modified
+Where AI chat system prompt is located (file path) and confirmation it was NOT modified
+Whether email templates exist in the project (and if so, were they extracted?)
+Total new keys added (broken down by surface)
+Verification results across all 3 languages
+Any additional missed strings discovered (list, do not fix)
+
+After this prompt is verified working, Phase 2 i18n extraction is structurally complete. Phase 2.6 (native-speaker translation polish) is a separate downstream content task.
