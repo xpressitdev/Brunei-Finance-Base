@@ -108,8 +108,8 @@ DuitPlan is being extended to serve BN/MY/ID regional subdomains with fixed per-
 - `i18next` + `react-i18next` installed
 - `src/i18n/index.ts` — i18next config with en/ms/id resources, `initImmediate: false`, fallback `en`
 - `src/i18n/locales/en.json` — ~160 nested keys (common, dashboard, expenseTracker, transactions, settings)
-- `src/i18n/locales/ms.json` — full Bahasa Melayu translations
-- `src/i18n/locales/id.json` — full Bahasa Indonesia translations
+- `src/i18n/locales/ms.json` — full Bahasa Melayu translations (native-speaker corrected: Liabiliti→Tanggungan, Urus Niaga→Transaksi, Tidak dikategorikan→Tanpa kategori, etc.)
+- `src/i18n/locales/id.json` — full Bahasa Indonesia translations (native-speaker corrected: Akun→Rekening, Tidak dikategorikan→Tanpa kategori, berbeda→lain, etc.)
 - `src/i18n/I18nProvider.tsx` — watches `profile.language` with `navigator.language` fallback
 - Pages fully translated: `dashboard.tsx`, `expenses/index.tsx`, `transactions.tsx`, `settings.tsx`
 - Settings > Preferences tab: language dropdown persists via PATCH `/api/profile { language }`

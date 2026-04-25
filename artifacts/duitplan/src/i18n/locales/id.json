@@ -14,10 +14,10 @@
     "description": "Deskripsi",
     "amount": "Jumlah",
     "category": "Kategori",
-    "account": "Akun",
-    "noAccount": "Tidak ada akun",
-    "uncategorised": "Tidak dikategorikan",
-    "uncategorized": "Tidak dikategorikan",
+    "account": "Rekening",
+    "noAccount": "Tidak ada rekening",
+    "uncategorised": "Tanpa kategori",
+    "uncategorized": "Tanpa kategori",
     "saveChanges": "Simpan Perubahan",
     "revert": "Kembalikan"
   },
@@ -64,7 +64,7 @@
     },
     "recentTransactions": {
       "title": "Transaksi Terbaru",
-      "uncategorised": "Tidak dikategorikan",
+      "uncategorised": "Tanpa kategori",
       "noTransactions": "Belum ada transaksi yang dicatat.",
       "importHint": "Coba impor rekening BIBD atau Baiduri Anda.",
       "viewAll": "Lihat semua transaksi"
@@ -72,10 +72,10 @@
   },
   "expenseTracker": {
     "title": "Pelacak Pengeluaran",
-    "subtitle": "Lacak setiap transaksi",
+    "subtitle": "Lacak semua transaksi",
     "today": "Hari ini",
     "receipt": "Kwitansi",
-    "uncategorised": "Tidak dikategorikan",
+    "uncategorised": "Tanpa kategori",
     "summary": {
       "today": "Hari ini",
       "monthExpenses": "Pengeluaran Bulan Ini",
@@ -123,11 +123,11 @@
       "descriptionPlaceholder": "Anda membelanjakan apa?",
       "merchant": "Merchant (opsional)",
       "merchantPlaceholder": "Nama toko atau vendor",
-      "account": "Akun",
-      "noAccount": "Tidak ada akun",
+      "account": "Rekening",
+      "noAccount": "Tidak ada rekening",
       "category": "Kategori",
       "selectCategory": "Pilih kategori",
-      "uncategorised": "Tidak dikategorikan",
+      "uncategorised": "Tanpa kategori",
       "save": "Simpan Perubahan"
     },
     "deleteDialog": {
@@ -142,7 +142,7 @@
     "subtitle": "Kelola pemasukan dan pengeluaran Anda.",
     "loading": "Memuat...",
     "confirmDelete": "Apakah Anda yakin ingin menghapus transaksi ini?",
-    "uncategorized": "Tidak dikategorikan",
+    "uncategorized": "Tanpa kategori",
     "filters": {
       "allMonths": "Semua bulan",
       "allAccounts": "Semua akun",
@@ -160,11 +160,11 @@
       "description": "Deskripsi",
       "amount": "Jumlah",
       "type": "Jenis",
-      "account": "Akun",
+      "account": "Rekening",
       "optional": "(opsional)",
-      "noAccount": "Tidak ada akun",
+      "noAccount": "Tidak ada rekening",
       "category": "Kategori",
-      "uncategorized": "Tidak dikategorikan",
+      "uncategorized": "Tanpa kategori",
       "expense": "Pengeluaran",
       "income": "Pemasukan",
       "save": "Simpan",
@@ -181,12 +181,12 @@
       "accountWarningBoth": "Menyimpan akan menyesuaikan saldo pada akun lama dan baru.",
       "accountWarningRemoved": "Menyimpan akan menghapus penyesuaian saldo dari akun asli.",
       "accountWarningAdded": "Menyimpan akan menyesuaikan saldo pada akun yang dipilih.",
-      "noAccount": "Tidak ada akun",
-      "uncategorized": "Tidak dikategorikan"
+      "noAccount": "Tidak ada rekening",
+      "uncategorized": "Tanpa kategori"
     },
     "empty": {
       "noTransactions": "Tidak ada transaksi ditemukan",
-      "noTransactionsForMonth": "Tidak ada transaksi untuk {{month}}. Transaksi yang diimpor mungkin ada di bulan yang berbeda.",
+      "noTransactionsForMonth": "Tidak ada transaksi untuk {{month}}. Transaksi yang diimpor mungkin ada di bulan yang lain.",
       "noTransactionsGeneral": "Belum ada transaksi. Impor rekening bank atau tambahkan secara manual.",
       "viewAll": "Lihat semua transaksi"
     }

@@ -16,8 +16,8 @@
     "category": "Kategori",
     "account": "Akaun",
     "noAccount": "Tiada akaun",
-    "uncategorised": "Tidak dikategorikan",
-    "uncategorized": "Tidak dikategorikan",
+    "uncategorised": "Tanpa kategori",
+    "uncategorized": "Tanpa kategori",
     "saveChanges": "Simpan Perubahan",
     "revert": "Kembalikan"
   },
@@ -64,7 +64,7 @@
     },
     "recentTransactions": {
       "title": "Transaksi Terbaru",
-      "uncategorised": "Tidak dikategorikan",
+      "uncategorised": "Tanpa kategori",
       "noTransactions": "Belum ada transaksi direkodkan.",
       "importHint": "Cuba import penyata BIBD atau Baiduri anda.",
       "viewAll": "Lihat semua transaksi"
@@ -75,7 +75,7 @@
     "subtitle": "Jejak setiap transaksi",
     "today": "Hari ini",
     "receipt": "Resit",
-    "uncategorised": "Tidak dikategorikan",
+    "uncategorised": "Tanpa kategori",
     "summary": {
       "today": "Hari ini",
       "monthExpenses": "Perbelanjaan Bulan Ini",
@@ -127,7 +127,7 @@
       "noAccount": "Tiada akaun",
       "category": "Kategori",
       "selectCategory": "Pilih kategori",
-      "uncategorised": "Tidak dikategorikan",
+      "uncategorised": "Tanpa kategori",
       "save": "Simpan Perubahan"
     },
     "deleteDialog": {
@@ -142,7 +142,7 @@
     "subtitle": "Urus pendapatan dan perbelanjaan anda.",
     "loading": "Memuatkan...",
     "confirmDelete": "Adakah anda pasti mahu memadam transaksi ini?",
-    "uncategorized": "Tidak dikategorikan",
+    "uncategorized": "Tanpa kategori",
     "filters": {
       "allMonths": "Semua bulan",
       "allAccounts": "Semua akaun",
@@ -164,7 +164,7 @@
       "optional": "(pilihan)",
       "noAccount": "Tiada akaun",
       "category": "Kategori",
-      "uncategorized": "Tidak dikategorikan",
+      "uncategorized": "Tanpa kategori",
       "expense": "Perbelanjaan",
       "income": "Pendapatan",
       "save": "Simpan",
@@ -182,12 +182,12 @@
       "accountWarningRemoved": "Menyimpan akan menghapuskan pelarasan baki dari akaun asal.",
       "accountWarningAdded": "Menyimpan akan melaraskan baki pada akaun yang dipilih.",
       "noAccount": "Tiada akaun",
-      "uncategorized": "Tidak dikategorikan"
+      "uncategorized": "Tanpa kategori"
     },
     "empty": {
       "noTransactions": "Tiada transaksi dijumpai",
       "noTransactionsForMonth": "Tiada transaksi untuk {{month}}. Transaksi yang diimport mungkin berada dalam bulan yang berbeza.",
-      "noTransactionsGeneral": "Belum ada transaksi. Import penyata bank atau tambah satu secara manual.",
+      "noTransactionsGeneral": "Belum ada transaksi. Import penyata bank atau tambah secara manual.",
       "viewAll": "Lihat semua transaksi"
     }
   },
