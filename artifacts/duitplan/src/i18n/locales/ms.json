@@ -71,7 +71,7 @@
   },
   "expenseTracker": {
     "title": "Penjejak Perbelanjaan",
-    "subtitle": "Jejak setiap transaksi",
+    "subtitle": "Jejak semua transaksi",
     "today": "Hari ini",
     "receipt": "Resit",
     "uncategorized": "Tanpa kategori",
@@ -694,6 +694,22 @@
     },
     "trustNote": "Fail anda diproses dengan selamat dan tidak dikongsi dengan pihak ketiga. Hanya data transaksi yang diekstrak yang disimpan — bukan fail asal anda."
   },
+  "nav": {
+    "dashboard": "Dashboard",
+    "expenseTracker": "Penjejak Perbelanjaan",
+    "duitplanAi": "DuitPlan AI",
+    "accounts": "Akaun",
+    "transactions": "Transaksi",
+    "budgets": "Belanjawan",
+    "commitments": "Komitmen",
+    "debts": "Hutang",
+    "goals": "Matlamat",
+    "netWorth": "Kekayaan Bersih",
+    "upload": "Muat Naik",
+    "insights": "Wawasan",
+    "achievements": "Pencapaian",
+    "settings": "Tetapan"
+  },
   "achievements": {
     "title": "Pencapaian",
     "subtitle": "{{earned}} daripada {{total}} lencana diperoleh. Teruskan!",
@@ -703,7 +719,47 @@
     },
     "badges": {
       "label": "Lencana Diperoleh",
-      "remaining": "{{count}} lagi"
+      "remaining": "{{count}} lagi",
+      "firstSetup": {
+        "name": "Permulaan Pertama",
+        "description": "Melengkapkan persediaan akaun dan orientasi anda"
+      },
+      "budgetStarter": {
+        "name": "Pemula Belanjawan",
+        "description": "Menetapkan belanjawan bulanan pertama anda"
+      },
+      "debtAware": {
+        "name": "Sedar Hutang",
+        "description": "Menambah pinjaman atau pembiayaan pertama anda"
+      },
+      "firstImport": {
+        "name": "Import Pertama",
+        "description": "Mengimport penyata bank buat kali pertama"
+      },
+      "firstTransaction": {
+        "name": "Transaksi Pertama",
+        "description": "Merekod perbelanjaan pertama anda"
+      },
+      "habitBuilder": {
+        "name": "Pembina Tabiat",
+        "description": "Merekod sekurang-kurangnya 10 transaksi dalam satu bulan"
+      },
+      "savingsBuilder": {
+        "name": "Pembina Simpanan",
+        "description": "Menambah kategori simpanan ke dalam belanjawan anda"
+      },
+      "smartSpender": {
+        "name": "Berbelanja Bijak",
+        "description": "Mengekalkan perbelanjaan dalam had belanjawan sepanjang sebulan"
+      },
+      "debtCrusher": {
+        "name": "Penghapus Hutang",
+        "description": "Menjejak pinjaman selama 3 bulan atau lebih"
+      },
+      "statementPro": {
+        "name": "Pro Penyata",
+        "description": "Mengimport 3 atau lebih penyata bank"
+      }
     },
     "challenge": {
       "label": "Cabaran Bulan Ini",

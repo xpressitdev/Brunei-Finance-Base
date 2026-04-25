@@ -1,30 +1,32 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/lib/auth";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Menu, X, LayoutDashboard, Receipt, PieChart, CalendarDays, Wallet, Upload, Lightbulb, Settings, Trophy, Target, TrendingUp, ScanLine, Building2, Bot } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navigation = [
-  { name: "DuitPlan AI", href: "/agent", icon: Bot },
-  { name: "Expense Tracker", href: "/expenses", icon: ScanLine },
-  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { name: "Accounts", href: "/accounts", icon: Building2 },
-  { name: "Transactions", href: "/transactions", icon: Receipt },
-  { name: "Budgets", href: "/budgets", icon: PieChart },
-  { name: "Commitments", href: "/commitments", icon: CalendarDays },
-  { name: "Debts", href: "/debts", icon: Wallet },
-  { name: "Goals", href: "/goals", icon: Target },
-  { name: "Net Worth", href: "/net-worth", icon: TrendingUp },
-  { name: "Upload", href: "/upload", icon: Upload },
-  { name: "Insights", href: "/insights", icon: Lightbulb },
-  { name: "Achievements", href: "/achievements", icon: Trophy },
-  { name: "Settings", href: "/settings", icon: Settings },
+  { key: "duitplanAi", href: "/agent", icon: Bot },
+  { key: "expenseTracker", href: "/expenses", icon: ScanLine },
+  { key: "dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { key: "accounts", href: "/accounts", icon: Building2 },
+  { key: "transactions", href: "/transactions", icon: Receipt },
+  { key: "budgets", href: "/budgets", icon: PieChart },
+  { key: "commitments", href: "/commitments", icon: CalendarDays },
+  { key: "debts", href: "/debts", icon: Wallet },
+  { key: "goals", href: "/goals", icon: Target },
+  { key: "netWorth", href: "/net-worth", icon: TrendingUp },
+  { key: "upload", href: "/upload", icon: Upload },
+  { key: "insights", href: "/insights", icon: Lightbulb },
+  { key: "achievements", href: "/achievements", icon: Trophy },
+  { key: "settings", href: "/settings", icon: Settings },
 ];
 
 export function Sidebar() {
   const [location] = useLocation();
   const { user, logout } = useAuth();
+  const { t } = useTranslation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
@@ -49,7 +51,7 @@ export function Sidebar() {
             const isActive = location === item.href || location.startsWith(item.href + "/");
             return (
               <Link
-                key={item.name}
+                key={item.key}
                 href={item.href}
                 className={cn(
                   "flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-md transition-colors",
@@ -60,7 +62,7 @@ export function Sidebar() {
                 onClick={() => setMobileMenuOpen(false)}
               >
                 <item.icon className="h-5 w-5 flex-shrink-0" />
-                {item.name}
+                {t(`nav.${item.key}`)}
               </Link>
             );
           })}

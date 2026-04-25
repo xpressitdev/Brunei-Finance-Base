@@ -1,0 +1,146 @@
+Task: Phase 2 Prompt 5b cleanup — Fix gaps and refinements found during translation review
+5b's extraction was largely successful but missed two areas that need extraction, plus has two small translation refinements needed. This is a focused cleanup, not a new prompt of comparable scope to 5b.
+
+Fix 1: Extract achievement badge names and descriptions
+The Achievements page renders badge cards with names like "First Setup", "Budget Starter", "Debt Aware", "First Import", "First Transaction" and descriptions like "Completed your account setup and onboarding", "Set up your first monthly budget". These are currently hardcoded in English and not in any locale file.
+Investigate:
+
+Locate where badge definitions live. Most likely candidates: a backend constants file (e.g., src/lib/achievements.ts, server/data/badges.ts, or similar), a database seed file, or hardcoded in the Achievements page component itself.
+List every badge in the system. There appear to be at least these visible ones: First Setup, Budget Starter, Debt Aware, First Import, First Transaction. There may be more in a "Habit Badges" section that's currently locked.
+
+Extract:
+
+Add new keys under achievements.badges.<badgeId>.name and achievements.badges.<badgeId>.description for every badge. Use the existing badge identifiers as the key suffix (e.g., firstSetup, budgetStarter, debtAware, firstImport, firstTransaction).
+Replace the hardcoded English strings with t() calls in whatever component/file renders the badge cards.
+
+Translate:
+
+Add Malay translations to ms.json and Indonesian to id.json for every new badge name and description.
+Maintain consistency with existing terminology (e.g., "transaksi" not "urusniaga", "lencana" for badge in Malay, "lencana" for badge in Indonesian — both use "lencana").
+Keep badge names short and punchy in all three languages (1-3 words ideal).
+Suggested translations to follow:
+
+First Setup → MS: "Permulaan Pertama" / ID: "Pengaturan Awal"
+Budget Starter → MS: "Pemula Belanjawan" / ID: "Pemula Anggaran"
+Debt Aware → MS: "Sedar Hutang" / ID: "Sadar Utang"
+First Import → MS: "Import Pertama" / ID: "Impor Pertama"
+First Transaction → MS: "Transaksi Pertama" / ID: "Transaksi Pertama"
+
+
+
+Translate descriptions in full sentences, idiomatic for each language. If you encounter additional badges (locked or unlocked) beyond the 5 listed, translate them following the same patterns.
+
+Fix 2: Extract sidebar navigation labels
+The sidebar navigation currently shows English labels (DuitPlan AI, Expense Tracker, Dashboard, Accounts, Transactions, Budgets, Commitments, Debts, Goals, Net Worth, Upload, Insights, Achievements, Settings) regardless of selected language.
+Investigate:
+
+Locate the sidebar component (likely src/components/Sidebar.tsx, src/layouts/AppLayout.tsx, or similar). Find where each menu item's label is defined.
+
+Extract:
+
+Add new keys under nav.<page> for each sidebar item:
+
+nav.dashboard → "Dashboard"
+nav.expenseTracker → "Expense Tracker"
+nav.duitplanAi → "DuitPlan AI"
+nav.accounts → "Accounts"
+nav.transactions → "Transactions"
+nav.budgets → "Budgets"
+nav.commitments → "Commitments"
+nav.debts → "Debts"
+nav.goals → "Goals"
+nav.netWorth → "Net Worth"
+nav.upload → "Upload"
+nav.insights → "Insights"
+nav.achievements → "Achievements"
+nav.settings → "Settings"
+
+
+Replace hardcoded English in the sidebar component with t() calls.
+
+Translate:
+
+Add Malay translations to ms.json. Use existing page-title translations as the source of truth — e.g., nav.dashboard should match the Malay used elsewhere, likely "Papan Pemuka" or just keep "Dashboard" as a loanword (your call — both are acceptable in Malaysian software contexts; check what the existing Dashboard page title uses, but note the page title is likely "Gambaran Keseluruhan" which is for the page heading, not the sidebar item).
+Suggested Malay translations:
+
+nav.dashboard → "Dashboard" (commonly kept as loanword in MY)
+nav.expenseTracker → "Penjejak Perbelanjaan"
+nav.duitplanAi → "DuitPlan AI" (brand/product name, untranslated)
+nav.accounts → "Akaun"
+nav.transactions → "Transaksi"
+nav.budgets → "Belanjawan"
+nav.commitments → "Komitmen"
+nav.debts → "Hutang"
+nav.goals → "Matlamat"
+nav.netWorth → "Kekayaan Bersih"
+nav.upload → "Muat Naik"
+nav.insights → "Wawasan"
+nav.achievements → "Pencapaian"
+nav.settings → "Tetapan"
+
+
+Add Indonesian translations to id.json:
+
+nav.dashboard → "Dashboard"
+nav.expenseTracker → "Pelacak Pengeluaran"
+nav.duitplanAi → "DuitPlan AI"
+nav.accounts → "Rekening"
+nav.transactions → "Transaksi"
+nav.budgets → "Anggaran"
+nav.commitments → "Komitmen"
+nav.debts → "Utang"
+nav.goals → "Tujuan"
+nav.netWorth → "Kekayaan Bersih"
+nav.upload → "Unggah"
+nav.insights → "Wawasan"
+nav.achievements → "Pencapaian"
+nav.settings → "Pengaturan"
+
+
+
+
+Fix 3: ms.json — change expenseTracker.subtitle
+Current value: "Jejak setiap transaksi"
+Change to: "Jejak semua transaksi"
+Reason: consistency with the Indonesian translation which uses "semua" (all). Single-word change, no other impact.
+
+Fix 4: id.json — change expenseTracker.addDialog.merchant
+Current value: "Merchant (opsional)"
+Change to: "Pedagang (opsional)"
+Reason: "Merchant" is an unnecessary anglicism. The Malay version correctly uses "Peniaga" (its native equivalent). "Pedagang" is the proper Indonesian term.
+Note: this only affects id.json. The ms.json key already uses "Peniaga (pilihan)" and is correct.
+
+STRICT scope boundaries — do NOT do any of the following:
+
+Do NOT extract from Landing page, Onboarding, Auth, AI chat, or email templates (those are Prompt 5c)
+Do NOT modify the i18n config or library setup
+Do NOT change the language switcher
+Do NOT touch BIBD/Baiduri references in translations (logged in REGION_CONTENT_BACKLOG.md, addressed in Phase 3.2)
+Do NOT make additional translation refinements beyond the four listed above
+Do NOT redesign or restructure any page
+
+If you find additional missed strings during this work (which is possible — sidebar fix may surface other navigation strings), list them in your report-back rather than fixing them. We'll prioritize them separately.
+
+Verification before reporting complete:
+
+Switch language to Bahasa Melayu → sidebar items render in Malay (Akaun, Transaksi, Belanjawan, Komitmen, etc.)
+Switch language to Bahasa Indonesia → sidebar items render in Indonesian (Rekening, Transaksi, Anggaran, etc.)
+Switch back to English → sidebar items render in English
+Visit Achievements page in all 3 languages → badge names and descriptions render in the user's chosen language
+Visit Expense Tracker page in Malay → subtitle reads "Jejak semua transaksi" (was "Jejak setiap transaksi")
+Open Add Expense dialog as Indonesian user → merchant field label reads "Pedagang (opsional)" (was "Merchant (opsional)")
+No regressions on the 13 other pages already extracted
+JSON files still valid (no syntax errors)
+
+
+Report back with:
+
+Where badge definitions were located (file path)
+Total list of badges found in the system (some may have been hidden)
+Where sidebar component lives (file path)
+Confirmation of all 4 fixes
+Total new keys added (split between achievements, nav, and refinements)
+Any additional missed strings discovered during the sidebar audit (list, do not fix)
+Verification results across all 3 languages
+
+Stop after this cleanup is verified working. Do NOT proceed to Prompt 5c.

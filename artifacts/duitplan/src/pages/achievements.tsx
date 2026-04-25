@@ -41,6 +41,10 @@ function useCheckAchievements() {
   });
 }
 
+function toBadgeKey(snakeKey: string): string {
+  return snakeKey.replace(/_([a-z])/g, (_, c: string) => c.toUpperCase());
+}
+
 export default function Achievements() {
   const { t } = useTranslation();
   const { data, isLoading, refetch } = useGamification();
@@ -144,9 +148,11 @@ export default function Achievements() {
               <span className={cn("text-3xl", !a.unlocked && "opacity-40")}>{a.icon}</span>
               <div>
                 <div className={cn("font-semibold text-sm", a.unlocked ? "text-foreground" : "text-muted-foreground")}>
-                  {a.name}
+                  {t(`achievements.badges.${toBadgeKey(a.key)}.name`, { defaultValue: a.name })}
                 </div>
-                <div className="text-xs text-muted-foreground leading-relaxed mt-0.5">{a.description}</div>
+                <div className="text-xs text-muted-foreground leading-relaxed mt-0.5">
+                  {t(`achievements.badges.${toBadgeKey(a.key)}.description`, { defaultValue: a.description })}
+                </div>
               </div>
               {a.unlocked && a.unlockedAt && (
                 <div className="text-xs text-primary font-medium mt-auto">
@@ -180,9 +186,11 @@ export default function Achievements() {
               <span className={cn("text-3xl", !a.unlocked && "opacity-40")}>{a.icon}</span>
               <div>
                 <div className={cn("font-semibold text-sm", a.unlocked ? "text-foreground" : "text-muted-foreground")}>
-                  {a.name}
+                  {t(`achievements.badges.${toBadgeKey(a.key)}.name`, { defaultValue: a.name })}
                 </div>
-                <div className="text-xs text-muted-foreground leading-relaxed mt-0.5">{a.description}</div>
+                <div className="text-xs text-muted-foreground leading-relaxed mt-0.5">
+                  {t(`achievements.badges.${toBadgeKey(a.key)}.description`, { defaultValue: a.description })}
+                </div>
               </div>
               {a.unlocked && a.unlockedAt && (
                 <div className="text-xs text-primary font-medium mt-auto">

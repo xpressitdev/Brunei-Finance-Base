@@ -104,7 +104,7 @@
       "amount": "Jumlah ({{currency}})",
       "descriptionLabel": "Deskripsi",
       "descriptionPlaceholder": "Anda membelanjakan apa?",
-      "merchant": "Merchant (opsional)",
+      "merchant": "Pedagang (opsional)",
       "merchantPlaceholder": "Nama toko atau vendor",
       "category": "Kategori",
       "selectCategory": "Pilih kategori",
@@ -694,6 +694,22 @@
     },
     "trustNote": "File Anda diproses dengan aman dan tidak dibagikan kepada pihak ketiga. Hanya data transaksi yang diekstrak yang disimpan — bukan file asli Anda."
   },
+  "nav": {
+    "dashboard": "Dashboard",
+    "expenseTracker": "Pelacak Pengeluaran",
+    "duitplanAi": "DuitPlan AI",
+    "accounts": "Rekening",
+    "transactions": "Transaksi",
+    "budgets": "Anggaran",
+    "commitments": "Komitmen",
+    "debts": "Utang",
+    "goals": "Tujuan",
+    "netWorth": "Kekayaan Bersih",
+    "upload": "Unggah",
+    "insights": "Wawasan",
+    "achievements": "Pencapaian",
+    "settings": "Pengaturan"
+  },
   "achievements": {
     "title": "Pencapaian",
     "subtitle": "{{earned}} dari {{total}} lencana diraih. Teruskan!",
@@ -703,7 +719,47 @@
     },
     "badges": {
       "label": "Lencana Diraih",
-      "remaining": "{{count}} lagi"
+      "remaining": "{{count}} lagi",
+      "firstSetup": {
+        "name": "Pengaturan Awal",
+        "description": "Menyelesaikan pengaturan akun dan orientasi Anda"
+      },
+      "budgetStarter": {
+        "name": "Pemula Anggaran",
+        "description": "Menetapkan anggaran bulanan pertama Anda"
+      },
+      "debtAware": {
+        "name": "Sadar Utang",
+        "description": "Menambahkan pinjaman atau pembiayaan pertama Anda"
+      },
+      "firstImport": {
+        "name": "Impor Pertama",
+        "description": "Mengimpor rekening bank untuk pertama kalinya"
+      },
+      "firstTransaction": {
+        "name": "Transaksi Pertama",
+        "description": "Mencatat pengeluaran pertama Anda"
+      },
+      "habitBuilder": {
+        "name": "Pembangun Kebiasaan",
+        "description": "Mencatat setidaknya 10 transaksi dalam satu bulan"
+      },
+      "savingsBuilder": {
+        "name": "Pembangun Tabungan",
+        "description": "Menambahkan kategori tabungan ke anggaran Anda"
+      },
+      "smartSpender": {
+        "name": "Belanja Cerdas",
+        "description": "Menjaga pengeluaran dalam batas anggaran selama satu bulan penuh"
+      },
+      "debtCrusher": {
+        "name": "Penghancur Utang",
+        "description": "Melacak pinjaman selama 3 bulan atau lebih"
+      },
+      "statementPro": {
+        "name": "Pro Rekening",
+        "description": "Mengimpor 3 atau lebih rekening bank"
+      }
     },
     "challenge": {
       "label": "Tantangan Bulan Ini",

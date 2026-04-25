@@ -694,6 +694,22 @@
     },
     "trustNote": "Your files are processed securely and never shared with third parties. Only the extracted transaction data is stored — not your original files."
   },
+  "nav": {
+    "dashboard": "Dashboard",
+    "expenseTracker": "Expense Tracker",
+    "duitplanAi": "DuitPlan AI",
+    "accounts": "Accounts",
+    "transactions": "Transactions",
+    "budgets": "Budgets",
+    "commitments": "Commitments",
+    "debts": "Debts",
+    "goals": "Goals",
+    "netWorth": "Net Worth",
+    "upload": "Upload",
+    "insights": "Insights",
+    "achievements": "Achievements",
+    "settings": "Settings"
+  },
   "achievements": {
     "title": "Achievements",
     "subtitle": "{{earned}} of {{total}} badges earned. Keep going!",
@@ -703,7 +719,47 @@
     },
     "badges": {
       "label": "Badges Earned",
-      "remaining": "{{count}} remaining"
+      "remaining": "{{count}} remaining",
+      "firstSetup": {
+        "name": "First Setup",
+        "description": "Completed your account setup and onboarding"
+      },
+      "budgetStarter": {
+        "name": "Budget Starter",
+        "description": "Set up your first monthly budget"
+      },
+      "debtAware": {
+        "name": "Debt Aware",
+        "description": "Added your first loan or financing"
+      },
+      "firstImport": {
+        "name": "First Import",
+        "description": "Imported a bank statement for the first time"
+      },
+      "firstTransaction": {
+        "name": "First Transaction",
+        "description": "Logged your very first expense"
+      },
+      "habitBuilder": {
+        "name": "Habit Builder",
+        "description": "Logged at least 10 transactions in a single month"
+      },
+      "savingsBuilder": {
+        "name": "Savings Builder",
+        "description": "Added a savings category to your budget"
+      },
+      "smartSpender": {
+        "name": "Smart Spender",
+        "description": "Stayed within budget for an entire month"
+      },
+      "debtCrusher": {
+        "name": "Debt Crusher",
+        "description": "Tracked a loan for 3 or more months"
+      },
+      "statementPro": {
+        "name": "Statement Pro",
+        "description": "Imported 3 or more bank statements"
+      }
     },
     "challenge": {
       "label": "This Month's Challenge",
