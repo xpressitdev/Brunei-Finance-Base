@@ -1,0 +1,226 @@
+{
+  "common": {
+    "save": "Simpan",
+    "saving": "Menyimpan...",
+    "cancel": "Batal",
+    "delete": "Padam",
+    "loading": "Memuatkan...",
+    "optional": "(pilihan)",
+    "addTransaction": "Tambah Urus Niaga",
+    "importStatement": "Import Penyata",
+    "expense": "Perbelanjaan",
+    "income": "Pendapatan",
+    "date": "Tarikh",
+    "description": "Penerangan",
+    "amount": "Jumlah",
+    "category": "Kategori",
+    "account": "Akaun",
+    "noAccount": "Tiada akaun",
+    "uncategorised": "Tidak dikategorikan",
+    "uncategorized": "Tidak dikategorikan",
+    "saveChanges": "Simpan Perubahan",
+    "revert": "Kembalikan"
+  },
+  "dashboard": {
+    "overview": {
+      "title": "Gambaran Keseluruhan"
+    },
+    "kpi": {
+      "remainingThisMonth": "Baki Bulan Ini",
+      "commitments": "Komitmen",
+      "debtRepayments": "Bayaran Hutang",
+      "spending": "Perbelanjaan",
+      "monthlySalary": "Gaji Bulanan",
+      "fixedCommitments": "Komitmen Tetap",
+      "liabilities": "Liabiliti",
+      "totalSpent": "Jumlah Dibelanjakan",
+      "received": "diterima",
+      "monthlyPayments": "Bayaran bulanan"
+    },
+    "remaining": {
+      "green": "Anda berada dalam landasan. {{amount}} lagi untuk baki bulan ini.",
+      "amber": "Ketat bulan ini — {{amount}} lagi selepas komitmen dan perbelanjaan.",
+      "red": "Anda melebihi bajet sebanyak {{amount}}. Semak komitmen atau perbelanjaan terbaru anda."
+    },
+    "gamification": {
+      "dayStreak": "Hari berturut-turut",
+      "logToStart": "Log urus niaga untuk bermula",
+      "thisMonth": "Bulan Ini",
+      "done": "✓ Selesai!",
+      "viewAllBadges": "Lihat semua lencana",
+      "noBadgesYet": "Belum ada lencana",
+      "latest": "Terbaru: {{name}}"
+    },
+    "chart": {
+      "spendingByCategory": "Perbelanjaan Mengikut Kategori",
+      "noSpendingData": "Belum ada data perbelanjaan",
+      "noSpendingHint": "Muat naik penyata BIBD atau Baiduri anda, atau tambah urus niaga secara manual."
+    },
+    "financing": {
+      "title": "Ringkasan Pembiayaan",
+      "monthlyPayment": "Bayaran Bulanan",
+      "debtToIncome": "Nisbah Hutang kepada Pendapatan",
+      "manage": "Urus Pembiayaan"
+    },
+    "recentTransactions": {
+      "title": "Urus Niaga Terbaru",
+      "uncategorised": "Tidak dikategorikan",
+      "noTransactions": "Belum ada urus niaga direkodkan.",
+      "importHint": "Cuba import penyata BIBD atau Baiduri anda.",
+      "viewAll": "Lihat semua urus niaga"
+    }
+  },
+  "expenseTracker": {
+    "title": "Penjejak Perbelanjaan",
+    "subtitle": "Jejak setiap urus niaga",
+    "today": "Hari ini",
+    "receipt": "Resit",
+    "uncategorised": "Tidak dikategorikan",
+    "summary": {
+      "today": "Hari ini",
+      "monthExpenses": "Perbelanjaan Bulan Ini",
+      "monthIncome": "Pendapatan Bulan Ini",
+      "expenseCount_one": "{{count}} perbelanjaan",
+      "expenseCount_other": "{{count}} perbelanjaan",
+      "entryCount_one": "{{count}} entri",
+      "entryCount_other": "{{count}} entri",
+      "salary": "(gaji)"
+    },
+    "empty": {
+      "noExpenses": "Tiada perbelanjaan untuk {{month}}",
+      "tapHint": "Ketik butang kamera untuk mengambil resit, atau butang + untuk tambah secara manual."
+    },
+    "addDialog": {
+      "title": "Tambah Perbelanjaan",
+      "scanHint": "Ambil atau muat naik resit untuk isi butiran secara automatik",
+      "scanning": "Membaca resit...",
+      "scanSuccess": "Butiran diekstrak — semak di bawah.",
+      "scanFailed": "Tidak dapat isi automatik — masukkan butiran secara manual.",
+      "retake": "Ambil Semula",
+      "camera": "Kamera",
+      "gallery": "Galeri",
+      "expense": "Perbelanjaan",
+      "income": "Pendapatan",
+      "date": "Tarikh",
+      "amount": "Jumlah ({{currency}})",
+      "descriptionLabel": "Penerangan",
+      "descriptionPlaceholder": "Apa yang anda belanjakan?",
+      "merchant": "Peniaga (pilihan)",
+      "merchantPlaceholder": "Nama kedai atau vendor",
+      "category": "Kategori",
+      "selectCategory": "Pilih kategori",
+      "save": "Simpan Perbelanjaan"
+    },
+    "editDialog": {
+      "title": "Edit Urus Niaga",
+      "expense": "Perbelanjaan",
+      "income": "Pendapatan",
+      "typeChangeWarning": "Menukar dari {{from}} ke {{to}} akan membalikkan pelarasan baki pada akaun yang dipautkan. Pastikan ini adalah tindakan yang disengajakan.",
+      "revert": "Kembalikan",
+      "date": "Tarikh",
+      "amount": "Jumlah ({{currency}})",
+      "descriptionLabel": "Penerangan",
+      "descriptionPlaceholder": "Apa yang anda belanjakan?",
+      "merchant": "Peniaga (pilihan)",
+      "merchantPlaceholder": "Nama kedai atau vendor",
+      "account": "Akaun",
+      "noAccount": "Tiada akaun",
+      "category": "Kategori",
+      "selectCategory": "Pilih kategori",
+      "uncategorised": "Tidak dikategorikan",
+      "save": "Simpan Perubahan"
+    },
+    "deleteDialog": {
+      "title": "Padam perbelanjaan?",
+      "description": "Tindakan ini tidak boleh dibatalkan.",
+      "cancel": "Batal",
+      "delete": "Padam"
+    }
+  },
+  "transactions": {
+    "title": "Urus Niaga",
+    "subtitle": "Urus pendapatan dan perbelanjaan anda.",
+    "loading": "Memuatkan...",
+    "confirmDelete": "Adakah anda pasti mahu memadam urus niaga ini?",
+    "uncategorized": "Tidak dikategorikan",
+    "filters": {
+      "allMonths": "Semua bulan",
+      "allAccounts": "Semua akaun",
+      "allTypes": "Semua jenis",
+      "clear": "Kosongkan",
+      "searchPlaceholder": "Cari penerangan..."
+    },
+    "typeLabel": {
+      "expense": "Perbelanjaan",
+      "income": "Pendapatan"
+    },
+    "addDialog": {
+      "title": "Tambah Urus Niaga",
+      "date": "Tarikh",
+      "description": "Penerangan",
+      "amount": "Jumlah",
+      "type": "Jenis",
+      "account": "Akaun",
+      "optional": "(pilihan)",
+      "noAccount": "Tiada akaun",
+      "category": "Kategori",
+      "uncategorized": "Tidak dikategorikan",
+      "expense": "Perbelanjaan",
+      "income": "Pendapatan",
+      "save": "Simpan",
+      "saving": "Menyimpan..."
+    },
+    "editDialog": {
+      "title": "Edit Urus Niaga",
+      "save": "Simpan Perubahan",
+      "saving": "Menyimpan...",
+      "expense": "Perbelanjaan",
+      "income": "Pendapatan",
+      "typeChangeWarning": "Menukar dari {{from}} ke {{to}} akan membalikkan pelarasan baki pada akaun yang dipautkan. Pastikan ini adalah tindakan yang disengajakan.",
+      "revert": "Kembalikan",
+      "accountWarningBoth": "Menyimpan akan melaraskan baki pada kedua-dua akaun lama dan baru.",
+      "accountWarningRemoved": "Menyimpan akan menghapuskan pelarasan baki dari akaun asal.",
+      "accountWarningAdded": "Menyimpan akan melaraskan baki pada akaun yang dipilih.",
+      "noAccount": "Tiada akaun",
+      "uncategorized": "Tidak dikategorikan"
+    },
+    "empty": {
+      "noTransactions": "Tiada urus niaga dijumpai",
+      "noTransactionsForMonth": "Tiada urus niaga untuk {{month}}. Urus niaga yang diimport mungkin berada dalam bulan yang berbeza.",
+      "noTransactionsGeneral": "Belum ada urus niaga. Import penyata bank atau tambah satu secara manual.",
+      "viewAll": "Lihat semua urus niaga"
+    }
+  },
+  "settings": {
+    "tabs": {
+      "profile": "Profil",
+      "categories": "Kategori",
+      "preferences": "Keutamaan"
+    },
+    "profile": {
+      "title": "Maklumat Peribadi",
+      "description": "Kemas kini butiran peribadi dan tetapan pendapatan anda.",
+      "fullName": "Nama Penuh",
+      "monthlyIncome": "Pendapatan Bulanan ({{currency}})",
+      "payday": "Hari Gaji (1-31)"
+    },
+    "categories": {
+      "title": "Kategori Tersuai",
+      "description": "Tambah kategori baharu untuk menyusun urus niaga anda.",
+      "nameLabel": "Nama",
+      "namePlaceholder": "cth. Perjalanan, Gim",
+      "typeLabel": "Jenis",
+      "add": "Tambah",
+      "yourCategories": "Kategori Anda",
+      "expense": "Perbelanjaan",
+      "income": "Pendapatan"
+    },
+    "language": {
+      "title": "Bahasa",
+      "description": "Pilih bahasa paparan pilihan anda. Perubahan akan berkuat kuasa serta-merta.",
+      "en": "English",
+      "ms": "Bahasa Melayu",
+      "id": "Bahasa Indonesia"
+    }
+  }
+}

@@ -1,0 +1,133 @@
+ Prompt 5a — i18n setup + Dashboard, Expense Tracker, Transactions
+
+Task: Phase 2 Prompt 5a — Set up i18n infrastructure and extract strings from the three highest-traffic pages
+Read ROADMAP.md for context. This is Prompt 5a of 3 in the i18n extraction work. Subsequent prompts (5b, 5c) will extract strings from the remaining pages — do NOT attempt them in this prompt.
+
+Context: why we're splitting this work
+The original Phase 2.1 attempt failed because it tried to refactor too many pages at once. We learned to split big architectural changes into small verifiable prompts. i18n extraction is the largest remaining task in Phase 2, so we're splitting it across three nights:
+
+5a (this prompt): i18n infrastructure setup + Dashboard + Expense Tracker + Transactions
+5b (next): Accounts, Budgets, Commitments, Debts, Goals, Net Worth, Insights, Upload, Achievements, Settings
+5c (final): Landing page, onboarding, auth, AI chat, emails, error messages
+
+This prompt sets up the foundation. Decisions made here (library choice, key naming, file structure) will be inherited by 5b and 5c.
+
+Step 1: Install and configure i18n library
+
+Install i18next and react-i18next if the project uses React. (Adjust to project's framework if different — e.g., next-intl for Next.js.)
+Create the configuration in src/i18n/index.ts (or equivalent path).
+Configure language detection to read primarily from user.language (the field added to the user model in Phase 2 Prompt 1). Fall back to navigator.language for unauthenticated visitors.
+Map locale codes: en-* → en, ms-MY → ms, id-ID → id. Default fallback language: en.
+Configure interpolation to support both standard {{variable}} substitution and number/date formatting via the existing formatCurrency and formatDate utilities. Do NOT replace those utilities — i18n handles strings, formatters handle numbers.
+
+
+Step 2: Create locale files
+Create three locale files:
+
+src/i18n/locales/en.json — English (will be populated in this prompt)
+src/i18n/locales/ms.json — Bahasa Melayu (empty stub {} for now)
+src/i18n/locales/id.json — Bahasa Indonesia (empty stub {} for now)
+
+Translations for ms.json and id.json are explicitly out of scope — those happen in Phase 2.6.
+
+Step 3: Establish the key naming convention
+Use a flat-but-scoped naming convention. Each key has the structure: <page>.<section>.<element>.
+Examples:
+
+dashboard.overview.title → "Overview"
+dashboard.kpi.monthlySalary → "Monthly Salary"
+dashboard.remaining.green → "You're on track. {{amount}} left for the rest of the month."
+expenseTracker.title → "Expense Tracker"
+expenseTracker.summary.today → "Today"
+transactions.filters.allMonths → "All months"
+common.save → "Save"
+common.cancel → "Cancel"
+common.loading → "Loading…"
+
+Strict rules:
+
+No deeper than 3 levels (e.g., dashboard.kpi.monthlySalary ✓ but dashboard.cards.kpi.monthlySalary ✗).
+Use common.* for shared UI elements that appear across pages (Save, Cancel, Loading, Error, etc.).
+Use lowercase camelCase for keys.
+Interpolated values use {{name}} syntax.
+
+
+Step 4: Extract strings from the Dashboard page
+Audit src/pages/Dashboard.tsx (or equivalent) and replace every hardcoded English string with a t('key') call.
+Strings to extract include but are not limited to:
+
+Page title ("Overview")
+Period subheading ("April 2026" — note: only the word structure goes in i18n; the actual date uses formatDate)
+Hero card title ("Remaining this month") and the three state messages (green/amber/red)
+All KPI card labels (Monthly Salary, Fixed Commitments, Liabilities, Total Spent)
+Subtext labels ("BND 0.00 received", "Loan monthly payments")
+Section titles ("Spending by Category", "Recent Transactions", "Financing Summary", "This Month", "Day streak", "Latest")
+Empty state messages ("No spending data yet", "Upload your... statement, or add a transaction manually")
+Button labels ("Import Statement", "Add Transaction", "View all badges", "Manage Financing")
+Achievement names if displayed (note: deeper achievement audit is in Phase 2.6 backlog)
+
+Critical: Do NOT translate variable content — transaction descriptions, account names, user-entered category names. Those are user-generated content and stay in whatever language the user typed them.
+
+Step 5: Extract strings from the Expense Tracker page
+Same process for src/pages/ExpenseTracker.tsx (or equivalent).
+Strings include:
+
+Page title and subtitle (note: "Track every ringgit you spend" subtitle should use a placeholder key expenseTracker.subtitle with a generic English value like "Track every transaction" — the region-specific currency-name version is logged in REGION_CONTENT_BACKLOG.md and addressed in 2.6)
+Summary card labels (Today, Month Expenses, Month Income)
+Entry counts ("0 expenses", "0 entries", "1 entry (salary)")
+Empty state message ("No expenses for April 2026", "Tap the camera button...")
+Month navigator if present
+
+
+Step 6: Extract strings from the Transactions page
+Same process for src/pages/Transactions.tsx (or equivalent).
+Strings include:
+
+Page title ("Transactions") and subtitle ("Manage your income and expenses")
+Filter dropdown labels ("All months", "All accounts", "All types")
+Search placeholder ("Search descriptions…")
+Add Transaction button
+Edit/Delete tooltips on transaction rows
+Empty state if applicable
+Confirmation dialogs (e.g., "Delete this transaction?")
+
+
+Step 7: Add a language switcher to Settings (test surface only)
+
+Add a temporary language dropdown in Settings: English / Bahasa Melayu / Bahasa Indonesia.
+Selecting MS or ID will show mostly untranslated keys (because we haven't written translations yet) — this is expected. The point is to verify the switcher and i18n machinery work.
+Save the choice to user.language.
+Switching language should NOT require a page reload — the new language applies immediately.
+
+Note: a more polished language switcher in the top nav can come in Phase 2.6 alongside translations. For now, Settings is sufficient.
+
+Step 8: Verification
+
+Open Dashboard, Expense Tracker, Transactions in English — every string renders identically to before this change. No regressions.
+Switch language to Bahasa Melayu in Settings → those three pages now render with translation keys visible (e.g., dashboard.overview.title instead of "Overview"). This is expected and proves extraction worked.
+Switch language to Bahasa Indonesia → same result, keys visible.
+Switch back to English → everything renders correctly again.
+Test across all 3 region test users (Hakem/BN, test-my, test-id) — i18n machinery works the same regardless of region. Currency formatting still uses the formatter and is independent of language.
+Confirm en.json is well-formed JSON, no duplicate keys, no nested objects deeper than 3 levels.
+
+
+Out of scope — do NOT do any of the following:
+
+Do NOT extract strings from any page outside Dashboard, Expense Tracker, Transactions.
+Do NOT write translations for ms.json or id.json. Leave them as {}.
+Do NOT modify the formatCurrency, formatDate, or other formatter utilities.
+Do NOT change the language switcher's location or design beyond a basic Settings dropdown.
+Do NOT touch the landing page (Phase 2 Prompt 5c).
+Do NOT change any business logic or data flow.
+Do NOT redesign or restructure the three pages — just replace strings.
+
+
+Report back with:
+
+Library installed and version (e.g., i18next 23.x, react-i18next 14.x)
+File structure created (paths to i18n config, locale files)
+Total count of keys extracted, broken down by page (Dashboard / Expense Tracker / Transactions / common)
+The full en.json file contents (so we can review and the next prompts have a reference)
+Any strings you encountered that you weren't sure how to handle (e.g., dynamic content, complex interpolations, plural forms)
+Verification that the language switcher works and language persists across sessions
+Confirmation that all 3 pages render identically in English mode (no regressions)

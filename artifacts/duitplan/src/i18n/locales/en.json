@@ -1,0 +1,226 @@
+{
+  "common": {
+    "save": "Save",
+    "saving": "Saving...",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "loading": "Loading...",
+    "optional": "(optional)",
+    "addTransaction": "Add Transaction",
+    "importStatement": "Import Statement",
+    "expense": "Expense",
+    "income": "Income",
+    "date": "Date",
+    "description": "Description",
+    "amount": "Amount",
+    "category": "Category",
+    "account": "Account",
+    "noAccount": "No account",
+    "uncategorised": "Uncategorised",
+    "uncategorized": "Uncategorized",
+    "saveChanges": "Save Changes",
+    "revert": "Revert"
+  },
+  "dashboard": {
+    "overview": {
+      "title": "Overview"
+    },
+    "kpi": {
+      "remainingThisMonth": "Remaining This Month",
+      "commitments": "Commitments",
+      "debtRepayments": "Debt repayments",
+      "spending": "Spending",
+      "monthlySalary": "Monthly Salary",
+      "fixedCommitments": "Fixed Commitments",
+      "liabilities": "Liabilities",
+      "totalSpent": "Total Spent",
+      "received": "received",
+      "monthlyPayments": "Monthly payments"
+    },
+    "remaining": {
+      "green": "You're on track. {{amount}} left for the rest of the month.",
+      "amber": "Tight this month — {{amount}} left after commitments and spending.",
+      "red": "You're over budget by {{amount}}. Check your commitments or recent spending."
+    },
+    "gamification": {
+      "dayStreak": "Day streak",
+      "logToStart": "Log a transaction to start",
+      "thisMonth": "This Month",
+      "done": "✓ Done!",
+      "viewAllBadges": "View all badges",
+      "noBadgesYet": "No badges yet",
+      "latest": "Latest: {{name}}"
+    },
+    "chart": {
+      "spendingByCategory": "Spending by Category",
+      "noSpendingData": "No spending data yet",
+      "noSpendingHint": "Upload your BIBD or Baiduri statement, or add a transaction manually."
+    },
+    "financing": {
+      "title": "Financing Summary",
+      "monthlyPayment": "Monthly Payment",
+      "debtToIncome": "Debt-to-Income",
+      "manage": "Manage Financing"
+    },
+    "recentTransactions": {
+      "title": "Recent Transactions",
+      "uncategorised": "Uncategorised",
+      "noTransactions": "No transactions recorded yet.",
+      "importHint": "Try importing your BIBD or Baiduri statement.",
+      "viewAll": "View all transactions"
+    }
+  },
+  "expenseTracker": {
+    "title": "Expense Tracker",
+    "subtitle": "Track every transaction",
+    "today": "Today",
+    "receipt": "Receipt",
+    "uncategorised": "Uncategorised",
+    "summary": {
+      "today": "Today",
+      "monthExpenses": "Month Expenses",
+      "monthIncome": "Month Income",
+      "expenseCount_one": "{{count}} expense",
+      "expenseCount_other": "{{count}} expenses",
+      "entryCount_one": "{{count}} entry",
+      "entryCount_other": "{{count}} entries",
+      "salary": "(salary)"
+    },
+    "empty": {
+      "noExpenses": "No expenses for {{month}}",
+      "tapHint": "Tap the camera button to snap a receipt, or the + button to add manually."
+    },
+    "addDialog": {
+      "title": "Add Expense",
+      "scanHint": "Snap or upload a receipt to auto-fill details",
+      "scanning": "Reading receipt...",
+      "scanSuccess": "Details extracted — review below.",
+      "scanFailed": "Could not auto-fill — enter details manually.",
+      "retake": "Retake",
+      "camera": "Camera",
+      "gallery": "Gallery",
+      "expense": "Expense",
+      "income": "Income",
+      "date": "Date",
+      "amount": "Amount ({{currency}})",
+      "descriptionLabel": "Description",
+      "descriptionPlaceholder": "What did you spend on?",
+      "merchant": "Merchant (optional)",
+      "merchantPlaceholder": "Store or vendor name",
+      "category": "Category",
+      "selectCategory": "Select category",
+      "save": "Save Expense"
+    },
+    "editDialog": {
+      "title": "Edit Transaction",
+      "expense": "Expense",
+      "income": "Income",
+      "typeChangeWarning": "Changing from {{from}} to {{to}} will reverse the balance adjustment on the linked account. Make sure this is intentional.",
+      "revert": "Revert",
+      "date": "Date",
+      "amount": "Amount ({{currency}})",
+      "descriptionLabel": "Description",
+      "descriptionPlaceholder": "What did you spend on?",
+      "merchant": "Merchant (optional)",
+      "merchantPlaceholder": "Store or vendor name",
+      "account": "Account",
+      "noAccount": "No account",
+      "category": "Category",
+      "selectCategory": "Select category",
+      "uncategorised": "Uncategorised",
+      "save": "Save Changes"
+    },
+    "deleteDialog": {
+      "title": "Delete expense?",
+      "description": "This cannot be undone.",
+      "cancel": "Cancel",
+      "delete": "Delete"
+    }
+  },
+  "transactions": {
+    "title": "Transactions",
+    "subtitle": "Manage your income and expenses.",
+    "loading": "Loading...",
+    "confirmDelete": "Are you sure you want to delete this transaction?",
+    "uncategorized": "Uncategorized",
+    "filters": {
+      "allMonths": "All months",
+      "allAccounts": "All accounts",
+      "allTypes": "All types",
+      "clear": "Clear",
+      "searchPlaceholder": "Search descriptions..."
+    },
+    "typeLabel": {
+      "expense": "Expense",
+      "income": "Income"
+    },
+    "addDialog": {
+      "title": "Add Transaction",
+      "date": "Date",
+      "description": "Description",
+      "amount": "Amount",
+      "type": "Type",
+      "account": "Account",
+      "optional": "(optional)",
+      "noAccount": "No account",
+      "category": "Category",
+      "uncategorized": "Uncategorized",
+      "expense": "Expense",
+      "income": "Income",
+      "save": "Save",
+      "saving": "Saving..."
+    },
+    "editDialog": {
+      "title": "Edit Transaction",
+      "save": "Save Changes",
+      "saving": "Saving...",
+      "expense": "Expense",
+      "income": "Income",
+      "typeChangeWarning": "Changing from {{from}} to {{to}} will reverse the balance adjustment on the linked account. Make sure this is intentional.",
+      "revert": "Revert",
+      "accountWarningBoth": "Saving will adjust balances on both the old and new accounts.",
+      "accountWarningRemoved": "Saving will remove the balance adjustment from the original account.",
+      "accountWarningAdded": "Saving will adjust the balance on the selected account.",
+      "noAccount": "No account",
+      "uncategorized": "Uncategorized"
+    },
+    "empty": {
+      "noTransactions": "No transactions found",
+      "noTransactionsForMonth": "No transactions for {{month}}. Imported transactions may be in a different month.",
+      "noTransactionsGeneral": "No transactions yet. Import a bank statement or add one manually.",
+      "viewAll": "View all transactions"
+    }
+  },
+  "settings": {
+    "tabs": {
+      "profile": "Profile",
+      "categories": "Categories",
+      "preferences": "Preferences"
+    },
+    "profile": {
+      "title": "Personal Information",
+      "description": "Update your personal details and income settings.",
+      "fullName": "Full Name",
+      "monthlyIncome": "Monthly Income ({{currency}})",
+      "payday": "Payday (1-31)"
+    },
+    "categories": {
+      "title": "Custom Categories",
+      "description": "Add new categories to organize your transactions.",
+      "nameLabel": "Name",
+      "namePlaceholder": "e.g. Travel, Gym",
+      "typeLabel": "Type",
+      "add": "Add",
+      "yourCategories": "Your Categories",
+      "expense": "Expense",
+      "income": "Income"
+    },
+    "language": {
+      "title": "Language",
+      "description": "Choose your preferred display language. The change applies immediately.",
+      "en": "English",
+      "ms": "Bahasa Melayu",
+      "id": "Bahasa Indonesia"
+    }
+  }
+}

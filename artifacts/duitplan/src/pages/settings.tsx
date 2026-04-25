@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useGetProfile, useUpdateProfile, useListCategories, useCreateCategory } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,11 +7,13 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, User, Tag, Settings as SettingsIcon } from "lucide-react";
+import { Plus, User, Tag, Globe } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useRegion } from "@/hooks/useRegion";
+import i18n from "@/i18n";
 
 export default function Settings() {
+  const { t } = useTranslation();
   const { region, decimalStep } = useRegion();
   const { data: profile, isLoading: profileLoading, refetch: refetchProfile } = useGetProfile();
   const { data: categories, isLoading: categoriesLoading, refetch: refetchCategories } = useListCategories();
@@ -25,6 +28,7 @@ export default function Settings() {
     payday: "",
   });
 
+  const [language, setLanguage] = useState("en");
   const [newCatName, setNewCatName] = useState("");
   const [newCatKind, setNewCatKind] = useState("expense");
 
@@ -35,6 +39,7 @@ export default function Settings() {
         monthlyIncome: profile.monthlyIncome || "",
         payday: profile.payday?.toString() || "",
       });
+      setLanguage(profile.language ?? "en");
     }
   }, [profile]);
 
@@ -52,6 +57,16 @@ export default function Settings() {
       refetchProfile();
     } catch (err) {
       toast({ title: "Failed to update profile", variant: "destructive" });
+    }
+  };
+
+  const handleLanguageChange = async (lang: string) => {
+    setLanguage(lang);
+    i18n.changeLanguage(lang);
+    try {
+      await updateProfileMutation.mutateAsync({ data: { language: lang } });
+    } catch {
+      // silent — language change already applied locally
     }
   };
 
@@ -73,7 +88,7 @@ export default function Settings() {
     }
   };
 
-  if (profileLoading || categoriesLoading) return <div className="p-8">Loading...</div>;
+  if (profileLoading || categoriesLoading) return <div className="p-8">{t("common.loading")}</div>;
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto animate-in fade-in duration-500">
@@ -84,20 +99,27 @@ export default function Settings() {
 
       <Tabs defaultValue="profile" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="profile" className="flex gap-2"><User className="w-4 h-4"/> Profile</TabsTrigger>
-          <TabsTrigger value="categories" className="flex gap-2"><Tag className="w-4 h-4"/> Categories</TabsTrigger>
+          <TabsTrigger value="profile" className="flex gap-2">
+            <User className="w-4 h-4"/> {t("settings.tabs.profile")}
+          </TabsTrigger>
+          <TabsTrigger value="categories" className="flex gap-2">
+            <Tag className="w-4 h-4"/> {t("settings.tabs.categories")}
+          </TabsTrigger>
+          <TabsTrigger value="preferences" className="flex gap-2">
+            <Globe className="w-4 h-4"/> {t("settings.tabs.preferences")}
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="profile">
           <Card>
             <CardHeader>
-              <CardTitle>Personal Information</CardTitle>
-              <CardDescription>Update your personal details and income settings.</CardDescription>
+              <CardTitle>{t("settings.profile.title")}</CardTitle>
+              <CardDescription>{t("settings.profile.description")}</CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleUpdateProfile} className="space-y-6 max-w-xl">
                 <div className="space-y-2">
-                  <Label>Full Name</Label>
+                  <Label>{t("settings.profile.fullName")}</Label>
                   <Input 
                     value={formData.fullName} 
                     onChange={(e) => setFormData({...formData, fullName: e.target.value})} 
@@ -105,7 +127,7 @@ export default function Settings() {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>Monthly Income ({region.currency})</Label>
+                    <Label>{t("settings.profile.monthlyIncome", { currency: region.currency })}</Label>
                     <Input 
                       type="number" 
                       step={decimalStep} 
@@ -114,7 +136,7 @@ export default function Settings() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>Payday (1-31)</Label>
+                    <Label>{t("settings.profile.payday")}</Label>
                     <Input 
                       type="number" 
                       min="1" 
@@ -125,7 +147,7 @@ export default function Settings() {
                   </div>
                 </div>
                 <Button type="submit" disabled={updateProfileMutation.isPending}>
-                  {updateProfileMutation.isPending ? "Saving..." : "Save Changes"}
+                  {updateProfileMutation.isPending ? t("common.saving") : t("common.saveChanges")}
                 </Button>
               </form>
             </CardContent>
@@ -135,37 +157,37 @@ export default function Settings() {
         <TabsContent value="categories">
           <Card>
             <CardHeader>
-              <CardTitle>Custom Categories</CardTitle>
-              <CardDescription>Add new categories to organize your transactions.</CardDescription>
+              <CardTitle>{t("settings.categories.title")}</CardTitle>
+              <CardDescription>{t("settings.categories.description")}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <form onSubmit={handleAddCategory} className="flex items-end gap-4">
                 <div className="space-y-2 flex-1">
-                  <Label>Name</Label>
+                  <Label>{t("settings.categories.nameLabel")}</Label>
                   <Input 
                     value={newCatName} 
                     onChange={(e) => setNewCatName(e.target.value)} 
-                    placeholder="e.g. Travel, Gym"
+                    placeholder={t("settings.categories.namePlaceholder")}
                     required
                   />
                 </div>
                 <div className="space-y-2 w-48">
-                  <Label>Type</Label>
+                  <Label>{t("settings.categories.typeLabel")}</Label>
                   <Select value={newCatKind} onValueChange={setNewCatKind}>
                     <SelectTrigger><SelectValue/></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="expense">Expense</SelectItem>
-                      <SelectItem value="income">Income</SelectItem>
+                      <SelectItem value="expense">{t("settings.categories.expense")}</SelectItem>
+                      <SelectItem value="income">{t("settings.categories.income")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <Button type="submit" disabled={createCategoryMutation.isPending}>
-                  <Plus className="w-4 h-4 mr-2" /> Add
+                  <Plus className="w-4 h-4 mr-2" /> {t("settings.categories.add")}
                 </Button>
               </form>
 
               <div className="mt-8">
-                <h3 className="font-semibold mb-4">Your Categories</h3>
+                <h3 className="font-semibold mb-4">{t("settings.categories.yourCategories")}</h3>
                 <div className="flex flex-wrap gap-2">
                   {categories?.map(c => (
                     <div key={c.id} className="bg-muted px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-2 border">
@@ -174,6 +196,29 @@ export default function Settings() {
                     </div>
                   ))}
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="preferences">
+          <Card>
+            <CardHeader>
+              <CardTitle>{t("settings.language.title")}</CardTitle>
+              <CardDescription>{t("settings.language.description")}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="max-w-xs">
+                <Select value={language} onValueChange={handleLanguageChange}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="en">{t("settings.language.en")}</SelectItem>
+                    <SelectItem value="ms">{t("settings.language.ms")}</SelectItem>
+                    <SelectItem value="id">{t("settings.language.id")}</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </CardContent>
           </Card>

@@ -1,0 +1,226 @@
+{
+  "common": {
+    "save": "Simpan",
+    "saving": "Menyimpan...",
+    "cancel": "Batal",
+    "delete": "Hapus",
+    "loading": "Memuat...",
+    "optional": "(opsional)",
+    "addTransaction": "Tambah Transaksi",
+    "importStatement": "Impor Rekening",
+    "expense": "Pengeluaran",
+    "income": "Pemasukan",
+    "date": "Tanggal",
+    "description": "Deskripsi",
+    "amount": "Jumlah",
+    "category": "Kategori",
+    "account": "Akun",
+    "noAccount": "Tidak ada akun",
+    "uncategorised": "Tidak dikategorikan",
+    "uncategorized": "Tidak dikategorikan",
+    "saveChanges": "Simpan Perubahan",
+    "revert": "Kembalikan"
+  },
+  "dashboard": {
+    "overview": {
+      "title": "Ikhtisar"
+    },
+    "kpi": {
+      "remainingThisMonth": "Sisa Bulan Ini",
+      "commitments": "Komitmen",
+      "debtRepayments": "Cicilan Utang",
+      "spending": "Pengeluaran",
+      "monthlySalary": "Gaji Bulanan",
+      "fixedCommitments": "Komitmen Tetap",
+      "liabilities": "Kewajiban",
+      "totalSpent": "Total Dibelanjakan",
+      "received": "diterima",
+      "monthlyPayments": "Pembayaran bulanan"
+    },
+    "remaining": {
+      "green": "Keuangan Anda terkendali. Masih ada {{amount}} untuk sisa bulan ini.",
+      "amber": "Ketat bulan ini — {{amount}} tersisa setelah komitmen dan pengeluaran.",
+      "red": "Anda melebihi anggaran sebesar {{amount}}. Periksa komitmen atau pengeluaran terbaru Anda."
+    },
+    "gamification": {
+      "dayStreak": "Hari berturut-turut",
+      "logToStart": "Catat transaksi untuk memulai",
+      "thisMonth": "Bulan Ini",
+      "done": "✓ Selesai!",
+      "viewAllBadges": "Lihat semua lencana",
+      "noBadgesYet": "Belum ada lencana",
+      "latest": "Terbaru: {{name}}"
+    },
+    "chart": {
+      "spendingByCategory": "Pengeluaran per Kategori",
+      "noSpendingData": "Belum ada data pengeluaran",
+      "noSpendingHint": "Unggah rekening BIBD atau Baiduri Anda, atau tambahkan transaksi secara manual."
+    },
+    "financing": {
+      "title": "Ringkasan Pembiayaan",
+      "monthlyPayment": "Pembayaran Bulanan",
+      "debtToIncome": "Rasio Utang terhadap Pendapatan",
+      "manage": "Kelola Pembiayaan"
+    },
+    "recentTransactions": {
+      "title": "Transaksi Terbaru",
+      "uncategorised": "Tidak dikategorikan",
+      "noTransactions": "Belum ada transaksi yang dicatat.",
+      "importHint": "Coba impor rekening BIBD atau Baiduri Anda.",
+      "viewAll": "Lihat semua transaksi"
+    }
+  },
+  "expenseTracker": {
+    "title": "Pelacak Pengeluaran",
+    "subtitle": "Lacak setiap transaksi",
+    "today": "Hari ini",
+    "receipt": "Kwitansi",
+    "uncategorised": "Tidak dikategorikan",
+    "summary": {
+      "today": "Hari ini",
+      "monthExpenses": "Pengeluaran Bulan Ini",
+      "monthIncome": "Pemasukan Bulan Ini",
+      "expenseCount_one": "{{count}} pengeluaran",
+      "expenseCount_other": "{{count}} pengeluaran",
+      "entryCount_one": "{{count}} entri",
+      "entryCount_other": "{{count}} entri",
+      "salary": "(gaji)"
+    },
+    "empty": {
+      "noExpenses": "Tidak ada pengeluaran untuk {{month}}",
+      "tapHint": "Ketuk tombol kamera untuk memindai kwitansi, atau tombol + untuk menambahkan secara manual."
+    },
+    "addDialog": {
+      "title": "Tambah Pengeluaran",
+      "scanHint": "Ambil atau unggah kwitansi untuk mengisi detail secara otomatis",
+      "scanning": "Membaca kwitansi...",
+      "scanSuccess": "Detail diekstrak — periksa di bawah.",
+      "scanFailed": "Tidak dapat mengisi otomatis — masukkan detail secara manual.",
+      "retake": "Ambil Ulang",
+      "camera": "Kamera",
+      "gallery": "Galeri",
+      "expense": "Pengeluaran",
+      "income": "Pemasukan",
+      "date": "Tanggal",
+      "amount": "Jumlah ({{currency}})",
+      "descriptionLabel": "Deskripsi",
+      "descriptionPlaceholder": "Anda membelanjakan apa?",
+      "merchant": "Merchant (opsional)",
+      "merchantPlaceholder": "Nama toko atau vendor",
+      "category": "Kategori",
+      "selectCategory": "Pilih kategori",
+      "save": "Simpan Pengeluaran"
+    },
+    "editDialog": {
+      "title": "Edit Transaksi",
+      "expense": "Pengeluaran",
+      "income": "Pemasukan",
+      "typeChangeWarning": "Mengubah dari {{from}} ke {{to}} akan membalikkan penyesuaian saldo pada akun yang terhubung. Pastikan ini disengaja.",
+      "revert": "Kembalikan",
+      "date": "Tanggal",
+      "amount": "Jumlah ({{currency}})",
+      "descriptionLabel": "Deskripsi",
+      "descriptionPlaceholder": "Anda membelanjakan apa?",
+      "merchant": "Merchant (opsional)",
+      "merchantPlaceholder": "Nama toko atau vendor",
+      "account": "Akun",
+      "noAccount": "Tidak ada akun",
+      "category": "Kategori",
+      "selectCategory": "Pilih kategori",
+      "uncategorised": "Tidak dikategorikan",
+      "save": "Simpan Perubahan"
+    },
+    "deleteDialog": {
+      "title": "Hapus pengeluaran?",
+      "description": "Tindakan ini tidak dapat dibatalkan.",
+      "cancel": "Batal",
+      "delete": "Hapus"
+    }
+  },
+  "transactions": {
+    "title": "Transaksi",
+    "subtitle": "Kelola pemasukan dan pengeluaran Anda.",
+    "loading": "Memuat...",
+    "confirmDelete": "Apakah Anda yakin ingin menghapus transaksi ini?",
+    "uncategorized": "Tidak dikategorikan",
+    "filters": {
+      "allMonths": "Semua bulan",
+      "allAccounts": "Semua akun",
+      "allTypes": "Semua jenis",
+      "clear": "Hapus filter",
+      "searchPlaceholder": "Cari deskripsi..."
+    },
+    "typeLabel": {
+      "expense": "Pengeluaran",
+      "income": "Pemasukan"
+    },
+    "addDialog": {
+      "title": "Tambah Transaksi",
+      "date": "Tanggal",
+      "description": "Deskripsi",
+      "amount": "Jumlah",
+      "type": "Jenis",
+      "account": "Akun",
+      "optional": "(opsional)",
+      "noAccount": "Tidak ada akun",
+      "category": "Kategori",
+      "uncategorized": "Tidak dikategorikan",
+      "expense": "Pengeluaran",
+      "income": "Pemasukan",
+      "save": "Simpan",
+      "saving": "Menyimpan..."
+    },
+    "editDialog": {
+      "title": "Edit Transaksi",
+      "save": "Simpan Perubahan",
+      "saving": "Menyimpan...",
+      "expense": "Pengeluaran",
+      "income": "Pemasukan",
+      "typeChangeWarning": "Mengubah dari {{from}} ke {{to}} akan membalikkan penyesuaian saldo pada akun yang terhubung. Pastikan ini disengaja.",
+      "revert": "Kembalikan",
+      "accountWarningBoth": "Menyimpan akan menyesuaikan saldo pada akun lama dan baru.",
+      "accountWarningRemoved": "Menyimpan akan menghapus penyesuaian saldo dari akun asli.",
+      "accountWarningAdded": "Menyimpan akan menyesuaikan saldo pada akun yang dipilih.",
+      "noAccount": "Tidak ada akun",
+      "uncategorized": "Tidak dikategorikan"
+    },
+    "empty": {
+      "noTransactions": "Tidak ada transaksi ditemukan",
+      "noTransactionsForMonth": "Tidak ada transaksi untuk {{month}}. Transaksi yang diimpor mungkin ada di bulan yang berbeda.",
+      "noTransactionsGeneral": "Belum ada transaksi. Impor rekening bank atau tambahkan secara manual.",
+      "viewAll": "Lihat semua transaksi"
+    }
+  },
+  "settings": {
+    "tabs": {
+      "profile": "Profil",
+      "categories": "Kategori",
+      "preferences": "Preferensi"
+    },
+    "profile": {
+      "title": "Informasi Pribadi",
+      "description": "Perbarui detail pribadi dan pengaturan pendapatan Anda.",
+      "fullName": "Nama Lengkap",
+      "monthlyIncome": "Pendapatan Bulanan ({{currency}})",
+      "payday": "Tanggal Gajian (1-31)"
+    },
+    "categories": {
+      "title": "Kategori Kustom",
+      "description": "Tambahkan kategori baru untuk mengatur transaksi Anda.",
+      "nameLabel": "Nama",
+      "namePlaceholder": "mis. Perjalanan, Gym",
+      "typeLabel": "Jenis",
+      "add": "Tambah",
+      "yourCategories": "Kategori Anda",
+      "expense": "Pengeluaran",
+      "income": "Pemasukan"
+    },
+    "language": {
+      "title": "Bahasa",
+      "description": "Pilih bahasa tampilan yang Anda inginkan. Perubahan langsung berlaku.",
+      "en": "English",
+      "ms": "Bahasa Melayu",
+      "id": "Bahasa Indonesia"
+    }
+  }
+}

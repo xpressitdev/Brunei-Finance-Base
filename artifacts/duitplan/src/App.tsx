@@ -7,6 +7,7 @@ import { SubscriptionProvider } from "@/lib/subscription";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { DevRegionProvider } from "@/lib/devRegion";
 import { DevRegionIndicator } from "@/components/DevRegionIndicator";
+import { I18nProvider } from "@/i18n/I18nProvider";
 
 // Pages
 import Landing from "@/pages/landing";
@@ -108,7 +109,9 @@ function App() {
         <DevRegionProvider>
           <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
             <AuthProvider>
-              <Router />
+              <I18nProvider>
+                <Router />
+              </I18nProvider>
             </AuthProvider>
           </WouterRouter>
           <Toaster />

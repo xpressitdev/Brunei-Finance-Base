@@ -99,8 +99,20 @@ DuitPlan is being extended to serve BN/MY/ID regional subdomains with fixed per-
 - DB: profiles table has region/locale/language fields (default BN/en-BN/en, all existing rows backfilled)
 - Test runner: `pnpm --filter @workspace/duitplan test`
 
-**Phase 2 Prompt 2 (planned):** Subdomain hostname detection — resolve region from Host header
-**Phase 2 Prompt 3 (planned):** Wire formatters into all pages — replace hardcoded BND displays
+**Phase 2 Prompts 2+3 (complete):** Multi-currency support
+- `src/hooks/useCurrency.ts` — `useCurrency()` hook exposing `fmt`, `currencyLabel`, `inputStep` from profile region
+- All 13 pages refactored to use `useCurrency()`; no hardcoded `BND X.toFixed(2)` remains
+- Subdomain hostname detection resolves region from Host header
+
+**Phase 2 Prompt 5a (complete):** i18n infrastructure + string extraction
+- `i18next` + `react-i18next` installed
+- `src/i18n/index.ts` — i18next config with en/ms/id resources, `initImmediate: false`, fallback `en`
+- `src/i18n/locales/en.json` — ~160 nested keys (common, dashboard, expenseTracker, transactions, settings)
+- `src/i18n/locales/ms.json` — full Bahasa Melayu translations
+- `src/i18n/locales/id.json` — full Bahasa Indonesia translations
+- `src/i18n/I18nProvider.tsx` — watches `profile.language` with `navigator.language` fallback
+- Pages fully translated: `dashboard.tsx`, `expenses/index.tsx`, `transactions.tsx`, `settings.tsx`
+- Settings > Preferences tab: language dropdown persists via PATCH `/api/profile { language }`
 
 ## Phases Completed
 

@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback } from "react";
 import { useLocation } from "wouter";
+import { useTranslation } from "react-i18next";
 import { format, startOfMonth, endOfMonth, isToday, parseISO } from "date-fns";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -148,6 +149,7 @@ type TransactionItem = {
 };
 
 export default function Expenses() {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -367,8 +369,8 @@ export default function Expenses() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold text-foreground tracking-tight">Expense Tracker</h1>
-          <p className="text-muted-foreground">Track every ringgit you spend.</p>
+          <h1 className="text-3xl font-bold text-foreground tracking-tight">{t("expenseTracker.title")}</h1>
+          <p className="text-muted-foreground">{t("expenseTracker.subtitle")}</p>
         </div>
         <div className="flex items-center gap-2 bg-white border rounded-xl px-3 py-2">
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={prevMonth}>
@@ -384,22 +386,26 @@ export default function Expenses() {
       {/* Summary cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
         <div className="bg-card border rounded-xl p-4 col-span-2 sm:col-span-1">
-          <p className="text-xs text-muted-foreground uppercase tracking-wide">Today</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wide">{t("expenseTracker.summary.today")}</p>
           <p className="text-2xl font-bold text-foreground mt-1">{formatCurrency(todayTotal)}</p>
-          <p className="text-xs text-muted-foreground mt-1">{todayTransactions.length} expense{todayTransactions.length !== 1 ? "s" : ""}</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            {t("expenseTracker.summary.expenseCount", { count: todayTransactions.length })}
+          </p>
         </div>
         <div className="bg-card border rounded-xl p-4">
-          <p className="text-xs text-muted-foreground uppercase tracking-wide">Month Expenses</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wide">{t("expenseTracker.summary.monthExpenses")}</p>
           <p className="text-xl font-bold text-red-500 mt-1">{formatCurrency(totalExpenses)}</p>
-          <p className="text-xs text-muted-foreground mt-1">{expenses.length} entries</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            {t("expenseTracker.summary.entryCount", { count: expenses.length })}
+          </p>
         </div>
         <div className="bg-card border rounded-xl p-4">
-          <p className="text-xs text-muted-foreground uppercase tracking-wide">Month Income</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wide">{t("expenseTracker.summary.monthIncome")}</p>
           <p className="text-xl font-bold text-emerald-600 mt-1">{formatCurrency(totalIncome)}</p>
           <p className="text-xs text-muted-foreground mt-1">
-            {incomeEntryCount} {incomeEntryCount === 1 ? "entry" : "entries"}
+            {t("expenseTracker.summary.entryCount", { count: incomeEntryCount })}
             {configuredSalary > 0 && income.length === 0 && (
-              <span className="ml-1">(salary)</span>
+              <span className="ml-1">{t("expenseTracker.summary.salary")}</span>
             )}
           </p>
         </div>
@@ -409,14 +415,16 @@ export default function Expenses() {
       {sortedDays.length === 0 ? (
         <div className="bg-card border rounded-xl p-12 text-center">
           <Receipt className="w-12 h-12 text-muted-foreground/40 mx-auto mb-4" />
-          <p className="text-muted-foreground font-medium">No expenses for {monthLabel}</p>
-          <p className="text-sm text-muted-foreground/70 mt-1">Tap the camera button to snap a receipt, or the + button to add manually.</p>
+          <p className="text-muted-foreground font-medium">{t("expenseTracker.empty.noExpenses", { month: monthLabel })}</p>
+          <p className="text-sm text-muted-foreground/70 mt-1">{t("expenseTracker.empty.tapHint")}</p>
         </div>
       ) : (
         <div className="space-y-4">
           {sortedDays.map((day) => {
             const dayDate = parseISO(day);
-            const dayLabel = isToday(dayDate) ? "Today" : dayDate.toLocaleDateString(region.locale, { weekday: 'long', day: 'numeric', month: 'short' });
+            const dayLabel = isToday(dayDate)
+              ? t("expenseTracker.today")
+              : dayDate.toLocaleDateString(region.locale, { weekday: "long", day: "numeric", month: "short" });
             const dayTotal = grouped[day].reduce((s, t) => s + parseFloat(t.amount), 0);
 
             return (
@@ -426,29 +434,29 @@ export default function Expenses() {
                   <span className="text-sm font-medium text-muted-foreground">{formatCurrency(dayTotal)}</span>
                 </div>
                 <div className="divide-y">
-                  {grouped[day].map((t) => (
-                    <div key={t.id} className="flex items-center gap-3 px-4 py-3 group">
-                      <div className={cn("w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0", getCategoryColor(t.categoryName))}>
-                        {getCategoryIcon(t.categoryName)}
+                  {grouped[day].map((tx) => (
+                    <div key={tx.id} className="flex items-center gap-3 px-4 py-3 group">
+                      <div className={cn("w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0", getCategoryColor(tx.categoryName))}>
+                        {getCategoryIcon(tx.categoryName)}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground truncate">{t.description}</p>
+                        <p className="text-sm font-medium text-foreground truncate">{tx.description}</p>
                         <p className="text-xs text-muted-foreground truncate">
-                          {t.merchant ? t.merchant : (t.categoryName ?? "Uncategorised")}
-                          {t.receiptUrl && (
+                          {tx.merchant ? tx.merchant : (tx.categoryName ?? t("expenseTracker.uncategorised"))}
+                          {tx.receiptUrl && (
                             <span className="ml-1.5 inline-flex items-center gap-0.5 text-primary">
-                              <Receipt className="w-3 h-3" /> Receipt
+                              <Receipt className="w-3 h-3" /> {t("expenseTracker.receipt")}
                             </span>
                           )}
                         </p>
                       </div>
                       <div className="flex items-center gap-2 flex-shrink-0">
-                        <p className="text-sm font-semibold text-foreground">{formatCurrency(parseFloat(t.amount))}</p>
+                        <p className="text-sm font-semibold text-foreground">{formatCurrency(parseFloat(tx.amount))}</p>
                         <Button
                           variant="ghost"
                           size="icon"
                           className="h-7 w-7 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground transition-opacity"
-                          onClick={() => openEdit(t)}
+                          onClick={() => openEdit(tx)}
                         >
                           <Pencil className="w-3.5 h-3.5" />
                         </Button>
@@ -456,7 +464,7 @@ export default function Expenses() {
                           variant="ghost"
                           size="icon"
                           className="h-7 w-7 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-opacity"
-                          onClick={() => setDeleteId(t.id)}
+                          onClick={() => setDeleteId(tx.id)}
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </Button>
@@ -472,7 +480,6 @@ export default function Expenses() {
 
       {/* Floating action buttons */}
       <div className="fixed bottom-6 right-6 flex flex-col gap-3 z-50">
-        {/* Camera / receipt scan */}
         <Button
           size="icon"
           className="h-14 w-14 rounded-full shadow-xl bg-white border-2 border-primary text-primary hover:bg-primary hover:text-white transition-all"
@@ -484,7 +491,6 @@ export default function Expenses() {
         >
           <Camera className="w-6 h-6" />
         </Button>
-        {/* Manual add */}
         <Button
           size="icon"
           className="h-14 w-14 rounded-full shadow-xl"
@@ -518,7 +524,7 @@ export default function Expenses() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Receipt className="w-5 h-5 text-primary" />
-              Add Expense
+              {t("expenseTracker.addDialog.title")}
             </DialogTitle>
           </DialogHeader>
 
@@ -531,7 +537,7 @@ export default function Expenses() {
               {isScanningReceipt ? (
                 <div className="flex flex-col items-center gap-2 py-2">
                   <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                  <p className="text-sm text-muted-foreground">Reading receipt...</p>
+                  <p className="text-sm text-muted-foreground">{t("expenseTracker.addDialog.scanning")}</p>
                 </div>
               ) : receiptPreview ? (
                 <div className="space-y-2">
@@ -544,7 +550,9 @@ export default function Expenses() {
                     )}
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    {scanSuccess ? "Details extracted — review below." : "Could not auto-fill — enter details manually."}
+                    {scanSuccess
+                      ? t("expenseTracker.addDialog.scanSuccess")
+                      : t("expenseTracker.addDialog.scanFailed")}
                   </p>
                   <Button
                     type="button"
@@ -553,12 +561,12 @@ export default function Expenses() {
                     className="text-xs"
                     onClick={() => cameraInputRef.current?.click()}
                   >
-                    <Camera className="w-3.5 h-3.5 mr-1" /> Retake
+                    <Camera className="w-3.5 h-3.5 mr-1" /> {t("expenseTracker.addDialog.retake")}
                   </Button>
                 </div>
               ) : (
                 <div className="space-y-2 py-1">
-                  <p className="text-xs text-muted-foreground">Snap or upload a receipt to auto-fill details</p>
+                  <p className="text-xs text-muted-foreground">{t("expenseTracker.addDialog.scanHint")}</p>
                   <div className="flex justify-center gap-2">
                     <Button
                       type="button"
@@ -567,7 +575,7 @@ export default function Expenses() {
                       className="gap-1.5"
                       onClick={() => cameraInputRef.current?.click()}
                     >
-                      <Camera className="w-4 h-4" /> Camera
+                      <Camera className="w-4 h-4" /> {t("expenseTracker.addDialog.camera")}
                     </Button>
                     <Button
                       type="button"
@@ -576,7 +584,7 @@ export default function Expenses() {
                       className="gap-1.5"
                       onClick={() => fileInputRef.current?.click()}
                     >
-                      <ImageIcon className="w-4 h-4" /> Gallery
+                      <ImageIcon className="w-4 h-4" /> {t("expenseTracker.addDialog.gallery")}
                     </Button>
                   </div>
                 </div>
@@ -592,7 +600,7 @@ export default function Expenses() {
                 className="flex-1"
                 onClick={() => setForm((f) => ({ ...f, type: "debit" }))}
               >
-                Expense
+                {t("expenseTracker.addDialog.expense")}
               </Button>
               <Button
                 type="button"
@@ -601,13 +609,13 @@ export default function Expenses() {
                 className="flex-1"
                 onClick={() => setForm((f) => ({ ...f, type: "credit" }))}
               >
-                Income
+                {t("expenseTracker.addDialog.income")}
               </Button>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label>Date</Label>
+                <Label>{t("expenseTracker.addDialog.date")}</Label>
                 <Input
                   type="date"
                   value={form.date}
@@ -616,7 +624,7 @@ export default function Expenses() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label>Amount ({region.currency})</Label>
+                <Label>{t("expenseTracker.addDialog.amount", { currency: region.currency })}</Label>
                 <Input
                   type="number"
                   step={decimalStep}
@@ -630,9 +638,9 @@ export default function Expenses() {
             </div>
 
             <div className="space-y-1.5">
-              <Label>Description</Label>
+              <Label>{t("expenseTracker.addDialog.descriptionLabel")}</Label>
               <Input
-                placeholder="What did you spend on?"
+                placeholder={t("expenseTracker.addDialog.descriptionPlaceholder")}
                 value={form.description}
                 onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
                 required
@@ -640,25 +648,25 @@ export default function Expenses() {
             </div>
 
             <div className="space-y-1.5">
-              <Label>Merchant (optional)</Label>
+              <Label>{t("expenseTracker.addDialog.merchant")}</Label>
               <Input
-                placeholder="Store or vendor name"
+                placeholder={t("expenseTracker.addDialog.merchantPlaceholder")}
                 value={form.merchant}
                 onChange={(e) => setForm((f) => ({ ...f, merchant: e.target.value }))}
               />
             </div>
 
             <div className="space-y-1.5">
-              <Label>Category</Label>
+              <Label>{t("expenseTracker.addDialog.category")}</Label>
               <Select
                 value={form.categoryId}
                 onValueChange={(v) => setForm((f) => ({ ...f, categoryId: v }))}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select category" />
+                  <SelectValue placeholder={t("expenseTracker.addDialog.selectCategory")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">Uncategorised</SelectItem>
+                  <SelectItem value="none">{t("expenseTracker.uncategorised")}</SelectItem>
                   {(categories ?? []).map((c) => (
                     <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
                   ))}
@@ -668,7 +676,7 @@ export default function Expenses() {
 
             <Button type="submit" className="w-full" disabled={createMutation.isPending}>
               {createMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-              Save Expense
+              {t("expenseTracker.addDialog.save")}
             </Button>
           </form>
         </DialogContent>
@@ -680,7 +688,7 @@ export default function Expenses() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Pencil className="w-5 h-5 text-primary" />
-              Edit Transaction
+              {t("expenseTracker.editDialog.title")}
             </DialogTitle>
           </DialogHeader>
           <form onSubmit={handleEdit} className="space-y-4 mt-2">
@@ -695,7 +703,7 @@ export default function Expenses() {
                 className="flex-1"
                 onClick={() => setEditData((d) => ({ ...d, type: "debit" }))}
               >
-                Expense
+                {t("expenseTracker.editDialog.expense")}
               </Button>
               <Button
                 type="button"
@@ -704,27 +712,30 @@ export default function Expenses() {
                 className="flex-1"
                 onClick={() => setEditData((d) => ({ ...d, type: "credit" }))}
               >
-                Income
+                {t("expenseTracker.editDialog.income")}
               </Button>
             </div>
             {editingTx && editData.type !== editingTx.type && (
               <div className="flex items-start gap-1.5 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-3 py-2">
                 <Info className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
                 <span className="flex-1">
-                  Changing from <strong>{editingTx.type === "debit" ? "Expense" : "Income"}</strong> to <strong>{editData.type === "debit" ? "Expense" : "Income"}</strong> will reverse the balance adjustment on the linked account. Make sure this is intentional.
+                  {t("expenseTracker.editDialog.typeChangeWarning", {
+                    from: editingTx.type === "debit" ? t("expenseTracker.editDialog.expense") : t("expenseTracker.editDialog.income"),
+                    to: editData.type === "debit" ? t("expenseTracker.editDialog.expense") : t("expenseTracker.editDialog.income"),
+                  })}
                 </span>
                 <button
                   type="button"
                   className="underline font-medium ml-2 whitespace-nowrap"
                   onClick={() => setEditData((d) => ({ ...d, type: editingTx.type }))}
                 >
-                  Revert
+                  {t("expenseTracker.editDialog.revert")}
                 </button>
               </div>
             )}
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label>Date</Label>
+                <Label>{t("expenseTracker.editDialog.date")}</Label>
                 <Input
                   type="date"
                   value={editData.date}
@@ -733,7 +744,7 @@ export default function Expenses() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label>Amount ({region.currency})</Label>
+                <Label>{t("expenseTracker.editDialog.amount", { currency: region.currency })}</Label>
                 <Input
                   type="number"
                   step={decimalStep}
@@ -746,30 +757,30 @@ export default function Expenses() {
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label>Description</Label>
+              <Label>{t("expenseTracker.editDialog.descriptionLabel")}</Label>
               <Input
-                placeholder="What did you spend on?"
+                placeholder={t("expenseTracker.editDialog.descriptionPlaceholder")}
                 value={editData.description}
                 onChange={(e) => setEditData((d) => ({ ...d, description: e.target.value }))}
                 required
               />
             </div>
             <div className="space-y-1.5">
-              <Label>Merchant (optional)</Label>
+              <Label>{t("expenseTracker.editDialog.merchant")}</Label>
               <Input
-                placeholder="Store or vendor name"
+                placeholder={t("expenseTracker.editDialog.merchantPlaceholder")}
                 value={editData.merchant}
                 onChange={(e) => setEditData((d) => ({ ...d, merchant: e.target.value }))}
               />
             </div>
             <div className="space-y-1.5">
-              <Label>Account <span className="text-muted-foreground text-xs">(optional)</span></Label>
+              <Label>{t("expenseTracker.editDialog.account")}</Label>
               <Select value={editData.accountId} onValueChange={(v) => setEditData((d) => ({ ...d, accountId: v }))}>
                 <SelectTrigger>
-                  <SelectValue placeholder="No account" />
+                  <SelectValue placeholder={t("expenseTracker.editDialog.noAccount")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">No account</SelectItem>
+                  <SelectItem value="none">{t("expenseTracker.editDialog.noAccount")}</SelectItem>
                   {(accounts ?? []).map((a) => (
                     <SelectItem key={a.id} value={a.id}>{a.name}{a.bankName ? ` — ${a.bankName}` : ""}</SelectItem>
                   ))}
@@ -777,13 +788,13 @@ export default function Expenses() {
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label>Category</Label>
+              <Label>{t("expenseTracker.editDialog.category")}</Label>
               <Select value={editData.categoryId} onValueChange={(v) => setEditData((d) => ({ ...d, categoryId: v }))}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select category" />
+                  <SelectValue placeholder={t("expenseTracker.editDialog.selectCategory")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">Uncategorised</SelectItem>
+                  <SelectItem value="none">{t("expenseTracker.editDialog.uncategorised")}</SelectItem>
                   {(categories ?? []).map((c) => (
                     <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
                   ))}
@@ -792,7 +803,7 @@ export default function Expenses() {
             </div>
             <Button type="submit" className="w-full" disabled={updateMutation.isPending}>
               {updateMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-              Save Changes
+              {t("expenseTracker.editDialog.save")}
             </Button>
           </form>
         </DialogContent>
@@ -802,16 +813,16 @@ export default function Expenses() {
       <AlertDialog open={!!deleteId} onOpenChange={(o) => !o && setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete expense?</AlertDialogTitle>
-            <AlertDialogDescription>This cannot be undone.</AlertDialogDescription>
+            <AlertDialogTitle>{t("expenseTracker.deleteDialog.title")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("expenseTracker.deleteDialog.description")}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("expenseTracker.deleteDialog.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive hover:bg-destructive/90"
               onClick={() => deleteId && handleDelete(deleteId)}
             >
-              Delete
+              {t("expenseTracker.deleteDialog.delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

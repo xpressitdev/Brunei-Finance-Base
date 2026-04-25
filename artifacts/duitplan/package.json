@@ -77,6 +77,8 @@
     "zod": "catalog:"
   },
   "dependencies": {
-    "html2canvas": "^1.4.1"
+    "html2canvas": "^1.4.1",
+    "i18next": "^26.0.7",
+    "react-i18next": "^17.0.4"
   }
 }

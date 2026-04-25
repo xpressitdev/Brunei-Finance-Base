@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useLocation, useSearch } from "wouter";
+import { useTranslation } from "react-i18next";
 import { format } from "date-fns";
 import { useQueryClient } from "@tanstack/react-query";
 import { 
@@ -45,6 +46,7 @@ type TransactionItem = {
 };
 
 export default function Transactions() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
   const { formatCurrency, formatDate, formatMonthYear, region, decimalStep } = useRegion();
@@ -163,7 +165,7 @@ export default function Transactions() {
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm("Are you sure you want to delete this transaction?")) {
+    if (confirm(t("transactions.confirmDelete"))) {
       try {
         await deleteMutation.mutateAsync({ id });
         refetch();
@@ -177,24 +179,24 @@ export default function Transactions() {
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-foreground tracking-tight">Transactions</h1>
-          <p className="text-muted-foreground">Manage your income and expenses.</p>
+          <h1 className="text-3xl font-bold text-foreground tracking-tight">{t("transactions.title")}</h1>
+          <p className="text-muted-foreground">{t("transactions.subtitle")}</p>
         </div>
         
         <Dialog open={isAddOpen} onOpenChange={(open) => { setIsAddOpen(open); if (!open) setTrialExpiredError(false); }}>
           <DialogTrigger asChild>
-            <Button><Plus className="w-4 h-4 mr-2" /> Add Transaction</Button>
+            <Button><Plus className="w-4 h-4 mr-2" /> {t("transactions.addDialog.title")}</Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Add Transaction</DialogTitle>
+              <DialogTitle>{t("transactions.addDialog.title")}</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleAdd} className="space-y-4">
               {trialExpiredError && (
                 <TrialExpiredPrompt action="add transactions" />
               )}
               <div className="space-y-2">
-                <Label>Date</Label>
+                <Label>{t("transactions.addDialog.date")}</Label>
                 <Input 
                   type="date" 
                   value={formData.date} 
@@ -203,7 +205,7 @@ export default function Transactions() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Description</Label>
+                <Label>{t("transactions.addDialog.description")}</Label>
                 <Input 
                   value={formData.description} 
                   onChange={(e) => setFormData({...formData, description: e.target.value})}
@@ -212,7 +214,7 @@ export default function Transactions() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Amount</Label>
+                  <Label>{t("transactions.addDialog.amount")}</Label>
                   <Input 
                     type="number" 
                     step={decimalStep} 
@@ -222,22 +224,25 @@ export default function Transactions() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Type</Label>
+                  <Label>{t("transactions.addDialog.type")}</Label>
                   <Select value={formData.type} onValueChange={(val) => setFormData({...formData, type: val})}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="debit">Expense</SelectItem>
-                      <SelectItem value="credit">Income</SelectItem>
+                      <SelectItem value="debit">{t("transactions.addDialog.expense")}</SelectItem>
+                      <SelectItem value="credit">{t("transactions.addDialog.income")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
               <div className="space-y-2">
-                <Label>Account <span className="text-muted-foreground text-xs">(optional)</span></Label>
+                <Label>
+                  {t("transactions.addDialog.account")}{" "}
+                  <span className="text-muted-foreground text-xs">{t("transactions.addDialog.optional")}</span>
+                </Label>
                 <Select value={formData.accountId} onValueChange={(val) => setFormData({...formData, accountId: val})}>
-                  <SelectTrigger><SelectValue placeholder="No account" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder={t("transactions.addDialog.noAccount")} /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">No account</SelectItem>
+                    <SelectItem value="none">{t("transactions.addDialog.noAccount")}</SelectItem>
                     {accounts?.map(a => (
                       <SelectItem key={a.id} value={a.id}>{a.name}{a.bankName ? ` — ${a.bankName}` : ""}</SelectItem>
                     ))}
@@ -245,11 +250,11 @@ export default function Transactions() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Category</Label>
+                <Label>{t("transactions.addDialog.category")}</Label>
                 <Select value={formData.categoryId} onValueChange={(val) => setFormData({...formData, categoryId: val})}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">Uncategorized</SelectItem>
+                    <SelectItem value="none">{t("transactions.addDialog.uncategorized")}</SelectItem>
                     {categories?.map(c => (
                       <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
                     ))}
@@ -257,7 +262,7 @@ export default function Transactions() {
                 </Select>
               </div>
               <Button type="submit" className="w-full" disabled={createMutation.isPending}>
-                {createMutation.isPending ? "Saving..." : "Save"}
+                {createMutation.isPending ? t("transactions.addDialog.saving") : t("transactions.addDialog.save")}
               </Button>
             </form>
           </DialogContent>
@@ -267,14 +272,14 @@ export default function Transactions() {
       <Dialog open={!!editingTx} onOpenChange={(open) => { if (!open) setEditingTx(null); }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Edit Transaction</DialogTitle>
+            <DialogTitle>{t("transactions.editDialog.title")}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleEdit} className="space-y-4">
             {editTrialExpiredError && (
               <TrialExpiredPrompt action="edit transactions" />
             )}
             <div className="space-y-2">
-              <Label>Date</Label>
+              <Label>{t("transactions.editDialog.title") && t("transactions.addDialog.date")}</Label>
               <Input 
                 type="date" 
                 value={editData.date} 
@@ -283,7 +288,7 @@ export default function Transactions() {
               />
             </div>
             <div className="space-y-2">
-              <Label>Description</Label>
+              <Label>{t("transactions.addDialog.description")}</Label>
               <Input 
                 value={editData.description} 
                 onChange={(e) => setEditData({...editData, description: e.target.value})}
@@ -292,7 +297,7 @@ export default function Transactions() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Amount</Label>
+                <Label>{t("transactions.addDialog.amount")}</Label>
                 <Input 
                   type="number" 
                   step={decimalStep} 
@@ -302,12 +307,12 @@ export default function Transactions() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Type</Label>
+                <Label>{t("transactions.addDialog.type")}</Label>
                 <Select value={editData.type} onValueChange={(val) => setEditData({...editData, type: val})}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="debit">Expense</SelectItem>
-                    <SelectItem value="credit">Income</SelectItem>
+                    <SelectItem value="debit">{t("transactions.editDialog.expense")}</SelectItem>
+                    <SelectItem value="credit">{t("transactions.editDialog.income")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -316,23 +321,29 @@ export default function Transactions() {
               <div className="flex items-start gap-1.5 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-3 py-2">
                 <Info className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
                 <span className="flex-1">
-                  Changing from <strong>{editingTx.type === "debit" ? "Expense" : "Income"}</strong> to <strong>{editData.type === "debit" ? "Expense" : "Income"}</strong> will reverse the balance adjustment on the linked account. Make sure this is intentional.
+                  {t("transactions.editDialog.typeChangeWarning", {
+                    from: editingTx.type === "debit" ? t("transactions.editDialog.expense") : t("transactions.editDialog.income"),
+                    to: editData.type === "debit" ? t("transactions.editDialog.expense") : t("transactions.editDialog.income"),
+                  })}
                 </span>
                 <button
                   type="button"
                   className="underline font-medium ml-2 whitespace-nowrap"
                   onClick={() => setEditData({ ...editData, type: editingTx.type })}
                 >
-                  Revert
+                  {t("transactions.editDialog.revert")}
                 </button>
               </div>
             )}
             <div className="space-y-2">
-              <Label>Account <span className="text-muted-foreground text-xs">(optional)</span></Label>
+              <Label>
+                {t("transactions.addDialog.account")}{" "}
+                <span className="text-muted-foreground text-xs">{t("transactions.addDialog.optional")}</span>
+              </Label>
               <Select value={editData.accountId} onValueChange={(val) => setEditData({...editData, accountId: val})}>
-                <SelectTrigger><SelectValue placeholder="No account" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder={t("transactions.editDialog.noAccount")} /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">No account</SelectItem>
+                  <SelectItem value="none">{t("transactions.editDialog.noAccount")}</SelectItem>
                   {accounts?.map(a => (
                     <SelectItem key={a.id} value={a.id}>{a.name}{a.bankName ? ` — ${a.bankName}` : ""}</SelectItem>
                   ))}
@@ -343,20 +354,20 @@ export default function Transactions() {
                   <Info className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
                   <span>
                     {editData.accountId !== "none" && (editingTx.accountId || "none") !== "none"
-                      ? "Saving will adjust balances on both the old and new accounts."
+                      ? t("transactions.editDialog.accountWarningBoth")
                       : editData.accountId === "none"
-                        ? "Saving will remove the balance adjustment from the original account."
-                        : "Saving will adjust the balance on the selected account."}
+                        ? t("transactions.editDialog.accountWarningRemoved")
+                        : t("transactions.editDialog.accountWarningAdded")}
                   </span>
                 </div>
               )}
             </div>
             <div className="space-y-2">
-              <Label>Category</Label>
+              <Label>{t("transactions.addDialog.category")}</Label>
               <Select value={editData.categoryId} onValueChange={(val) => setEditData({...editData, categoryId: val})}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">Uncategorized</SelectItem>
+                  <SelectItem value="none">{t("transactions.editDialog.uncategorized")}</SelectItem>
                   {categories?.map(c => (
                     <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
                   ))}
@@ -364,7 +375,7 @@ export default function Transactions() {
               </Select>
             </div>
             <Button type="submit" className="w-full" disabled={updateMutation.isPending}>
-              {updateMutation.isPending ? "Saving..." : "Save Changes"}
+              {updateMutation.isPending ? t("transactions.editDialog.saving") : t("transactions.editDialog.save")}
             </Button>
           </form>
         </DialogContent>
@@ -377,23 +388,23 @@ export default function Transactions() {
             value={month} 
             onChange={(e) => setMonth(e.target.value)} 
             className="w-44"
-            placeholder="All months"
+            placeholder={t("transactions.filters.allMonths")}
           />
           {month ? (
             <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={() => setMonth("")}>
-              Clear
+              {t("transactions.filters.clear")}
             </Button>
           ) : (
-            <span className="text-sm text-muted-foreground">All months</span>
+            <span className="text-sm text-muted-foreground">{t("transactions.filters.allMonths")}</span>
           )}
         </div>
         <div className="w-48">
           <Select value={accountFilter || "all"} onValueChange={(val) => setAccountFilter(val === "all" ? "" : val)}>
             <SelectTrigger>
-              <SelectValue placeholder="All accounts" />
+              <SelectValue placeholder={t("transactions.filters.allAccounts")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All accounts</SelectItem>
+              <SelectItem value="all">{t("transactions.filters.allAccounts")}</SelectItem>
               {accounts?.map(a => (
                 <SelectItem key={a.id} value={a.id}>{a.name}{a.bankName ? ` — ${a.bankName}` : ""}</SelectItem>
               ))}
@@ -403,19 +414,19 @@ export default function Transactions() {
         <div className="w-36">
           <Select value={typeFilter || "all"} onValueChange={(val) => setTypeFilter(val === "all" ? "" : val)}>
             <SelectTrigger>
-              <SelectValue placeholder="All types" />
+              <SelectValue placeholder={t("transactions.filters.allTypes")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All types</SelectItem>
-              <SelectItem value="debit">Expense</SelectItem>
-              <SelectItem value="credit">Income</SelectItem>
+              <SelectItem value="all">{t("transactions.filters.allTypes")}</SelectItem>
+              <SelectItem value="debit">{t("transactions.typeLabel.expense")}</SelectItem>
+              <SelectItem value="credit">{t("transactions.typeLabel.income")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
         <div className="relative flex-1 min-w-48 max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input 
-            placeholder="Search descriptions..." 
+            placeholder={t("transactions.filters.searchPlaceholder")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-9"
@@ -425,21 +436,21 @@ export default function Transactions() {
 
       <div className="bg-white rounded-xl border overflow-hidden">
         {isLoading ? (
-          <div className="p-8 text-center text-muted-foreground">Loading...</div>
+          <div className="p-8 text-center text-muted-foreground">{t("transactions.loading")}</div>
         ) : !transactions?.length ? (
           <div className="p-12 text-center flex flex-col items-center">
             <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-4">
               <Receipt className="w-6 h-6 text-muted-foreground" />
             </div>
-            <h3 className="font-semibold text-lg mb-1">No transactions found</h3>
+            <h3 className="font-semibold text-lg mb-1">{t("transactions.empty.noTransactions")}</h3>
             <p className="text-muted-foreground mb-4">
               {month
-                ? `No transactions for ${formatMonthYear(month + "-01")}. Imported transactions may be in a different month.`
-                : "No transactions yet. Import a bank statement or add one manually."}
+                ? t("transactions.empty.noTransactionsForMonth", { month: formatMonthYear(month + "-01") })
+                : t("transactions.empty.noTransactionsGeneral")}
             </p>
             {month && (
               <Button variant="outline" size="sm" onClick={() => setMonth("")}>
-                View all transactions
+                {t("transactions.empty.viewAll")}
               </Button>
             )}
           </div>
@@ -459,7 +470,9 @@ export default function Transactions() {
                     <div className="text-sm text-muted-foreground flex items-center gap-2 flex-wrap">
                       {formatDate(tx.date)}
                       <span>&bull;</span>
-                      <span className="bg-muted px-2 py-0.5 rounded-full text-xs">{tx.categoryName || 'Uncategorized'}</span>
+                      <span className="bg-muted px-2 py-0.5 rounded-full text-xs">
+                        {tx.categoryName || t("transactions.uncategorized")}
+                      </span>
                       {tx.accountName && (
                         <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-xs">{tx.accountName}</span>
                       )}
