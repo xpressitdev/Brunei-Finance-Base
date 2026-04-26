@@ -126,6 +126,20 @@ DuitPlan is being extended to serve BN/MY/ID regional subdomains with fixed per-
   - Free + Premium subscription plans seeded
   - Mock PDF parsers for BIBD and Baiduri (ready for real parser implementation)
 
+**Phase 3 Prompt 1 (complete):** Zakat calculator page
+- `src/config/zakatNisab.ts` — Nisab reference values (BN/MY/ID) for gold and silver thresholds, with last-updated date
+- `src/config/zakatAuthorities.ts` — Official Zakat authority metadata (MUIB/Brunei, LZS/Malaysia, BAZNAS/Indonesia)
+- `src/pages/zakat.tsx` — Full Zakat calculator page with:
+  - Account selector (checkboxes for savings/current accounts only, checked by default)
+  - Nisab threshold input with gold/silver quick-set buttons + info popover showing regional reference values
+  - Live calculation summary (total wealth, excluded, zakatable wealth, above-nisab check, 2.5% rate, Zakat owed)
+  - "Create Zakat goal" button → creates a custom savings goal via `useCreateGoal`
+  - "Visit authority" button → links to regional Zakat authority website
+  - Shafi'i school disclaimer
+- Sidebar: HandCoins icon added, `zakat` nav item inserted between `goals` and `netWorth`
+- App.tsx: `/zakat` ProtectedRoute registered
+- i18n: `nav.zakat` key + full `zakat.*` section added to en/ms/id locale files
+
 ## Upcoming Phases
 
 - **Phase 2**: Core finance tracking — categories, manual transactions, budget allocation

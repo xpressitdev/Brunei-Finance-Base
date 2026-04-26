@@ -704,6 +704,7 @@
     "commitments": "Komitmen",
     "debts": "Hutang",
     "goals": "Matlamat",
+    "zakat": "Zakat",
     "netWorth": "Kekayaan Bersih",
     "upload": "Muat Naik",
     "insights": "Wawasan",
@@ -863,6 +864,48 @@
       "english": "English",
       "malay": "Bahasa Melayu",
       "indonesian": "Bahasa Indonesia"
+    }
+  },
+  "zakat": {
+    "title": "Kalkulator Zakat",
+    "subtitle": "Kira zakat tahunan anda berdasarkan simpanan dan aset anda.",
+    "wealth": {
+      "sectionTitle": "Harta Zakat Anda",
+      "sectionDescription": "Pilih akaun yang hendak disertakan dalam pengiraan zakat anda. Secara lalai, semua akaun disertakan.",
+      "totalLabel": "Jumlah Harta Zakat",
+      "noAccounts": "Anda belum mempunyai akaun. Tambah akaun untuk mengira zakat."
+    },
+    "nisab": {
+      "label": "Had nisab",
+      "helperText": "Nilai minimum harta yang mewajibkan zakat. Lazimnya dikira berdasarkan nilai 85g emas atau 595g perak.",
+      "referenceTitle": "Anggaran nilai nisab",
+      "goldBased": "Berasaskan emas (85g): {{value}}",
+      "silverBased": "Berasaskan perak (595g): {{value}}",
+      "referenceFooter": "Semak nilai terkini dengan pihak berkuasa zakat tempatan anda. Ini adalah nilai rujukan sahaja — pihak berkuasa zakat anda adalah sumber kebenaran.",
+      "lastUpdated": "Nilai rujukan dikemaskini pada: {{date}}"
+    },
+    "result": {
+      "totalWealth": "Jumlah harta",
+      "excluded": "Dikecualikan",
+      "zakatableWealth": "Harta yang layak dizakatkan",
+      "nisabThreshold": "Had nisab",
+      "aboveNisab": "Melebihi nisab?",
+      "yes": "Ya",
+      "below": "Di bawah nisab",
+      "zakatRate": "Kadar zakat",
+      "zakatOwed": "Zakat yang perlu dibayar",
+      "belowNisabMessage": "Zakat belum wajib ke atas jumlah ini."
+    },
+    "actions": {
+      "createGoal": "Cipta matlamat zakat",
+      "createGoalSuccess": "Matlamat zakat telah dicipta dalam halaman Matlamat anda",
+      "visitAuthorityBn": "Lawati MUIB (Brunei)",
+      "visitAuthorityMy": "Lawati Lembaga Zakat Selangor",
+      "visitAuthorityId": "Lawati BAZNAS"
+    },
+    "disclaimer": {
+      "title": "Tentang kalkulator ini",
+      "body": "Kalkulator ini menggunakan kaedah zakat tunai standard mengikut mazhab Syafi'i (mazhab dominan di Asia Tenggara). Pengiraan ini mengandaikan harta telah dipegang melebihi nisab selama satu tahun Hijrah penuh (haul). Untuk situasi kompleks seperti aset perniagaan, hasil pertanian, hutang yang perlu diterima, atau mazhab yang berbeza, sila rujuk pihak berkuasa zakat tempatan anda."
     }
   },
   "onboarding": {

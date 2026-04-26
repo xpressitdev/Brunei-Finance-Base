@@ -1,0 +1,276 @@
+Task: Phase 3 Prompt 1 — Build a Zakat calculator that uses the user's account balances to compute Zakatable wealth and Zakat owed
+This is the first feature in Phase 3 — the differentiators phase. Zakat is religious obligation for Muslims (~63% of Malaysia, ~87% of Indonesia, majority of Brunei). No Western finance app addresses Zakat properly. This becomes one of DuitPlan's strongest moats.
+Read these files first to understand existing conventions:
+
+src/config/regions.ts (region structure, currency, locale)
+src/utils/formatting.ts (formatCurrency, formatNumber)
+src/i18n/locales/en.json, ms.json, id.json (existing keys, terminology)
+src/components/layout/Sidebar.tsx (nav structure)
+The Goals page (src/pages/Goals.tsx or similar) for goal-creation patterns
+The Net Worth page for account-balance aggregation patterns
+
+
+What we're building
+A new "Zakat" page accessible from the sidebar. The page lets the user calculate Zakat owed based on their existing account balances, with a clear breakdown and the option to create a Zakat savings goal.
+Page sections (top to bottom):
+
+Header — "Zakat Calculator" with a brief subtitle explaining what Zakat is in plain language
+Zakatable wealth — list of all user accounts with toggleable checkboxes
+Nisab threshold — input field with helper text showing approximate gold/silver values
+Calculation result — clear breakdown of: total wealth, deselected, Zakatable, ≥ nisab?, Zakat owed
+Action buttons — "Create Zakat goal" (creates a new Goal) + "Visit [regional body]" (external link)
+Disclaimer — religious disclaimer with Shafi'i note
+
+
+Step 1: Add "Zakat" to the sidebar nav
+Insert "Zakat" between "Goals" and "Net Worth" in the sidebar order. Translation keys:
+
+nav.zakat → "Zakat" (EN) / "Zakat" (MS) / "Zakat" (ID) — same word in all three languages, it's universal
+
+Use a relevant icon from lucide-react. Suggested: HandHeart, HandCoins, or Coins. Pick whatever matches the existing nav icon style.
+Route: /zakat
+
+Step 2: Build the Zakat page (src/pages/Zakat.tsx)
+Section 2.1: Header
+Title: t('zakat.title') = "Zakat Calculator"
+Subtitle: t('zakat.subtitle') = "Calculate your annual Zakat based on your savings and assets."
+Section 2.2: Zakatable Wealth
+Pull all the user's accounts from the existing accounts API. Display each as a row:
+[✓] Account name              Balance: BND 5,432.10
+[✓] Savings - Maybank         Balance: MYR 12,300.00
+[ ] Business - Cuci Xpress    Balance: BND 8,900.00 (deselected = not counted)
+Each row has:
+
+A checkbox (default: checked for all accounts)
+Account name
+Balance in user's currency (use formatCurrency from useRegion hook)
+
+Subtotal at bottom: "Total Zakatable Wealth: BND 17,732.10" (sum of checked accounts only)
+Real-time recalculation when checkboxes toggle — no submit button needed for this section.
+Note: do NOT include debt accounts in this list. Only positive-balance asset accounts (current accounts, savings accounts, etc.). If your account model has a type field, filter to asset types only.
+Section 2.3: Nisab Threshold Input
+Label: t('zakat.nisab.label') = "Nisab threshold"
+Helper text below input:
+  t('zakat.nisab.helperText') = "The minimum wealth threshold above which Zakat becomes obligatory. Traditionally calculated as the value of 85g of gold or 595g of silver."
+Info icon (ℹ️) opens a popover/tooltip with reference values:
+  t('zakat.nisab.referenceTitle') = "Approximate nisab values (April 2026)"
+  t('zakat.nisab.referenceBody') with regional defaults:
+    BN: "Gold-based: BND 16,575 (85g × ~BND 195/g)\nSilver-based: BND 1,500 (595g × ~BND 2.50/g)"
+    MY: "Gold-based: MYR 54,400 (85g × ~MYR 640/g)\nSilver-based: MYR 4,800 (595g × ~MYR 8/g)"
+    ID: "Gold-based: IDR 225,250,000 (85g × ~IDR 2,650,000/g)\nSilver-based: IDR 21,000,000 (595g × ~IDR 35,000/g)"
+  t('zakat.nisab.referenceFooter') = "Verify current values with [regional body]. These are reference figures only — your local Zakat authority is the source of truth."
+Input: numeric, currency-formatted, defaults to the gold-based nisab for the user's region (so users have a sensible starting point but can override).
+Note for the agent: the reference values above (~BND 195/g, ~MYR 640/g, ~IDR 2,650,000/g for gold; ~BND 2.50/g, ~MYR 8/g, ~IDR 35,000/g for silver) are reference numbers for April 2026. Hardcode them in a constants file (e.g., src/config/zakatNisab.ts) so they can be updated easily. Add a lastUpdated field to the constants and surface it in the UI ("Reference values last updated: April 2026").
+Section 2.4: Calculation Result
+A card or panel showing:
+Total wealth:                           BND 26,632.10
+Excluded:                              -BND  8,900.00
+                                        ─────────────
+Zakatable wealth:                       BND 17,732.10
+
+Nisab threshold:                        BND 16,575.00
+≥ Nisab?                                ✅ Yes
+
+Zakat rate:                             2.5%
+Zakat owed:                             BND  443.30
+If Zakatable wealth < nisab, show a different state:
+Zakatable wealth:                       BND 14,200.00
+Nisab threshold:                        BND 16,575.00
+≥ Nisab?                                ❌ Below nisab
+
+Zakat is not yet obligatory on this amount.
+All amounts use formatCurrency from useRegion for proper region-specific formatting.
+Section 2.5: Action Buttons
+Two buttons:
+
+"Create Zakat goal" — creates a new Goal in the Goals page with:
+
+Goal name: "Zakat 2026" (auto-incremented if exists, e.g., "Zakat 2026 (2)")
+Target amount: the calculated Zakat owed
+Optional: linked back to the Zakat page so user can recalculate later
+Show toast confirmation on success: t('zakat.goalCreated') = "Zakat goal created in your Goals page"
+This button is disabled if Zakat owed = 0 (i.e., below nisab)
+
+
+"Visit [regional body]" — external link button:
+
+For BN users: "Visit MUIB" → opens https://muib.gov.bn in new tab
+For MY users: "Visit Lembaga Zakat Selangor" → opens https://www.zakatselangor.com.my in new tab
+For ID users: "Visit BAZNAS" → opens https://baznas.go.id in new tab
+Use small "external link" icon (lucide-react ExternalLink)
+Translation keys: zakat.visitAuthority.bn, zakat.visitAuthority.my, zakat.visitAuthority.id
+
+
+
+Region detection should use the existing useRegion hook. Authority URLs and labels should live in src/config/zakatAuthorities.ts keyed by region.
+Section 2.6: Disclaimer
+Footer card with subdued styling:
+t('zakat.disclaimer.title') = "About this calculator"
+t('zakat.disclaimer.body') = "This calculator uses standard cash Zakat rules under the Shafi'i school of jurisprudence (the dominant madhab in Southeast Asia). The calculation assumes the wealth has been held above nisab for one full hijri year (haul). For complex situations involving business assets, agricultural produce, debts owed to you, or different schools of jurisprudence, please consult [regional body name]."
+
+Step 3: Backend — Zakat goal creation endpoint
+If the existing Goals API has a generic "create goal" endpoint, reuse it. No new endpoint needed.
+If not, create a thin wrapper:
+
+POST /api/zakat/create-goal
+Body: { amount, year }
+Creates a goal in the user's account with name = "Zakat ${year}", targetAmount = amount, category = "zakat" (add to category enum if needed)
+Returns the created goal
+
+No new database tables needed. Zakat is calculated on-the-fly from accounts; no need to persist Zakat-specific data.
+
+Step 4: Translation keys (full list)
+Add to en.json, ms.json, id.json:
+json"nav": {
+  ...,
+  "zakat": "Zakat"
+},
+"zakat": {
+  "title": "Zakat Calculator",
+  "subtitle": "Calculate your annual Zakat based on your savings and assets.",
+  "wealth": {
+    "sectionTitle": "Your Zakatable wealth",
+    "sectionDescription": "Select which accounts to include in your Zakat calculation. By default, all accounts are included.",
+    "totalLabel": "Total Zakatable Wealth",
+    "noAccounts": "You don't have any accounts yet. Add an account to calculate Zakat."
+  },
+  "nisab": {
+    "label": "Nisab threshold",
+    "helperText": "The minimum wealth threshold above which Zakat becomes obligatory. Traditionally calculated as the value of 85g of gold or 595g of silver.",
+    "referenceTitle": "Approximate nisab values",
+    "referenceFooter": "Verify current values with your local Zakat authority. These are reference figures only — your authority is the source of truth.",
+    "lastUpdated": "Last updated: {{date}}"
+  },
+  "result": {
+    "totalWealth": "Total wealth",
+    "excluded": "Excluded",
+    "zakatableWealth": "Zakatable wealth",
+    "nisabThreshold": "Nisab threshold",
+    "aboveNisab": "Above nisab?",
+    "yes": "Yes",
+    "below": "Below nisab",
+    "zakatRate": "Zakat rate",
+    "zakatOwed": "Zakat owed",
+    "belowNisabMessage": "Zakat is not yet obligatory on this amount."
+  },
+  "actions": {
+    "createGoal": "Create Zakat goal",
+    "createGoalSuccess": "Zakat goal created in your Goals page",
+    "visitAuthorityBn": "Visit MUIB (Brunei)",
+    "visitAuthorityMy": "Visit Lembaga Zakat Selangor",
+    "visitAuthorityId": "Visit BAZNAS"
+  },
+  "disclaimer": {
+    "title": "About this calculator",
+    "body": "This calculator uses standard cash Zakat rules under the Shafi'i school of jurisprudence (the dominant madhab in Southeast Asia). The calculation assumes the wealth has been held above nisab for one full hijri year (haul). For complex situations involving business assets, agricultural produce, debts owed to you, or different schools of jurisprudence, please consult your local Zakat authority."
+  }
+}
+Translate naturally to Malay and Indonesian. Some specific terminology to use:
+
+Malay (MS):
+
+Zakat → "Zakat" (universal)
+Calculator → "Kalkulator" (loanword, common in MY)
+Nisab → "Nisab" (universal Islamic term)
+Wealth → "Harta"
+Zakatable → "yang Layak Dizakatkan" or "harta zakat"
+Madhab → "Mazhab"
+Hijri year → "tahun Hijrah"
+Haul → "haul" (universal Islamic term)
+Goal → "Matlamat" (matches existing translation)
+Account → "Akaun" (matches existing)
+
+
+Indonesian (ID):
+
+Zakat → "Zakat"
+Calculator → "Kalkulator"
+Nisab → "Nisab"
+Wealth → "Harta"
+Zakatable → "yang wajib dizakati" or "harta zakat"
+Madhab → "Mazhab"
+Hijri year → "tahun Hijriah"
+Haul → "haul"
+Goal → "Tujuan" (matches existing)
+Account → "Rekening" (matches existing)
+
+
+
+
+Step 5: Region-aware authority links
+Create src/config/zakatAuthorities.ts:
+tsexport const ZAKAT_AUTHORITIES = {
+  BN: {
+    name: "MUIB",
+    fullName: "Majlis Ugama Islam Brunei",
+    url: "https://muib.gov.bn",
+  },
+  MY: {
+    name: "Lembaga Zakat Selangor",
+    fullName: "Lembaga Zakat Selangor (LZS)",
+    url: "https://www.zakatselangor.com.my",
+  },
+  ID: {
+    name: "BAZNAS",
+    fullName: "Badan Amil Zakat Nasional",
+    url: "https://baznas.go.id",
+  },
+};
+
+Step 6: Region-aware nisab reference values
+Create src/config/zakatNisab.ts:
+ts// Approximate nisab values based on April 2026 gold/silver prices.
+// 85g gold = nisab threshold (most commonly used)
+// 595g silver = nisab threshold (alternative, lower)
+// These are REFERENCE values only. Users override in the calculator.
+// Update these monthly or quarterly to keep helper text relevant.
+
+export const ZAKAT_NISAB_REFERENCE = {
+  BN: { gold: 16575, silver: 1500, currency: "BND" },
+  MY: { gold: 54400, silver: 4800, currency: "MYR" },
+  ID: { gold: 225250000, silver: 21000000, currency: "IDR" },
+};
+
+export const ZAKAT_NISAB_LAST_UPDATED = "April 2026";
+
+STRICT scope boundaries — do NOT do any of the following:
+
+Do NOT integrate with a gold price API (we're using hardcoded references)
+Do NOT add madhab selection or per-madhab calculation differences (Shafi'i hardcoded for v1)
+Do NOT add hijri calendar / haul tracking logic (deferred to v2)
+Do NOT add per-asset-type Zakat (gold ornaments, business inventory, agricultural — only cash for v1)
+Do NOT add notification logic ("notify me when I cross nisab" — deferred)
+Do NOT include debt amounts as deductions from Zakatable wealth (madhab-dependent — keep simple for v1)
+Do NOT add a payment portal integration (just link out to authority website)
+Do NOT modify the existing accounts schema or Goals schema (reuse existing endpoints)
+Do NOT add Zakat to onboarding flow (deferred — users discover it via sidebar nav)
+
+If you find that a feature you want to add isn't in this scope, list it in your report-back rather than building it. We'll evaluate it for v2.
+
+Verification before reporting complete:
+
+Sidebar shows "Zakat" nav item between Goals and Net Worth in all 3 languages
+Click Zakat nav → page loads with header, accounts list, nisab input, calculation result, action buttons, disclaimer
+Default state: all accounts checked, nisab pre-filled with region's gold reference value
+Toggle an account checkbox → "Total Zakatable Wealth" updates immediately
+Edit nisab value → "Above nisab?" status updates immediately
+Below-nisab state: when total < nisab, Zakat owed shows 0 and "Create goal" button disabled
+Above-nisab state: Zakat owed = 2.5% of zakatable wealth, properly currency-formatted
+Click "Create Zakat goal" → new goal appears in Goals page with correct name and amount, toast confirmation shows
+Click "Visit [authority]" → opens correct regional URL in new tab
+Test as BN user → MUIB shown, BND formatting, English/MS/ID translations work
+Test as MY user → LZS shown, MYR formatting, translations work
+Test as ID user → BAZNAS shown, IDR (no decimals) formatting, translations work
+Empty state: user with no accounts sees "You don't have any accounts yet" message gracefully
+Disclaimer renders at the bottom in all 3 languages
+
+
+Report back with:
+
+Files created and modified
+Total new translation keys added
+Any account types you excluded from the Zakatable wealth list (e.g., loan accounts)
+Whether you reused the existing Goals API or created a new endpoint
+Verification results across all 14 test scenarios
+Screenshot of the Zakat page (BN user, default state) so we can spot-check visual quality
+Any complications or scope creep you noticed but did not implement (list, do not fix)

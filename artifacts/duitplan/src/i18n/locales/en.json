@@ -704,6 +704,7 @@
     "commitments": "Commitments",
     "debts": "Debts",
     "goals": "Goals",
+    "zakat": "Zakat",
     "netWorth": "Net Worth",
     "upload": "Upload",
     "insights": "Insights",
@@ -863,6 +864,48 @@
       "english": "English",
       "malay": "Bahasa Melayu",
       "indonesian": "Bahasa Indonesia"
+    }
+  },
+  "zakat": {
+    "title": "Zakat Calculator",
+    "subtitle": "Calculate your annual Zakat based on your savings and assets.",
+    "wealth": {
+      "sectionTitle": "Your Zakatable Wealth",
+      "sectionDescription": "Select which accounts to include in your Zakat calculation. By default, all accounts are included.",
+      "totalLabel": "Total Zakatable Wealth",
+      "noAccounts": "You don't have any accounts yet. Add an account to calculate Zakat."
+    },
+    "nisab": {
+      "label": "Nisab threshold",
+      "helperText": "The minimum wealth threshold above which Zakat becomes obligatory. Traditionally calculated as the value of 85g of gold or 595g of silver.",
+      "referenceTitle": "Approximate nisab values",
+      "goldBased": "Gold-based (85g): {{value}}",
+      "silverBased": "Silver-based (595g): {{value}}",
+      "referenceFooter": "Verify current values with your local Zakat authority. These are reference figures only — your authority is the source of truth.",
+      "lastUpdated": "Reference values last updated: {{date}}"
+    },
+    "result": {
+      "totalWealth": "Total wealth",
+      "excluded": "Excluded",
+      "zakatableWealth": "Zakatable wealth",
+      "nisabThreshold": "Nisab threshold",
+      "aboveNisab": "Above nisab?",
+      "yes": "Yes",
+      "below": "Below nisab",
+      "zakatRate": "Zakat rate",
+      "zakatOwed": "Zakat owed",
+      "belowNisabMessage": "Zakat is not yet obligatory on this amount."
+    },
+    "actions": {
+      "createGoal": "Create Zakat goal",
+      "createGoalSuccess": "Zakat goal created in your Goals page",
+      "visitAuthorityBn": "Visit MUIB (Brunei)",
+      "visitAuthorityMy": "Visit Lembaga Zakat Selangor",
+      "visitAuthorityId": "Visit BAZNAS"
+    },
+    "disclaimer": {
+      "title": "About this calculator",
+      "body": "This calculator uses standard cash Zakat rules under the Shafi'i school of jurisprudence (the dominant madhab in Southeast Asia). The calculation assumes the wealth has been held above nisab for one full hijri year (haul). For complex situations involving business assets, agricultural produce, debts owed to you, or different schools of jurisprudence, please consult your local Zakat authority."
     }
   },
   "onboarding": {

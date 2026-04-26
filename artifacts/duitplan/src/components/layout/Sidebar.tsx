@@ -3,7 +3,7 @@ import { Link, useLocation } from "wouter";
 import { useAuth } from "@/lib/auth";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
-import { Menu, X, LayoutDashboard, Receipt, PieChart, CalendarDays, Wallet, Upload, Lightbulb, Settings, Trophy, Target, TrendingUp, ScanLine, Building2, Bot } from "lucide-react";
+import { Menu, X, LayoutDashboard, Receipt, PieChart, CalendarDays, Wallet, Upload, Lightbulb, Settings, Trophy, Target, TrendingUp, ScanLine, Building2, Bot, HandCoins } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navigation = [
@@ -16,6 +16,7 @@ const navigation = [
   { key: "commitments", href: "/commitments", icon: CalendarDays },
   { key: "debts", href: "/debts", icon: Wallet },
   { key: "goals", href: "/goals", icon: Target },
+  { key: "zakat", href: "/zakat", icon: HandCoins },
   { key: "netWorth", href: "/net-worth", icon: TrendingUp },
   { key: "upload", href: "/upload", icon: Upload },
   { key: "insights", href: "/insights", icon: Lightbulb },
