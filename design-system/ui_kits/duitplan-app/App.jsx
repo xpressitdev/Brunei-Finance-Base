@@ -3,9 +3,10 @@ const App = () => {
   const [hariGajiOpen, setHariGajiOpen] = React.useState(true);
 
   const titleMap = {
-    dashboard: "Dashboard", expenses: "Expense Tracker", budgets: "Budgets",
+    dashboard: "Dashboard", expenses: "Transactions", budgets: "Budgets",
     debts: "Debts", goals: "Goals", accounts: "Accounts",
-    transactions: "Expense Tracker", commitments: "Budgets",
+    transactions: "Transactions", commitments: "Budgets",
+    networth: "Net Worth",
   };
   const realKey = titleMap[active] ? active : "dashboard";
 
@@ -16,6 +17,7 @@ const App = () => {
     case "debts":                         page = <Debts/>; break;
     case "goals":                         page = <Goals/>; break;
     case "accounts":                      page = <Accounts/>; break;
+    case "networth":                      page = <NetWorth/>; break;
     default: page = <Dashboard onNav={setActive} hariGajiOpen={hariGajiOpen} setHariGajiOpen={setHariGajiOpen}/>;
   }
 

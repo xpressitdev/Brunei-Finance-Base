@@ -2,7 +2,6 @@ const Sidebar = ({ active, onNav }) => {
   const I = window.Icons;
   const items = [
     { key: "ai",          label: "DuitPlan AI",   icon: I.Bot },
-    { key: "expenses",    label: "Expense Tracker", icon: I.Scan },
     { key: "dashboard",   label: "Dashboard",     icon: I.Layout },
     { key: "accounts",    label: "Accounts",      icon: I.Bank },
     { key: "transactions",label: "Transactions",  icon: I.Receipt },

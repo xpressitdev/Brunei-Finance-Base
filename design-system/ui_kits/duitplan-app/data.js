@@ -24,10 +24,10 @@ const data = {
   },
 
   accounts: [
-    { id: "a1", name: "BIBD Personal Savings",  bank: "BIBD",     balance: 8420.55, type: "savings" },
-    { id: "a2", name: "BIBD Salary Account",    bank: "BIBD",     balance: 1289.5,  type: "current" },
-    { id: "a3", name: "Baiduri Visa",           bank: "Baiduri",  balance: -612.40, type: "credit"  },
-    { id: "a4", name: "Cash Wallet",            bank: "Cash",     balance: 110.0,   type: "wallet"  },
+    { id: "a1", name: "BIBD Personal Savings",  bank: "BIBD",     last4: "4421", balance: 8420.55,  available: 8420.55, type: "savings", color: "#0a8a6e", trend: [7800, 7900, 8050, 8100, 8200, 8420], lastTx: "2026-04-25", txCount30d: 8 },
+    { id: "a2", name: "BIBD Salary Account",    bank: "BIBD",     last4: "1108", balance: 1289.50,  available: 1289.50, type: "current", color: "#0a8a6e", trend: [200, 4450, 4100, 3200, 2100, 1289], lastTx: "2026-04-25", txCount30d: 24 },
+    { id: "a3", name: "Baiduri Visa Platinum",  bank: "Baiduri",  last4: "8842", balance: -612.40,  available: 9387.60, limit: 10000, type: "credit", color: "#1f3a5f", trend: [-220, -310, -480, -520, -610, -612], lastTx: "2026-04-23", txCount30d: 14, dueDate: "2026-05-15" },
+    { id: "a4", name: "Cash Wallet",            bank: "Cash",     last4: null,   balance: 110.00,   available: 110.00,  type: "wallet",  color: "#6b7280", trend: [180, 150, 220, 180, 140, 110], lastTx: "2026-04-22", txCount30d: 5 },
   ],
 
   spending: [
@@ -39,12 +39,29 @@ const data = {
   ],
 
   recentTransactions: [
-    { id: "t1", description: "Hari Gaji — April",       date: "2026-04-25", type: "credit", amount: 4250.00, categoryName: "Salary",     accountName: "BIBD" },
-    { id: "t2", description: "Shell — Petrol Tutong",   date: "2026-04-24", type: "debit",  amount:   48.50, categoryName: "Transport",  accountName: "BIBD" },
-    { id: "t3", description: "Hua Ho Mata-Mata",        date: "2026-04-23", type: "debit",  amount:  132.40, categoryName: "Groceries",  accountName: "Baiduri" },
-    { id: "t4", description: "Kopi Mam — Gadong",       date: "2026-04-22", type: "debit",  amount:   12.80, categoryName: "Eating out", accountName: "Baiduri" },
-    { id: "t5", description: "DST monthly bill",        date: "2026-04-21", type: "debit",  amount:   38.00, categoryName: "Utilities",  accountName: "BIBD" },
-    { id: "t6", description: "Personal Loan — auto",    date: "2026-04-25", type: "debit",  amount:  420.00, categoryName: "Loan",       accountName: "BIBD" },
+    // April 2026 (current month)
+    { id: "t1",  description: "Hari Gaji — April",         merchant: "BIBD Payroll",        date: "2026-04-25", type: "credit", amount: 4250.00, categoryName: "Salary",     accountName: "BIBD",    accountId: "a2", note: null },
+    { id: "t2",  description: "Toyota Hilux loan",         merchant: "BIBD Auto Finance",   date: "2026-04-25", type: "debit",  amount:  580.50, categoryName: "Loan",       accountName: "BIBD",    accountId: "a2", note: "Auto-deducted on Hari Gaji", auto: true },
+    { id: "t3",  description: "House financing",           merchant: "Baiduri Mortgage",    date: "2026-04-25", type: "debit",  amount:  920.00, categoryName: "Loan",       accountName: "Baiduri", accountId: "a3", note: "Auto-deducted on Hari Gaji", auto: true },
+    { id: "t4",  description: "Shell — petrol",            merchant: "Shell Tutong",        date: "2026-04-24", type: "debit",  amount:   48.50, categoryName: "Transport",  accountName: "BIBD",    accountId: "a2", note: null },
+    { id: "t5",  description: "Hua Ho Mata-Mata",          merchant: "Hua Ho Department",   date: "2026-04-23", type: "debit",  amount:  132.40, categoryName: "Groceries",  accountName: "Baiduri", accountId: "a3", note: "Weekly grocery run" },
+    { id: "t6",  description: "Kopi Mam — Gadong",         merchant: "Kopi Mam",            date: "2026-04-22", type: "debit",  amount:   12.80, categoryName: "Eating out", accountName: "Baiduri", accountId: "a3", note: null },
+    { id: "t7",  description: "DST monthly bill",          merchant: "DST",                 date: "2026-04-21", type: "debit",  amount:   38.00, categoryName: "Utilities",  accountName: "BIBD",    accountId: "a2", note: "Auto-pay", auto: true },
+    { id: "t8",  description: "Excapade Sushi",            merchant: "Excapade",            date: "2026-04-20", type: "debit",  amount:   85.20, categoryName: "Eating out", accountName: "Baiduri", accountId: "a3", note: "Family dinner" },
+    { id: "t9",  description: "Soon Lee Megamart",         merchant: "Soon Lee",            date: "2026-04-19", type: "debit",  amount:   67.30, categoryName: "Groceries",  accountName: "Baiduri", accountId: "a3", note: null },
+    { id: "t10", description: "Grab — airport run",        merchant: "Grab",                date: "2026-04-18", type: "debit",  amount:   24.00, categoryName: "Transport",  accountName: "Baiduri", accountId: "a3", note: null },
+    { id: "t11", description: "Chip Mong cafe",            merchant: "Chip Mong",           date: "2026-04-17", type: "debit",  amount:    8.50, categoryName: "Eating out", accountName: "Cash",    accountId: "a4", note: "Morning kopi" },
+    { id: "t12", description: "Jollibee Times Square",     merchant: "Jollibee",            date: "2026-04-16", type: "debit",  amount:   28.40, categoryName: "Eating out", accountName: "Baiduri", accountId: "a3", note: null },
+    { id: "t13", description: "Shell — petrol",            merchant: "Shell Berakas",       date: "2026-04-15", type: "debit",  amount:   42.00, categoryName: "Transport",  accountName: "BIBD",    accountId: "a2", note: null },
+    { id: "t14", description: "PB Pharmacy",               merchant: "PB Pharmacy",         date: "2026-04-14", type: "debit",  amount:   23.50, categoryName: "Health",     accountName: "Baiduri", accountId: "a3", note: "Vitamins" },
+    { id: "t15", description: "Refund — Lazada",           merchant: "Lazada",              date: "2026-04-13", type: "credit", amount:   45.00, categoryName: "Refund",     accountName: "Baiduri", accountId: "a3", note: "Wrong size returned" },
+    { id: "t16", description: "Hua Ho Manggis",            merchant: "Hua Ho Department",   date: "2026-04-12", type: "debit",  amount:   88.20, categoryName: "Groceries",  accountName: "Baiduri", accountId: "a3", note: null },
+    { id: "t17", description: "Kianggeh wet market",       merchant: "Kianggeh Market",     date: "2026-04-11", type: "debit",  amount:   34.50, categoryName: "Groceries",  accountName: "Cash",    accountId: "a4", note: "Fresh fish" },
+    { id: "t18", description: "Family transfer — Mama",    merchant: "BIBD Transfer",       date: "2026-04-10", type: "debit",  amount:  350.00, categoryName: "Family",     accountName: "BIBD",    accountId: "a2", note: "Monthly support", auto: true },
+    { id: "t19", description: "Insurance premium",         merchant: "Takaful Brunei",      date: "2026-04-08", type: "debit",  amount:  135.00, categoryName: "Insurance",  accountName: "BIBD",    accountId: "a2", note: "Auto-pay", auto: true },
+    { id: "t20", description: "Rent — Beribi",             merchant: "Landlord",            date: "2026-04-05", type: "debit",  amount:  600.00, categoryName: "Housing",    accountName: "BIBD",    accountId: "a2", note: "April rent", auto: true },
+    { id: "t21", description: "Excapade Sushi",            merchant: "Excapade",            date: "2026-04-03", type: "debit",  amount:   62.10, categoryName: "Eating out", accountName: "Baiduri", accountId: "a3", note: null },
+    { id: "t22", description: "Personal loan",             merchant: "BIBD Personal",       date: "2026-04-25", type: "debit",  amount:  320.00, categoryName: "Loan",       accountName: "BIBD",    accountId: "a2", note: "Auto-deducted", auto: true },
   ],
 
   commitments: [
