@@ -823,46 +823,49 @@
       "subheadline": "Lacak gaji Anda, kelola komitmen, dan pantau pinjaman — tanpa stres.",
       "tagline": "Auto-baca rekening bank Anda. Didukung AI.",
       "ctaStart": "Mulai Rencanakan Gratis",
-      "ctaSignIn": "Masuk"
+      "ctaSignIn": "Masuk",
+      "ctaImport": "Impor mutasi",
+      "trustFree": "Gratis selamanya untuk individu",
+      "trustNoBank": "Tanpa koneksi bank diperlukan"
     },
     "features": {
       "title": "Semua yang Anda butuhkan untuk mengatur gaji",
       "subtitle": "Sederhana, praktis, dan dibangun sesuai cara uang bekerja di Asia Tenggara.",
       "card1": {
-        "title": "Pengaturan terpandu dalam hitungan menit",
-        "desc": "Onboarding kami memandu Anda melalui gaji, tagihan, dan pinjaman menggunakan preset yang relevan. Tanpa formulir kosong — pilih dan konfirmasi saja."
+        "title": "Anggaran berbasis gaji",
+        "desc": "Impor slip gaji Anda, masukkan take-home pay, dan lihat berapa sisa setelah komitmen dan utang. Setiap sen tercatat."
       },
       "card2": {
-        "title": "Impor rekening bank Anda",
-        "desc": "Unggah PDF rekening atau bagikan tangkapan layar dari aplikasi mobile banking Anda. Kami mengekstrak transaksi dan mengategorikannya secara otomatis."
+        "title": "Pinjaman & pembiayaan, terpantau",
+        "desc": "KPR, kredit kendaraan, kartu kredit — semua di satu tempat dengan rasio utang-pendapatan dan pemotongan otomatis saat Hari Gaji."
       },
       "card3": {
-        "title": "Perencana pinjaman & utang",
-        "desc": "Lacak kredit kendaraan, KPR, atau pinjaman pribadi Anda. Lihat total kewajiban bulanan dan simulasikan pelunasan utang lebih cepat."
+        "title": "Tujuan, tersimpan aman",
+        "desc": "Umrah, dana darurat, sekolah anak — sisihkan uang sebelum dihabiskan. Tersimpan, tetap on track."
       }
     },
     "steps": {
       "title": "Cara kerjanya",
       "step1": {
-        "title": "Atur gaji Anda",
-        "desc": "Masukkan gaji bersih bulanan dan tanggal gajian Anda. Kami akan menghitung ruang pengeluaran Anda dari sana."
+        "title": "Impor mutasi",
+        "desc": "Unggah PDF mutasi BIBD atau Baiduri. Kami ekstrak transaksi dan mengkategorikannya secara otomatis — tanpa koneksi bank."
       },
       "step2": {
-        "title": "Tambahkan komitmen Anda",
-        "desc": "Pilih kredit kendaraan, sewa, utilitas, dan tagihan tetap lainnya dari daftar preset kami."
+        "title": "Tetapkan gaji & komitmen Anda",
+        "desc": "Beritahu kami gaji bulanan, Hari Gaji, dan tagihan tetap Anda. Kami buat rencana amplop Anda dalam hitungan detik."
       },
       "step3": {
-        "title": "Impor atau tambah transaksi",
-        "desc": "Unggah rekening bank Anda atau tambahkan transaksi secara manual. Tinjau dan konfirmasi sebelum menyimpan."
+        "title": "Rencanakan, pantau, ulangi",
+        "desc": "Setiap Hari Gaji, siklus dimulai ulang. Pinjaman terbayar, tujuan bertambah, dan Anda tahu persis mana yang aman untuk dibelanjakan."
       }
     },
     "cta": {
-      "title": "Mulai pahami uang Anda hari ini.",
-      "subtitle": "Gratis. Tanpa kartu kredit. Cukup gaji Anda dan beberapa menit.",
-      "button": "Buat Akun Gratis"
+      "title": "Siap merencanakan gaji Anda?",
+      "subtitle": "Bergabung dengan ribuan orang Brunei, Malaysia, dan Indonesia yang mengelola keuangan mereka — dengan tenang.",
+      "button": "Mulai rencanakan gratis"
     },
     "footer": {
-      "tagline": "Keuangan pribadi untuk Asia Tenggara. © {{year}} DuitPlan."
+      "tagline": "Keuangan pribadi untuk Asia Tenggara · Bandar Seri Begawan · © {{year}} DuitPlan"
     },
     "languageSwitcher": {
       "label": "Bahasa",

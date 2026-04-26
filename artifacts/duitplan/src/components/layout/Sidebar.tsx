@@ -33,8 +33,9 @@ export function Sidebar() {
   return (
     <>
       <div className="md:hidden flex items-center justify-between p-4 border-b bg-background">
-        <Link href="/dashboard">
-          <img src="/logo-horizontal.png" alt="DuitPlan" className="h-7 w-auto" />
+        <Link href="/dashboard" className="flex items-center gap-2">
+          <img src="/logo-mark.png" alt="" className="h-7 w-7 object-contain" />
+          <span className="font-bold text-base tracking-tight">DuitPlan</span>
         </Link>
         <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
           {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -46,8 +47,9 @@ export function Sidebar() {
         mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
       )}>
         <div className="p-6 hidden md:block">
-          <Link href="/dashboard">
-            <img src="/logo-horizontal.png" alt="DuitPlan" className="h-8 w-auto" />
+          <Link href="/dashboard" className="flex items-center gap-2">
+            <img src="/logo-mark.png" alt="" className="h-8 w-8 object-contain" />
+            <span className="font-bold text-base tracking-tight">DuitPlan</span>
           </Link>
         </div>
 

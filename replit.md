@@ -182,8 +182,27 @@ DuitPlan is being extended to serve BN/MY/ID regional subdomains with fixed per-
 
 ## Design
 
-- Calm fintech dashboard aesthetic — teal/green primary color
-- Trustworthy, modern, practical
+- Calm fintech dashboard aesthetic — teal/green primary color `hsl(162 70% 35%)`
+- Trustworthy, modern, practical — closer to Linear/Mercury than a busy bank app
 - Left sidebar on desktop, mobile-responsive
 - Currency: BND (Brunei Dollar)
 - Built for Brunei salaried professionals
+- Design system implemented from `DuitPlan_Design_System_*.zip` — covers color tokens, typography, brand assets, marketing landing page
+
+### Brand Assets (`artifacts/duitplan/public/`)
+- `logo-mark.png` — square logo mark (= `logo-icon-dark.png`), used in header and sidebar
+- `logo-wordmark.png` — full horizontal wordmark
+- `illustration-payslip.png` — salary/payslip flow icon
+- `illustration-bank.png` — loan/financing flow icon
+- `illustration-vault.png` — goals/savings flow icon
+- `opengraph.jpg` — OG social preview image
+- `app-dashboard.png` — app dashboard screenshot
+
+### Design Rules (from SKILL.md)
+- **Sentence case everywhere** — never Title Case (exception: proper nouns like Hari Gaji, BIBD)
+- **No gradients on app UI** — marketing CTA uses solid `bg-primary` only
+- **Single anchor hue** — teal `hsl(162 70% 35%)` is the only saturated brand colour on production surfaces
+- **Borders first, shadows second** — cards use `border + bg-card`, very flat shadows
+- **Tabular nums on every currency value** — `font-variant-numeric: tabular-nums`
+- **Lucide icons only**, 1.5–2 stroke. No mixed icon families
+- **Inter only** — linked from Google Fonts, no serifs

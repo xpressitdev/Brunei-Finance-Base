@@ -2,11 +2,9 @@ import { useState, useRef, useEffect } from "react";
 import { Link } from "wouter";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, ShieldCheck, Upload, CreditCard, Globe } from "lucide-react";
+import { ArrowRight, Upload, Check, Globe } from "lucide-react";
 import { cn } from "@/lib/utils";
 import i18n, { STORAGE_KEY } from "@/i18n";
-
-// ── Language Switcher ─────────────────────────────────────────────────────────
 
 const LANGUAGES = [
   { code: "en", nativeLabel: "English" },
@@ -28,22 +26,16 @@ function LanguageSwitcher() {
     setOpen(false);
   };
 
-  // Close on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // Close on Escape
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
-    };
+    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
     document.addEventListener("keydown", handler);
     return () => document.removeEventListener("keydown", handler);
   }, []);
@@ -59,7 +51,6 @@ function LanguageSwitcher() {
         <Globe className="w-4 h-4" />
         <span>{currentCode}</span>
       </button>
-
       {open && (
         <div
           role="listbox"
@@ -73,9 +64,7 @@ function LanguageSwitcher() {
               onClick={() => handleSelect(lang.code)}
               className={cn(
                 "w-full text-left px-4 py-2.5 text-sm hover:bg-muted/50 transition-colors",
-                currentLang === lang.code
-                  ? "text-primary font-semibold"
-                  : "text-foreground"
+                currentLang === lang.code ? "text-primary font-semibold" : "text-foreground"
               )}
             >
               {lang.nativeLabel}
@@ -87,97 +76,167 @@ function LanguageSwitcher() {
   );
 }
 
-// ── Landing Page ──────────────────────────────────────────────────────────────
-
 export default function Landing() {
   const { t } = useTranslation();
 
   return (
-    <div className="min-h-screen bg-background flex flex-col font-sans">
+    <div className="min-h-screen bg-white flex flex-col font-sans">
+
       {/* Header */}
-      <header className="px-6 py-4 flex items-center justify-between border-b bg-white/80 backdrop-blur-sm sticky top-0 z-10">
-        <div className="flex items-center">
-          <img src="/logo-horizontal.png" alt="DuitPlan" className="h-8 w-auto" />
+      <header className="border-b border-border bg-white/80 backdrop-blur-sm sticky top-0 z-50">
+        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+          <a href="#" className="flex items-center gap-2">
+            <img src="/logo-mark.png" alt="" className="w-8 h-8 object-contain" />
+            <span className="text-xl font-bold tracking-tight">DuitPlan</span>
+          </a>
+          <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-muted-foreground">
+            <a href="#features" className="hover:text-foreground transition-colors">Features</a>
+            <a href="#how-it-works" className="hover:text-foreground transition-colors">How it works</a>
+            <a href="#zakat" className="hover:text-foreground transition-colors">Zakat</a>
+          </nav>
+          <div className="flex items-center gap-2">
+            <LanguageSwitcher />
+            <Link href="/login">
+              <Button variant="ghost" size="sm" className="hidden sm:inline-flex">{t('landing.header.signIn')}</Button>
+            </Link>
+            <Link href="/register">
+              <Button size="sm" className="inline-flex items-center gap-1.5">
+                {t('landing.header.getStarted')}
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Button>
+            </Link>
+          </div>
         </div>
-        <nav className="flex items-center gap-2">
-          <LanguageSwitcher />
-          <Link href="/login">
-            <Button variant="ghost" className="hidden sm:inline-flex">{t('landing.header.signIn')}</Button>
-          </Link>
-          <Link href="/register">
-            <Button>{t('landing.header.getStarted')}</Button>
-          </Link>
-        </nav>
       </header>
 
       <main className="flex-1 flex flex-col">
+
         {/* Hero */}
-        <section className="px-6 py-20 md:py-32 flex flex-col items-center text-center max-w-4xl mx-auto">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-8">
-            {t('landing.hero.badge')}
-          </div>
-          <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-foreground mb-6">
-            {(() => {
-              const headline = t('landing.hero.headline');
-              const parts = headline.split('gaji');
-              if (parts.length >= 2) {
-                return <>{parts[0]}<span className="text-primary">gaji</span>{parts.slice(1).join('gaji')}</>;
-              }
-              return headline;
-            })()}
-          </h1>
-          <p className="text-xl text-muted-foreground mb-4 max-w-2xl">
-            {t('landing.hero.subheadline')}
-          </p>
-          <p className="text-sm text-muted-foreground mb-10">
-            {t('landing.hero.tagline')}
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4">
-            <Link href="/register">
-              <Button size="lg" className="w-full sm:w-auto h-14 px-8 text-base rounded-xl">
-                {t('landing.hero.ctaStart')} <ArrowRight className="ml-2 w-5 h-5" />
-              </Button>
-            </Link>
-            <Link href="/login">
-              <Button size="lg" variant="outline" className="w-full sm:w-auto h-14 px-8 text-base rounded-xl bg-white">
-                {t('landing.hero.ctaSignIn')}
-              </Button>
-            </Link>
+        <section className="relative">
+          <div className="max-w-6xl mx-auto px-6 pt-20 pb-24">
+            <div className="grid lg:grid-cols-2 gap-12 items-center">
+              <div>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-accent text-accent-foreground text-xs font-semibold mb-6">
+                  🇧🇳 Built for Brunei · 🇲🇾 Malaysia · 🇮🇩 Indonesia
+                </span>
+                <h1 className="text-5xl lg:text-6xl font-bold tracking-tight leading-[1.05] mb-5">
+                  {(() => {
+                    const headline = t('landing.hero.headline');
+                    const parts = headline.split('gaji');
+                    if (parts.length >= 2) {
+                      return <>{parts[0]}<span className="text-primary">gaji</span>{parts.slice(1).join('gaji')}</>;
+                    }
+                    return headline;
+                  })()}
+                  <br />
+                  {(() => {
+                    const sub = "Plan every duit.";
+                    const parts = sub.split('duit');
+                    return <>{parts[0]}<span className="text-primary">duit</span>{parts.slice(1).join('duit')}</>;
+                  })()}
+                </h1>
+                <p className="text-lg text-muted-foreground max-w-md mb-7 leading-relaxed">
+                  {t('landing.hero.subheadline')}
+                </p>
+                <div className="flex flex-wrap gap-3">
+                  <Link href="/register">
+                    <Button size="lg" className="h-12 px-7 inline-flex items-center gap-2">
+                      {t('landing.hero.ctaStart')}
+                      <ArrowRight className="w-4 h-4" />
+                    </Button>
+                  </Link>
+                  <Link href="/upload">
+                    <Button size="lg" variant="outline" className="h-12 px-6 bg-white inline-flex items-center gap-2">
+                      <Upload className="w-4 h-4" />
+                      {t('landing.hero.ctaImport')}
+                    </Button>
+                  </Link>
+                </div>
+                <div className="flex flex-wrap items-center gap-4 mt-8 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-1.5">
+                    <Check className="w-4 h-4 text-emerald-600" />
+                    {t('landing.hero.trustFree')}
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Check className="w-4 h-4 text-emerald-600" />
+                    {t('landing.hero.trustNoBank')}
+                  </div>
+                </div>
+              </div>
+
+              {/* Hero card mockup */}
+              <div className="relative hidden lg:block">
+                <div className="absolute inset-0 bg-primary/[0.08] rounded-3xl rotate-1" />
+                <div className="relative bg-white border border-card-border rounded-2xl p-6 shadow-xl">
+                  <div className="flex items-center justify-between mb-5">
+                    <div className="text-sm font-semibold">
+                      {new Date().toLocaleString('en', { month: 'long', year: 'numeric' })}
+                    </div>
+                    <span className="text-xs px-2 py-1 rounded-full bg-accent text-accent-foreground font-semibold">BND</span>
+                  </div>
+                  <div className="rounded-xl bg-primary/[0.05] border border-primary/20 p-4 mb-4">
+                    <div className="text-[11px] uppercase tracking-wider font-semibold text-primary">Remaining</div>
+                    <div className="text-3xl font-bold text-primary tabular-nums mt-1">BND 1,289.50</div>
+                    <div className="text-xs text-muted-foreground mt-1">After commitments and spending</div>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <img src="/illustration-payslip.png" className="w-10 h-10 object-contain" alt="" />
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium">Hari Gaji — {new Date().toLocaleString('en', { month: 'long' })}</div>
+                        <div className="text-xs text-muted-foreground">25 {new Date().toLocaleString('en', { month: 'short' })} · BIBD</div>
+                      </div>
+                      <div className="text-sm font-semibold text-emerald-600 tabular-nums">+BND 4,250</div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <img src="/illustration-bank.png" className="w-10 h-10 object-contain" alt="" />
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium">Toyota Hilux — auto</div>
+                        <div className="text-xs text-muted-foreground">Loan · 4.2% APR</div>
+                      </div>
+                      <div className="text-sm font-semibold tabular-nums text-foreground">−BND 520</div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <img src="/illustration-vault.png" className="w-10 h-10 object-contain" alt="" />
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium">Umrah fund</div>
+                        <div className="text-xs text-muted-foreground">Goal · 68% complete</div>
+                      </div>
+                      <div className="text-sm font-semibold tabular-nums text-foreground">−BND 200</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
         {/* Features */}
-        <section className="px-6 py-20 bg-muted/40 border-t">
+        <section id="features" className="px-6 py-20 bg-muted/40 border-t">
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-14">
               <h2 className="text-3xl font-bold mb-3">{t('landing.features.title')}</h2>
               <p className="text-muted-foreground max-w-xl mx-auto">{t('landing.features.subtitle')}</p>
             </div>
             <div className="grid md:grid-cols-3 gap-6">
-              <div className="bg-white p-8 rounded-2xl border shadow-sm flex flex-col items-start">
-                <div className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-5">
-                  <ShieldCheck className="w-6 h-6" />
-                </div>
+              <div className="bg-white border border-card-border rounded-2xl p-7">
+                <img src="/illustration-payslip.png" className="w-16 h-16 object-contain mb-4" alt="" />
                 <h3 className="text-lg font-semibold mb-2">{t('landing.features.card1.title')}</h3>
-                <p className="text-muted-foreground text-sm leading-relaxed">
+                <p className="text-sm text-muted-foreground leading-relaxed">
                   {t('landing.features.card1.desc')}
                 </p>
               </div>
-              <div className="bg-white p-8 rounded-2xl border shadow-sm flex flex-col items-start">
-                <div className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-5">
-                  <Upload className="w-6 h-6" />
-                </div>
+              <div className="bg-white border border-card-border rounded-2xl p-7">
+                <img src="/illustration-bank.png" className="w-16 h-16 object-contain mb-4" alt="" />
                 <h3 className="text-lg font-semibold mb-2">{t('landing.features.card2.title')}</h3>
-                <p className="text-muted-foreground text-sm leading-relaxed">
+                <p className="text-sm text-muted-foreground leading-relaxed">
                   {t('landing.features.card2.desc')}
                 </p>
               </div>
-              <div className="bg-white p-8 rounded-2xl border shadow-sm flex flex-col items-start">
-                <div className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-5">
-                  <CreditCard className="w-6 h-6" />
-                </div>
+              <div className="bg-white border border-card-border rounded-2xl p-7">
+                <img src="/illustration-vault.png" className="w-16 h-16 object-contain mb-4" alt="" />
                 <h3 className="text-lg font-semibold mb-2">{t('landing.features.card3.title')}</h3>
-                <p className="text-muted-foreground text-sm leading-relaxed">
+                <p className="text-sm text-muted-foreground leading-relaxed">
                   {t('landing.features.card3.desc')}
                 </p>
               </div>
@@ -186,22 +245,22 @@ export default function Landing() {
         </section>
 
         {/* How it works */}
-        <section className="px-6 py-20 border-t">
-          <div className="max-w-4xl mx-auto">
-            <div className="text-center mb-14">
-              <h2 className="text-3xl font-bold mb-3">{t('landing.steps.title')}</h2>
-            </div>
-            <div className="grid sm:grid-cols-3 gap-8">
+        <section id="how-it-works" className="px-6 py-20 border-t">
+          <div className="max-w-6xl mx-auto">
+            <h2 className="text-3xl lg:text-4xl font-bold tracking-tight text-center mb-12">
+              {t('landing.steps.title')}
+            </h2>
+            <div className="grid md:grid-cols-3 gap-8">
               {([
                 { num: "1", title: t('landing.steps.step1.title'), desc: t('landing.steps.step1.desc') },
                 { num: "2", title: t('landing.steps.step2.title'), desc: t('landing.steps.step2.desc') },
                 { num: "3", title: t('landing.steps.step3.title'), desc: t('landing.steps.step3.desc') },
               ] as const).map(step => (
-                <div key={step.num} className="text-center">
-                  <div className="w-12 h-12 rounded-full bg-primary text-white font-bold text-lg flex items-center justify-center mx-auto mb-4">
+                <div key={step.num}>
+                  <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold mb-4">
                     {step.num}
                   </div>
-                  <h3 className="font-semibold mb-2">{step.title}</h3>
+                  <h3 className="text-base font-semibold mb-2">{step.title}</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">{step.desc}</p>
                 </div>
               ))}
@@ -209,32 +268,46 @@ export default function Landing() {
           </div>
         </section>
 
-        {/* CTA banner */}
-        <section className="px-6 py-16 bg-primary text-white">
-          <div className="max-w-2xl mx-auto text-center">
-            <h2 className="text-3xl font-bold mb-4">{t('landing.cta.title')}</h2>
-            <p className="text-primary-foreground/80 mb-8">
+        {/* Zakat anchor (keeps nav link valid) */}
+        <div id="zakat" />
+
+        {/* CTA band */}
+        <section className="bg-primary py-16">
+          <div className="max-w-4xl mx-auto px-6 text-center text-white">
+            <h2 className="text-3xl lg:text-4xl font-bold tracking-tight mb-4">
+              {t('landing.cta.title')}
+            </h2>
+            <p className="text-white/85 max-w-xl mx-auto mb-7">
               {t('landing.cta.subtitle')}
             </p>
             <Link href="/register">
-              <Button size="lg" variant="secondary" className="px-8 h-12 text-base rounded-xl">
-                {t('landing.cta.button')} <ArrowRight className="ml-2 w-5 h-5" />
+              <Button size="lg" variant="secondary" className="h-12 px-7 font-semibold inline-flex items-center gap-2">
+                {t('landing.cta.button')}
+                <ArrowRight className="w-4 h-4" />
               </Button>
             </Link>
           </div>
         </section>
       </main>
 
-      <footer className="py-8 border-t bg-white">
-        <div className="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row justify-between items-center gap-4">
-          <div className="flex items-center">
-            <img src="/logo-horizontal.png" alt="DuitPlan" className="h-6 w-auto" />
+      {/* Footer */}
+      <footer className="border-t border-border py-10 bg-white">
+        <div className="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="flex items-center gap-2">
+            <img src="/logo-mark.png" className="w-7 h-7 object-contain" alt="" />
+            <span className="font-bold">DuitPlan</span>
+            <span className="text-xs text-muted-foreground ml-2">
+              {t('landing.footer.tagline', { year: new Date().getFullYear() })}
+            </span>
           </div>
-          <p className="text-sm text-muted-foreground">
-            {t('landing.footer.tagline', { year: new Date().getFullYear() })}
-          </p>
+          <div className="flex gap-5 text-sm text-muted-foreground">
+            <a href="#" className="hover:text-foreground transition-colors">Privacy</a>
+            <a href="#" className="hover:text-foreground transition-colors">Terms</a>
+            <a href="#" className="hover:text-foreground transition-colors">Contact</a>
+          </div>
         </div>
       </footer>
+
     </div>
   );
 }

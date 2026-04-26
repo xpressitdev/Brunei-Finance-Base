@@ -29,8 +29,9 @@ export default function Register() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-muted/30 p-4">
-      <Link href="/" className="mb-8">
-        <img src="/logo-horizontal.png" alt="DuitPlan" className="h-9 w-auto" />
+      <Link href="/" className="mb-8 flex items-center gap-2">
+        <img src="/logo-mark.png" alt="" className="h-9 w-9 object-contain" />
+        <span className="font-bold text-xl tracking-tight">DuitPlan</span>
       </Link>
       
       <div className="w-full max-w-md bg-white rounded-2xl shadow-sm border p-8">

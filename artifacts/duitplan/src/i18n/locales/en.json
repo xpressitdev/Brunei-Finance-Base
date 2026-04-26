@@ -823,46 +823,49 @@
       "subheadline": "Track your salary, manage your commitments, and stay on top of your loans — without the stress.",
       "tagline": "Auto-parses your bank statements. AI-powered.",
       "ctaStart": "Start Planning Free",
-      "ctaSignIn": "Sign In"
+      "ctaSignIn": "Sign In",
+      "ctaImport": "Import a statement",
+      "trustFree": "Free forever for individuals",
+      "trustNoBank": "No bank connection needed"
     },
     "features": {
       "title": "Everything you need to manage your gaji",
       "subtitle": "Simple, practical, and built around how money works in Southeast Asia.",
       "card1": {
-        "title": "Guided setup in minutes",
-        "desc": "Our onboarding walks you through your salary, bills, and loans using locally-relevant presets. No blank forms — just select and confirm."
+        "title": "Salary-first budgeting",
+        "desc": "Import your pay slip, enter your take-home gaji, and see exactly how much is left after commitments and debts. Every cent accounted for."
       },
       "card2": {
-        "title": "Import your bank statements",
-        "desc": "Upload a PDF statement or share a screenshot from your mobile banking app. We extract the transactions and categorise them automatically."
+        "title": "Loans & financing, tracked",
+        "desc": "Car loan, house financing, credit card — all in one place with debt-to-income, payoff timeline, and Hari Gaji auto-deduction reconciled."
       },
       "card3": {
-        "title": "Loan & debt planner",
-        "desc": "Track your car loan, house financing, or personal loans. See your total monthly obligations and simulate paying off debt faster."
+        "title": "Goals, locked away",
+        "desc": "Umrah, emergency fund, kids' school — earmark money before you can spend it. Out of sight, on track."
       }
     },
     "steps": {
       "title": "How it works",
       "step1": {
-        "title": "Set up your salary",
-        "desc": "Enter your monthly take-home pay and payday. We'll calculate your spending room from there."
+        "title": "Import a statement",
+        "desc": "Drop in a BIBD or Baiduri PDF. We extract the transactions and categorise them automatically — no bank connection needed."
       },
       "step2": {
-        "title": "Add your commitments",
-        "desc": "Select your car loan, rent, utilities, and other fixed bills from our preset list."
+        "title": "Set your gaji & commitments",
+        "desc": "Tell us your monthly salary, payday, and fixed bills. We build your envelope plan in seconds."
       },
       "step3": {
-        "title": "Import or add transactions",
-        "desc": "Upload your bank statement or add transactions manually. Review and confirm before saving."
+        "title": "Plan, track, repeat",
+        "desc": "Every Hari Gaji, the cycle resets. Your loans get paid, your goals get fed, and you know exactly what's safe to spend."
       }
     },
     "cta": {
-      "title": "Start understanding your money today.",
-      "subtitle": "Free to use. No credit card required. Just your salary and a few minutes.",
-      "button": "Create a Free Account"
+      "title": "Ready to plan your gaji?",
+      "subtitle": "Join thousands of Bruneians, Malaysians, and Indonesians taking control of their money — calmly.",
+      "button": "Start planning free"
     },
     "footer": {
-      "tagline": "Personal finance for Southeast Asia. © {{year}} DuitPlan."
+      "tagline": "Personal finance for Southeast Asia · Bandar Seri Begawan · © {{year}} DuitPlan"
     },
     "languageSwitcher": {
       "label": "Language",
