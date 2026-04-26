@@ -857,6 +857,12 @@
     },
     "footer": {
       "tagline": "Kewangan peribadi untuk Asia Tenggara. © {{year}} DuitPlan."
+    },
+    "languageSwitcher": {
+      "label": "Bahasa",
+      "english": "English",
+      "malay": "Bahasa Melayu",
+      "indonesian": "Bahasa Indonesia"
     }
   },
   "onboarding": {

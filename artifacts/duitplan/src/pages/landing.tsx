@@ -1,7 +1,93 @@
+import { useState, useRef, useEffect } from "react";
 import { Link } from "wouter";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, ShieldCheck, Upload, CreditCard } from "lucide-react";
+import { ArrowRight, ShieldCheck, Upload, CreditCard, Globe } from "lucide-react";
+import { cn } from "@/lib/utils";
+import i18n, { STORAGE_KEY } from "@/i18n";
+
+// ── Language Switcher ─────────────────────────────────────────────────────────
+
+const LANGUAGES = [
+  { code: "en", nativeLabel: "English" },
+  { code: "ms", nativeLabel: "Bahasa Melayu" },
+  { code: "id", nativeLabel: "Bahasa Indonesia" },
+] as const;
+
+function LanguageSwitcher() {
+  const { i18n: i18nInstance } = useTranslation();
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  const currentLang = i18nInstance.language?.substring(0, 2) ?? "en";
+  const currentCode = currentLang.toUpperCase();
+
+  const handleSelect = (code: string) => {
+    i18n.changeLanguage(code);
+    localStorage.setItem(STORAGE_KEY, code);
+    setOpen(false);
+  };
+
+  // Close on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  // Close on Escape
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, []);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen(o => !o)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+      >
+        <Globe className="w-4 h-4" />
+        <span>{currentCode}</span>
+      </button>
+
+      {open && (
+        <div
+          role="listbox"
+          className="absolute right-0 top-full mt-1.5 bg-white border border-border rounded-xl shadow-lg py-1 z-50 min-w-[190px]"
+        >
+          {LANGUAGES.map(lang => (
+            <button
+              key={lang.code}
+              role="option"
+              aria-selected={currentLang === lang.code}
+              onClick={() => handleSelect(lang.code)}
+              className={cn(
+                "w-full text-left px-4 py-2.5 text-sm hover:bg-muted/50 transition-colors",
+                currentLang === lang.code
+                  ? "text-primary font-semibold"
+                  : "text-foreground"
+              )}
+            >
+              {lang.nativeLabel}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Landing Page ──────────────────────────────────────────────────────────────
 
 export default function Landing() {
   const { t } = useTranslation();
@@ -14,7 +100,8 @@ export default function Landing() {
           <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-white font-bold text-xl">D</div>
           <span className="text-xl font-bold text-foreground">DuitPlan</span>
         </div>
-        <nav className="flex items-center gap-3">
+        <nav className="flex items-center gap-2">
+          <LanguageSwitcher />
           <Link href="/login">
             <Button variant="ghost" className="hidden sm:inline-flex">{t('landing.header.signIn')}</Button>
           </Link>

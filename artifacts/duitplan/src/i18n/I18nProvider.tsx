@@ -1,22 +1,20 @@
 import { useEffect } from "react";
 import { useGetProfile } from "@workspace/api-client-react";
-import i18n from "./index";
-
-function detectBrowserLang(): string {
-  const nav = (typeof navigator !== "undefined" ? navigator.language : "en") ?? "en";
-  if (nav.startsWith("id")) return "id";
-  if (nav.startsWith("ms")) return "ms";
-  return "en";
-}
+import i18n, { STORAGE_KEY } from "./index";
 
 export function I18nProvider({ children }: { children: React.ReactNode }) {
   const { data: profile } = useGetProfile();
 
   useEffect(() => {
-    const lang = profile?.language ?? detectBrowserLang();
-    if (i18n.language !== lang) {
-      i18n.changeLanguage(lang);
+    if (profile?.language) {
+      // Authenticated user: profile language always wins, clear any visitor override
+      localStorage.removeItem(STORAGE_KEY);
+      if (i18n.language !== profile.language) {
+        i18n.changeLanguage(profile.language);
+      }
     }
+    // Unauthenticated: language was resolved at init time by resolveInitialLanguage()
+    // — don't override it here so the switcher choice is preserved
   }, [profile?.language]);
 
   return <>{children}</>;

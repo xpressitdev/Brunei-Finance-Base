@@ -857,6 +857,12 @@
     },
     "footer": {
       "tagline": "Personal finance for Southeast Asia. © {{year}} DuitPlan."
+    },
+    "languageSwitcher": {
+      "label": "Language",
+      "english": "English",
+      "malay": "Bahasa Melayu",
+      "indonesian": "Bahasa Indonesia"
     }
   },
   "onboarding": {

@@ -1,0 +1,103 @@
+Phase 2 Prompt 5c follow-up — Landing page language detection + switcher
+Task: Add language auto-detection and a language switcher to the landing page (and other unauthenticated surfaces)
+Phase 2 Prompt 5c successfully extracted and translated all landing page strings, but the landing page does not detect or apply non-English languages for unauthenticated visitors. When a logged-out visitor arrives at the landing page, they always see English regardless of their browser language or the subdomain they visited.
+This task fixes that by adding (1) auto-detection logic for unauthenticated visitors and (2) a language switcher in the landing page top navigation as an override.
+
+Step 1: Update i18n language detection for unauthenticated visitors
+Locate the i18n initialization (likely src/i18n/index.ts). Currently the language detection logic probably reads from user.language and falls back to English. Replace this with a priority chain:
+
+If user is authenticated → use user.language (existing behavior, do not change)
+If localStorage has i18n_language_override → use that (set by language switcher in Step 3)
+Hostname detection:
+
+my.duitplan.com or hostname starts with my. → ms
+id.duitplan.com or hostname starts with id. → id
+bn.duitplan.com or hostname starts with bn. → en (Brunei users default to English)
+All other hostnames including localhost and replit.dev → continue to step 4
+
+
+Browser locale via navigator.language:
+
+If starts with ms → ms
+If starts with id or in (legacy code for Indonesian) → id
+If starts with en → en
+Anything else → en (safe default)
+
+
+Final fallback: en
+
+Critical: the dev override (?region= URL param) used during testing should NOT change the language for unauthenticated visitors — region and language are independent concepts. Region drives currency; language drives UI text. Do not couple them.
+Implement this as a function that returns the resolved language code, called once at i18n init.
+
+Step 2: Persist language choice across sessions
+When the language is set (via switcher in Step 3, or via auto-detection), write it to localStorage under key i18n_language_override ONLY IF the visitor explicitly chose it via the switcher. Auto-detected language should NOT be written to localStorage (to allow the detection to re-run on subsequent visits if browser/hostname changes).
+When an authenticated user logs in, the user.language field takes precedence and the localStorage override is cleared (so when they log out, detection runs fresh).
+
+Step 3: Add a language switcher to the landing page top nav
+Locate the landing page header/nav component (likely in src/pages/Landing.tsx or src/components/LandingHeader.tsx or similar).
+Add a small, unobtrusive language switcher to the top-right area, positioned BEFORE the "Sign In" link. Design requirements:
+
+Visual style: A small button or dropdown showing the current language. Use a globe icon (lucide-react Globe icon if available) plus the current language code in uppercase: 🌐 EN, 🌐 MS, 🌐 ID. Or just the language code without icon if cleaner.
+Interaction: Click opens a small dropdown menu with three options: "English", "Bahasa Melayu", "Bahasa Indonesia". Selecting one updates the i18n language immediately, persists to localStorage, and re-renders the landing page in the new language.
+Position: In the top nav, to the left of the "Sign In" button. On mobile, it should still be visible — consider it as priority navigation.
+Visual weight: Subtle. Should not compete with the "Get Started Free" CTA. Use muted text color, no background, simple hover state.
+Closing behavior: Dropdown closes on selection, on outside click, or on Escape key.
+
+Do NOT use heavy UI library components if simple ones already exist in the project. Match the existing design language.
+
+Step 4: Apply same language detection to other unauthenticated surfaces
+The detection logic from Step 1 should also apply to:
+
+Login page — strings should render in detected language
+Signup page — same
+Forgot password / password reset pages (if they exist)
+Email verification page (if it exists)
+
+The language switcher from Step 3 does NOT need to appear on these auth pages — only on the landing page is sufficient. The auth pages will naturally inherit whatever language was selected on the landing page (via the i18n_language_override localStorage key) or fall through to detection.
+
+Step 5: Add the new language switcher labels to translation files
+Add to en.json, ms.json, id.json:
+json"landing": {
+  ...existing keys...,
+  "languageSwitcher": {
+    "label": "Language" / "Bahasa" / "Bahasa",
+    "english": "English",
+    "malay": "Bahasa Melayu",
+    "indonesian": "Bahasa Indonesia"
+  }
+}
+Note: language names within the switcher dropdown should appear in their NATIVE form (English, Bahasa Melayu, Bahasa Indonesia) regardless of the currently selected language. This is the standard pattern — a French speaker browsing an English app should see "Français" in the language picker, not "French". The same principle applies here.
+
+STRICT scope boundaries — do NOT do any of the following:
+
+Do NOT modify the language switcher inside the authenticated app (the existing one in Settings is unchanged)
+Do NOT change how user.language is read for authenticated users — that logic stays
+Do NOT add region detection or currency switching to the landing page (region is determined by subdomain + auth, not visitor preference)
+Do NOT add language detection logic that reads from URL query parameters (?lang=ms) — we use localStorage + hostname + browser only
+Do NOT redesign the landing page beyond adding the switcher to the top nav
+Do NOT modify the existing dev region override (?region=) — that's separate and stays
+
+
+Verification before reporting complete:
+
+Logged-out visitor on default hostname (e.g., replit.dev) with English browser → landing page renders in English ✓
+Logged-out visitor with Malay browser (manually set navigator.language to ms-MY via DevTools, or use a Malay browser) → landing page renders in Malay
+Logged-out visitor with Indonesian browser → landing page renders in Indonesian
+Click language switcher → select Bahasa Melayu → landing page re-renders in Malay immediately, no page reload required
+Refresh page → still in Malay (localStorage persisted)
+Open new tab to landing page → still in Malay (localStorage persisted)
+Click switcher → select English → reverts to English
+Sign in as test-id user → app uses Indonesian (user.language takes precedence)
+Sign out → returns to landing page → uses last selected language from switcher (or detection if never set)
+Subdomain test (if you can simulate): mock hostname as my.duitplan.com via DevTools or proxy → landing page detects MS without browser hint
+Login/signup pages — also render in detected language
+
+
+Report back with:
+
+File paths modified
+Confirmation of detection priority chain order
+Where the language switcher renders (component path)
+Screenshot or description of switcher in landing nav (so we can verify visual weight)
+Verification results across all 11 test scenarios above
+Any complications encountered (e.g., SSR vs CSR considerations, hydration issues)
