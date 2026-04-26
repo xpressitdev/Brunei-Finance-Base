@@ -38,8 +38,7 @@ export async function runStartupMigrations(): Promise<void> {
     await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS onboarded_at timestamptz;`);
     await client.query(`UPDATE users SET onboarded_at = created_at WHERE onboarded_at IS NULL;`);
 
-    // Bug A1: Remove duplicate commitments — keep the earliest created per (user_id, label).
-    // The unique constraint is added separately via schema migration after this dedupe runs.
+    // Bug A1: Remove duplicate commitments — keep the earliest created per (user_id, label)
     await client.query(`
       DELETE FROM commitments
       WHERE id NOT IN (
@@ -47,6 +46,17 @@ export async function runStartupMigrations(): Promise<void> {
         FROM commitments
         ORDER BY user_id, label, created_at ASC
       );
+    `);
+    // Bug A1: Enforce uniqueness — safe to add now that duplicates are removed above
+    await client.query(`
+      DO $$ BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_constraint
+          WHERE conname = 'commitments_user_id_label_unique'
+        ) THEN
+          ALTER TABLE commitments ADD CONSTRAINT commitments_user_id_label_unique UNIQUE (user_id, label);
+        END IF;
+      END $$;
     `);
 
     // Bug A2: Backfill linked_debt_id on legacy payday_prompt debit transactions
