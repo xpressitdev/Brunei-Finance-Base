@@ -161,16 +161,11 @@ function BucketRow({
       {pulse && <div className="absolute inset-0 rounded-xl bg-primary/10 pointer-events-none animate-pulse" />}
 
       <div className="flex items-start gap-3">
-        <div className={cn(
-          "w-9 h-9 rounded-lg flex items-center justify-center shrink-0",
-          isVault ? "bg-amber-50 text-amber-700" :
-          isLoan  ? "bg-rose-50 text-rose-600"   :
-                    "bg-primary/10 text-primary"
-        )}>
-          {isVault ? <PiggyBank className="w-4 h-4" /> :
-           isLoan  ? <Banknote className="w-4 h-4" />  :
-                     <Wallet className="w-4 h-4" />}
-        </div>
+        <img
+          src={isVault ? "/illustration-vault.png" : isLoan ? "/illustration-bank.png" : "/illustration-payslip.png"}
+          className="w-9 h-9 object-contain shrink-0"
+          alt=""
+        />
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2">
@@ -292,6 +287,7 @@ function VaultUnlockModal({
 
 function AllocateView({
   month,
+  monthLabel,
   salary,
   commitments,
   categories,
@@ -299,8 +295,10 @@ function AllocateView({
   upsert,
   refetch,
   onTrialExpired,
+  resetSignal,
 }: {
   month: string;
+  monthLabel: string;
   salary: number;
   commitments: Array<{ id: string; label: string; amount: string }>;
   categories: Array<{ id: string; name: string; kind: string }>;
@@ -308,6 +306,7 @@ function AllocateView({
   upsert: ReturnType<typeof useUpsertBudget>;
   refetch: () => void;
   onTrialExpired: () => void;
+  resetSignal: number;
 }) {
   // Build buckets from existing data
   const loanKeywords = ["loan", "financing", "credit", "mortgage", "hire purchase"];
@@ -365,8 +364,8 @@ function AllocateView({
   const [pulse, setPulse] = useState<string | null>(null);
   const [vaultUnlock, setVaultUnlock] = useState<{ fromId: string; toId: string; amount: number } | null>(null);
 
-  // Re-sync when underlying data changes (month switch, etc)
-  useEffect(() => { setBuckets(initialBuckets); }, [initialBuckets]);
+  // Re-sync when underlying data changes (month switch, etc) or reset is triggered
+  useEffect(() => { setBuckets(initialBuckets); }, [initialBuckets, resetSignal]);
 
   const totalIncome = salary;
   const allocated = buckets.reduce((s, b) => s + b.allocated, 0);
@@ -488,7 +487,7 @@ function AllocateView({
               )}>
                 {available < 0 ? "−" : ""}{fmt(Math.abs(available))}
               </span>
-              <span className="text-sm text-muted-foreground">of {fmt(totalIncome)} gaji</span>
+              <span className="text-sm text-muted-foreground">of {fmt(totalIncome)} {monthLabel} gaji</span>
             </div>
             <div className="mt-3 h-2 rounded-full bg-muted overflow-hidden w-full lg:w-96">
               <div
@@ -525,12 +524,12 @@ function AllocateView({
       <div className="grid lg:grid-cols-3 gap-5">
         {/* Bank / loans */}
         <section className="space-y-3">
-          <div className="flex items-center gap-2 px-1">
-            <div className="w-9 h-9 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center">
-              <Banknote className="w-5 h-5" />
+          <div className="flex items-center gap-3 px-1">
+            <div className="w-9 h-9 rounded-lg bg-rose-50 flex items-center justify-center">
+              <img src="/illustration-bank.png" className="w-7 h-7 object-contain" alt="" />
             </div>
             <div>
-              <h3 className="text-base font-semibold">Bank</h3>
+              <h3 className="text-base font-semibold tracking-tight">Bank</h3>
               <p className="text-xs text-muted-foreground">Loan repayments — auto on Hari Gaji</p>
             </div>
           </div>
@@ -558,12 +557,12 @@ function AllocateView({
 
         {/* Envelopes */}
         <section className="space-y-3">
-          <div className="flex items-center gap-2 px-1">
-            <div className="w-9 h-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
-              <Wallet className="w-5 h-5" />
+          <div className="flex items-center gap-3 px-1">
+            <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
+              <img src="/illustration-payslip.png" className="w-7 h-7 object-contain" alt="" />
             </div>
             <div>
-              <h3 className="text-base font-semibold">Envelopes</h3>
+              <h3 className="text-base font-semibold tracking-tight">Envelopes</h3>
               <p className="text-xs text-muted-foreground">Spending categories — drained as you spend</p>
             </div>
           </div>
@@ -586,12 +585,12 @@ function AllocateView({
 
         {/* Vault */}
         <section className="space-y-3">
-          <div className="flex items-center gap-2 px-1">
-            <div className="w-9 h-9 rounded-lg bg-amber-50 text-amber-700 flex items-center justify-center">
-              <PiggyBank className="w-5 h-5" />
+          <div className="flex items-center gap-3 px-1">
+            <div className="w-9 h-9 rounded-lg bg-amber-50 flex items-center justify-center">
+              <img src="/illustration-vault.png" className="w-7 h-7 object-contain" alt="" />
             </div>
             <div>
-              <h3 className="text-base font-semibold">Vault</h3>
+              <h3 className="text-base font-semibold tracking-tight">Vault</h3>
               <p className="text-xs text-muted-foreground">Long-term goals — friction-locked</p>
             </div>
           </div>
@@ -789,6 +788,8 @@ export default function Budgets() {
   const [editing, setEditing] = useState<Record<string, string>>({});
   const [showAccountsPanel, setShowAccountsPanel] = useState(true);
   const [trialExpiredError, setTrialExpiredError] = useState(false);
+  const [resetSignal, setResetSignal] = useState(0);
+  const [confirmed, setConfirmed] = useState(false);
 
   const month = format(activeDate, "yyyy-MM");
   const monthLabel = format(activeDate, "MMMM yyyy");
@@ -829,29 +830,50 @@ export default function Budgets() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
-          <h1 className="text-3xl font-bold text-foreground tracking-tight">
-            {view === "allocate" ? "Allocate your gaji" : "Cash Flow Plan"}
-          </h1>
+          <h1 className="text-3xl font-bold text-foreground tracking-tight">Budgets</h1>
           <p className="text-muted-foreground">
             {view === "allocate"
-              ? "Drag from Available into Bank, Envelopes, or Vault."
+              ? "Allocate your gaji. Drag from Available into Bank, Envelopes, or Vault."
+              : view === "annual"
+              ? "Annual overview of your income and spending."
               : "Plan your income and spending each month."}
           </p>
         </div>
 
-        {view === "annual" ? (
-          <div className="flex items-center gap-2 bg-white border rounded-xl px-3 py-2">
-            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setActiveDate(d => subYears(d, 1))}><ChevronLeft className="w-4 h-4" /></Button>
-            <span className="text-sm font-semibold w-16 text-center">{year}</span>
-            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setActiveDate(d => addYears(d, 1))}><ChevronRight className="w-4 h-4" /></Button>
-          </div>
-        ) : (
-          <div className="flex items-center gap-2 bg-white border rounded-xl px-3 py-2">
-            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setActiveDate(d => subMonths(d, 1))}><ChevronLeft className="w-4 h-4" /></Button>
-            <span className="text-sm font-semibold w-32 text-center">{monthLabel}</span>
-            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setActiveDate(d => addMonths(d, 1))}><ChevronRight className="w-4 h-4" /></Button>
-          </div>
-        )}
+        <div className="flex items-center gap-2 flex-wrap">
+          {view === "allocate" && (
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => { setResetSignal(s => s + 1); setConfirmed(false); }}
+              >
+                Reset
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => { setConfirmed(true); setTimeout(() => setConfirmed(false), 3000); }}
+                className={confirmed ? "bg-emerald-600 hover:bg-emerald-600" : ""}
+              >
+                <Check className="w-3.5 h-3.5" />
+                {confirmed ? "Allocation saved!" : "Confirm allocation"}
+              </Button>
+            </>
+          )}
+          {view === "annual" ? (
+            <div className="flex items-center gap-2 bg-white border rounded-xl px-3 py-2">
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setActiveDate(d => subYears(d, 1))}><ChevronLeft className="w-4 h-4" /></Button>
+              <span className="text-sm font-semibold w-16 text-center">{year}</span>
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setActiveDate(d => addYears(d, 1))}><ChevronRight className="w-4 h-4" /></Button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 bg-white border rounded-xl px-3 py-2">
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setActiveDate(d => subMonths(d, 1))}><ChevronLeft className="w-4 h-4" /></Button>
+              <span className="text-sm font-semibold w-32 text-center">{monthLabel}</span>
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setActiveDate(d => addMonths(d, 1))}><ChevronRight className="w-4 h-4" /></Button>
+            </div>
+          )}
+        </div>
       </div>
 
       {trialExpiredError && <TrialExpiredPrompt action="set budgets" />}
@@ -876,6 +898,7 @@ export default function Budgets() {
       {view === "allocate" && categories && commitments && (
         <AllocateView
           month={month}
+          monthLabel={format(activeDate, "MMMM")}
           salary={salary}
           commitments={commitments ?? []}
           categories={categories ?? []}
@@ -883,6 +906,7 @@ export default function Budgets() {
           upsert={upsert}
           refetch={refetch}
           onTrialExpired={() => setTrialExpiredError(true)}
+          resetSignal={resetSignal}
         />
       )}
 

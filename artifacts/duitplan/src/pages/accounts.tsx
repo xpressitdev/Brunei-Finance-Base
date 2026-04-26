@@ -312,6 +312,9 @@ export default function Accounts() {
   const invalidate = () => qc.invalidateQueries({ queryKey: ["/api/accounts"] });
 
   const totalBalance = accounts.reduce((s, a) => s + parseFloat(a.balance ?? "0"), 0);
+  const assets      = accounts.filter(a => parseFloat(a.balance ?? "0") >= 0).reduce((s, a) => s + parseFloat(a.balance ?? "0"), 0);
+  const liabilities = accounts.filter(a => parseFloat(a.balance ?? "0") < 0).reduce((s, a) => s + Math.abs(parseFloat(a.balance ?? "0")), 0);
+  const netWorth    = assets - liabilities;
 
   function safeBalance(raw: string): string {
     const n = parseFloat(raw);
@@ -374,113 +377,209 @@ export default function Accounts() {
     );
   }
 
+  const BANK_COLORS: Record<string, string> = {
+    "BIBD": "#15a06e",
+    "Baiduri Bank": "#1e3a5f",
+    "Standard Chartered": "#0070f3",
+    "Citibank": "#003b7a",
+    "HSBC": "#c41230",
+    "Other": "#475569",
+  };
+  const bankColor = (a: Account) => {
+    if (a.type === "cash") return null;
+    return BANK_COLORS[a.bankName ?? ""] ?? "#475569";
+  };
+  const assetAccounts = accounts.filter(a => parseFloat(a.balance ?? "0") >= 0);
+  const totalAssetForComposition = assetAccounts.reduce((s, a) => s + parseFloat(a.balance ?? "0"), 0);
+
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">{t("accounts.title")}</h1>
-          <p className="text-muted-foreground">{t("accounts.subtitle")}</p>
+          <p className="text-muted-foreground">Your money, across every bank, card, and wallet.</p>
         </div>
-        <Button onClick={() => setAddOpen(true)} className="gap-2">
-          <Plus className="w-4 h-4" /> {t("accounts.addButton")}
-        </Button>
+        <div className="flex gap-2">
+          <Link href="/upload">
+            <Button variant="outline" className="gap-2 bg-white">
+              <Upload className="w-4 h-4" /> Import statement
+            </Button>
+          </Link>
+          <Button onClick={() => setAddOpen(true)} className="gap-2">
+            <Plus className="w-4 h-4" /> Link account
+          </Button>
+        </div>
       </div>
 
-      {/* Total balance summary */}
-      <Card className="border-primary/20 bg-primary/5">
-        <CardHeader className="flex flex-row items-center justify-between pb-2 pt-4 px-5">
-          <CardTitle className="text-xs font-medium text-primary uppercase tracking-wider">{t("accounts.totalBalance")}</CardTitle>
-          <Building2 className="w-4 h-4 text-primary" />
-        </CardHeader>
-        <CardContent className="px-5 pb-5">
-          <div className="text-3xl font-bold text-primary">{formatCurrency(totalBalance)}</div>
-          <p className="text-xs text-muted-foreground mt-1">
-            {accounts.length === 0
-              ? t("accounts.noAccounts")
-              : t("accounts.acrossAccounts", { count: accounts.length })}
-          </p>
+      {/* Net Worth hero strip */}
+      <Card className="border-primary/20 bg-primary/5 overflow-hidden">
+        <CardContent className="p-6">
+          <div className="grid md:grid-cols-3 gap-6 items-center">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-primary">Net Worth</p>
+              <div className="text-4xl font-bold text-primary mt-1 tabular-nums">{formatCurrency(netWorth)}</div>
+              <p className="text-xs text-muted-foreground mt-1.5">
+                across {accounts.length} account{accounts.length !== 1 ? "s" : ""}
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Assets</p>
+                <div className="text-xl font-bold text-emerald-700 mt-0.5 tabular-nums">{formatCurrency(assets)}</div>
+                <p className="text-[11px] text-muted-foreground">{assetAccounts.length} accounts</p>
+              </div>
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Liabilities</p>
+                <div className="text-xl font-bold text-rose-600 mt-0.5 tabular-nums">{formatCurrency(liabilities)}</div>
+                <p className="text-[11px] text-muted-foreground">{accounts.length - assetAccounts.length} accounts</p>
+              </div>
+            </div>
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">Composition</p>
+              <div className="flex h-2.5 rounded-full overflow-hidden shadow-inner bg-muted">
+                {assetAccounts.map(a => {
+                  const pct = totalAssetForComposition > 0 ? (parseFloat(a.balance ?? "0") / totalAssetForComposition) * 100 : 0;
+                  const color = bankColor(a) ?? "#94a3b8";
+                  return <div key={a.id} className="h-full" style={{ width: `${pct}%`, background: color }} title={a.name} />;
+                })}
+              </div>
+              <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2">
+                {assetAccounts.map(a => (
+                  <div key={a.id} className="flex items-center gap-1.5 text-[11px]">
+                    <span className="w-2 h-2 rounded-sm" style={{ background: bankColor(a) ?? "#94a3b8" }} />
+                    <span className="text-muted-foreground">{a.bankName ?? a.name}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </CardContent>
       </Card>
 
       {/* Account cards */}
-      {accounts.length === 0 ? (
-        <div className="rounded-2xl border-2 border-dashed border-muted py-16 text-center">
-          <div className="text-5xl mb-4">🏦</div>
-          <p className="font-semibold text-lg text-foreground mb-1">{t("accounts.noAccounts")}</p>
-          <p className="text-sm text-muted-foreground mb-6">
-            {t("accounts.noAccountsSub")}
-          </p>
-          <Button onClick={() => setAddOpen(true)} className="gap-2">
-            <Plus className="w-4 h-4" /> {t("accounts.addFirstAccount")}
-          </Button>
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-lg font-semibold tracking-tight">Your accounts</h2>
+          <span className="text-xs text-muted-foreground">{accounts.length} linked</span>
         </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {accounts.map(account => {
-            const typeInfo = getTypeInfo(account.type);
-            const Icon = typeInfo.icon;
-            return (
-              <Card key={account.id} className="shadow-sm border-muted group relative">
-                <CardContent className="p-5 flex flex-col gap-4">
-                  {/* Top row: icon + name + badge */}
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-center gap-3">
-                      <div className={cn("w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0", typeInfo.color)}>
-                        <Icon className="w-5 h-5" />
-                      </div>
+        {accounts.length === 0 ? (
+          <div className="rounded-2xl border-2 border-dashed border-muted py-16 text-center">
+            <div className="text-5xl mb-4">🏦</div>
+            <p className="font-semibold text-lg text-foreground mb-1">{t("accounts.noAccounts")}</p>
+            <p className="text-sm text-muted-foreground mb-6">{t("accounts.noAccountsSub")}</p>
+            <Button onClick={() => setAddOpen(true)} className="gap-2">
+              <Plus className="w-4 h-4" /> {t("accounts.addFirstAccount")}
+            </Button>
+          </div>
+        ) : (
+          <div className="grid sm:grid-cols-2 gap-4">
+            {accounts.map(account => {
+              const typeInfo   = getTypeInfo(account.type);
+              const Icon       = typeInfo.icon;
+              const cardColor  = bankColor(account);
+              const isCredit   = account.type === "credit";
+              const isCash     = account.type === "cash";
+              const bal        = parseFloat(account.balance ?? "0");
+              const utilPct    = 0; // creditLimit not tracked in schema yet
+
+              return (
+                <div
+                  key={account.id}
+                  className={cn(
+                    "relative rounded-2xl overflow-hidden p-5 shadow-sm group",
+                    "transition-all hover:shadow-md",
+                  )}
+                  style={{
+                    background: isCash
+                      ? "linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)"
+                      : cardColor
+                      ? `linear-gradient(135deg, ${cardColor} 0%, ${cardColor}dd 60%, ${cardColor}99 100%)`
+                      : "linear-gradient(135deg, #475569 0%, #334155 100%)",
+                    color: isCash ? "hsl(var(--foreground))" : "white",
+                    minHeight: 170,
+                  }}
+                >
+                  {/* dot pattern overlay */}
+                  <div className="absolute inset-0 opacity-[.05] pointer-events-none"
+                    style={{ backgroundImage: "radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)", backgroundSize: "12px 12px" }} />
+
+                  <div className="relative flex flex-col h-full justify-between gap-4">
+                    {/* Top */}
+                    <div className="flex items-start justify-between">
                       <div>
-                        <p className="font-semibold text-sm leading-tight">{account.name}</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">{account.bankName ?? "—"}</p>
+                        <div className={cn("text-[10px] font-bold uppercase tracking-[0.18em]", isCash ? "text-muted-foreground" : "opacity-70")}>
+                          {account.bankName ?? "—"}
+                        </div>
+                        <div className={cn("text-sm font-semibold mt-0.5", isCash ? "" : "")}>{account.name}</div>
+                      </div>
+                      <div className={isCash ? "text-muted-foreground" : "opacity-80"}>
+                        <Icon className="w-7 h-7" />
                       </div>
                     </div>
-                    <Badge variant="secondary" className={cn("text-xs shrink-0", typeInfo.color)}>
-                      {t(`accounts.types.${account.type}`)}
-                    </Badge>
+
+                    {/* Balance */}
+                    <div>
+                      <div className={cn("text-[10px] uppercase tracking-wider font-semibold", isCash ? "text-muted-foreground" : "opacity-70")}>
+                        {isCredit ? "Outstanding" : "Balance"}
+                      </div>
+                      <div className={cn("text-2xl font-bold tabular-nums mt-0.5", isCredit && !isCash ? "text-rose-200" : "")}>
+                        {formatCurrency(Math.abs(bal))}
+                      </div>
+                      {isCredit && utilPct > 0 && (
+                        <div className="mt-1.5">
+                          <div className={cn("h-1 rounded-full overflow-hidden w-32", isCash ? "bg-muted" : "bg-white/20")}>
+                            <div className={cn("h-full rounded-full", isCash ? "bg-primary" : "bg-white/80")} style={{ width: `${utilPct}%` }} />
+                          </div>
+                          <div className={cn("text-[10px] mt-1 tabular-nums", isCash ? "text-muted-foreground" : "opacity-80")}>
+                            {Math.round(utilPct)}% utilised
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
-                  {/* Balance */}
-                  <div className="text-2xl font-bold">{formatCurrency(account.balance)}</div>
-
-                  {/* Actions */}
-                  <div className="flex items-center gap-2 pt-1 border-t">
-                    <Link href="/upload" className="flex-1">
-                      <Button variant="outline" size="sm" className="w-full gap-1.5 text-xs">
-                        <Upload className="w-3 h-3" /> {t("accounts.importStatement")}
-                      </Button>
-                    </Link>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-muted-foreground hover:text-primary"
+                  {/* Hover action row */}
+                  <div className="absolute inset-x-0 bottom-0 flex items-center justify-end gap-1 p-2 opacity-0 group-hover:opacity-100 transition-opacity bg-black/10 rounded-b-2xl">
+                    <button
+                      className="h-7 w-7 rounded flex items-center justify-center text-white/80 hover:text-white hover:bg-white/20"
                       title="Balance history"
                       onClick={() => setHistoryAccount(account)}
                     >
                       <BarChart2 className="w-3.5 h-3.5" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                    </button>
+                    <button
+                      className="h-7 w-7 rounded flex items-center justify-center text-white/80 hover:text-white hover:bg-white/20"
                       onClick={() => setEditAccount(account)}
                     >
                       <Pencil className="w-3.5 h-3.5" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                    </button>
+                    <button
+                      className="h-7 w-7 rounded flex items-center justify-center text-white/80 hover:text-rose-300 hover:bg-white/20"
                       onClick={() => setDeleteAccount(account)}
                     >
                       <Trash2 className="w-3.5 h-3.5" />
-                    </Button>
+                    </button>
                   </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      )}
+                </div>
+              );
+            })}
+
+            {/* Link another account */}
+            <button
+              onClick={() => setAddOpen(true)}
+              className="rounded-2xl border-2 border-dashed border-muted p-5 min-h-[170px]
+                         flex flex-col items-center justify-center gap-2 text-muted-foreground
+                         hover:border-primary hover:text-primary hover:bg-primary/5
+                         transition-colors group"
+            >
+              <Plus className="w-5 h-5" />
+              <div className="text-sm font-semibold">Link another account</div>
+              <div className="text-[11px]">BIBD · Baiduri · Standard Chartered · HSBC</div>
+            </button>
+          </div>
+        )}
+      </div>
 
       {/* Balance history dialog */}
       <Dialog open={!!historyAccount} onOpenChange={open => { if (!open) setHistoryAccount(null); }}>
