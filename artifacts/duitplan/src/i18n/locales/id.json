@@ -1090,5 +1090,30 @@
     },
     "shareInsight": "Bagikan wawasan",
     "share": "Bagikan"
+  },
+  "feedback": {
+    "button": "Masukan",
+    "title": "Bagikan masukan Anda",
+    "categoryLabel": "Jenis",
+    "categories": {
+      "bug": "🐛 Bug",
+      "feature": "💡 Permintaan fitur",
+      "general": "💬 Umum",
+      "praise": "🙌 Pujian"
+    },
+    "ratingLabel": "Pengalaman keseluruhan (opsional)",
+    "messageLabel": "Pesan",
+    "messagePlaceholder": "Ceritakan pendapat Anda...",
+    "emailLabel": "Email (opsional, untuk tindak lanjut)",
+    "emailPlaceholder": "anda@email.com",
+    "includeAccount": "Sertakan informasi akun saya dalam masukan ini",
+    "anonymousNote": "Masukan Anda dikirim secara anonim.",
+    "submit": "Kirim masukan",
+    "submitting": "Mengirim...",
+    "success": {
+      "title": "Terima kasih atas masukan Anda!",
+      "subtitle": "Kami membaca setiap kiriman dan menggunakannya untuk meningkatkan DuitPlan.",
+      "close": "Tutup"
+    }
   }
 }

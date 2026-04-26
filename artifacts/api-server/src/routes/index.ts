@@ -22,6 +22,7 @@ import receiptRouter from "./receipt";
 import storageRouter from "./storage";
 import agentRouter from "./agent";
 import paydayPromptRouter from "./payday-prompt";
+import feedbackRouter from "./feedback";
 
 const router: IRouter = Router();
 
@@ -48,5 +49,6 @@ router.use(receiptRouter);
 router.use(storageRouter);
 router.use(agentRouter);
 router.use(paydayPromptRouter);
+router.use(feedbackRouter);
 
 export default router;

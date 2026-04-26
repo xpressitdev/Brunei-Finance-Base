@@ -1090,5 +1090,30 @@
     },
     "shareInsight": "Share insight",
     "share": "Share"
+  },
+  "feedback": {
+    "button": "Feedback",
+    "title": "Share your feedback",
+    "categoryLabel": "Type",
+    "categories": {
+      "bug": "🐛 Bug",
+      "feature": "💡 Feature request",
+      "general": "💬 General",
+      "praise": "🙌 Praise"
+    },
+    "ratingLabel": "Overall experience (optional)",
+    "messageLabel": "Message",
+    "messagePlaceholder": "Tell us what you think...",
+    "emailLabel": "Email (optional, for follow-up)",
+    "emailPlaceholder": "your@email.com",
+    "includeAccount": "Attach my account info to this feedback",
+    "anonymousNote": "Your feedback is submitted anonymously.",
+    "submit": "Send feedback",
+    "submitting": "Sending...",
+    "success": {
+      "title": "Thanks for your feedback!",
+      "subtitle": "We read every submission and use it to improve DuitPlan.",
+      "close": "Close"
+    }
   }
 }

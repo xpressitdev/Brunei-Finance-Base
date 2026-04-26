@@ -1090,5 +1090,30 @@
     },
     "shareInsight": "Kongsi wawasan",
     "share": "Kongsi"
+  },
+  "feedback": {
+    "button": "Maklum Balas",
+    "title": "Kongsi maklum balas anda",
+    "categoryLabel": "Jenis",
+    "categories": {
+      "bug": "🐛 Pepijat",
+      "feature": "💡 Cadangan ciri",
+      "general": "💬 Umum",
+      "praise": "🙌 Pujian"
+    },
+    "ratingLabel": "Pengalaman keseluruhan (pilihan)",
+    "messageLabel": "Mesej",
+    "messagePlaceholder": "Kongsikan pendapat anda...",
+    "emailLabel": "E-mel (pilihan, untuk susulan)",
+    "emailPlaceholder": "anda@emel.com",
+    "includeAccount": "Sertakan maklumat akaun saya dalam maklum balas ini",
+    "anonymousNote": "Maklum balas anda dihantar secara tanpa nama.",
+    "submit": "Hantar maklum balas",
+    "submitting": "Menghantar...",
+    "success": {
+      "title": "Terima kasih atas maklum balas anda!",
+      "subtitle": "Kami membaca setiap hantar dan menggunakannya untuk meningkatkan DuitPlan.",
+      "close": "Tutup"
+    }
   }
 }

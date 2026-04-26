@@ -8,6 +8,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { DevRegionProvider } from "@/lib/devRegion";
 import { DevRegionIndicator } from "@/components/DevRegionIndicator";
 import { I18nProvider } from "@/i18n/I18nProvider";
+import { FeedbackWidget } from "@/components/FeedbackWidget";
 
 // Pages
 import Landing from "@/pages/landing";
@@ -113,6 +114,7 @@ function App() {
             <AuthProvider>
               <I18nProvider>
                 <Router />
+                <FeedbackWidget />
               </I18nProvider>
             </AuthProvider>
           </WouterRouter>
