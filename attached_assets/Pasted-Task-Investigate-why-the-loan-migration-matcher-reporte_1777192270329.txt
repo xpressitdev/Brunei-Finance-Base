@@ -1,0 +1,68 @@
+Task: Investigate why the loan migration matcher reported "convert" for both car_loan commitments when a matching car_loan debt already exists
+Context:
+The dry-run for Milestone 1.5 reported these results for user pengiranabdulhakem@gmail.com:
+Total affected users: 1
+TO DELETE: 0
+TO CONVERT: 2 — both car_loan commitments would become Debt rows
+Anomalies: 1 — user has 2 duplicate car_loan commitments
+But this user is known to have an existing car_loan row in the debts table (BND 18,000 outstanding balance, BND 450 monthly_payment). The expected behavior was for at least one (or both) of the commitments to match the existing debt and be marked for DELETE, not CONVERT.
+The fact that the matcher reported "convert" for both suggests the matching logic isn't recognizing the existing debt row. This needs investigation before we can trust the migration to run on real users in the future.
+
+What I need you to do — investigation only, NO data changes
+Step 1: Inspect actual data for the test user
+For user pengiranabdulhakem@gmail.com, run these queries (or equivalent ORM operations) and paste the raw results:
+
+List all rows in commitments table for this user where type is one of car_loan, personal_loan, house_financing, credit_card. Show ALL columns.
+List all rows in debts table for this user where type is one of car_loan, personal_loan, house_financing, credit_card. Show ALL columns.
+For both tables, show the schema definition (column name, type, nullability) for the columns that the matcher uses to compare rows. Specifically:
+
+The category/type column (whatever it's called in each table)
+The monthly payment column (whatever it's called in each table)
+The user_id column
+
+
+
+Step 2: Show me the matcher code
+Paste the actual code that does the matching logic in the migration script. The function/block that decides whether a given commitment row "matches" an existing debt row. I want to read it line by line.
+Step 3: Walk through the matcher manually for one of the test user's commitments
+Pick the first car_loan commitment for this user. Walk through what the matcher code does step-by-step:
+
+What value does it read from the commitment row for the type comparison?
+What value does it read from the debt row for the type comparison?
+Are they equal? If not, why not?
+Same exercise for monthly_payment comparison
+Same for user_id matching
+
+Show me where the comparison fails and what the actual values are.
+Step 4: Diagnose the root cause
+Based on the inspection, identify the cause:
+
+Is it a column name mismatch (e.g., category vs type)?
+Is it an enum/string case mismatch (e.g., car_loan vs CAR_LOAN)?
+Is it a data type mismatch (e.g., decimal precision, number vs string)?
+Is it that the matcher doesn't handle "N commitments + 1 debt" cases?
+Is it something else?
+
+Step 5: Recommend a fix (do NOT implement yet)
+Based on your diagnosis, describe what the fix would look like. But DO NOT modify the migration code. We'll evaluate the fix together before any changes.
+
+STRICT scope boundaries — do NOT do any of the following:
+
+Do NOT modify the migration code in this prompt
+Do NOT run the migration in any mode (dry-run or destructive)
+Do NOT modify any commitments or debts data
+Do NOT modify the schema
+Do NOT modify other parts of the app to "improve" them
+Do NOT add new tests or new features
+
+This is a read-only investigation. Find the bug, explain it clearly, propose a fix. We'll do the fix in a separate prompt after I review.
+
+Report back with:
+
+Raw data: all commitment rows and debt rows for the test user with all columns
+Schema info for the relevant columns in both tables
+The matcher code (paste it directly)
+Step-by-step walkthrough of the matcher running on one specific commitment row, showing where the match fails and why
+Root cause diagnosis (one or more of the possibilities above, or something I haven't listed)
+Proposed fix description (high-level, not code)
+Whether you suspect this same bug would affect any other users beyond the test account
