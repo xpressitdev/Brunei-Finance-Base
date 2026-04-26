@@ -87,7 +87,12 @@
     },
     "empty": {
       "noExpenses": "Tiada perbelanjaan untuk {{month}}",
-      "tapHint": "Ketik butang kamera untuk mengambil resit, atau butang + untuk tambah secara manual."
+      "title": "Mula jejak perbelanjaan anda",
+      "subtitle": "Tambah perbelanjaan pertama anda untuk {{month}}"
+    },
+    "actions": {
+      "snapReceipt": "Imbas Resit",
+      "addManually": "Tambah Manual"
     },
     "addDialog": {
       "title": "Tambah Perbelanjaan",

@@ -87,7 +87,12 @@
     },
     "empty": {
       "noExpenses": "Tidak ada pengeluaran untuk {{month}}",
-      "tapHint": "Ketuk tombol kamera untuk memindai kwitansi, atau tombol + untuk menambahkan secara manual."
+      "title": "Mulai lacak pengeluaranmu",
+      "subtitle": "Tambahkan pengeluaran pertamamu untuk {{month}}"
+    },
+    "actions": {
+      "snapReceipt": "Pindai Struk",
+      "addManually": "Tambah Manual"
     },
     "addDialog": {
       "title": "Tambah Pengeluaran",

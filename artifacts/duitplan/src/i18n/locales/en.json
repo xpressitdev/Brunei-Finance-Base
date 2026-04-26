@@ -87,7 +87,12 @@
     },
     "empty": {
       "noExpenses": "No expenses for {{month}}",
-      "tapHint": "Tap the camera button to snap a receipt, or the + button to add manually."
+      "title": "Start tracking your expenses",
+      "subtitle": "Add your first expense for {{month}}"
+    },
+    "actions": {
+      "snapReceipt": "Snap Receipt",
+      "addManually": "Add Manually"
     },
     "addDialog": {
       "title": "Add Expense",

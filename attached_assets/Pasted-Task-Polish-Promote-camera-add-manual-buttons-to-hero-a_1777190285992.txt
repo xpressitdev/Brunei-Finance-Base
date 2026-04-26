@@ -1,0 +1,155 @@
+Task: Polish — Promote camera/add-manual buttons to hero actions on the Expense Tracker page
+The Expense Tracker page is the most-used page in DuitPlan. Its two primary actions — "Snap Receipt" (AI receipt scanning) and "Add Manually" (manual transaction entry) — are currently hidden as floating action buttons in the bottom-right corner, where they collide with the Feedback widget. They should be hero-prominent, not corner-tucked.
+Read these files first to understand existing conventions:
+
+The Expense Tracker page (src/pages/ExpenseTracker.tsx or similar)
+The existing camera/receipt scanning flow (find the click handler for the camera FAB)
+The existing manual-add modal (find the click handler for the + FAB)
+src/i18n/locales/en.json, ms.json, id.json (existing keys, terminology — expenseTracker.* namespace)
+
+
+What we're building
+Two changes that work together:
+
+A persistent action bar at the top of the Expense Tracker page, right under the title — always visible, regardless of whether the user has expenses or not.
+A redesigned empty state with hero-sized action buttons centered, replacing the small helper text.
+Removal of the existing bottom-right floating action buttons (the camera and + buttons) on this page only. They become redundant once the new buttons exist.
+
+The functionality of both actions stays exactly the same — only their visual placement and prominence changes.
+
+Step 1: Add the persistent action bar
+Below the page header (<h1>Expense Tracker</h1> and the "Track every transaction" subtitle), and ABOVE the stats cards (Today / Month Expenses / Month Income), insert a horizontal action bar containing two buttons side-by-side.
+Layout:
+Expense Tracker
+Track every transaction
+
+┌─────────────────────────┐  ┌─────────────────────────┐
+│  📷  Snap Receipt        │  │  ➕  Add Manually        │
+└─────────────────────────┘  └─────────────────────────┘
+
+[Today]    [Month Expenses]   [Month Income]
+Visual specs:
+
+Two buttons in a row, equal width, generous padding (e.g., py-4 px-6 in tailwind terms)
+Primary action is "Snap Receipt" — use the brand green background, white text, camera icon
+Secondary action is "Add Manually" — use a lighter/outlined style, dark text, plus icon
+Both buttons have rounded corners (matching existing brand button rounding)
+Icons from lucide-react: Camera (or ScanLine) and Plus
+On mobile: stack vertically (full width each)
+On desktop: side-by-side, max-width that matches the stats cards row below
+
+Behavior:
+
+"Snap Receipt" click handler → reuse the existing camera/receipt-scanning logic (find what the bottom-right camera FAB currently does, and call the same function)
+"Add Manually" click handler → reuse the existing manual-add modal logic
+Translation keys: use existing expenseTracker.* keys if they exist for these actions, or add:
+
+expenseTracker.actions.snapReceipt → "Snap Receipt" / "Imbas Resit" (MS) / "Pindai Struk" (ID)
+expenseTracker.actions.addManually → "Add Manually" / "Tambah Manual" (MS) / "Tambah Manual" (ID)
+
+
+
+
+Step 2: Redesign the empty state
+The current empty state shows:
+
+Receipt icon
+Heading: "No expenses for April 2026"
+Helper text: "Tap the camera button to snap a receipt, or the + button to add manually."
+
+Replace this with:
+Layout:
+         [Receipt icon, larger]
+
+     Start tracking your expenses
+     Add your first expense for April 2026
+
+  ┌────────────────────┐  ┌────────────────────┐
+  │  📷  Snap Receipt  │  │  ➕  Add Manually  │
+  └────────────────────┘  └────────────────────┘
+Visual specs:
+
+Receipt icon stays (or use a more inviting empty-state illustration if one exists)
+Heading is action-oriented, not state-descriptive
+Subheading shows current month for context
+Two buttons centered, slightly smaller than the page-top action bar but still hero-sized (e.g., py-3 px-5)
+Same color treatment as the top action bar (green primary, outlined secondary)
+The helper text "Tap the camera button..." is REMOVED — the buttons themselves communicate the actions
+Click handlers are the same as the top action bar (reuse the same functions)
+
+New translation keys:
+
+expenseTracker.empty.title → "Start tracking your expenses" / "Mula jejak perbelanjaan anda" / "Mulai lacak pengeluaranmu"
+expenseTracker.empty.subtitle → "Add your first expense for {{month}} {{year}}" / "Tambah perbelanjaan pertama anda untuk {{month}} {{year}}" / "Tambahkan pengeluaran pertamamu untuk {{month}} {{year}}"
+
+Remove the old expenseTracker.empty.helperText key (or whatever the current key is for "Tap the camera button..." text).
+
+Step 3: Remove the bottom-right floating action buttons
+Find where the floating camera and + buttons are rendered (likely a fixed-position div at the bottom-right of the Expense Tracker page). Remove this UI entirely.
+Important scope note: these floating buttons are ONLY on the Expense Tracker page. Do NOT remove similar floating buttons that may exist on other pages (Transactions, Dashboard, etc.). This change is scoped to Expense Tracker only.
+If the FAB component is shared (e.g., a <FloatingActionButtons /> component used in multiple places), don't delete the component — just remove its usage from the Expense Tracker page.
+The Feedback button (bottom-right) is unrelated and should remain.
+
+Step 4: Verify translations
+Three new translation keys (actions.snapReceipt, actions.addManually, empty.title, empty.subtitle) need to be added to all three locale files: en.json, ms.json, id.json.
+Maintain consistency with existing terminology. Don't translate "Snap" or "Receipt" word-for-word — use natural local equivalents:
+
+Malay (MS): "Imbas Resit" (Scan Receipt — natural Malay), "Tambah Manual" (Add Manual — common loanword usage)
+Indonesian (ID): "Pindai Struk" (Scan Receipt — natural Indonesian), "Tambah Manual" (same as MS, works in both)
+
+Note: "Resit" (MS) vs "Struk" (ID) is a real distinction — both mean receipt but each language has its preferred term. Don't conflate them.
+
+STRICT scope boundaries — do NOT do any of the following:
+
+Do NOT modify the receipt-scanning logic itself (we're just changing how it's invoked)
+Do NOT modify the manual-add transaction modal
+Do NOT modify the stats cards (Today / Month Expenses / Month Income)
+Do NOT modify any other page (this is Expense Tracker only)
+Do NOT remove or modify the Feedback button
+Do NOT change the page header copy or page title
+Do NOT add any new functionality (no bulk import, no quick-add presets, nothing new)
+Do NOT change the routing or URL of the page
+Do NOT touch the floating buttons on other pages even if they look similar
+
+If you find that you'd need to refactor a shared component to scope this change properly, that's fine — just don't break other pages while doing it.
+
+Verification before reporting complete:
+
+Visit Expense Tracker as a user with NO expenses (empty state):
+
+See the receipt icon, "Start tracking your expenses" heading, subtitle with current month
+See two large buttons (Snap Receipt + Add Manually) centered below
+Old helper text is gone
+No floating buttons in bottom-right
+
+
+Visit Expense Tracker as a user WITH expenses:
+
+See the page header
+Below header: see persistent action bar with two buttons (Snap Receipt + Add Manually)
+Below that: stats cards (Today / Month Expenses / Month Income)
+Below that: the existing transaction list
+No floating buttons in bottom-right
+
+
+Click "Snap Receipt" (top action bar) → camera/scan flow opens normally
+Click "Add Manually" (top action bar) → manual transaction modal opens normally
+Click "Snap Receipt" (empty state, when no expenses) → same camera/scan flow
+Click "Add Manually" (empty state, when no expenses) → same manual modal
+Confirm Feedback button is still in bottom-right, unchanged
+Confirm OTHER pages (Dashboard, Transactions, etc.) still have their floating buttons if they had them before — only Expense Tracker is changed
+Test all 3 languages: English, Malay, Indonesian — translations correct in both action bar and empty state
+Mobile responsive: buttons stack vertically on narrow screens, no horizontal overflow
+Test on production domain (duitplan.com) after change — no regressions on real domain
+
+
+Report back with:
+
+Files modified (component file, locale files)
+Confirmation that floating buttons were removed ONLY from Expense Tracker (not other pages)
+Confirmation that the click handlers reuse the existing camera/manual-add functions (no new logic)
+New translation keys added (4 keys × 3 languages = 12)
+Old translation keys removed (helper text)
+Verification results across all 11 test scenarios
+Screenshot of empty state and populated state in English, so we can spot-check visual quality
+Any unexpected complications

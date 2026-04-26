@@ -364,6 +364,11 @@ export default function Expenses() {
   const monthLabel = formatMonthYear(currentMonth + "-01");
   const isCurrentMonth = currentMonth === format(new Date(), "yyyy-MM");
 
+  const handleSnapReceipt = () => {
+    openAdd();
+    setTimeout(() => cameraInputRef.current?.click(), 100);
+  };
+
   return (
     <div className="space-y-6 animate-in fade-in duration-500 pb-24">
       {/* Header */}
@@ -381,6 +386,27 @@ export default function Expenses() {
             <ChevronRight className="w-4 h-4" />
           </Button>
         </div>
+      </div>
+
+      {/* Action bar */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <Button
+          size="lg"
+          className="h-14 gap-2 text-base"
+          onClick={handleSnapReceipt}
+        >
+          <Camera className="w-5 h-5" />
+          {t("expenseTracker.actions.snapReceipt")}
+        </Button>
+        <Button
+          size="lg"
+          variant="outline"
+          className="h-14 gap-2 text-base bg-white"
+          onClick={() => openAdd()}
+        >
+          <Plus className="w-5 h-5" />
+          {t("expenseTracker.actions.addManually")}
+        </Button>
       </div>
 
       {/* Summary cards */}
@@ -414,9 +440,28 @@ export default function Expenses() {
       {/* Transaction list */}
       {sortedDays.length === 0 ? (
         <div className="bg-card border rounded-xl p-12 text-center">
-          <Receipt className="w-12 h-12 text-muted-foreground/40 mx-auto mb-4" />
-          <p className="text-muted-foreground font-medium">{t("expenseTracker.empty.noExpenses", { month: monthLabel })}</p>
-          <p className="text-sm text-muted-foreground/70 mt-1">{t("expenseTracker.empty.tapHint")}</p>
+          <Receipt className="w-16 h-16 text-muted-foreground/30 mx-auto mb-4" />
+          <p className="text-lg font-semibold text-foreground mb-1">{t("expenseTracker.empty.title")}</p>
+          <p className="text-sm text-muted-foreground mb-6">{t("expenseTracker.empty.subtitle", { month: monthLabel })}</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-sm mx-auto">
+            <Button
+              size="lg"
+              className="h-12 gap-2"
+              onClick={handleSnapReceipt}
+            >
+              <Camera className="w-5 h-5" />
+              {t("expenseTracker.actions.snapReceipt")}
+            </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              className="h-12 gap-2 bg-white"
+              onClick={() => openAdd()}
+            >
+              <Plus className="w-5 h-5" />
+              {t("expenseTracker.actions.addManually")}
+            </Button>
+          </div>
         </div>
       ) : (
         <div className="space-y-4">
@@ -477,29 +522,6 @@ export default function Expenses() {
           })}
         </div>
       )}
-
-      {/* Floating action buttons */}
-      <div className="fixed bottom-6 right-6 flex flex-col gap-3 z-50">
-        <Button
-          size="icon"
-          className="h-14 w-14 rounded-full shadow-xl bg-white border-2 border-primary text-primary hover:bg-primary hover:text-white transition-all"
-          onClick={() => {
-            openAdd();
-            setTimeout(() => cameraInputRef.current?.click(), 100);
-          }}
-          title="Scan a receipt"
-        >
-          <Camera className="w-6 h-6" />
-        </Button>
-        <Button
-          size="icon"
-          className="h-14 w-14 rounded-full shadow-xl"
-          onClick={() => openAdd()}
-          title="Add expense manually"
-        >
-          <Plus className="w-6 h-6" />
-        </Button>
-      </div>
 
       {/* Hidden camera/file inputs */}
       <input
