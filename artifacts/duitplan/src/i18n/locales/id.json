@@ -976,6 +976,7 @@
     "commitments": {
       "title": "Komitmen tetap bulanan",
       "subtitle": "Pilih yang berlaku untuk Anda, lalu masukkan jumlah bulanannya.",
+      "loansHelperNote": "Punya cicilan mobil, KPR, atau utang kartu kredit? Kamu bisa tambahkan di langkah berikutnya — kami akan lacak progres pelunasanmu.",
       "amountHeader": "Masukkan jumlah bulanan ({{currency}})",
       "addCustom": "Tambah komitmen kustom",
       "customLabel": "Label",
@@ -1119,6 +1120,14 @@
       "title": "Terima kasih atas masukan Anda!",
       "subtitle": "Kami membaca setiap kiriman dan menggunakannya untuk meningkatkan DuitPlan.",
       "close": "Tutup"
+    }
+  },
+  "migration": {
+    "commitmentToDebt": {
+      "title": "Kami telah meningkatkan cara pelacakan pinjaman!",
+      "body": "{{loanName}} telah dipindahkan dari Komitmen ke Utang. Tambahkan saldo yang tersisa agar kami bisa menampilkan progres pelunasanmu.",
+      "update": "Perbarui {{loanName}}",
+      "dismiss": "Mengerti"
     }
   }
 }

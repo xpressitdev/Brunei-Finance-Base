@@ -9,6 +9,7 @@ import { DevRegionProvider } from "@/lib/devRegion";
 import { DevRegionIndicator } from "@/components/DevRegionIndicator";
 import { I18nProvider } from "@/i18n/I18nProvider";
 import { FeedbackWidget } from "@/components/FeedbackWidget";
+import { MigrationNoticeBanner } from "@/components/MigrationNoticeBanner";
 
 // Pages
 import Landing from "@/pages/landing";
@@ -115,6 +116,7 @@ function App() {
               <I18nProvider>
                 <Router />
                 <FeedbackWidget />
+                <MigrationNoticeBanner />
               </I18nProvider>
             </AuthProvider>
           </WouterRouter>

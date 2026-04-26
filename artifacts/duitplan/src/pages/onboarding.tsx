@@ -21,16 +21,12 @@ const TOTAL_STEPS = 6;
 // ── Preset definitions (id + icon only; labels come from i18n) ───────────────
 
 const COMMITMENT_PRESETS = [
-  { id: "car_loan", icon: "🚗" },
-  { id: "personal_loan", icon: "💰" },
-  { id: "house_financing", icon: "🏠" },
   { id: "rent", icon: "🏢" },
   { id: "utilities", icon: "💡" },
   { id: "internet_phone", icon: "📱" },
   { id: "insurance_takaful", icon: "🛡️" },
   { id: "family_support", icon: "👨‍👩‍👧" },
   { id: "school_fees", icon: "📚" },
-  { id: "credit_card", icon: "💳" },
   { id: "childcare", icon: "👶" },
   { id: "subscription", icon: "📺" },
 ];
@@ -329,6 +325,11 @@ export default function Onboarding() {
                 <div className="mb-6">
                   <h2 className="text-2xl font-bold mb-2">{t('onboarding.commitments.title')}</h2>
                   <p className="text-muted-foreground">{t('onboarding.commitments.subtitle')}</p>
+                </div>
+
+                <div className="flex items-start gap-2 bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 mb-4 text-sm text-blue-800">
+                  <span className="mt-0.5 shrink-0">💡</span>
+                  <span>{t('onboarding.commitments.loansHelperNote')}</span>
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">

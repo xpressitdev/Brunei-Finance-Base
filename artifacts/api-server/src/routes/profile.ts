@@ -22,6 +22,7 @@ router.get("/profile", requireAuth, async (req: AuthenticatedRequest, res): Prom
     language: profile.language,
     payday: profile.payday,
     monthlyIncome: profile.monthlyIncome,
+    migrationNoticeDismissed: profile.migrationNoticeDismissed ?? false,
     createdAt: profile.createdAt.toISOString(),
     updatedAt: profile.updatedAt.toISOString(),
   });
@@ -62,6 +63,11 @@ router.put("/profile", requireAuth, async (req: AuthenticatedRequest, res): Prom
     createdAt: updated.createdAt.toISOString(),
     updatedAt: updated.updatedAt.toISOString(),
   });
+});
+
+router.post("/profile/dismiss-migration-notice", requireAuth, async (req: AuthenticatedRequest, res): Promise<void> => {
+  await db.update(profilesTable).set({ migrationNoticeDismissed: true }).where(eq(profilesTable.userId, req.userId!));
+  res.json({ ok: true });
 });
 
 export default router;

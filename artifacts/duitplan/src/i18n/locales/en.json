@@ -976,6 +976,7 @@
     "commitments": {
       "title": "Monthly fixed commitments",
       "subtitle": "Select the ones that apply to you, then enter the monthly amount.",
+      "loansHelperNote": "Have a car loan, house financing, or credit card debt? You'll add those in the next step — we'll track payoff progress for you.",
       "amountHeader": "Enter monthly amounts ({{currency}})",
       "addCustom": "Add a custom commitment",
       "customLabel": "Label",
@@ -1119,6 +1120,14 @@
       "title": "Thanks for your feedback!",
       "subtitle": "We read every submission and use it to improve DuitPlan.",
       "close": "Close"
+    }
+  },
+  "migration": {
+    "commitmentToDebt": {
+      "title": "We've improved how we track loans!",
+      "body": "{{loanName}} has been moved from Commitments to Debts. Please add the outstanding balance so we can show your payoff progress accurately.",
+      "update": "Update {{loanName}}",
+      "dismiss": "Got it"
     }
   }
 }

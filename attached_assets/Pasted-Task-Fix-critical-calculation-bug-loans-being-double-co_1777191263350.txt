@@ -1,0 +1,185 @@
+Task: Fix critical calculation bug — loans being double-counted as both Commitments AND Debts
+Severity: LAUNCH BLOCKER. This bug corrupts the headline "Remaining this month" number on every user's Dashboard. It must ship before any soft-launch.
+
+The bug
+Step 3 (Monthly fixed commitments) and Step 5 (Loans & financing) of onboarding both expose the same loan tiles: Car Loan, Personal Loan, House Financing, Credit Card. They write to two different tables (commitments and debts). The Dashboard's "Fixed Commitments" KPI sums the commitments table; the "Remaining this month" calculation subtracts both commitments AND debt repayments independently. Result: any loan declared in both gets subtracted twice from Remaining.
+Reproduction:
+
+Sign up as a new user
+In onboarding Step 3, click the "Car Loan" tile and enter BND 450
+Continue to Step 5, click the "Car Loan" tile and enter Monthly Payment BND 450 + Outstanding Balance BND 18,000
+Finish onboarding and go to the Dashboard
+
+Expected: Fixed Commitments shows BND 450 (or 0, depending on model)
+Actual: Fixed Commitments shows BND 900 — same Car Loan counted twice
+The Commitments page also shows two separate "Car Loan" entries, both BND 450.
+
+Root cause
+The data model conflates two distinct concepts:
+
+Commitments = recurring bills owed to vendors/services (rent, utilities, subscriptions, family support)
+Debts = money owed to lenders that has a balance and a payoff date (car loan, mortgage, credit card, personal loan)
+
+Loans got accidentally exposed in both places during onboarding, and the calculation logic on Dashboard counts each table independently.
+
+The fix — three changes
+Change 1 — Remove loan tiles from Step 3 (Commitments)
+In the Step 3 tile grid, remove these four tiles entirely:
+
+Car Loan
+Personal Loan
+House Financing
+Credit Card
+
+Keep these tiles (do not modify):
+
+Rent
+Utilities
+Internet/Phone
+Insurance/Takaful
+Family Support
+School Fees
+Childcare
+Subscriptions
+"Add a custom commitment" option
+
+Add a helper note above the Step 3 tile grid:
+Have a car loan, house financing, or credit card debt? You'll add those in the next step — we'll track payoff progress for you.
+Translation keys for the helper note:
+
+onboarding.step3.loansHelperNote.en → "Have a car loan, house financing, or credit card debt? You'll add those in the next step — we'll track payoff progress for you."
+onboarding.step3.loansHelperNote.ms → "Ada pinjaman kereta, pembiayaan rumah, atau hutang kad kredit? Anda boleh tambah itu di langkah seterusnya — kami akan jejak kemajuan pembayaran untuk anda."
+onboarding.step3.loansHelperNote.id → "Punya cicilan mobil, KPR, atau utang kartu kredit? Kamu bisa tambahkan di langkah berikutnya — kami akan lacak progres pelunasanmu."
+
+Change 2 — Verify Step 5 writes only to debts
+Step 5 is presumed correctly wired but please verify before completing:
+
+Step 5 writes ONLY to the debts table
+Step 5 does NOT write to the commitments table under any circumstance
+
+If Step 5 is currently writing to both, that's an additional bug to fix here.
+Change 3 — One-time data migration to clean up existing users
+Write a migration that processes affected users to clean up the duplicate state.
+Migration logic:
+For each user, find commitments whose type/category matches one of: car_loan, personal_loan, house_financing, credit_card. (Use the actual category enum values from the schema — these are illustrative names.)
+For each such commitment row:
+
+If the same user has a matching debt row for the same loan type with the same monthly_payment: delete the commitment row (the debt row is the source of truth)
+If the same user has NO matching debt row: convert the commitment into a debt row with:
+
+monthly_payment from the commitment
+outstanding_balance = 0
+interest_rate = null
+Add a flag: migration_source = 'commitment_auto_migrated' (add this column if it doesn't exist) so we can identify these later
+Then delete the commitment row
+
+
+
+Important: custom commitments must be untouched
+The migration must ONLY match against the four built-in loan-type categories. If a user added a custom commitment named "My BIBD Car Loan" via the "Add a custom commitment" path, that row stays in commitments regardless of its name. Only the built-in car_loan, personal_loan, house_financing, credit_card enum values are migrated.
+Change 4 — Auto-migrated user notice (one-time banner)
+For users whose loan was auto-migrated from commitments to debts (i.e., migration_source = 'commitment_auto_migrated'), show a one-time banner on next login:
+We've improved how we track loans! [Loan name] has been moved from Commitments to Debts. Please add the outstanding balance so we can show your payoff progress accurately.
+Banner has:
+
+Link/button: "Update [Loan name]" → opens the edit-debt modal for that specific debt
+Dismiss button: "Got it"
+Banner is shown only once per user (track dismissal in user settings or a separate seen_migration_notices field)
+
+Translation keys:
+
+migration.commitmentToDebt.title.en → "We've improved how we track loans!"
+migration.commitmentToDebt.body.en → "{{loanName}} has been moved from Commitments to Debts. Please add the outstanding balance so we can show your payoff progress accurately."
+migration.commitmentToDebt.update.en → "Update {{loanName}}"
+migration.commitmentToDebt.dismiss.en → "Got it"
+Translate naturally to ms and id, maintaining established terminology
+
+
+🛑 CRITICAL SAFETY REQUIREMENTS — READ CAREFULLY 🛑
+
+The migration MUST run in dry-run mode by default. The destructive mode must be gated behind an explicit environment variable or admin flag (e.g., MIGRATION_DRY_RUN=false).
+DO NOT run the destructive migration during this prompt. Only show me the dry-run log. I will manually flip the flag to destructive AFTER reviewing the dry-run output and confirming.
+The dry-run log MUST clearly list each commitment row that would be affected, with the following columns per row:
+
+user_id
+user_email (for human verification)
+commitment_id
+commitment_type (e.g., car_loan)
+commitment_monthly_payment
+matching_debt_id (or null if no match)
+matching_debt_monthly_payment (or null)
+action (either delete or convert)
+notes (any caveats or anomalies)
+
+
+The dry-run log should also show summary statistics at the bottom:
+
+Total affected users
+Total commitments to delete
+Total commitments to convert to debts
+Any users with anomalies (e.g., monthly_payment mismatch between commitment and debt)
+
+
+If you encounter any anomaly or unexpected state during dry-run, log it explicitly and do not proceed to destructive mode. Examples:
+
+Commitment exists but monthly_payment differs from the matching debt
+User has multiple commitments of the same loan type (data corruption)
+User has a debt without a monthly_payment value
+
+
+
+
+Acceptance criteria
+
+New users going through onboarding cannot declare a Car Loan, Personal Loan, House Financing, or Credit Card in Step 3 — those tiles are removed
+Step 3 displays the new helper note above the tile grid in all 3 languages
+Step 5 still works as before for new loan entry
+Step 5 writes ONLY to the debts table, never to commitments (verified)
+After running the migration on the existing test account pengiranabdulhakem@gmail.com (which currently has two "Car Loan" commitment entries totalling BND 900):
+
+Commitments page shows only Rent (BND 800) and School Fees (BND 300)
+Fixed Commitments KPI on Dashboard shows BND 1,100 (was BND 2,000)
+Liabilities/Debts KPI still shows BND 450 monthly
+Remaining this month becomes BND 500 (was BND 50)
+Debts page is unchanged — still shows the one Car Loan with BND 18,000 balance and 40 months to payoff
+
+
+Auto-migrated users see the one-time banner on next login (test by simulating a user whose only loan was in commitments)
+Custom commitments (added via "Add a custom commitment") are not affected by the migration regardless of name
+
+
+STRICT scope boundaries — do NOT do any of the following:
+
+Do NOT change anything about the debts table schema (only adding the migration_source column on debts is acceptable)
+Do NOT change the Debts page UI
+Do NOT change the Dashboard layout or the Remaining hero card design
+Do NOT change the wizard step count (still 6 steps, still Goals at Step 6)
+Do NOT touch the salary-as-transaction logic
+Do NOT modify the receipt-scanning, AI chat, or any other feature
+Do NOT modify the Hari Gaji payday banner logic
+Do NOT modify the Zakat calculator logic
+Do NOT add new loan-tracking features (this fix is purely about correctness)
+Do NOT proactively migrate other "lookalike" data that isn't in the four loan categories
+
+
+Verification before reporting complete (for the dry-run phase)
+
+Step 3 of onboarding shows the 8 commitment tiles + custom option, NOT the 4 loan tiles
+Step 3 shows the helper note above the tiles, in all 3 languages
+Step 5 unchanged in UI but verified to write only to debts table
+Migration code exists, defaulted to dry-run mode, gated behind MIGRATION_DRY_RUN=false environment variable
+Dry-run log generated for the user pengiranabdulhakem@gmail.com showing exactly which rows would be affected
+Dry-run log shows summary statistics
+Code is committed but destructive migration is NOT executed
+
+
+Report back with:
+
+Files modified
+New translation keys added
+Whether Step 5 was already correctly writing only to debts (or if it had a bug too)
+The full dry-run migration log for the test account
+Confirmation that destructive mode is gated and not executed
+Schema changes (the new migration_source column on debts, if added)
+Any anomalies discovered during dry-run that I should know about before flipping to destructive mode
+Visual confirmation: screenshot of Step 3 onboarding showing 8 commitment tiles (no loans) with helper note visible

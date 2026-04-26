@@ -976,6 +976,7 @@
     "commitments": {
       "title": "Komitmen tetap bulanan",
       "subtitle": "Pilih yang berkenaan dengan anda, kemudian masukkan jumlah bulanan.",
+      "loansHelperNote": "Ada pinjaman kereta, pembiayaan rumah, atau hutang kad kredit? Anda boleh tambah itu di langkah seterusnya — kami akan jejak kemajuan pembayaran untuk anda.",
       "amountHeader": "Masukkan jumlah bulanan ({{currency}})",
       "addCustom": "Tambah komitmen tersuai",
       "customLabel": "Label",
@@ -1119,6 +1120,14 @@
       "title": "Terima kasih atas maklum balas anda!",
       "subtitle": "Kami membaca setiap hantar dan menggunakannya untuk meningkatkan DuitPlan.",
       "close": "Tutup"
+    }
+  },
+  "migration": {
+    "commitmentToDebt": {
+      "title": "Kami telah menambah baik cara penjejakan pinjaman!",
+      "body": "{{loanName}} telah dipindahkan dari Komitmen ke Hutang. Sila tambah baki tertunggak supaya kami boleh tunjukkan kemajuan pembayaran anda.",
+      "update": "Kemaskini {{loanName}}",
+      "dismiss": "Faham"
     }
   }
 }

@@ -27,6 +27,7 @@ function formatDebt(d: typeof debtsTable.$inferSelect) {
     targetExtraPayment: d.targetExtraPayment,
     startDate: d.startDate ?? null,
     endDate: d.endDate?.toISOString() ?? null,
+    migrationSource: d.migrationSource ?? null,
     createdAt: d.createdAt.toISOString(),
     updatedAt: d.updatedAt.toISOString(),
   };

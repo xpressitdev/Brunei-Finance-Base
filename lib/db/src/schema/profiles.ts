@@ -1,4 +1,4 @@
-import { pgTable, text, integer, numeric, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, integer, numeric, timestamp, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -12,6 +12,7 @@ export const profilesTable = pgTable("profiles", {
   language: text("language").notNull().default("en"),
   payday: integer("payday").notNull(),
   monthlyIncome: numeric("monthly_income", { precision: 12, scale: 2 }).notNull(),
+  migrationNoticeDismissed: boolean("migration_notice_dismissed").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

@@ -13,6 +13,7 @@ export const debtsTable = pgTable("debts", {
   targetExtraPayment: numeric("target_extra_payment", { precision: 12, scale: 2 }),
   startDate: date("start_date"),
   endDate: timestamp("end_date", { withTimezone: true }),
+  migrationSource: text("migration_source"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });
