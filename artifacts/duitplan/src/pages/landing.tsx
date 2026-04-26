@@ -96,9 +96,8 @@ export default function Landing() {
     <div className="min-h-screen bg-background flex flex-col font-sans">
       {/* Header */}
       <header className="px-6 py-4 flex items-center justify-between border-b bg-white/80 backdrop-blur-sm sticky top-0 z-10">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-white font-bold text-xl">D</div>
-          <span className="text-xl font-bold text-foreground">DuitPlan</span>
+        <div className="flex items-center">
+          <img src="/logo-horizontal.png" alt="DuitPlan" className="h-8 w-auto" />
         </div>
         <nav className="flex items-center gap-2">
           <LanguageSwitcher />
@@ -228,9 +227,8 @@ export default function Landing() {
 
       <footer className="py-8 border-t bg-white">
         <div className="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row justify-between items-center gap-4">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded bg-primary flex items-center justify-center text-white font-bold text-xs">D</div>
-            <span className="font-semibold text-sm">DuitPlan</span>
+          <div className="flex items-center">
+            <img src="/logo-horizontal.png" alt="DuitPlan" className="h-6 w-auto" />
           </div>
           <p className="text-sm text-muted-foreground">
             {t('landing.footer.tagline', { year: new Date().getFullYear() })}

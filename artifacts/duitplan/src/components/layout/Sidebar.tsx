@@ -33,7 +33,9 @@ export function Sidebar() {
   return (
     <>
       <div className="md:hidden flex items-center justify-between p-4 border-b bg-background">
-        <Link href="/dashboard" className="text-xl font-bold text-primary">DuitPlan</Link>
+        <Link href="/dashboard">
+          <img src="/logo-horizontal.png" alt="DuitPlan" className="h-7 w-auto" />
+        </Link>
         <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
           {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
         </Button>
@@ -44,7 +46,9 @@ export function Sidebar() {
         mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
       )}>
         <div className="p-6 hidden md:block">
-          <Link href="/dashboard" className="text-2xl font-bold text-primary">DuitPlan</Link>
+          <Link href="/dashboard">
+            <img src="/logo-horizontal.png" alt="DuitPlan" className="h-8 w-auto" />
+          </Link>
         </div>
 
         <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
