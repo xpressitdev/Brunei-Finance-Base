@@ -1,0 +1,29 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body{margin:0;padding:22px;background:#fff;font-family:var(--app-font-sans)}
+  .row{display:flex;flex-direction:column;gap:14px;max-width:520px}
+  .lbl{display:flex;justify-content:space-between;font-size:13px;font-weight:500}
+  .lbl .meta{color:hsl(var(--muted-foreground));font-weight:500;font-variant-numeric:tabular-nums}
+  .bar{height:8px;background:hsl(var(--muted));border-radius:9999px;overflow:hidden}
+  .fill{height:100%;border-radius:9999px}
+  .ok .fill{background:hsl(var(--primary))}
+  .warn .fill{background:#f59e0b}
+  .danger .fill{background:#e11d48}
+</style></head>
+<body>
+<div class="row">
+  <div class="ok">
+    <div class="lbl"><span>Groceries</span><span class="meta">BND 240 / 600</span></div>
+    <div class="bar"><div class="fill" style="width:40%"></div></div>
+  </div>
+  <div class="warn">
+    <div class="lbl"><span>Eating out</span><span class="meta">BND 320 / 400</span></div>
+    <div class="bar"><div class="fill" style="width:80%"></div></div>
+  </div>
+  <div class="danger">
+    <div class="lbl"><span>Transport</span><span class="meta">BND 580 / 500</span></div>
+    <div class="bar"><div class="fill" style="width:100%"></div></div>
+  </div>
+</div>
+</body></html>

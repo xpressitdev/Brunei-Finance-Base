@@ -1,0 +1,24 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body{margin:0;padding:22px;background:#fff;font-family:var(--app-font-sans)}
+  .field{display:flex;flex-direction:column;gap:6px;max-width:320px;margin-bottom:14px}
+  label{font-size:13px;font-weight:500;color:hsl(var(--foreground))}
+  input,select{height:36px;padding:0 12px;border:1px solid hsl(var(--input));border-radius:8px;background:#fff;font-size:14px;font-family:inherit;color:hsl(var(--foreground));box-shadow:var(--shadow-xs)}
+  input:focus,select:focus{outline:2px solid hsl(var(--ring));outline-offset:0;border-color:transparent}
+  .help{font-size:12px;color:hsl(var(--muted-foreground))}
+  .grp{display:flex;align-items:stretch;border:1px solid hsl(var(--input));border-radius:8px;background:#fff;overflow:hidden}
+  .grp .pre{display:flex;align-items:center;padding:0 12px;background:hsl(var(--muted));color:hsl(var(--muted-foreground));font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
+  .grp input{flex:1;border:0;box-shadow:none;font-variant-numeric:tabular-nums}
+</style></head>
+<body>
+<div class="field">
+  <label>Email</label>
+  <input value="hakem@duitplan.com">
+</div>
+<div class="field">
+  <label>Monthly salary</label>
+  <div class="grp"><span class="pre">BND</span><input value="4,250.00"></div>
+  <span class="help">Take-home pay after deductions.</span>
+</div>
+</body></html>

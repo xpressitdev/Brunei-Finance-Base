@@ -1,0 +1,41 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body{margin:0;padding:24px;background:#fff;font-family:var(--app-font-sans)}
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;align-items:stretch}
+  .cell{border:1px solid hsl(var(--card-border));border-radius:12px;padding:18px;display:flex;flex-direction:column;gap:10px;background:#fff;min-height:140px}
+  .cell.dark{background:hsl(164 40% 12%);border-color:transparent}
+  .cell.tinted{background:hsl(162 70% 35% / .05);border-color:hsl(162 70% 35% / .25)}
+  .cell .surface{flex:1;display:flex;align-items:center;justify-content:flex-start;gap:12px}
+  .cell .meta{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+  .lbl{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:hsl(var(--muted-foreground))}
+  .dark .lbl{color:hsl(0 0% 100% / .55)}
+  .ttl{font-size:13px;font-weight:600;color:hsl(var(--foreground))}
+  .dark .ttl{color:#fff}
+  .wordmark{height:42px;width:auto;display:block}
+  .mark{height:56px;width:56px;display:block;object-fit:contain}
+  .mark-sm{height:32px;width:32px}
+  .lockup{display:flex;align-items:center;gap:10px}
+  .lockup .name{font-size:22px;font-weight:700;letter-spacing:-0.01em;color:hsl(var(--foreground))}
+  .dark .lockup .name{color:#fff}
+</style></head>
+<body>
+<div class="grid">
+  <div class="cell">
+    <div class="meta"><span class="ttl">Wordmark — primary</span><span class="lbl">on white</span></div>
+    <div class="surface"><img class="wordmark" src="../assets/logo-wordmark.png" alt="DuitPlan"></div>
+  </div>
+  <div class="cell tinted">
+    <div class="meta"><span class="ttl">Wordmark — on tint</span><span class="lbl">primary 5%</span></div>
+    <div class="surface"><img class="wordmark" src="../assets/logo-wordmark.png" alt="DuitPlan"></div>
+  </div>
+  <div class="cell">
+    <div class="meta"><span class="ttl">App icon</span><span class="lbl">512px master</span></div>
+    <div class="surface"><img class="mark" src="../assets/logo-mark.png" alt="DuitPlan icon"></div>
+  </div>
+  <div class="cell">
+    <div class="meta"><span class="ttl">Header lockup</span><span class="lbl">in-app</span></div>
+    <div class="surface"><div class="lockup"><img class="mark mark-sm" src="../assets/logo-mark.png" alt=""><span class="name">DuitPlan</span></div></div>
+  </div>
+</div>
+</body></html>

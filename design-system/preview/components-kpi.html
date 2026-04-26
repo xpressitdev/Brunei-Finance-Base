@@ -1,0 +1,43 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body{margin:0;padding:18px;background:hsl(var(--background));font-family:var(--app-font-sans)}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .kpi{background:#fff;border:1px solid hsl(var(--card-border));border-radius:12px;padding:14px 16px;box-shadow:var(--shadow-sm)}
+  .kpi.hero{background:hsl(162 70% 35% / .05);border-color:hsl(162 70% 35% / .2)}
+  .top{display:flex;justify-content:space-between;align-items:center}
+  .ey{font-size:11px;text-transform:uppercase;letter-spacing:.06em;font-weight:600;color:hsl(var(--muted-foreground))}
+  .hero .ey{color:hsl(var(--primary))}
+  .num{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;margin-top:6px;line-height:1.1}
+  .hero .num{color:hsl(var(--primary))}
+  .delta{font-size:11px;color:#047857;display:flex;align-items:center;gap:4px;margin-top:4px;font-weight:500}
+  .ico{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+</style></head>
+<body>
+<div class="grid">
+  <div class="kpi">
+    <div class="top"><span class="ey">Monthly Salary</span>
+      <svg class="ico" viewBox="0 0 24 24" style="color:hsl(162 70% 40% / .6)"><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/><path d="M12 7v10M9 14h6"/></svg>
+    </div>
+    <div class="num">BND 4,250.00</div>
+    <div class="delta">↑ BND 4,250.00 received</div>
+  </div>
+  <div class="kpi">
+    <div class="top"><span class="ey">Liabilities</span>
+      <svg class="ico" viewBox="0 0 24 24" style="color:#e11d4880"><path d="M3 21h18M5 21V10l7-5 7 5v11M9 21V12h6v9"/></svg>
+    </div>
+    <div class="num">BND 1,820.50</div>
+    <div style="font-size:11px;color:hsl(var(--muted-foreground));margin-top:4px">Loan monthly payments</div>
+  </div>
+  <div class="kpi hero">
+    <div class="top"><span class="ey">Remaining</span>
+      <svg class="ico" viewBox="0 0 24 24" style="color:hsl(var(--primary))"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+    </div>
+    <div class="num">BND 1,289.50</div>
+    <div style="border-top:1px solid hsl(var(--border));margin-top:8px;padding-top:6px;display:flex;flex-direction:column;gap:2px">
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:hsl(var(--muted-foreground))"><span>Commitments</span><span>−BND 540</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:hsl(var(--muted-foreground))"><span>Spending</span><span>−BND 600</span></div>
+    </div>
+  </div>
+</div>
+</body></html>

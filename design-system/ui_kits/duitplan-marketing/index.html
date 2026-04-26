@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>DuitPlan — Personal Finance for Southeast Asia</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/png" href="../../assets/logo-mark.png">
+  <link rel="stylesheet" href="../../colors_and_type.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body{font-family:'Inter',system-ui,sans-serif;color:hsl(var(--foreground));background:#fff}
+    .ico{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round}
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="border-b border-[hsl(var(--card-border))] bg-white/80 backdrop-blur-sm sticky top-0 z-50">
+  <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+    <a href="#" class="flex items-center gap-2">
+      <img src="../../assets/logo-mark.png" alt="" class="w-8 h-8 object-contain"/>
+      <span class="text-xl font-bold tracking-tight">DuitPlan</span>
+    </a>
+    <nav class="hidden md:flex items-center gap-6 text-sm font-medium text-[hsl(var(--muted-foreground))]">
+      <a class="hover:text-[hsl(var(--foreground))]">Features</a>
+      <a class="hover:text-[hsl(var(--foreground))]">How it works</a>
+      <a class="hover:text-[hsl(var(--foreground))]">Pricing</a>
+      <a class="hover:text-[hsl(var(--foreground))]">Zakat</a>
+    </nav>
+    <div class="flex items-center gap-2">
+      <button class="h-9 px-3 text-sm font-medium text-[hsl(var(--foreground))] hover:bg-[hsl(var(--accent))] rounded-md">Sign in</button>
+      <button class="h-9 px-4 text-sm font-medium bg-[hsl(var(--primary))] text-white rounded-md border border-[hsl(162_70%_27%)] inline-flex items-center gap-1.5">Start Free
+        <svg class="ico" viewBox="0 0 24 24" style="width:14px;height:14px"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="relative">
+  <div class="max-w-6xl mx-auto px-6 pt-20 pb-24">
+    <div class="grid lg:grid-cols-2 gap-12 items-center">
+      <div>
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))] text-xs font-semibold mb-6">
+          🇧🇳 Built for Brunei · 🇲🇾 Malaysia · 🇮🇩 Indonesia
+        </span>
+        <h1 class="text-5xl lg:text-6xl font-bold tracking-tight leading-[1.05] mb-5">
+          Understand your <span class="text-[hsl(var(--primary))]">gaji</span>.<br/>
+          Plan every <span class="text-[hsl(var(--primary))]">duit</span>.
+        </h1>
+        <p class="text-lg text-[hsl(var(--muted-foreground))] max-w-md mb-7 leading-relaxed">
+          Track your salary, manage your commitments, and stay on top of your loans — without the stress. Built around how money actually works in Southeast Asia.
+        </p>
+        <div class="flex flex-wrap gap-3">
+          <button class="h-12 px-7 bg-[hsl(var(--primary))] text-white font-medium rounded-md border border-[hsl(162_70%_27%)] inline-flex items-center gap-2">
+            Start Planning Free
+            <svg class="ico" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button>
+          <button class="h-12 px-6 bg-white border border-black/10 font-medium rounded-md inline-flex items-center gap-2 shadow-sm">
+            <svg class="ico" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 9l5-5 5 5M12 4v12"/></svg>
+            Import a statement
+          </button>
+        </div>
+        <div class="flex items-center gap-4 mt-8 text-sm text-[hsl(var(--muted-foreground))]">
+          <div class="flex items-center gap-1.5"><svg class="ico text-emerald-600" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg> Free forever for individuals</div>
+          <div class="flex items-center gap-1.5"><svg class="ico text-emerald-600" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg> No bank connection needed</div>
+        </div>
+      </div>
+
+      <!-- Hero card mockup -->
+      <div class="relative">
+        <div class="absolute inset-0 bg-[hsl(162_70%_35%/.08)] rounded-3xl rotate-1"></div>
+        <div class="relative bg-white border border-[hsl(var(--card-border))] rounded-2xl p-6 shadow-xl">
+          <div class="flex items-center justify-between mb-5">
+            <div class="text-sm font-semibold">April 2026</div>
+            <span class="text-xs px-2 py-1 rounded-full bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))] font-semibold">BND</span>
+          </div>
+          <div class="rounded-xl bg-[hsl(162_70%_35%/.05)] border border-[hsl(162_70%_35%/.2)] p-4 mb-4">
+            <div class="text-[11px] uppercase tracking-wider font-semibold text-[hsl(var(--primary))]">Remaining</div>
+            <div class="text-3xl font-bold text-[hsl(var(--primary))] tabular-nums mt-1">BND 1,289.50</div>
+            <div class="text-xs text-[hsl(var(--muted-foreground))] mt-1">After commitments and spending</div>
+          </div>
+          <div class="space-y-3">
+            <div class="flex items-center gap-3">
+              <img src="../../assets/illustration-payslip.png" class="w-10 h-10 object-contain"/>
+              <div class="flex-1">
+                <div class="text-sm font-medium">Hari Gaji — April</div>
+                <div class="text-xs text-[hsl(var(--muted-foreground))]">25 Apr · BIBD</div>
+              </div>
+              <div class="text-sm font-semibold text-emerald-600 tabular-nums">+BND 4,250</div>
+            </div>
+            <div class="flex items-center gap-3">
+              <img src="../../assets/illustration-bank.png" class="w-10 h-10 object-contain"/>
+              <div class="flex-1">
+                <div class="text-sm font-medium">Toyota Hilux — auto</div>
+                <div class="text-xs text-[hsl(var(--muted-foreground))]">Loan · 4.2% APR</div>
+              </div>
+              <div class="text-sm font-semibold text-rose-600 tabular-nums">−BND 580.50</div>
+            </div>
+            <div class="flex items-center gap-3">
+              <img src="../../assets/illustration-vault.png" class="w-10 h-10 object-contain"/>
+              <div class="flex-1">
+                <div class="text-sm font-medium">Umrah 2027 fund</div>
+                <div class="text-xs text-[hsl(var(--muted-foreground))]">Goal · 28% saved</div>
+              </div>
+              <div class="text-sm font-semibold tabular-nums">+BND 200</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="bg-[hsl(160_20%_99%)] border-y border-[hsl(var(--card-border))] py-20">
+  <div class="max-w-6xl mx-auto px-6">
+    <div class="text-center max-w-2xl mx-auto mb-12">
+      <span class="text-xs font-semibold uppercase tracking-wider text-[hsl(var(--primary))]">Built for SEA salary life</span>
+      <h2 class="text-3xl lg:text-4xl font-bold tracking-tight mt-3 mb-4">Three flows. One clear picture.</h2>
+      <p class="text-[hsl(var(--muted-foreground))] leading-relaxed">Every ringgit, dollar, and rupiah of your gaji has a job — covering loans, fixed commitments, and your goals. DuitPlan models it the way you actually think about it.</p>
+    </div>
+    <div class="grid md:grid-cols-3 gap-5">
+      <div class="bg-white border border-[hsl(var(--card-border))] rounded-2xl p-7">
+        <img src="../../assets/illustration-payslip.png" class="w-16 h-16 object-contain mb-4"/>
+        <h3 class="text-lg font-semibold mb-2">Hari Gaji, automatic</h3>
+        <p class="text-sm text-[hsl(var(--muted-foreground))] leading-relaxed">On payday, we log your salary, deduct your loan auto-debits, and roll your fixed commitments into envelopes. You see what's left to spend.</p>
+      </div>
+      <div class="bg-white border border-[hsl(var(--card-border))] rounded-2xl p-7">
+        <img src="../../assets/illustration-bank.png" class="w-16 h-16 object-contain mb-4"/>
+        <h3 class="text-lg font-semibold mb-2">Loans &amp; financing, tracked</h3>
+        <p class="text-sm text-[hsl(var(--muted-foreground))] leading-relaxed">Car loan, house financing, credit card — all in one place with debt-to-income, payoff timeline, and Hari Gaji auto-deduction reconciled.</p>
+      </div>
+      <div class="bg-white border border-[hsl(var(--card-border))] rounded-2xl p-7">
+        <img src="../../assets/illustration-vault.png" class="w-16 h-16 object-contain mb-4"/>
+        <h3 class="text-lg font-semibold mb-2">Goals, locked away</h3>
+        <p class="text-sm text-[hsl(var(--muted-foreground))] leading-relaxed">Umrah, emergency fund, kids' school — earmark money before you can spend it. Out of sight, on track.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="py-20">
+  <div class="max-w-6xl mx-auto px-6">
+    <h2 class="text-3xl lg:text-4xl font-bold tracking-tight text-center mb-12">How it works</h2>
+    <div class="grid md:grid-cols-3 gap-8">
+      <div>
+        <div class="w-10 h-10 rounded-full bg-[hsl(var(--primary))] text-white flex items-center justify-center font-bold mb-4">1</div>
+        <h3 class="text-base font-semibold mb-2">Import a statement</h3>
+        <p class="text-sm text-[hsl(var(--muted-foreground))] leading-relaxed">Drop in a BIBD or Baiduri PDF. We extract the transactions and categorise them automatically — no bank connection needed.</p>
+      </div>
+      <div>
+        <div class="w-10 h-10 rounded-full bg-[hsl(var(--primary))] text-white flex items-center justify-center font-bold mb-4">2</div>
+        <h3 class="text-base font-semibold mb-2">Set your gaji &amp; commitments</h3>
+        <p class="text-sm text-[hsl(var(--muted-foreground))] leading-relaxed">Tell us your monthly salary, payday, and fixed bills. We build your envelope plan in seconds.</p>
+      </div>
+      <div>
+        <div class="w-10 h-10 rounded-full bg-[hsl(var(--primary))] text-white flex items-center justify-center font-bold mb-4">3</div>
+        <h3 class="text-base font-semibold mb-2">Plan, track, repeat</h3>
+        <p class="text-sm text-[hsl(var(--muted-foreground))] leading-relaxed">Every Hari Gaji, the cycle resets. Your loans get paid, your goals get fed, and you know exactly what's safe to spend.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="bg-[hsl(var(--primary))] py-16">
+  <div class="max-w-4xl mx-auto px-6 text-center text-white">
+    <h2 class="text-3xl lg:text-4xl font-bold tracking-tight mb-4">Ready to plan your gaji?</h2>
+    <p class="text-white/85 max-w-xl mx-auto mb-7">Join thousands of Bruneians, Malaysians, and Indonesians taking control of their money — calmly.</p>
+    <button class="h-12 px-7 bg-white text-[hsl(var(--primary))] font-semibold rounded-md inline-flex items-center gap-2">
+      Start Planning Free
+      <svg class="ico" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+    </button>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="border-t border-[hsl(var(--card-border))] py-10">
+  <div class="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div class="flex items-center gap-2">
+      <img src="../../assets/logo-mark.png" class="w-7 h-7 object-contain"/>
+      <span class="font-bold">DuitPlan</span>
+      <span class="text-xs text-[hsl(var(--muted-foreground))] ml-2">© 2026 · Bandar Seri Begawan</span>
+    </div>
+    <div class="flex gap-5 text-sm text-[hsl(var(--muted-foreground))]">
+      <a class="hover:text-[hsl(var(--foreground))]">Privacy</a>
+      <a class="hover:text-[hsl(var(--foreground))]">Terms</a>
+      <a class="hover:text-[hsl(var(--foreground))]">Contact</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

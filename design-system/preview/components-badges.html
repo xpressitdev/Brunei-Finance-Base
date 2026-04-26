@@ -1,0 +1,37 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body{margin:0;padding:22px;background:#fff;font-family:var(--app-font-sans)}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .badge{display:inline-flex;align-items:center;gap:6px;height:22px;padding:0 10px;border-radius:6px;font-size:12px;font-weight:600;border:1px solid transparent}
+  .b-primary{background:hsl(var(--primary));color:#fff}
+  .b-secondary{background:hsl(var(--secondary));color:hsl(var(--secondary-foreground))}
+  .b-destructive{background:hsl(var(--destructive));color:#fff}
+  .b-outline{color:hsl(var(--foreground));border-color:rgba(0,0,0,.10);background:#fff}
+  .b-success{background:#10b98114;color:#047857}
+  .b-warn{background:#f59e0b1f;color:#b45309}
+  .b-info{background:#0ea5e91a;color:#0369a1}
+  .b-rose{background:#e11d481a;color:#be123c}
+  .b-streak{background:#f973161a;color:#c2410c}
+  .pill{height:24px;padding:0 12px;border-radius:9999px;display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:500}
+  .p-region{background:hsl(var(--accent));color:hsl(var(--accent-foreground))}
+</style></head>
+<body>
+<div class="row">
+  <span class="badge b-primary">Active</span>
+  <span class="badge b-secondary">Draft</span>
+  <span class="badge b-success">+BND 1,200 received</span>
+  <span class="badge b-warn">7 days left</span>
+  <span class="badge b-rose">Overdue</span>
+  <span class="badge b-streak">🔥 12 day streak</span>
+  <span class="badge b-info">BIBD</span>
+  <span class="badge b-outline">Uncategorised</span>
+  <span class="badge b-destructive">Trial expired</span>
+</div>
+<div style="height:14px"></div>
+<div class="row">
+  <span class="pill p-region">🇧🇳 Brunei</span>
+  <span class="pill p-region">🇲🇾 Malaysia</span>
+  <span class="pill p-region">🇮🇩 Indonesia</span>
+</div>
+</body></html>

@@ -1,0 +1,24 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body{margin:0;padding:20px;background:#fff}
+  .row{display:flex;gap:8px}
+  .sw{flex:1;display:flex;flex-direction:column;gap:6px}
+  .sw .chip{height:64px;border-radius:10px}
+  .sw .lbl{font-size:10px;color:hsl(var(--muted-foreground));font-family:var(--app-font-mono)}
+  .sw .name{font-size:11px;font-weight:600}
+  .group{margin-bottom:14px}
+  .gtitle{font-size:11px;font-weight:600;color:hsl(var(--muted-foreground));text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+</style></head>
+<body>
+<div class="group">
+  <div class="gtitle">Chart palette</div>
+  <div class="row">
+    <div class="sw"><div class="chip" style="background:hsl(162 70% 40%)"></div><div class="name">chart-1</div><div class="lbl">teal</div></div>
+    <div class="sw"><div class="chip" style="background:hsl(175 60% 45%)"></div><div class="name">chart-2</div><div class="lbl">cyan</div></div>
+    <div class="sw"><div class="chip" style="background:hsl(150 50% 50%)"></div><div class="name">chart-3</div><div class="lbl">mint</div></div>
+    <div class="sw"><div class="chip" style="background:hsl(190 60% 40%)"></div><div class="name">chart-4</div><div class="lbl">deep cyan</div></div>
+    <div class="sw"><div class="chip" style="background:hsl(140 40% 60%)"></div><div class="name">chart-5</div><div class="lbl">sage</div></div>
+  </div>
+</div>
+</body></html>

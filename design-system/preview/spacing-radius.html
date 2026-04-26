@@ -1,0 +1,19 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body{margin:0;padding:24px;background:#fff;font-family:var(--app-font-sans)}
+  .row{display:flex;gap:24px;align-items:flex-end}
+  .item{display:flex;flex-direction:column;gap:8px;align-items:center}
+  .box{background:hsl(var(--accent));border:1px solid hsl(var(--card-border))}
+  .lbl{font-size:11px;font-family:var(--app-font-mono);color:hsl(var(--muted-foreground))}
+  .name{font-size:11px;font-weight:600}
+</style></head>
+<body>
+<div class="row">
+  <div class="item"><div class="box" style="width:64px;height:64px;border-radius:var(--radius-sm)"></div><div class="name">sm</div><div class="lbl">8px</div></div>
+  <div class="item"><div class="box" style="width:64px;height:64px;border-radius:var(--radius-md)"></div><div class="name">md</div><div class="lbl">10px</div></div>
+  <div class="item"><div class="box" style="width:64px;height:64px;border-radius:var(--radius-lg)"></div><div class="name">lg</div><div class="lbl">12px</div></div>
+  <div class="item"><div class="box" style="width:64px;height:64px;border-radius:var(--radius-xl)"></div><div class="name">xl</div><div class="lbl">16px</div></div>
+  <div class="item"><div class="box" style="width:64px;height:64px;border-radius:var(--radius-pill)"></div><div class="name">pill</div><div class="lbl">9999</div></div>
+</div>
+</body></html>

@@ -1,0 +1,20 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body{margin:0;padding:20px;background:#fff}
+  .row{display:flex;gap:12px;flex-wrap:wrap}
+  .sw{display:flex;flex-direction:column;gap:6px;width:120px}
+  .sw .chip{height:64px;border-radius:10px;border:1px solid hsl(var(--border))}
+  .sw .lbl{font-size:11px;color:hsl(var(--muted-foreground));font-family:var(--app-font-mono)}
+  .sw .name{font-size:12px;font-weight:600}
+</style></head>
+<body>
+<div class="row">
+  <div class="sw"><div class="chip" style="background:#10b981"></div><div class="name">success</div><div class="lbl">emerald-600</div></div>
+  <div class="sw"><div class="chip" style="background:hsl(0 70% 50%)"></div><div class="name">destructive</div><div class="lbl">0 70% 50%</div></div>
+  <div class="sw"><div class="chip" style="background:#f97316"></div><div class="name">streak</div><div class="lbl">orange-500</div></div>
+  <div class="sw"><div class="chip" style="background:#f59e0b"></div><div class="name">warning</div><div class="lbl">amber-500</div></div>
+  <div class="sw"><div class="chip" style="background:#0ea5e9"></div><div class="name">info</div><div class="lbl">sky-500</div></div>
+  <div class="sw"><div class="chip" style="background:#e11d48"></div><div class="name">liability</div><div class="lbl">rose-600</div></div>
+</div>
+</body></html>

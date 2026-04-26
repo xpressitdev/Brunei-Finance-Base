@@ -1,0 +1,29 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body{margin:0;padding:18px;background:hsl(var(--background));font-family:var(--app-font-sans)}
+  .banner{background:linear-gradient(0deg,hsl(162 70% 35% / .06),hsl(162 70% 35% / .06)),#fff;border:1px solid hsl(162 70% 35% / .25);border-radius:12px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:14px;box-shadow:var(--shadow-sm)}
+  .left{display:flex;align-items:center;gap:14px}
+  .ico{width:36px;height:36px;border-radius:9999px;background:hsl(var(--primary));color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px}
+  .title{font-size:14px;font-weight:600;color:hsl(var(--foreground))}
+  .body{font-size:13px;color:hsl(var(--muted-foreground));margin-top:2px}
+  .actions{display:flex;gap:8px}
+  .btn{height:32px;padding:0 14px;border-radius:8px;font-size:13px;font-weight:500;border:1px solid transparent;cursor:pointer;font-family:inherit}
+  .primary{background:hsl(var(--primary));color:#fff;border-color:hsl(162 70% 27%)}
+  .ghost{background:transparent;color:hsl(var(--foreground))}
+</style></head>
+<body>
+<div class="banner">
+  <div class="left">
+    <div class="ico">💵</div>
+    <div>
+      <div class="title">Hari Gaji is today, Hakem.</div>
+      <div class="body">Did you receive your BND 4,250.00 salary? We'll log it and deduct your auto-debits.</div>
+    </div>
+  </div>
+  <div class="actions">
+    <button class="btn ghost">Remind tomorrow</button>
+    <button class="btn primary">Yes, I got paid</button>
+  </div>
+</div>
+</body></html>

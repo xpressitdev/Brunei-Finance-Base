@@ -1,0 +1,211 @@
+/* ==========================================================================
+   DuitPlan — Color & Type tokens
+   Source of truth: artifacts/duitplan/src/index.css (Brunei-Finance-Base)
+   Calm teal/green fintech aesthetic. HSL-based, dark-mode ready.
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  /* ---------- COLOR TOKENS (HSL channels — wrap with hsl() in use) ---------- */
+
+  /* Surfaces */
+  --background:        160 20% 99%;
+  --foreground:        164 40% 15%;
+  --border:            160 20% 90%;
+  --card:              0   0% 100%;
+  --card-foreground:   164 40% 15%;
+  --card-border:       160 20% 92%;
+
+  /* Sidebar — slightly tinted surface */
+  --sidebar:                     160 20% 97%;
+  --sidebar-foreground:          164 40% 20%;
+  --sidebar-border:              160 20% 90%;
+  --sidebar-primary:             162 70% 40%;
+  --sidebar-primary-foreground:  0   0% 100%;
+  --sidebar-accent:              160 30% 92%;
+  --sidebar-accent-foreground:   164 40% 15%;
+  --sidebar-ring:                162 70% 40%;
+
+  /* Brand primary (teal-green) */
+  --primary:               162 70% 35%;
+  --primary-foreground:    0 0% 100%;
+
+  /* Secondary / muted / accent */
+  --secondary:             160 20% 90%;
+  --secondary-foreground:  164 40% 20%;
+  --muted:                 160 20% 94%;
+  --muted-foreground:      164 20% 40%;
+  --accent:                162 40% 92%;
+  --accent-foreground:     162 70% 30%;
+
+  /* Semantic */
+  --destructive:           0 70% 50%;
+  --destructive-foreground:0 0% 100%;
+
+  /* Form */
+  --input:                 160 20% 88%;
+  --ring:                  162 70% 40%;
+
+  /* Charts (multi-hue teal/cyan/lime family) */
+  --chart-1: 162 70% 40%;   /* teal-green primary */
+  --chart-2: 175 60% 45%;   /* cyan-teal */
+  --chart-3: 150 50% 50%;   /* mint-green */
+  --chart-4: 190 60% 40%;   /* deep cyan */
+  --chart-5: 140 40% 60%;   /* sage */
+
+  /* Status colours used in app body (orange streak, rose liabilities, emerald gains) */
+  --success: 158 64% 40%;     /* emerald-600 */
+  --warning: 38  92% 50%;     /* amber-500 */
+  --info:    199 89% 48%;     /* sky-500 */
+  --danger:  0   70% 50%;
+  --streak:  25  95% 53%;     /* orange-500 — used for Hari Gaji streaks */
+
+  /* Elevation overlays (subtle) */
+  --elevate-1: rgba(0,0,0, .03);
+  --elevate-2: rgba(0,0,0, .08);
+  --button-outline: rgba(0,0,0, .10);
+  --badge-outline:  rgba(0,0,0, .05);
+
+  /* ---------- TYPE ---------- */
+  --app-font-sans:  'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --app-font-serif: Georgia, serif;
+  --app-font-mono:  Menlo, ui-monospace, monospace;
+
+  /* ---------- SHAPE & RHYTHM ---------- */
+  --radius:    0.75rem;       /* card */
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-pill: 9999px;
+
+  --spacing: 0.25rem;
+
+  /* ---------- SHADOWS (very flat — fintech calm) ---------- */
+  --shadow-2xs: 0px 2px 0px 0px rgba(0,0,0,0.02);
+  --shadow-xs:  0px 2px 0px 0px rgba(0,0,0,0.04);
+  --shadow-sm:  0px 2px 0px 0px rgba(0,0,0,0.02), 0px 1px 2px -1px rgba(0,0,0,0.04);
+  --shadow:     0px 2px 0px 0px rgba(0,0,0,0.02), 0px 1px 2px -1px rgba(0,0,0,0.04);
+  --shadow-md:  0px 2px 0px 0px rgba(0,0,0,0.02), 0px 2px 4px -1px rgba(0,0,0,0.04);
+  --shadow-lg:  0px 2px 0px 0px rgba(0,0,0,0.02), 0px 4px 6px -1px rgba(0,0,0,0.04);
+  --shadow-xl:  0px 2px 0px 0px rgba(0,0,0,0.02), 0px 8px 10px -1px rgba(0,0,0,0.04);
+  --shadow-2xl: 0px 2px 0px 0px rgba(0,0,0,0.02);
+
+  /* ---------- SEMANTIC TYPE TOKENS ---------- */
+  --type-display-size: 3.5rem;     /* 56px — landing hero */
+  --type-display-line: 1.05;
+  --type-display-track:-0.02em;
+
+  --type-h1-size: 2rem;            /* 32px */
+  --type-h1-line: 1.15;
+  --type-h1-track:-0.01em;
+
+  --type-h2-size: 1.5rem;          /* 24px */
+  --type-h2-line: 1.25;
+
+  --type-h3-size: 1.125rem;        /* 18px */
+  --type-h3-line: 1.4;
+
+  --type-body-size: 0.9375rem;     /* 15px */
+  --type-body-line: 1.55;
+
+  --type-small-size: 0.8125rem;    /* 13px */
+  --type-small-line: 1.45;
+
+  --type-eyebrow-size: 0.75rem;    /* 12px UPPERCASE label */
+  --type-eyebrow-track: 0.08em;
+}
+
+.dark {
+  --background:       164 40% 10%;
+  --foreground:       160 20% 95%;
+  --border:           164 30% 20%;
+  --card:             164 40% 12%;
+  --card-foreground:  160 20% 95%;
+  --card-border:      164 30% 20%;
+  --sidebar:          164 40% 10%;
+  --sidebar-foreground:        160 20% 90%;
+  --sidebar-border:            164 30% 20%;
+  --sidebar-accent:            164 30% 20%;
+  --sidebar-accent-foreground: 160 20% 95%;
+  --primary:          162 70% 40%;
+  --primary-foreground:0 0% 100%;
+  --secondary:        164 30% 20%;
+  --secondary-foreground:160 20% 95%;
+  --muted:            164 30% 18%;
+  --muted-foreground: 160 15% 65%;
+  --accent:           164 30% 20%;
+  --accent-foreground:162 70% 50%;
+  --destructive:      0 60% 45%;
+  --input:            164 30% 25%;
+  --elevate-1: rgba(255,255,255,.04);
+  --elevate-2: rgba(255,255,255,.09);
+}
+
+/* ==========================================================================
+   Semantic, ready-to-use class & element styles
+   ========================================================================== */
+
+html, body {
+  font-family: var(--app-font-sans);
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, .h1 {
+  font-size: var(--type-h1-size);
+  line-height: var(--type-h1-line);
+  letter-spacing: var(--type-h1-track);
+  font-weight: 700;
+}
+
+h2, .h2 {
+  font-size: var(--type-h2-size);
+  line-height: var(--type-h2-line);
+  font-weight: 700;
+}
+
+h3, .h3 {
+  font-size: var(--type-h3-size);
+  line-height: var(--type-h3-line);
+  font-weight: 600;
+}
+
+p, .body {
+  font-size: var(--type-body-size);
+  line-height: var(--type-body-line);
+  color: hsl(var(--foreground));
+}
+
+.small, small {
+  font-size: var(--type-small-size);
+  line-height: var(--type-small-line);
+  color: hsl(var(--muted-foreground));
+}
+
+.display {
+  font-size: var(--type-display-size);
+  line-height: var(--type-display-line);
+  letter-spacing: var(--type-display-track);
+  font-weight: 700;
+}
+
+.eyebrow {
+  font-size: var(--type-eyebrow-size);
+  letter-spacing: var(--type-eyebrow-track);
+  text-transform: uppercase;
+  font-weight: 600;
+  color: hsl(var(--muted-foreground));
+}
+
+.numeric {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+code, pre, .mono {
+  font-family: var(--app-font-mono);
+}
