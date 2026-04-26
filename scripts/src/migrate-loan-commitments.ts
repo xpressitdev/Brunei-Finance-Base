@@ -7,13 +7,29 @@
  *
  * This script:
  *  - In DRY_RUN mode (default): prints what would happen, no writes
- *  - In DESTRUCTIVE mode (MIGRATION_DRY_RUN=false): deletes/converts the rows
+ *  - In DESTRUCTIVE mode (MIGRATION_DRY_RUN=false): executes the migration
  *
  * Usage:
  *   pnpm --filter @workspace/scripts tsx src/migrate-loan-commitments.ts
  *
  * To run destructive mode (REVIEW DRY-RUN OUTPUT FIRST):
  *   MIGRATION_DRY_RUN=false pnpm --filter @workspace/scripts tsx src/migrate-loan-commitments.ts
+ *
+ * ── DEDUPLICATION LOGIC ──────────────────────────────────────────────────────
+ * Commitments are grouped by (user_id, loan_type). For each group:
+ *
+ *   Case A — matching debt already exists:
+ *     Delete ALL commitments in the group. The debt stays; we just remove the
+ *     double-counted commitment.
+ *
+ *   Case B — no matching debt:
+ *     Convert only the FIRST commitment (earliest created_at) into a new debt
+ *     row (outstanding_balance=0, migration_source='commitment_auto_migrated').
+ *     Delete the remaining commitments as "delete_duplicate" — no extra debt rows.
+ *
+ * "First" is defined as earliest created_at. This is deterministic because
+ * created_at is set by the database default (now()) at INSERT time and
+ * commitments are inserted sequentially by the onboarding wizard.
  */
 
 import pg from "pg";
@@ -49,6 +65,7 @@ type CommitmentRow = {
   user_email: string;
   label: string;
   amount: string;
+  created_at: string;
 };
 
 type DebtRow = {
@@ -59,6 +76,11 @@ type DebtRow = {
   monthly_payment: string;
 };
 
+// "delete"          — commitment has a matching debt; just delete the commitment
+// "convert"         — first commitment of a type with no matching debt; create debt + delete commitment
+// "delete_duplicate"— extra commitments of the same type with no matching debt; delete only, no debt created
+type ActionKind = "delete" | "convert" | "delete_duplicate";
+
 type MigrationAction = {
   user_id: string;
   user_email: string;
@@ -67,7 +89,7 @@ type MigrationAction = {
   commitment_monthly_payment: string;
   matching_debt_id: string | null;
   matching_debt_monthly_payment: string | null;
-  action: "delete" | "convert";
+  action: ActionKind;
   notes: string;
 };
 
@@ -82,15 +104,16 @@ async function main() {
   console.log();
 
   try {
-    // Build placeholder list for IN clause
     const placeholders = LOAN_LABELS.map((_, i) => `$${i + 1}`).join(", ");
 
+    // ORDER BY created_at ensures group[0] is always the earliest row —
+    // this makes the "first commitment to convert" choice deterministic.
     const { rows: commitments } = await client.query<CommitmentRow>(`
-      SELECT c.id, c.user_id, u.email AS user_email, c.label, c.amount
+      SELECT c.id, c.user_id, u.email AS user_email, c.label, c.amount, c.created_at
       FROM commitments c
       JOIN users u ON u.id = c.user_id
       WHERE c.label IN (${placeholders})
-      ORDER BY c.user_id, c.label
+      ORDER BY c.user_id, c.label, c.created_at ASC
     `, LOAN_LABELS);
 
     if (commitments.length === 0) {
@@ -104,66 +127,93 @@ async function main() {
       WHERE debt_type IN ('car_loan', 'personal_loan', 'mortgage', 'credit_card')
     `);
 
+    // ── GROUP commitments by (user_id, loan_type) ────────────────────────────
+    // Key: "<user_id>:<debt_type>"  Value: commitments in ascending created_at order
+    const groups = new Map<string, CommitmentRow[]>();
+    for (const c of commitments) {
+      const debtType = LOAN_LABEL_TO_DEBT_TYPE[c.label];
+      if (!debtType) continue;
+      const key = `${c.user_id}:${debtType}`;
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key)!.push(c);
+    }
+
     const actions: MigrationAction[] = [];
     const anomalies: string[] = [];
     let statsDelete = 0;
     let statsConvert = 0;
+    let statsDeleteDuplicate = 0;
 
-    const userCommitmentCounts: Record<string, Record<string, number>> = {};
-
-    for (const c of commitments) {
-      const debtType = LOAN_LABEL_TO_DEBT_TYPE[c.label];
-      if (!debtType) continue;
-
-      // Check for duplicates of same loan type per user
-      const key = `${c.user_id}:${debtType}`;
-      userCommitmentCounts[key] = userCommitmentCounts[key] ?? {};
-      userCommitmentCounts[key][c.id] = (userCommitmentCounts[key][c.id] ?? 0) + 1;
-
-      const matchingDebt = debts.find(d => d.user_id === c.user_id && d.debt_type === debtType);
-
-      let action: "delete" | "convert";
-      let notes = "";
+    for (const [key, group] of groups) {
+      const [user_id, debtType] = key.split(":");
+      const matchingDebt = debts.find(d => d.user_id === user_id && d.debt_type === debtType);
 
       if (matchingDebt) {
-        action = "delete";
-        statsDelete++;
-        const commitmentAmt = parseFloat(c.amount);
-        const debtAmt = parseFloat(matchingDebt.monthly_payment);
-        if (Math.abs(commitmentAmt - debtAmt) > 0.01) {
-          const msg = `⚠️  ANOMALY: commitment amount ${c.amount} ≠ debt monthly_payment ${matchingDebt.monthly_payment} for user ${c.user_id} (${c.user_email}), label "${c.label}"`;
-          anomalies.push(msg);
-          notes = `ANOMALY: amount mismatch — commitment=${c.amount}, debt=${matchingDebt.monthly_payment}`;
+        // ── Case A: matching debt exists — delete every commitment in the group ──
+        for (const c of group) {
+          const commitmentAmt = parseFloat(c.amount);
+          const debtAmt = parseFloat(matchingDebt.monthly_payment);
+          let notes = "";
+          if (Math.abs(commitmentAmt - debtAmt) > 0.01) {
+            const msg = `⚠️  ANOMALY: amount mismatch for ${c.user_email} label "${c.label}" — commitment=${c.amount}, debt=${matchingDebt.monthly_payment}`;
+            anomalies.push(msg);
+            notes = `ANOMALY: amount mismatch — commitment=${c.amount}, debt=${matchingDebt.monthly_payment}`;
+          }
+          statsDelete++;
+          actions.push({
+            user_id: c.user_id,
+            user_email: c.user_email,
+            commitment_id: c.id,
+            commitment_type: debtType,
+            commitment_monthly_payment: c.amount,
+            matching_debt_id: matchingDebt.id,
+            matching_debt_monthly_payment: matchingDebt.monthly_payment,
+            action: "delete",
+            notes,
+          });
         }
       } else {
-        action = "convert";
+        // ── Case B: no matching debt — convert first, delete rest as duplicates ──
+        const [first, ...rest] = group;
+
+        // Convert the earliest commitment to a new debt row
         statsConvert++;
-        notes = "No matching debt row found — will create new debt with outstanding_balance=0";
-      }
+        const firstNotes = rest.length > 0
+          ? `First of ${group.length} duplicates — will create new debt with outstanding_balance=0`
+          : "Will create new debt with outstanding_balance=0";
+        actions.push({
+          user_id: first.user_id,
+          user_email: first.user_email,
+          commitment_id: first.id,
+          commitment_type: debtType,
+          commitment_monthly_payment: first.amount,
+          matching_debt_id: null,
+          matching_debt_monthly_payment: null,
+          action: "convert",
+          notes: firstNotes,
+        });
 
-      actions.push({
-        user_id: c.user_id,
-        user_email: c.user_email,
-        commitment_id: c.id,
-        commitment_type: debtType,
-        commitment_monthly_payment: c.amount,
-        matching_debt_id: matchingDebt?.id ?? null,
-        matching_debt_monthly_payment: matchingDebt?.monthly_payment ?? null,
-        action,
-        notes,
-      });
+        // Delete remaining duplicates without creating extra debt rows
+        for (const c of rest) {
+          statsDeleteDuplicate++;
+          actions.push({
+            user_id: c.user_id,
+            user_email: c.user_email,
+            commitment_id: c.id,
+            commitment_type: debtType,
+            commitment_monthly_payment: c.amount,
+            matching_debt_id: null,
+            matching_debt_monthly_payment: null,
+            action: "delete_duplicate",
+            notes: `Duplicate of ${first.id} — deleted without creating a debt row`,
+          });
+        }
+      }
     }
 
-    // Check for duplicate commitment types per user (data corruption indicator)
-    for (const [key, ids] of Object.entries(userCommitmentCounts)) {
-      if (Object.keys(ids).length > 1) {
-        anomalies.push(`⚠️  ANOMALY: user ${key.split(":")[0]} has multiple commitments of type ${key.split(":")[1]}`);
-      }
-    }
-
-    // Print dry-run table
+    // ── Print dry-run table ───────────────────────────────────────────────────
     console.log("AFFECTED ROWS:");
-    console.log("-".repeat(120));
+    console.log("-".repeat(136));
     const header = [
       "user_email".padEnd(32),
       "commitment_id".padEnd(38),
@@ -171,11 +221,11 @@ async function main() {
       "c_amount".padEnd(10),
       "debt_id".padEnd(38),
       "d_payment".padEnd(10),
-      "action".padEnd(8),
+      "action".padEnd(16),
       "notes",
     ].join(" | ");
     console.log(header);
-    console.log("-".repeat(120));
+    console.log("-".repeat(136));
 
     for (const a of actions) {
       const row = [
@@ -185,7 +235,7 @@ async function main() {
         a.commitment_monthly_payment.padEnd(10),
         (a.matching_debt_id ?? "null").padEnd(38),
         (a.matching_debt_monthly_payment ?? "null").padEnd(10),
-        a.action.padEnd(8),
+        a.action.padEnd(16),
         a.notes,
       ].join(" | ");
       console.log(row);
@@ -193,10 +243,11 @@ async function main() {
 
     console.log();
     console.log("SUMMARY:");
-    console.log(`  Total affected users:          ${new Set(actions.map(a => a.user_id)).size}`);
-    console.log(`  Commitments to DELETE:         ${statsDelete} (matching debt exists → delete commitment)`);
-    console.log(`  Commitments to CONVERT:        ${statsConvert} (no matching debt → create debt, delete commitment)`);
-    console.log(`  Anomalies:                     ${anomalies.length}`);
+    console.log(`  Total affected users:                     ${new Set(actions.map(a => a.user_id)).size}`);
+    console.log(`  Commitments to DELETE (debt exists):      ${statsDelete}`);
+    console.log(`  Commitments to CONVERT (first, no debt):  ${statsConvert}`);
+    console.log(`  Commitments DELETE_DUPLICATE (no debt):   ${statsDeleteDuplicate}  ← would have created extra debt rows in the buggy version`);
+    console.log(`  Anomalies:                                ${anomalies.length}`);
 
     if (anomalies.length > 0) {
       console.log();
@@ -211,7 +262,7 @@ async function main() {
     if (DRY_RUN) {
       console.log();
       console.log("DRY-RUN COMPLETE. No database changes were made.");
-      console.log("To execute destructive mode: MIGRATION_DRY_RUN=false pnpm --filter @workspace/scripts tsx src/migrate-loan-commitments.ts");
+      console.log("To execute: MIGRATION_DRY_RUN=false pnpm --filter @workspace/scripts exec tsx src/migrate-loan-commitments.ts");
       return;
     }
 
@@ -219,14 +270,16 @@ async function main() {
     console.log();
     console.log("⚠️  EXECUTING DESTRUCTIVE MIGRATION...");
 
+    const { v4: uuidv4 } = await import("uuid");
+
     await client.query("BEGIN");
     try {
       for (const a of actions) {
-        if (a.action === "delete") {
+        if (a.action === "delete" || a.action === "delete_duplicate") {
+          // delete_duplicate: remove the extra commitment row; no debt created
           await client.query(`DELETE FROM commitments WHERE id = $1`, [a.commitment_id]);
         } else {
-          // Convert: insert new debt, then delete commitment
-          const { v4: uuidv4 } = await import("uuid");
+          // convert: insert new debt with outstanding_balance=0, then delete commitment
           await client.query(`
             INSERT INTO debts (id, user_id, debt_type, lender, outstanding_balance, monthly_payment, migration_source, created_at, updated_at)
             VALUES ($1, $2, $3, $4, '0', $5, 'commitment_auto_migrated', now(), now())

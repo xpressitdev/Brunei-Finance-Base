@@ -1,0 +1,108 @@
+Task: Implement the deduplication fix in the migration script and re-run dry-run
+The investigation report you produced was excellent. You correctly identified:
+
+The matcher logic is correct as-is — don't change it
+There's a latent bug in the destructive convert path: when N commitments of the same type exist for a user with no matching debt, the loop creates N new debt rows where 1 should exist
+The fix is to deduplicate by (user_id, loan_type) before processing, converting only the first commitment and deleting the rest
+
+Implement that fix now and re-run dry-run.
+
+Step 1: Implement the deduplication guard
+Modify the migration script so that for each user × loan_type combination:
+
+If a matching debt exists for that user + loan type: delete ALL commitments of that type for that user (current behavior is correct)
+If NO matching debt exists for that user + loan type:
+
+Convert ONLY the first commitment to a new debt row (with monthly_payment from that commitment, outstanding_balance = 0, interest_rate = null, and migration_source = 'commitment_auto_migrated')
+Delete the remaining duplicate commitments without creating additional debt rows
+
+
+
+The "first" commitment can be selected by:
+
+Lowest id (if numeric/sortable), OR
+Earliest created_at timestamp, OR
+Whatever ordering makes the result deterministic
+
+Use whichever ordering makes the most sense given the schema. Document your choice in code comments.
+Logic structure should be:
+Group commitments by (user_id, loan_type).
+For each group:
+  matching_debt = find debt where user_id matches AND debt_type matches loan_type
+  IF matching_debt exists:
+    For each commitment in group → action = delete
+  ELSE:
+    first_commitment = group[0] (per chosen ordering)
+    first_commitment → action = convert
+    For remaining commitments in group → action = delete (NO new debt rows)
+
+Step 2: Update the dry-run log to reflect the new logic
+The dry-run log should now show, per affected commitment row:
+
+user_id
+user_email
+commitment_id
+commitment_type
+commitment_monthly_payment
+matching_debt_id (or null)
+action (now possible values: delete, convert, delete_duplicate)
+notes (e.g., "first of N duplicates" or "duplicate of commitment_id X")
+
+The summary at the bottom should now show:
+
+Total affected users
+Total commitments to delete (because matching debt exists)
+Total commitments to convert (first of duplicates with no matching debt)
+Total duplicate commitments to delete (rest of duplicates with no matching debt — these would have caused extra debt rows in the buggy version)
+
+Anomaly detection should now NOT flag duplicate commitments as an anomaly (they're handled by the dedup logic). It should still flag:
+
+Commitment exists but monthly_payment differs significantly from the matching debt's monthly_payment
+User has a debt without a monthly_payment value
+
+
+Step 3: Re-run dry-run on all affected users
+After implementing the fix, re-run the dry-run with MIGRATION_DRY_RUN=true and report the new log.
+Specifically for hakemshahbirin@live.com, the expected plan is:
+
+2 car_loan commitments exist
+No car_loan debt exists for this user
+Action: convert the first commitment to a new debt row, delete the second as duplicate
+Result: 1 new debt row created, 2 commitment rows deleted
+
+
+🛑 SAFETY REMINDER 🛑
+
+Do NOT run destructive mode in this prompt. Only dry-run.
+The destructive flag MIGRATION_DRY_RUN=false will be flipped manually by me after I review the new dry-run log.
+Code stays in dry-run-default mode after this prompt.
+
+
+STRICT scope boundaries — do NOT do any of the following:
+
+Do NOT modify the matcher logic itself (it's correct)
+Do NOT modify the debts schema beyond what was already added (the migration_source column)
+Do NOT modify the commitments schema
+Do NOT modify the auto-migrated banner UI
+Do NOT modify Step 3 onboarding (already fixed)
+Do NOT touch any other migration or feature
+Do NOT manually edit data for hakemshahbirin@live.com or any other user — only update the migration script
+
+
+Verification before reporting complete:
+
+Migration script implements deduplication grouping by (user_id, loan_type)
+The "first commitment" selection logic is deterministic and documented in code
+Dry-run log shows the new action types (delete, convert, delete_duplicate)
+For hakemshahbirin@live.com: dry-run shows 1 convert + 1 delete_duplicate (was: 2 converts in the buggy version)
+Anomaly detection no longer flags simple duplicates
+Code committed but destructive migration NOT executed
+
+
+Report back with:
+
+The updated matcher/processing code (paste the changed function/block directly)
+The new dry-run log for all affected users
+Confirmation that destructive mode is gated and not executed
+Any new anomalies detected (separately from simple duplicates)
+Confirmation that the expected plan for hakemshahbirin@live.com is exactly: 1 convert + 1 delete_duplicate
