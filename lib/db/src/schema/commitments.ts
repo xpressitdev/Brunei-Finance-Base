@@ -1,4 +1,4 @@
-import { pgTable, text, integer, numeric, timestamp, unique } from "drizzle-orm/pg-core";
+import { pgTable, text, integer, numeric, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -11,9 +11,7 @@ export const commitmentsTable = pgTable("commitments", {
   recurrence: text("recurrence").notNull().default("monthly"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
-}, (table) => [
-  unique("commitments_user_id_label_unique").on(table.userId, table.label),
-]);
+});
 
 export const insertCommitmentSchema = createInsertSchema(commitmentsTable).omit({ createdAt: true, updatedAt: true });
 export type InsertCommitment = z.infer<typeof insertCommitmentSchema>;
