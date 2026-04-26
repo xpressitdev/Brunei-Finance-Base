@@ -23,7 +23,9 @@ import {
   useGetProfile,
   useListCommitments,
   useListAccounts,
+  useListDebts,
 } from "@workspace/api-client-react";
+import type { Debt } from "@workspace/api-client-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -55,6 +57,10 @@ function fmt(n: number) {
 }
 function fmtShort(n: number) {
   return n.toLocaleString("en-BN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+function safeNum(x: unknown): number {
+  const n = typeof x === "number" ? x : parseFloat(String(x ?? "0"));
+  return Number.isFinite(n) ? n : 0;
 }
 
 function SummaryCard({ label, value, sub, color }: { label: string; value: string; sub?: string; color?: string }) {
@@ -205,16 +211,18 @@ function BucketRow({
             </p>
           )}
 
-          {/* Slider always available so users without drag fluency can still allocate */}
-          <input
-            type="range"
-            min={bucket.fixed ? bucket.target ?? 0 : 0}
-            max={Math.max((bucket.target ?? 1500) * 1.5, bucket.allocated * 2, 1500)}
-            step={10}
-            value={bucket.allocated}
-            onChange={(e) => onSlider(Number(e.target.value))}
-            className="w-full mt-3 accent-primary"
-          />
+          {/* Slider for vault/loan rows; envelopes show progress bar only */}
+          {!isEnv && (
+            <input
+              type="range"
+              min={0}
+              max={Math.max((bucket.target ?? 1500) * 1.5, bucket.allocated * 2, 1500)}
+              step={10}
+              value={bucket.allocated}
+              onChange={(e) => onSlider(Number(e.target.value))}
+              className="w-full mt-3 accent-primary"
+            />
+          )}
 
           {bucket.allocated >= 50 && !bucket.auto && !bucket.fixed && (
             <button
@@ -290,6 +298,7 @@ function AllocateView({
   monthLabel,
   salary,
   commitments,
+  debts,
   categories,
   budgetMap,
   upsert,
@@ -301,6 +310,7 @@ function AllocateView({
   monthLabel: string;
   salary: number;
   commitments: Array<{ id: string; label: string; amount: string }>;
+  debts: Debt[];
   categories: Array<{ id: string; name: string; kind: string }>;
   budgetMap: Record<string, { categoryId: string; plannedAmount?: string; actualAmount?: string }>;
   upsert: ReturnType<typeof useUpsertBudget>;
@@ -308,28 +318,24 @@ function AllocateView({
   onTrialExpired: () => void;
   resetSignal: number;
 }) {
-  // Build buckets from existing data
-  const loanKeywords = ["loan", "financing", "credit", "mortgage", "hire purchase"];
-  const isLoanLike = (label: string) => loanKeywords.some(k => label.toLowerCase().includes(k));
-
   const expenseCats = useMemo(() => categories.filter(c => c.kind === "expense"), [categories]);
   const savingsCats = useMemo(() => categories.filter(c => c.kind === "savings" || /vault|goal|saving/i.test(c.name)), [categories]);
 
   const initialBuckets: Bucket[] = useMemo(() => {
-    const loans: Bucket[] = commitments.filter(c => isLoanLike(c.label)).map(c => ({
-      id: `L:${c.id}`,
-      name: c.label,
+    const loans: Bucket[] = debts.map(d => ({
+      id: `L:${d.id}`,
+      name: d.lender,
       kind: "loan",
-      allocated: parseFloat(c.amount),
-      target: parseFloat(c.amount),
+      allocated: safeNum(d.monthlyPayment),
+      target: safeNum(d.monthlyPayment),
       auto: true,
     }));
-    const fixedEnvelopes: Bucket[] = commitments.filter(c => !isLoanLike(c.label)).map(c => ({
+    const fixedEnvelopes: Bucket[] = commitments.map(c => ({
       id: `F:${c.id}`,
       name: c.label,
       kind: "envelope",
-      allocated: parseFloat(c.amount),
-      target: parseFloat(c.amount),
+      allocated: safeNum(c.amount),
+      target: safeNum(c.amount),
       fixed: true,
     }));
     const variableEnvelopes: Bucket[] = expenseCats.map(cat => {
@@ -338,8 +344,8 @@ function AllocateView({
         id: `E:${cat.id}`,
         name: cat.name,
         kind: "envelope",
-        allocated: parseFloat(b?.plannedAmount ?? "0"),
-        spent: parseFloat(b?.actualAmount ?? "0"),
+        allocated: safeNum(b?.plannedAmount),
+        spent: safeNum(b?.actualAmount),
       };
     });
     const vaults: Bucket[] = savingsCats.length > 0
@@ -349,14 +355,14 @@ function AllocateView({
             id: `V:${cat.id}`,
             name: cat.name,
             kind: "vault",
-            allocated: parseFloat(b?.plannedAmount ?? "0"),
-            target: 5000, // placeholder until /goals is wired up
+            allocated: safeNum(b?.plannedAmount),
+            target: 5000,
           };
         })
       : [];
 
     return [...loans, ...fixedEnvelopes, ...variableEnvelopes, ...vaults];
-  }, [commitments, expenseCats, savingsCats, budgetMap]);
+  }, [debts, commitments, expenseCats, savingsCats, budgetMap]);
 
   const [buckets, setBuckets] = useState<Bucket[]>(initialBuckets);
   const [dragging, setDragging] = useState<{ amount: number; fromId?: string } | null>(null);
@@ -520,9 +526,18 @@ function AllocateView({
         </div>
       </div>
 
-      {/* Three columns */}
-      <div className="grid lg:grid-cols-3 gap-5">
-        {/* Bank / loans */}
+      {/* Bank empty-state banner — shown above the grid when no debts */}
+      {loanBuckets.length === 0 && (
+        <div className="rounded-lg border border-dashed bg-accent/30 px-5 py-3 flex items-center justify-between gap-3 text-sm">
+          <span className="text-muted-foreground">No loans tracked yet — add your financing on the Debts page to see repayments here.</span>
+          <a href="/debts" className="text-primary text-xs font-semibold underline underline-offset-2 shrink-0">Go to Debts →</a>
+        </div>
+      )}
+
+      {/* Three columns (collapses to 2-col when no debts) */}
+      <div className={cn("grid gap-5", loanBuckets.length > 0 ? "lg:grid-cols-3" : "lg:grid-cols-2")}>
+        {/* Bank / loans — only shown when debts exist */}
+        {loanBuckets.length > 0 && (
         <section className="space-y-3">
           <div className="flex items-center gap-3 px-1">
             <div className="w-9 h-9 rounded-lg bg-rose-50 flex items-center justify-center">
@@ -534,11 +549,6 @@ function AllocateView({
             </div>
           </div>
           <div className="space-y-2">
-            {loanBuckets.length === 0 && (
-              <div className="rounded-xl border border-dashed p-6 text-center text-xs text-muted-foreground">
-                No loans yet. Add commitments labelled "Loan" / "Financing" on the Commitments page.
-              </div>
-            )}
             {loanBuckets.map(b => (
               <BucketRow
                 key={b.id}
@@ -554,6 +564,7 @@ function AllocateView({
             ))}
           </div>
         </section>
+        )}
 
         {/* Envelopes */}
         <section className="space-y-3">
@@ -797,20 +808,21 @@ export default function Budgets() {
 
   const { data: profile } = useGetProfile();
   const { data: commitments } = useListCommitments();
+  const { data: debts = [] } = useListDebts();
   const { data: budgets, refetch } = useListBudgets({ month });
   const { data: categories } = useListCategories();
   const { data: accounts = [] } = useListAccounts();
   const upsert = useUpsertBudget();
 
-  const salary = parseFloat(profile?.monthlyIncome ?? "0");
-  const totalCommitments = (commitments ?? []).reduce((s, c) => s + parseFloat(c.amount), 0);
+  const salary = safeNum(profile?.monthlyIncome);
+  const totalCommitments = (commitments ?? []).reduce((s, c) => s + safeNum(c.amount), 0);
   const expenseCategories = (categories ?? []).filter(c => c.kind === "expense");
   const budgetMap = Object.fromEntries((budgets ?? []).map(b => [b.categoryId, b]));
 
-  const totalPlanned = expenseCategories.reduce((s, c) => s + parseFloat(budgetMap[c.id]?.plannedAmount ?? "0"), 0);
-  const totalActual = expenseCategories.reduce((s, c) => s + parseFloat(budgetMap[c.id]?.actualAmount ?? "0"), 0);
+  const totalPlanned = expenseCategories.reduce((s, c) => s + safeNum(budgetMap[c.id]?.plannedAmount), 0);
+  const totalActual = expenseCategories.reduce((s, c) => s + safeNum(budgetMap[c.id]?.actualAmount), 0);
   const pool = salary - totalCommitments - totalPlanned;
-  const totalAccountBalance = accounts.reduce((s, a) => s + parseFloat(a.balance ?? "0"), 0);
+  const totalAccountBalance = accounts.reduce((s, a) => s + safeNum(a.balance), 0);
   const readyToAssign = totalAccountBalance - totalCommitments - totalPlanned;
 
   const handleSave = async (categoryId: string) => {
@@ -901,6 +913,7 @@ export default function Budgets() {
           monthLabel={format(activeDate, "MMMM")}
           salary={salary}
           commitments={commitments ?? []}
+          debts={debts}
           categories={categories ?? []}
           budgetMap={budgetMap}
           upsert={upsert}

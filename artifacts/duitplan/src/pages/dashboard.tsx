@@ -81,6 +81,7 @@ export default function Dashboard() {
 
   const hasTransactions = recentTransactions && recentTransactions.length > 0;
   const hasSpending = spending && spending.length > 0;
+  const hasRealSpending = hasSpending && spending!.some(s => !/^uncategorized$/i.test(s.categoryName ?? "uncategorized"));
   const challenge = gamification?.monthlyChallenge;
   const challengePct = challenge ? Math.min(100, (challenge.progress / challenge.target) * 100) : 0;
   const latestBadge = gamification?.achievements
@@ -99,12 +100,12 @@ export default function Dashboard() {
         <div className="flex gap-2">
           <Link href="/upload">
             <Button variant="outline" className="bg-white gap-2">
-              <Upload className="w-4 h-4" /> Import Statement
+              <Upload className="w-4 h-4" /> {t("common.importStatement")}
             </Button>
           </Link>
           <Link href="/transactions">
             <Button className="gap-2">
-              <ArrowUpRight className="w-4 h-4" /> Add Transaction
+              <ArrowUpRight className="w-4 h-4" /> {t("common.addTransaction")}
             </Button>
           </Link>
         </div>
@@ -208,6 +209,11 @@ export default function Dashboard() {
                 <div className="flex justify-between text-[11px] text-muted-foreground">
                   <span>Spending</span><span>−{formatCurrency(summary?.totalSpent)}</span>
                 </div>
+                {(summary?.totalDebtMonthlyPayment ?? 0) > 0 && (
+                  <div className="flex justify-between text-[11px] text-muted-foreground">
+                    <span>Loan repayments due</span><span>−{formatCurrency(summary?.totalDebtMonthlyPayment)}</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -233,7 +239,7 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-6">
-              {hasSpending ? (
+              {hasRealSpending ? (
                 <>
                   <div className="w-44 h-44 shrink-0">
                     <ResponsiveContainer width="100%" height="100%">
@@ -289,8 +295,8 @@ export default function Dashboard() {
                       <p className="font-medium text-sm leading-tight truncate">{tx.description}</p>
                       <p className="text-[11px] text-muted-foreground mt-0.5 flex items-center gap-1 flex-wrap">
                         {formatDate(tx.date)}
-                        {tx.categoryName && <span className="bg-sky-50 text-sky-700 px-1.5 py-0.5 rounded text-[10px] font-bold">{tx.categoryName}</span>}
-                        {tx.accountName && <span className="bg-emerald-50 text-emerald-700 px-1.5 py-0.5 rounded text-[10px] font-bold">{tx.accountName}</span>}
+                        {tx.categoryName && tx.categoryName !== tx.description && <span className="bg-sky-50 text-sky-700 px-1.5 py-0.5 rounded text-[10px] font-bold">{tx.categoryName}</span>}
+                        <span className="bg-emerald-50 text-emerald-700 px-1.5 py-0.5 rounded text-[10px] font-bold">{tx.accountName ?? "—"}</span>
                       </p>
                     </div>
                     <span className={cn("font-bold text-sm ml-3 shrink-0 tabular-nums", tx.type === "credit" ? "text-emerald-600" : "text-rose-600")}>
@@ -320,7 +326,7 @@ export default function Dashboard() {
                 <p className="text-xs text-muted-foreground mt-0.5">Debt-to-income {summary?.debtToIncomeRatio ?? 0}%</p>
               </div>
               <Link href="/debts">
-                <Button variant="outline" size="sm">Manage Financing</Button>
+                <Button variant="outline" size="sm">{t("dashboard.financing.manage")}</Button>
               </Link>
             </div>
           </CardHeader>
@@ -358,16 +364,32 @@ export default function Dashboard() {
                 </div>
                 <span className="bg-orange-200 text-orange-900 text-xs font-bold px-2 py-1 rounded-full">🔥 {gamification.streak.current}</span>
               </div>
-              <div className="mt-4 grid grid-cols-7 gap-1">
-                {Array.from({ length: Math.min(gamification.streak.current, 14) }).map((_, i) => (
-                  <div key={i} className="h-7 rounded bg-orange-300/70 flex items-center justify-center text-[10px] font-bold text-orange-900">
-                    {i + 1}
+              {(() => {
+                const labels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+                const raw = new Date().getDay();
+                const todayIdx = raw === 0 ? 6 : raw - 1;
+                const streak = gamification.streak.current;
+                return (
+                  <div className="mt-4 grid grid-cols-7 gap-1">
+                    {labels.map((label, i) => {
+                      const isFuture = i > todayIdx;
+                      const isLogged = !isFuture && (todayIdx - i) < streak;
+                      return (
+                        <div key={i} className={cn(
+                          "h-7 rounded flex items-center justify-center text-[10px] font-bold",
+                          isFuture
+                            ? "bg-orange-100/40 text-orange-300"
+                            : isLogged
+                              ? "bg-orange-300/70 text-orange-900"
+                              : "border border-dashed border-orange-300 text-orange-400"
+                        )}>
+                          {label}
+                        </div>
+                      );
+                    })}
                   </div>
-                ))}
-                {Array.from({ length: Math.max(0, 2 - Math.max(0, gamification.streak.current - 12)) }).map((_, i) => (
-                  <div key={"f" + i} className="h-7 rounded border border-dashed border-orange-300" />
-                ))}
-              </div>
+                );
+              })()}
             </CardContent>
           </Card>
         )}

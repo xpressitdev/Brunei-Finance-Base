@@ -6,8 +6,8 @@
     "delete": "Delete",
     "loading": "Loading...",
     "optional": "(optional)",
-    "addTransaction": "Add Transaction",
-    "importStatement": "Import Statement",
+    "addTransaction": "Add transaction",
+    "importStatement": "Import statement",
     "expense": "Expense",
     "income": "Income",
     "date": "Date",
@@ -58,8 +58,8 @@
     "financing": {
       "title": "Financing Summary",
       "monthlyPayment": "Monthly Payment",
-      "debtToIncome": "Debt-to-Income",
-      "manage": "Manage Financing"
+      "debtToIncome": "Debt-to-income",
+      "manage": "Manage financing"
     },
     "recentTransactions": {
       "title": "Recent Transactions",
@@ -391,7 +391,7 @@
   "debts": {
     "title": "Debts",
     "subtitle": "Track your loans and plan payoffs.",
-    "addButton": "Add Debt",
+    "addButton": "Add debt",
     "empty": "No debts added yet.",
     "loading": "Loading...",
     "totalOutstanding": "Total Outstanding",
@@ -399,14 +399,14 @@
     "balanceLabel": "Balance:",
     "monthlyLabel": "Monthly:",
     "rateLabel": "Rate:",
-    "simulatePayoff": "Simulate Payoff",
+    "simulatePayoff": "Simulate payoff",
     "lastUpdated": "Last updated {{time}}",
     "noActivity": "No activity yet",
     "timeline": "Balance timeline — {{months}} months to payoff",
     "timelineStarted": "started {{date}}",
     "confirmDelete": "Are you sure?",
     "addDialog": {
-      "title": "Add Debt",
+      "title": "Add debt",
       "lenderLabel": "Lender / Bank Name",
       "balanceLabel": "Outstanding Balance ({{currency}})",
       "monthlyPaymentLabel": "Monthly Payment ({{currency}})",
@@ -600,7 +600,7 @@
       "categoryAnomalies": "Category Anomalies",
       "subscriptionCreep": "Subscription Creep",
       "savingsRate": "Savings Rate",
-      "dti": "Debt-to-Income Ratio",
+      "dti": "Debt-to-income ratio",
       "budgetAdherence": "Budget Adherence"
     },
     "spendingTrend": {
