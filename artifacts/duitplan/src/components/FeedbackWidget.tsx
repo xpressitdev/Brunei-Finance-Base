@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { MessageSquarePlus, Star, X, Loader2, CheckCircle2 } from "lucide-react";
+import { MessageSquarePlus, Star, X, Loader2, CheckCircle2, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -12,11 +12,19 @@ import { cn } from "@/lib/utils";
 const CATEGORIES = ["bug", "feature", "general", "praise"] as const;
 type Category = typeof CATEGORIES[number];
 
+function getMinimized() {
+  try { return localStorage.getItem("feedback-minimized") === "1"; } catch { return false; }
+}
+function setMinimizedPref(v: boolean) {
+  try { localStorage.setItem("feedback-minimized", v ? "1" : "0"); } catch {}
+}
+
 export function FeedbackWidget() {
   const { t } = useTranslation();
   const { user } = useAuth();
 
   const [open, setOpen] = useState(false);
+  const [minimized, setMinimized] = useState(getMinimized);
   const [category, setCategory] = useState<Category>("general");
   const [message, setMessage] = useState("");
   const [rating, setRating] = useState<number | null>(null);
@@ -39,6 +47,14 @@ export function FeedbackWidget() {
   const handleClose = () => {
     setOpen(false);
     setTimeout(reset, 300);
+  };
+
+  const toggleMinimized = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const next = !minimized;
+    setMinimized(next);
+    setMinimizedPref(next);
+    if (next) setOpen(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -68,20 +84,45 @@ export function FeedbackWidget() {
   return (
     <>
       {/* Floating trigger button */}
-      <button
-        onClick={() => setOpen(true)}
+      <div
         className={cn(
-          "fixed bottom-6 right-6 z-50 flex items-center gap-2 bg-primary text-primary-foreground",
-          "rounded-full shadow-lg px-4 py-2.5 text-sm font-medium",
-          "hover:bg-primary/90 transition-all duration-200",
-          "hover:shadow-xl active:scale-95",
+          "fixed bottom-6 right-6 z-50 flex items-center",
           open && "opacity-0 pointer-events-none"
         )}
-        aria-label={t("feedback.button")}
       >
-        <MessageSquarePlus className="w-4 h-4" />
-        <span>{t("feedback.button")}</span>
-      </button>
+        {minimized ? (
+          /* Minimized — icon-only pill with expand affordance */
+          <button
+            onClick={() => { setMinimized(false); setMinimizedPref(false); }}
+            className="flex items-center justify-center w-10 h-10 rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 transition-all duration-200 hover:shadow-xl active:scale-95"
+            aria-label={t("feedback.button")}
+            title={t("feedback.button")}
+          >
+            <MessageSquarePlus className="w-4 h-4" />
+          </button>
+        ) : (
+          /* Full pill with collapse button */
+          <div className="flex items-center rounded-full shadow-lg overflow-hidden border border-primary/20">
+            <button
+              onClick={() => setOpen(true)}
+              className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2.5 text-sm font-medium hover:bg-primary/90 transition-colors duration-200 active:scale-95"
+              aria-label={t("feedback.button")}
+            >
+              <MessageSquarePlus className="w-4 h-4" />
+              <span>{t("feedback.button")}</span>
+            </button>
+            {/* Minimize chevron */}
+            <button
+              onClick={toggleMinimized}
+              className="bg-primary/80 hover:bg-primary/70 text-primary-foreground px-2 py-2.5 transition-colors duration-200 border-l border-primary/30"
+              aria-label="Minimize feedback button"
+              title="Minimize"
+            >
+              <ChevronDown className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
+      </div>
 
       {/* Backdrop */}
       {open && (
@@ -117,7 +158,6 @@ export function FeedbackWidget() {
 
         <div className="p-5">
           {done ? (
-            /* Success state */
             <div className="flex flex-col items-center gap-3 py-6 text-center">
               <CheckCircle2 className="w-12 h-12 text-emerald-500" />
               <p className="font-semibold text-sm">{t("feedback.success.title")}</p>

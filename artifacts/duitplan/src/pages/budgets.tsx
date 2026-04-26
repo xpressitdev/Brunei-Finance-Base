@@ -538,9 +538,19 @@ function AllocateView({
                 />
               ))}
             </div>
-            <Button variant="ghost" size="sm" onClick={reset} className="self-start text-xs">
-              <RotateCcw className="w-3 h-3 mr-1" /> Reset to saved
-            </Button>
+            <div className="flex items-center gap-2 mt-1">
+              <Button variant="ghost" size="sm" onClick={reset} className="text-xs gap-1">
+                <RotateCcw className="w-3 h-3" /> Reset
+              </Button>
+              <div className="flex items-center gap-2">
+                {available < 0 && (
+                  <span className="text-xs text-red-600 font-medium">
+                    Over by {fmt(Math.abs(available))}
+                  </span>
+                )}
+                <ConfirmAllocationButton available={available} />
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -685,20 +695,6 @@ function AllocateView({
         />
       )}
 
-      {/* Confirm / Reset bar */}
-      <div className="flex items-center justify-between gap-3 pt-2 border-t">
-        <Button variant="ghost" size="sm" onClick={reset} className="text-xs gap-1">
-          <RotateCcw className="w-3 h-3" /> Reset to saved
-        </Button>
-        <div className="flex items-center gap-2">
-          {available < 0 && (
-            <span className="text-xs text-red-600 font-medium">
-              Over-allocated by {fmt(Math.abs(available))} — reduce spending before confirming.
-            </span>
-          )}
-          <ConfirmAllocationButton available={available} />
-        </div>
-      </div>
     </div>
   );
 }
