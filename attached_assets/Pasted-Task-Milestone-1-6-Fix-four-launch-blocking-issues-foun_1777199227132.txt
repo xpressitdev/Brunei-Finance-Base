@@ -1,0 +1,186 @@
+Task: Milestone 1.6 — Fix four launch-blocking issues found during founder dogfooding before soft-launch
+Background: After shipping Milestone 1.5 (loan double-counting fix), the founder used DuitPlan in production and found four issues that block soft-launch. This prompt addresses all four in one focused work session.
+Read these files first to understand existing conventions:
+
+The Dashboard page (look for "Remaining this month" calculation logic)
+The Hari Gaji banner component and payday_prompts table
+The transactions service / API (how transactions are created and linked)
+The Budgets page (specifically variable budget rendering)
+src/i18n/locales/en.json, ms.json, id.json
+Search the codebase globally for "YNAB" — find all occurrences
+
+
+Fix 1: Reconcile-on-transaction logic for the "Remaining this month" calculation (items 1+2)
+The bug:
+When the Hari Gaji banner creates a debt repayment transaction, the user's debt is now subtracted twice from "Remaining this month":
+
+Once because debts.monthly_payment is summed into the planned-outflows side of Remaining
+Once because the actual transaction is summed into actual-outflows side of Remaining
+
+The fix — Option A: Reconcile on transaction
+When a transaction is linked to a planned debt, the planned amount stops being subtracted from Remaining. The transaction takes its place.
+Step 1.1 — Add a link between transactions and debts
+Add a column to the transactions table:
+linked_debt_id  uuid (nullable, foreign key → debts.id)
+This column establishes a 1-to-1 link from a transaction to the debt it pays off.
+Step 1.2 — Auto-link Hari Gaji-created debt transactions
+When the user confirms the Hari Gaji review modal and the system creates debt repayment transactions, each transaction must be created with linked_debt_id set to the corresponding debt's ID.
+Income transactions (salary) do NOT need this column — leave linked_debt_id = null for income.
+Find the existing Hari Gaji confirmation handler (creates transactions in batch). Modify it so that for each debt-repayment line item, the resulting transaction includes linked_debt_id.
+Step 1.3 — Modify the "Remaining this month" calculation
+Locate the function/query that computes "Remaining this month" on the Dashboard.
+Current logic (broken):
+remaining = salary
+          - SUM(commitments.monthly_amount)
+          - SUM(debts.monthly_payment)         ← subtracted as planned
+          - SUM(transactions for current month) ← also subtracted as actual (DOUBLE COUNT)
+New logic (correct):
+// For each debt, check if a transaction has reconciled it this month
+reconciled_debt_ids = SET of debt IDs where there exists a transaction for the current month with linked_debt_id matching that debt
+
+unreconciled_debts_total = SUM(debts.monthly_payment) WHERE debt.id NOT IN reconciled_debt_ids
+
+remaining = salary
+          - SUM(commitments.monthly_amount)
+          - unreconciled_debts_total           ← only debts NOT yet transacted
+          - SUM(transactions for current month) ← all actual outflows
+Key insight: a debt's monthly_payment is subtracted from Remaining UNTIL a transaction with linked_debt_id referencing it appears for the current month. After that, only the actual transaction amount counts.
+V1 limitation (acceptable): Manually-created transactions do NOT auto-link to debts. Only Hari Gaji-created transactions reconcile. We accept this limitation for v1 and may add manual linking in a future milestone if users request it.
+Step 1.4 — Verify other Dashboard KPIs are not affected
+The KPI cards "Salary", "Fixed Commitments", "Liabilities", "Total Spent" should not change. Only "Remaining" calculation changes. Verify before reporting complete.
+
+Fix 2: Hari Gaji should not fire on or before onboarding day (item 9)
+The bug:
+When a user completes onboarding and their payday for the current month has already passed (or is today), the Hari Gaji banner fires immediately. The user can confirm "Yes I got paid" and the app creates a salary income transaction + debt repayment transactions on top of account balances that already reflect those events.
+Why it's wrong: Account balances entered during onboarding represent the user's CURRENT state — already post-salary, already post-debt-deductions for the current month. Adding new transactions for events that already happened double-counts everything.
+The fix:
+Modify the Hari Gaji banner trigger logic. Add this rule to the existing logic:
+SKIP the banner for the current month if:
+  current_month_payday_date <= user.onboarded_at
+Where:
+
+current_month_payday_date = a date object built from current year + current month + user's payday (day-of-month)
+user.onboarded_at = a timestamp recorded when the user completed onboarding
+
+Step 2.1 — Add onboarded_at to user model if not already present
+Check the user table schema. If onboarded_at doesn't exist, add it:
+onboarded_at  timestamp (nullable)
+Set it to NOW() when a user completes the final step of onboarding.
+For existing users who already completed onboarding before this column existed, backfill onboarded_at = created_at (a reasonable approximation).
+Step 2.2 — Update the banner trigger logic
+Find the function that decides whether to render the Hari Gaji banner (likely in GET /api/payday-prompt/current from Phase 3.3). Add the new skip condition.
+Pseudocode:
+function shouldShowPaydayBanner(user):
+  if user.payday is null or user.monthlyIncome is null:
+    return null  # existing rule
+
+  today = today's date
+  current_month_payday_date = construct(today.year, today.month, user.payday)
+
+  # NEW RULE
+  if current_month_payday_date <= user.onboarded_at:
+    return null  # current month's payday already passed at onboarding time
+
+  # existing rules continue (check today >= payday, check pending state, etc.)
+  ...
+Step 2.3 — Edge cases to handle
+
+Payday=31 in a 30-day month: existing logic should treat as "last day of month". Verify still works after this change.
+Existing users with no onboarded_at after backfill: created_at is the fallback. Users created before this fix would have onboarded_at = created_at, which is correct because their first payday after the column was added still passes this rule.
+User changes their payday mid-month: the rule still applies based on the new payday value. If they change payday from 25 to 1 mid-month, and onboarded_at was last week, the new payday=1 has already passed for the current month → banner skipped. Acceptable behavior.
+
+
+Fix 3: Variable budget not showing on Budgets page (item 4)
+The bug:
+The user reports that "variable budget" entries created via the Budgets page are not displaying. The user budgeted an amount but it doesn't appear.
+Investigation required:
+Investigate the cause. Likely culprits:
+
+The variable budget query doesn't include certain budget types
+There's a conditional render that hides them under specific states
+They're being saved to a different table or with a different type than expected
+UI tab filter is set to "fixed" only by default
+
+Approach:
+
+Read the Budgets page component
+Identify how budgets are queried/rendered
+Trace whether variable budgets exist in the database for the test user
+Identify why they aren't being displayed
+Apply the minimum fix to make them display
+
+Report back with the root cause and the specific fix applied.
+
+Fix 4: Remove "YNAB" placeholder text from Plan vs Actual section (item 5)
+The bug:
+The string "YNAB" appears somewhere in the Budgets page Plan vs Actual section. This is leftover developer/reference text that shouldn't be visible to users.
+The fix:
+
+Search the codebase for "YNAB" (case-insensitive)
+Identify each occurrence
+For occurrences in user-facing UI: remove or replace with appropriate copy (most likely something neutral like "Plan vs Actual" if the YNAB reference was a header)
+For occurrences in code comments or developer docs: leave them alone (those are fine)
+If the replacement copy needs to be in the locale files, add appropriate keys
+
+Report back with each occurrence found and how it was handled.
+
+STRICT scope boundaries — do NOT do any of the following
+
+Do NOT add manual transaction-to-debt linking (v1 limitation; only Hari Gaji auto-links)
+Do NOT modify the Hari Gaji banner UI/copy beyond the trigger logic change
+Do NOT modify the onboarding flow itself
+Do NOT modify Zakat, Net Worth, Goals, Insights, or any unrelated page
+Do NOT change the Phase 2 multi-region architecture or i18n
+Do NOT proactively redesign the Dashboard layout
+Do NOT add new categories, tags, or transaction fields beyond linked_debt_id
+Do NOT add notifications for the reconciliation logic ("Your car loan has been paid!")
+Do NOT add insights or analytics around reconciled vs unreconciled debts
+Do NOT touch the Mailgun DNS records or anything email-related
+
+
+Verification before reporting complete
+For Fix 1 (reconciliation):
+
+Schema change: transactions.linked_debt_id column exists, nullable, foreign key to debts
+Hari Gaji confirmation creates debt-repayment transactions with linked_debt_id set correctly
+Manual transaction creation does NOT set linked_debt_id (stays null)
+"Remaining this month" calculation:
+
+Test scenario A: User has 1 debt of BND 754/month, no transaction yet → Remaining subtracts the 754 as planned
+Test scenario B: User has 1 debt of BND 754/month, Hari Gaji fired and user confirmed → transaction created with linked_debt_id → Remaining now subtracts 754 as actual transaction (NOT also as planned)
+Test scenario C: Same as B but user manually creates a separate BND 754 transaction → BOTH the planned (no linked_debt_id) AND the manual transaction count → may show double-count, this is the V1 LIMITATION (document in code comments)
+
+
+Dashboard "Salary", "Fixed Commitments", "Liabilities", "Total Spent" KPIs unchanged
+
+For Fix 2 (Hari Gaji onboarding rule):
+
+users.onboarded_at column exists, populated for new users completing onboarding
+Existing users without onboarded_at had it backfilled to created_at
+Test scenario A: New user signs up Apr 26 with payday=25 → no Hari Gaji banner appears for April → first banner appears May 25
+Test scenario B: New user signs up Apr 20 with payday=25 → no banner Apr 20-24 → banner appears Apr 25 onwards (until acted on)
+Test scenario C: New user signs up Apr 25 with payday=25 → no Hari Gaji banner for April → first banner May 25 (skip-if-on-or-before rule)
+Existing users (created before this fix) still get their normal Hari Gaji prompts (because their onboarded_at = created_at is in the past)
+
+For Fix 3 (variable budget):
+
+Variable budgets created on the Budgets page now display correctly
+Pre-existing variable budgets for the test user (if any) also display
+Fixed budgets continue to display (no regression)
+
+For Fix 4 (YNAB cleanup):
+
+The string "YNAB" no longer appears anywhere in user-facing UI in any of the 3 languages
+Code comments referencing YNAB (if any) are preserved (those are fine)
+
+
+Report back with
+
+Files modified (group by fix)
+Schema changes made (linked_debt_id column, onboarded_at column)
+Migration logic for backfilling onboarded_at = created_at for existing users (and confirmation it ran successfully)
+Root cause of variable budget bug (Fix 3)
+Each "YNAB" occurrence found and how it was handled (Fix 4)
+Verification results across all 16 test scenarios above
+Any new translation keys added
+Any complications or scope creep noticed but not implemented (list, do not fix)

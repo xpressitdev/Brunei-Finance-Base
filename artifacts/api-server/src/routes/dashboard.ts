@@ -45,7 +45,18 @@ router.get("/dashboard/summary", requireAuth, async (req: AuthenticatedRequest, 
   const totalDebtPayment = debts.reduce((s, d) => s + parseFloat(d.monthlyPayment), 0);
   const debtToIncomeRatio = income > 0 ? (totalDebtPayment / income) * 100 : 0;
 
-  const remaining = income - totalCommitments - totalSpent - totalDebtPayment;
+  // Only subtract debt payments for debts not yet reconciled this month
+  // (debts are reconciled when a payday-prompt transaction with linked_debt_id is created)
+  const reconciledDebtIds = new Set(
+    debitTxns
+      .filter(t => t.linkedDebtId !== null && t.linkedDebtId !== undefined)
+      .map(t => t.linkedDebtId!)
+  );
+  const unreconciledDebtPayment = debts
+    .filter(d => !reconciledDebtIds.has(d.id))
+    .reduce((s, d) => s + parseFloat(d.monthlyPayment), 0);
+
+  const remaining = income - totalCommitments - totalSpent - unreconciledDebtPayment;
 
   const allTxns = await db.select().from(transactionsTable).where(and(
     eq(transactionsTable.userId, req.userId!),

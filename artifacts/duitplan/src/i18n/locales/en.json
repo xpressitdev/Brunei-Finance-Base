@@ -345,7 +345,7 @@
       "sectionTitle": "Account Balances",
       "noAccounts": "No accounts added yet.",
       "noAccountsCta": "Add your accounts",
-      "noAccountsHint": "to use YNAB-style budgeting.",
+      "noAccountsHint": "to track your variable spending.",
       "totalCash": "Total Cash"
     },
     "commitments": {
@@ -355,7 +355,7 @@
     },
     "variableBudget": {
       "sectionTitle": "Variable Budget",
-      "actualSectionTitle": "Category Budget — Actual (YNAB)",
+      "actualSectionTitle": "Category Budget — Actual",
       "colCategory": "Category",
       "colAssigned": "Assigned",
       "colActivity": "Activity",

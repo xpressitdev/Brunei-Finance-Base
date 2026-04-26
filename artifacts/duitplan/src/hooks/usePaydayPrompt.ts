@@ -25,6 +25,7 @@ export interface ConfirmTransaction {
   description: string;
   date: string;
   notes?: string | null;
+  debtId?: string | null;
 }
 
 const QUERY_KEY = ["payday-prompt", "current"] as const;

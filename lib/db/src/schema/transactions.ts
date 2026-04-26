@@ -16,6 +16,7 @@ export const transactionsTable = pgTable("transactions", {
   notes: text("notes"),
   importedRowId: text("imported_row_id"),
   receiptUrl: text("receipt_url"),
+  linkedDebtId: text("linked_debt_id"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 }, (table) => [

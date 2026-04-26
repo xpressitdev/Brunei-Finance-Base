@@ -18,7 +18,9 @@ router.get("/onboarding/status", requireAuth, async (req: AuthenticatedRequest, 
 });
 
 router.post("/onboarding/complete", requireAuth, async (req: AuthenticatedRequest, res): Promise<void> => {
-  await db.update(usersTable).set({ onboardingCompleted: true }).where(eq(usersTable.id, req.userId!));
+  await db.update(usersTable)
+    .set({ onboardingCompleted: true, onboardedAt: new Date() })
+    .where(eq(usersTable.id, req.userId!));
   res.json({ completed: true, currentStep: null });
 });
 

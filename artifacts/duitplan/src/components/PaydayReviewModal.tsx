@@ -261,6 +261,7 @@ export function PaydayReviewModal({ open, onClose, prompt }: Props) {
       accountId: item.accountId || null,
       description: item.description,
       date: item.date,
+      debtId: item.debtId ?? null,
     }));
 
     try {

@@ -345,7 +345,7 @@
       "sectionTitle": "Saldo Rekening",
       "noAccounts": "Belum ada rekening.",
       "noAccountsCta": "Tambahkan rekening Anda",
-      "noAccountsHint": "untuk menggunakan anggaran gaya YNAB.",
+      "noAccountsHint": "untuk melacak pengeluaran variabel Anda.",
       "totalCash": "Total Tunai"
     },
     "commitments": {
@@ -355,7 +355,7 @@
     },
     "variableBudget": {
       "sectionTitle": "Anggaran Variabel",
-      "actualSectionTitle": "Anggaran Kategori — Aktual (YNAB)",
+      "actualSectionTitle": "Anggaran Kategori — Aktual",
       "colCategory": "Kategori",
       "colAssigned": "Dialokasikan",
       "colActivity": "Aktivitas",

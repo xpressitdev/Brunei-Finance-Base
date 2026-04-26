@@ -8,6 +8,7 @@ import {
   debtsTable,
   transactionsTable,
   accountsTable,
+  usersTable,
 } from "@workspace/db";
 import { requireAuth, type AuthenticatedRequest } from "../lib/auth";
 import { requireAccess } from "../lib/access";
@@ -45,6 +46,17 @@ router.get("/payday-prompt/current", requireAuth, async (req: AuthenticatedReque
   if (day < effectivePd) {
     res.json(null);
     return;
+  }
+
+  // Skip the payday banner for the calendar month in which the user onboarded.
+  // This prevents newly-created accounts from seeing the banner immediately on signup.
+  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1);
+  if (user?.onboardedAt) {
+    const oa = new Date(user.onboardedAt);
+    if (oa.getFullYear() === year && (oa.getMonth() + 1) === month) {
+      res.json(null);
+      return;
+    }
   }
 
   // Find or create the prompt for this month
@@ -114,6 +126,7 @@ interface ConfirmTxn {
   description: string;
   date: string;
   notes?: string | null;
+  debtId?: string | null;
 }
 
 router.post("/payday-prompt/:id/confirm", requireAuth, requireAccess, async (req: AuthenticatedRequest, res): Promise<void> => {
@@ -142,6 +155,7 @@ router.post("/payday-prompt/:id/confirm", requireAuth, requireAccess, async (req
         accountId: t.accountId ?? null,
         notes: t.notes ?? null,
         source: "payday_prompt",
+        linkedDebtId: t.debtId ?? null,
       }).returning();
 
       if (inserted.accountId) {

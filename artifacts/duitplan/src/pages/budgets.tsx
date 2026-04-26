@@ -329,8 +329,8 @@ export default function Budgets() {
     if (val === undefined) return;
     try {
       await upsert.mutateAsync({ data: { categoryId, month, plannedAmount: parseFloat(val).toFixed(2) } });
+      await refetch();
       setEditing(prev => { const n = { ...prev }; delete n[categoryId]; return n; });
-      refetch();
     } catch (err) {
       if (isTrialExpiredError(err)) {
         setTrialExpiredError(true);

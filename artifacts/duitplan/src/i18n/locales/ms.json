@@ -345,7 +345,7 @@
       "sectionTitle": "Baki Akaun",
       "noAccounts": "Tiada akaun lagi.",
       "noAccountsCta": "Tambah akaun anda",
-      "noAccountsHint": "untuk menggunakan belanjawan gaya YNAB.",
+      "noAccountsHint": "untuk menjejak perbelanjaan berubah anda.",
       "totalCash": "Jumlah Tunai"
     },
     "commitments": {
@@ -355,7 +355,7 @@
     },
     "variableBudget": {
       "sectionTitle": "Belanjawan Berubah",
-      "actualSectionTitle": "Belanjawan Kategori — Sebenar (YNAB)",
+      "actualSectionTitle": "Belanjawan Kategori — Sebenar",
       "colCategory": "Kategori",
       "colAssigned": "Ditetapkan",
       "colActivity": "Aktiviti",

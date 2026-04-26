@@ -34,6 +34,9 @@ export async function runStartupMigrations(): Promise<void> {
     `);
     await client.query(`ALTER TABLE debts ADD COLUMN IF NOT EXISTS migration_source text;`);
     await client.query(`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS migration_notice_dismissed boolean NOT NULL DEFAULT false;`);
+    await client.query(`ALTER TABLE transactions ADD COLUMN IF NOT EXISTS linked_debt_id text;`);
+    await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS onboarded_at timestamptz;`);
+    await client.query(`UPDATE users SET onboarded_at = created_at WHERE onboarded_at IS NULL;`);
     logger.info("Startup migrations applied");
   } catch (err) {
     logger.error({ err }, "Startup migration failed — aborting server start");
