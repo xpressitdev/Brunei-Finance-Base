@@ -23,6 +23,9 @@ import {
   LineChart,
   Line,
   Legend,
+  AreaChart,
+  Area,
+  ReferenceLine,
 } from "recharts";
 import type { TooltipProps } from "recharts";
 import { Button } from "@/components/ui/button";
@@ -343,93 +346,166 @@ export default function NetWorth() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Total Assets */}
-        <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-5">
-          <p className="text-xs font-semibold text-emerald-700 uppercase tracking-wide mb-1">{t("netWorth.summary.totalAssets")}</p>
-          <p className="text-2xl font-bold text-emerald-800">{formatCurrency(totalAssets)}</p>
-          <div className="mt-2 space-y-1">
-            <div className="flex justify-between text-xs text-emerald-700">
-              <span>{t("netWorth.summary.assetEntries")}</span>
-              <span className="font-medium">{formatCurrency(totalAssetEntries)}</span>
+      {/* Net Worth Hero — balance scale + deltas */}
+      {(() => {
+        const maxSide = Math.max(totalAssets, totalLiabilities, 1);
+        const tiltDeg = Math.max(-22, Math.min(22, ((totalLiabilities - totalAssets) / maxSide) * 22));
+        const debtToAsset = totalAssets > 0 ? (totalLiabilities / totalAssets) : null;
+        const equityPct = totalAssets > 0 ? ((netWorth / totalAssets) * 100) : null;
+        const debtLoadPct = (totalAssets + totalLiabilities) > 0 ? (totalLiabilities / (totalAssets + totalLiabilities) * 100) : null;
+        const lastMonthVal = trendData[trendData.length - 2]?.value ?? null;
+        const yearAgoVal = trendData[0]?.value ?? null;
+        const vsLastMonthStr = trendData.length >= 2 && lastMonthVal !== null
+          ? ((totalAssetEntries - lastMonthVal) >= 0 ? "+" : "") + formatCurrency(totalAssetEntries - lastMonthVal)
+          : null;
+        const vsYearStr = trendData.length >= 12 && yearAgoVal !== null
+          ? ((totalAssetEntries - yearAgoVal) >= 0 ? "+" : "") + formatCurrency(totalAssetEntries - yearAgoVal)
+          : null;
+
+        return (
+          <>
+            {/* Hero card */}
+            <div className="grid lg:grid-cols-5 gap-4">
+              <div className="lg:col-span-3 rounded-xl border bg-card p-6">
+                <div className="flex items-start justify-between gap-6">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Today's Net Worth</p>
+                    <div className={cn("text-4xl font-extrabold tabular-nums mt-1", netWorthPositive ? "text-primary" : "text-rose-600")}>
+                      {formatCurrency(netWorth)}
+                    </div>
+                    <span className={cn("inline-flex items-center gap-1 mt-2 px-2.5 py-0.5 rounded-full text-xs font-semibold", netWorthPositive ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700")}>
+                      {netWorthPositive ? "✓ Healthy" : "⚠ Critical"}
+                    </span>
+                    <div className="mt-4 flex gap-6">
+                      {vsLastMonthStr && (
+                        <div>
+                          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">vs Last Month</p>
+                          <p className={cn("text-sm font-bold tabular-nums mt-0.5", (totalAssetEntries - (lastMonthVal ?? 0)) >= 0 ? "text-primary" : "text-rose-600")}>{vsLastMonthStr}</p>
+                        </div>
+                      )}
+                      {vsYearStr && (
+                        <div>
+                          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">vs 12 Months Ago</p>
+                          <p className={cn("text-sm font-bold tabular-nums mt-0.5", (totalAssetEntries - (yearAgoVal ?? 0)) >= 0 ? "text-primary" : "text-rose-600")}>{vsYearStr}</p>
+                        </div>
+                      )}
+                    </div>
+                    <div className="mt-4 pt-4 border-t flex gap-6 text-xs text-muted-foreground">
+                      <span>Assets: <span className="font-semibold text-foreground">{formatCurrency(totalAssets)}</span></span>
+                      <span>Liabilities: <span className="font-semibold text-foreground">{formatCurrency(totalLiabilities)}</span></span>
+                    </div>
+                  </div>
+
+                  {/* Balance scale SVG */}
+                  <div className="flex-shrink-0 flex flex-col items-center select-none" aria-label={`Balance scale: Assets ${formatCurrency(totalAssets)}, Liabilities ${formatCurrency(totalLiabilities)}`}>
+                    <svg width="160" height="130" viewBox="0 0 160 130" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <defs>
+                        <linearGradient id="assetGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#15a06e" stopOpacity="0.9" />
+                          <stop offset="100%" stopColor="#0d7a52" stopOpacity="1" />
+                        </linearGradient>
+                        <linearGradient id="liabGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#ef4444" stopOpacity="0.9" />
+                          <stop offset="100%" stopColor="#dc2626" stopOpacity="1" />
+                        </linearGradient>
+                      </defs>
+                      {/* Stand */}
+                      <rect x="77" y="80" width="6" height="42" rx="3" fill="#94a3b8" />
+                      <ellipse cx="80" cy="122" rx="20" ry="5" fill="#e2e8f0" />
+                      {/* Pivot circle */}
+                      <circle cx="80" cy="80" r="5" fill="#64748b" />
+                      {/* Beam — rotates from pivot (80,80) */}
+                      <g transform={`rotate(${tiltDeg} 80 80)`}>
+                        <rect x="14" y="77" width="132" height="6" rx="3" fill="#64748b" />
+                        {/* Left string + pan (Assets) */}
+                        <line x1="22" y1="80" x2="22" y2="98" stroke="#94a3b8" strokeWidth="1.5" />
+                        <rect x="8" y="98" width="28" height="16" rx="4" fill="url(#assetGrad)" />
+                        <text x="22" y="110" textAnchor="middle" fill="white" fontSize="7" fontWeight="bold">ASSETS</text>
+                        {/* Right string + pan (Liabilities) */}
+                        <line x1="138" y1="80" x2="138" y2="98" stroke="#94a3b8" strokeWidth="1.5" />
+                        <rect x="124" y="98" width="28" height="16" rx="4" fill="url(#liabGrad)" />
+                        <text x="138" y="110" textAnchor="middle" fill="white" fontSize="6.5" fontWeight="bold">LIAB.</text>
+                      </g>
+                    </svg>
+                    <p className="text-[10px] text-muted-foreground -mt-1 font-medium">
+                      {Math.abs(tiltDeg) < 2 ? "Balanced" : netWorthPositive ? "Assets outweigh debts" : "Debts outweigh assets"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Metrics */}
+              <div className="lg:col-span-2 grid grid-cols-1 gap-3">
+                <div className="rounded-xl border bg-card p-4">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Debt-to-Asset Ratio</p>
+                  <div className={cn("text-3xl font-extrabold tabular-nums mt-1", debtToAsset !== null && debtToAsset > 0.5 ? "text-rose-600" : "text-primary")}>
+                    {debtToAsset !== null ? debtToAsset.toFixed(2) : "—"}
+                  </div>
+                  <p className="text-[11px] text-muted-foreground mt-1">{debtToAsset !== null ? (debtToAsset <= 0.3 ? "Excellent — well under control" : debtToAsset <= 0.6 ? "Manageable" : "High — focus on reducing debt") : "Add assets to track"}</p>
+                  {debtToAsset !== null && (
+                    <div className="mt-2 h-1.5 rounded-full bg-accent overflow-hidden">
+                      <div className={cn("h-full rounded-full", debtToAsset <= 0.3 ? "bg-emerald-500" : debtToAsset <= 0.6 ? "bg-amber-500" : "bg-rose-500")} style={{ width: `${Math.min(debtToAsset * 100, 100)}%` }} />
+                    </div>
+                  )}
+                </div>
+                <div className="rounded-xl border bg-card p-4">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Equity %</p>
+                  <div className={cn("text-3xl font-extrabold tabular-nums mt-1", equityPct !== null && equityPct < 40 ? "text-rose-600" : "text-primary")}>
+                    {equityPct !== null ? `${equityPct.toFixed(1)}%` : "—"}
+                  </div>
+                  <p className="text-[11px] text-muted-foreground mt-1">of total assets owned free of debt</p>
+                  {equityPct !== null && (
+                    <div className="mt-2 h-1.5 rounded-full bg-accent overflow-hidden">
+                      <div className="h-full rounded-full bg-primary" style={{ width: `${Math.max(0, Math.min(equityPct, 100))}%` }} />
+                    </div>
+                  )}
+                </div>
+                <div className="rounded-xl border bg-card p-4">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Debt Load</p>
+                  <div className={cn("text-3xl font-extrabold tabular-nums mt-1", debtLoadPct !== null && debtLoadPct > 50 ? "text-rose-600" : "text-amber-600")}>
+                    {debtLoadPct !== null ? `${debtLoadPct.toFixed(1)}%` : "—"}
+                  </div>
+                  <p className="text-[11px] text-muted-foreground mt-1">of total portfolio is liabilities</p>
+                  {debtLoadPct !== null && (
+                    <div className="mt-2 h-1.5 rounded-full bg-accent overflow-hidden">
+                      <div className={cn("h-full rounded-full", debtLoadPct <= 30 ? "bg-emerald-500" : debtLoadPct <= 50 ? "bg-amber-500" : "bg-rose-500")} style={{ width: `${debtLoadPct}%` }} />
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
-            <div className="flex justify-between text-xs text-emerald-700">
-              <span>{t("netWorth.summary.accountBalances")}</span>
-              <span className="font-medium">{formatCurrency(totalAccountBalance)}</span>
+
+            {/* 12-month trajectory area chart */}
+            <div className="rounded-xl border bg-card p-5">
+              <div className="mb-4">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">12-Month Asset Trajectory</p>
+                <h3 className="text-base font-semibold mt-0.5">{t("netWorth.charts.trendSubtitle")}</h3>
+              </div>
+              {trendData.every((d) => d.value === 0) ? (
+                <div className="flex items-center justify-center h-48 text-sm text-muted-foreground">
+                  {t("netWorth.charts.trendEmpty")}
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height={200}>
+                  <AreaChart data={trendData} margin={{ top: 4, right: 8, left: 0, bottom: 4 }}>
+                    <defs>
+                      <linearGradient id="trajGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                        <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.02} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                    <XAxis dataKey="month" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} tickFormatter={(v: number) => fmtCompact(v)} width={70} />
+                    <Tooltip content={<LineTooltip />} />
+                    <Area type="monotone" dataKey="value" stroke="hsl(var(--primary))" strokeWidth={2.5} fill="url(#trajGrad)" dot={{ r: 3, fill: "hsl(var(--primary))", strokeWidth: 0 }} activeDot={{ r: 5 }} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              )}
             </div>
-          </div>
-        </div>
-
-        {/* Total Liabilities */}
-        <div className="bg-red-50 border border-red-200 rounded-xl p-5">
-          <p className="text-xs font-semibold text-red-700 uppercase tracking-wide mb-1">{t("netWorth.summary.totalLiabilities")}</p>
-          <p className="text-2xl font-bold text-red-800">{formatCurrency(totalLiabilities)}</p>
-          <div className="mt-2">
-            <p className="text-xs text-red-700">
-              {t("netWorth.summary.debtsOutstanding", { count: debts.length })}
-            </p>
-          </div>
-        </div>
-
-        {/* Net Worth */}
-        <div className={cn(
-          "rounded-xl p-5 border-2",
-          netWorthPositive ? "bg-white border-emerald-400" : "bg-red-50 border-red-400"
-        )}>
-          <p className={cn("text-xs font-semibold uppercase tracking-wide mb-1", netWorthPositive ? "text-emerald-700" : "text-red-700")}>
-            {t("netWorth.summary.netWorth")}
-          </p>
-          <p className={cn("text-3xl font-extrabold", netWorthPositive ? "text-emerald-700" : "text-red-700")}>
-            {formatCurrency(netWorth)}
-          </p>
-          <p className="text-xs text-muted-foreground mt-2">
-            {formatCurrency(totalAssets)} − {formatCurrency(totalLiabilities)}
-          </p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Assets vs Liabilities comparison chart */}
-        <div className="bg-card border rounded-xl p-5">
-          <h2 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide mb-4">
-            {t("netWorth.charts.assetsVsLiabilities")}
-          </h2>
-          <ResponsiveContainer width="100%" height={220}>
-            <BarChart data={comparisonData} margin={{ top: 4, right: 8, left: 0, bottom: 4 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-              <XAxis dataKey="name" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} tickFormatter={(v: number) => fmtCompact(v)} width={70} />
-              <Tooltip content={<ComparisonTooltip />} />
-              <Legend wrapperStyle={{ fontSize: 12 }} />
-              <Bar dataKey="Assets" name={t("netWorth.summary.totalAssets")} fill="hsl(142, 71%, 45%)" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="Liabilities" name={t("netWorth.summary.totalLiabilities")} fill="hsl(0, 84%, 60%)" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-
-        {/* 12-month asset entries trend */}
-        <div className="bg-card border rounded-xl p-5">
-          <h2 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide mb-1">
-            {t("netWorth.charts.trendTitle")}
-          </h2>
-          <p className="text-xs text-muted-foreground mb-3">{t("netWorth.charts.trendSubtitle")}</p>
-          {trendData.every((d) => d.value === 0) ? (
-            <div className="flex items-center justify-center h-48 text-sm text-muted-foreground">
-              {t("netWorth.charts.trendEmpty")}
-            </div>
-          ) : (
-            <ResponsiveContainer width="100%" height={200}>
-              <LineChart data={trendData} margin={{ top: 4, right: 8, left: 0, bottom: 4 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="month" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} tickFormatter={(v: number) => fmtCompact(v)} width={70} />
-                <Tooltip content={<LineTooltip />} />
-                <Line type="monotone" dataKey="value" stroke="hsl(var(--primary))" strokeWidth={2.5} dot={{ r: 3, fill: "hsl(var(--primary))", strokeWidth: 0 }} activeDot={{ r: 5 }} />
-              </LineChart>
-            </ResponsiveContainer>
-          )}
-        </div>
-      </div>
+          </>
+        );
+      })()}
 
       {/* Account Balances section */}
       <div className="space-y-2">

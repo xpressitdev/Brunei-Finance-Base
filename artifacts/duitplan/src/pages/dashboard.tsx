@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useGetDashboardSummary, useGetRecentTransactions, useGetSpendingByCategory, useGetProfile } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,6 +11,8 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useRegion } from "@/hooks/useRegion";
 import { cn } from "@/lib/utils";
+import { usePaydayPrompt } from "@/hooks/usePaydayPrompt";
+import { PaydayReviewModal } from "@/components/PaydayReviewModal";
 
 const COLORS = ["#15a06e", "#0ea5e9", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4", "#84cc16", "#f97316"];
 
@@ -46,8 +48,10 @@ export default function Dashboard() {
   const currentMonth = format(new Date(), "yyyy-MM");
   const currentMonthName = format(new Date(), "MMMM");
   const { formatCurrency, formatDate } = useRegion();
+  const [payModalOpen, setPayModalOpen] = useState(false);
 
   const { data: profile } = useGetProfile();
+  const { prompt: paydayPrompt, remindTomorrow: remindPaydayTomorrow } = usePaydayPrompt();
   const { data: summary, isLoading: summaryLoading } = useGetDashboardSummary({ month: currentMonth });
   const { data: spending, isLoading: spendingLoading } = useGetSpendingByCategory({ month: currentMonth });
   const { data: recentTransactions } = useGetRecentTransactions({ limit: 5 });
@@ -105,6 +109,34 @@ export default function Dashboard() {
           </Link>
         </div>
       </div>
+
+      {/* Hari Gaji Banner */}
+      {paydayPrompt && (
+        <div className="rounded-xl border border-emerald-200/60 bg-emerald-50/60 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center text-lg flex-shrink-0">
+              💵
+            </div>
+            <div>
+              <div className="text-sm font-semibold">
+                Hari Gaji is today{profile?.firstName ? `, ${profile.firstName}` : ""}.
+              </div>
+              <div className="text-[13px] text-muted-foreground">
+                Did you receive your {formatCurrency(parseFloat(paydayPrompt.monthlyIncome))} salary? We'll log it and deduct your auto-debits.
+              </div>
+            </div>
+          </div>
+          <div className="flex gap-2 shrink-0">
+            <Button variant="ghost" size="sm" onClick={() => remindPaydayTomorrow(paydayPrompt.id)}>
+              Remind tomorrow
+            </Button>
+            <Button size="sm" onClick={() => setPayModalOpen(true)}>
+              Yes, I got paid
+            </Button>
+          </div>
+        </div>
+      )}
+      {paydayPrompt && <PaydayReviewModal open={payModalOpen} onClose={() => setPayModalOpen(false)} prompt={paydayPrompt} />}
 
       {/* 5 KPI Cards */}
       {(() => {

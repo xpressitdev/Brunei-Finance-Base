@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useLocation, useSearch } from "wouter";
 import { useTranslation } from "react-i18next";
-import { format } from "date-fns";
+import { format, getDaysInMonth, startOfMonth, getDay } from "date-fns";
 import { useQueryClient } from "@tanstack/react-query";
 import { 
   useListTransactions, 
@@ -67,9 +67,72 @@ export default function Transactions() {
     ...(accountFilter ? { accountId: accountFilter } : {}),
     ...(typeFilter ? { type: typeFilter } : {}),
   };
+  const currentMonthStr = format(new Date(), "yyyy-MM");
   const { data: transactions, isLoading, refetch } = useListTransactions(listParams);
+  const { data: currentMonthTxs } = useListTransactions({ month: currentMonthStr });
   const { data: categories } = useListCategories();
   const { data: accounts } = useListAccounts();
+
+  // Heatmap & stats derived from current month's transactions
+  const heatmapData = useMemo(() => {
+    if (!currentMonthTxs?.length) return { monthSpend: {} as Record<number, number>, income: 0, spent: 0, topMerchants: [] as { merchant: string; total: number; count: number }[] };
+    const monthSpend: Record<number, number> = {};
+    let income = 0, spent = 0;
+    const merchantTotals: Record<string, { total: number; count: number }> = {};
+    for (const tx of currentMonthTxs) {
+      const day = parseInt(tx.date.split("-")[2]);
+      const amt = Number(tx.amount);
+      if (tx.type === "debit") {
+        monthSpend[day] = (monthSpend[day] || 0) + amt;
+        spent += amt;
+        const key = tx.description || "Unknown";
+        if (!merchantTotals[key]) merchantTotals[key] = { total: 0, count: 0 };
+        merchantTotals[key].total += amt;
+        merchantTotals[key].count += 1;
+      } else {
+        income += amt;
+      }
+    }
+    const topMerchants = Object.entries(merchantTotals)
+      .map(([merchant, d]) => ({ merchant, ...d }))
+      .sort((a, b) => b.total - a.total)
+      .slice(0, 5);
+    return { monthSpend, income, spent, topMerchants };
+  }, [currentMonthTxs]);
+
+  const { monthSpend, income: hmIncome, spent: hmSpent, topMerchants } = heatmapData;
+  const hmNet = hmIncome - hmSpent;
+  const daysInMonth = getDaysInMonth(new Date());
+  const maxDaySpend = Math.max(...Object.values(monthSpend), 1);
+  const avgPerDay = daysInMonth > 0 ? hmSpent / daysInMonth : 0;
+  const noSpendDays = daysInMonth - Object.keys(monthSpend).length;
+  const activeDays = Object.keys(monthSpend).length;
+  const highestDay = Math.max(...Object.values(monthSpend), 0);
+  const firstDow = getDay(startOfMonth(new Date())); // 0=Sun
+
+  const [catFilter, setCatFilter] = useState<string | null>(null);
+  const categoryStats = useMemo(() => {
+    if (!currentMonthTxs?.length) return [] as { name: string; total: number; color: string }[];
+    const totals: Record<string, number> = {};
+    for (const tx of currentMonthTxs) {
+      if (tx.type === "debit") {
+        const cat = tx.categoryName || "Uncategorized";
+        totals[cat] = (totals[cat] || 0) + Number(tx.amount);
+      }
+    }
+    const CAT_COLORS: Record<string, string> = { Loan: "#15a06e", Housing: "#0ea5e9", Family: "#f59e0b", Groceries: "#ef4444", "Eating out": "#8b5cf6", Insurance: "#06b6d4", Transport: "#84cc16", Utilities: "#f97316", Health: "#14b8a6", Uncategorized: "#94a3b8" };
+    return Object.entries(totals).map(([name, total]) => ({ name, total, color: CAT_COLORS[name] ?? "#64748b" })).sort((a, b) => b.total - a.total);
+  }, [currentMonthTxs]);
+  const maxCatTotal = categoryStats[0]?.total || 1;
+
+  const heatColor = (amount: number) => {
+    if (!amount) return "bg-accent";
+    const t = amount / maxDaySpend;
+    if (t > 0.75) return "bg-[hsl(162,70%,30%)] text-white";
+    if (t > 0.5)  return "bg-[hsl(162,60%,42%)] text-white";
+    if (t > 0.25) return "bg-[hsl(162,55%,70%)] text-emerald-900";
+    return "bg-[hsl(162,55%,88%)] text-emerald-900";
+  };
   
   const createMutation = useCreateTransaction();
   const updateMutation = useUpdateTransaction();
@@ -380,6 +443,138 @@ export default function Transactions() {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Hero stats */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="rounded-xl border bg-card p-4 relative overflow-hidden">
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Income · {format(new Date(), "MMMM")}</p>
+          <div className="text-2xl font-bold tabular-nums text-emerald-700 mt-1">+{formatCurrency(hmIncome)}</div>
+          <div className="text-[11px] text-muted-foreground mt-0.5">{currentMonthTxs?.filter(t => t.type === "credit").length ?? 0} deposits</div>
+        </div>
+        <div className="rounded-xl border bg-card p-4 relative overflow-hidden">
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Spent · {format(new Date(), "MMMM")}</p>
+          <div className="text-2xl font-bold tabular-nums text-rose-600 mt-1">−{formatCurrency(hmSpent)}</div>
+          <div className="text-[11px] text-muted-foreground mt-0.5">{currentMonthTxs?.filter(t => t.type === "debit").length ?? 0} purchases</div>
+        </div>
+        <div className={`rounded-xl border p-4 relative overflow-hidden ${hmNet >= 0 ? "bg-emerald-50/60 border-emerald-200" : "bg-rose-50/60 border-rose-200"}`}>
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Net flow</p>
+          <div className={`text-2xl font-bold tabular-nums mt-1 ${hmNet >= 0 ? "text-primary" : "text-rose-600"}`}>{hmNet >= 0 ? "+" : "−"}{formatCurrency(Math.abs(hmNet))}</div>
+          <div className="text-[11px] text-muted-foreground mt-0.5">{hmNet >= 0 ? "Saving this month" : "Overspending"}</div>
+        </div>
+        <div className="rounded-xl border bg-card p-4 relative overflow-hidden">
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Avg per day</p>
+          <div className="text-2xl font-bold tabular-nums mt-1">{formatCurrency(avgPerDay)}</div>
+          <div className="text-[11px] text-muted-foreground mt-0.5">over {daysInMonth} days</div>
+        </div>
+      </div>
+
+      {/* Spending heatmap + Top merchants */}
+      <div className="grid lg:grid-cols-3 gap-4">
+        {/* Calendar heatmap */}
+        <div className="rounded-xl border bg-card p-5 lg:col-span-2">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Spending heatmap</p>
+              <h3 className="text-base font-semibold mt-0.5">{format(new Date(), "MMMM yyyy")}</h3>
+            </div>
+            <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+              <span>Less</span>
+              <div className="flex gap-0.5">
+                {["bg-accent", "bg-[hsl(162,55%,88%)]", "bg-[hsl(162,55%,70%)]", "bg-[hsl(162,60%,42%)]", "bg-[hsl(162,70%,30%)]"].map((c, i) => (
+                  <span key={i} className={`w-3 h-3 rounded-sm ${c}`} />
+                ))}
+              </div>
+              <span>More</span>
+            </div>
+          </div>
+          <div className="grid grid-cols-7 gap-1.5">
+            {["S","M","T","W","T","F","S"].map((d, i) => (
+              <div key={i} className="text-center text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">{d}</div>
+            ))}
+            {Array.from({ length: firstDow }).map((_, i) => <div key={`pad-${i}`} />)}
+            {Array.from({ length: daysInMonth }).map((_, i) => {
+              const day = i + 1;
+              const amt = monthSpend[day] || 0;
+              const isToday = day === new Date().getDate();
+              return (
+                <div key={day}
+                  className={`aspect-square rounded-md flex flex-col items-center justify-center cursor-pointer transition-all hover:scale-110 hover:z-10 ${heatColor(amt)} ${isToday ? "ring-2 ring-primary ring-offset-1" : ""}`}
+                  title={amt ? `${formatCurrency(amt)} on ${day} ${format(new Date(), "MMMM")}` : `No spend on ${day} ${format(new Date(), "MMMM")}`}>
+                  <div className="text-[11px] font-bold leading-none">{day}</div>
+                  {amt > 0 && <div className="text-[8px] tabular-nums opacity-80 leading-none mt-0.5">{amt < 100 ? amt.toFixed(0) : Math.round(amt)}</div>}
+                </div>
+              );
+            })}
+          </div>
+          <div className="mt-4 pt-3 border-t grid grid-cols-3 gap-3 text-center">
+            <div>
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Highest day</div>
+              <div className="text-sm font-bold tabular-nums mt-0.5">{formatCurrency(highestDay)}</div>
+            </div>
+            <div>
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">No-spend days</div>
+              <div className="text-sm font-bold tabular-nums mt-0.5">{noSpendDays}</div>
+            </div>
+            <div>
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Active days</div>
+              <div className="text-sm font-bold tabular-nums mt-0.5">{activeDays}</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Top merchants */}
+        <div className="rounded-xl border bg-card p-5">
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Top merchants</p>
+          <h3 className="text-base font-semibold mt-0.5 mb-4">Where money goes</h3>
+          {topMerchants.length === 0 ? (
+            <div className="py-8 text-center text-sm text-muted-foreground">No transactions this month</div>
+          ) : (
+            <div className="space-y-3">
+              {topMerchants.map((m, i) => (
+                <div key={m.merchant} className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-lg bg-accent flex items-center justify-center text-sm font-bold text-muted-foreground flex-shrink-0">
+                    #{i + 1}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-semibold truncate">{m.merchant}</div>
+                    <div className="text-[11px] text-muted-foreground">{m.count}× this month</div>
+                  </div>
+                  <div className="text-sm font-bold tabular-nums text-rose-600">{formatCurrency(m.total)}</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Spending by category filter pills */}
+      {categoryStats.length > 0 && (
+        <div className="rounded-xl border bg-card p-5">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Spending by category</p>
+            {catFilter && (
+              <button onClick={() => setCatFilter(null)} className="text-[11px] font-semibold text-primary hover:underline flex items-center gap-1">
+                ✕ Clear filter
+              </button>
+            )}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {categoryStats.map(c => {
+              const active = catFilter === c.name;
+              const pct = (c.total / maxCatTotal) * 100;
+              return (
+                <button key={c.name} onClick={() => setCatFilter(active ? null : c.name)}
+                  className={`relative overflow-hidden flex items-center gap-2 px-3 py-2 rounded-full border transition-all ${active ? "border-primary bg-primary/5" : "border-border hover:border-primary"}`}>
+                  <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: c.color }} />
+                  <span className="text-xs font-semibold">{c.name}</span>
+                  <span className="text-xs font-bold tabular-nums text-muted-foreground">{formatCurrency(c.total)}</span>
+                  <span className="absolute bottom-0 left-0 h-[3px] rounded-b-full" style={{ width: `${pct}%`, background: c.color }} />
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       <div className="flex gap-3 items-center bg-white p-4 rounded-xl border flex-wrap">
         <div className="flex items-center gap-2">
