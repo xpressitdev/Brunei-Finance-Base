@@ -270,8 +270,6 @@ async function main() {
     console.log();
     console.log("⚠️  EXECUTING DESTRUCTIVE MIGRATION...");
 
-    const { v4: uuidv4 } = await import("uuid");
-
     await client.query("BEGIN");
     try {
       for (const a of actions) {
@@ -280,10 +278,11 @@ async function main() {
           await client.query(`DELETE FROM commitments WHERE id = $1`, [a.commitment_id]);
         } else {
           // convert: insert new debt with outstanding_balance=0, then delete commitment
+          // crypto.randomUUID() is built into Node.js 14.17+ — no external dep needed
           await client.query(`
             INSERT INTO debts (id, user_id, debt_type, lender, outstanding_balance, monthly_payment, migration_source, created_at, updated_at)
             VALUES ($1, $2, $3, $4, '0', $5, 'commitment_auto_migrated', now(), now())
-          `, [uuidv4(), a.user_id, a.commitment_type, a.commitment_type.replace(/_/g, " "), a.commitment_monthly_payment]);
+          `, [crypto.randomUUID(), a.user_id, a.commitment_type, a.commitment_type.replace(/_/g, " "), a.commitment_monthly_payment]);
           await client.query(`DELETE FROM commitments WHERE id = $1`, [a.commitment_id]);
         }
       }
