@@ -211,7 +211,7 @@ function BucketRow({
             </p>
           )}
 
-          {/* Slider for vault/loan rows; envelopes show progress bar only */}
+          {/* Slider for vault/loan rows; direct input for variable envelopes */}
           {!isEnv && (
             <input
               type="range"
@@ -222,6 +222,23 @@ function BucketRow({
               onChange={(e) => onSlider(Number(e.target.value))}
               className="w-full mt-3 accent-primary"
             />
+          )}
+          {isEnv && !bucket.fixed && (
+            <div className="flex items-center gap-1.5 mt-2">
+              <span className="text-[11px] text-muted-foreground">BND</span>
+              <input
+                type="number"
+                min={0}
+                step={10}
+                value={bucket.allocated === 0 ? "" : bucket.allocated}
+                placeholder="0.00"
+                onChange={(e) => {
+                  const v = parseFloat(e.target.value);
+                  onSlider(Number.isFinite(v) && v >= 0 ? v : 0);
+                }}
+                className="w-28 text-right text-sm h-7 rounded-md border border-border bg-background px-2 outline-none focus:ring-2 focus:ring-primary/40 tabular-nums"
+              />
+            </div>
           )}
 
           {bucket.allocated >= 50 && !bucket.auto && !bucket.fixed && (
@@ -469,6 +486,8 @@ function AllocateView({
 
   const loanBuckets = buckets.filter(b => b.kind === "loan");
   const envBuckets  = buckets.filter(b => b.kind === "envelope");
+  const fixedEnvBuckets = envBuckets.filter(b => b.fixed);
+  const variableEnvBuckets = envBuckets.filter(b => !b.fixed);
   const vaultBuckets = buckets.filter(b => b.kind === "vault");
 
   return (
@@ -566,19 +585,49 @@ function AllocateView({
         </section>
         )}
 
-        {/* Envelopes */}
+        {/* Expenses (Fixed + Variable) */}
         <section className="space-y-3">
           <div className="flex items-center gap-3 px-1">
             <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
               <img src="/illustration-payslip.png" className="w-7 h-7 object-contain" alt="" />
             </div>
             <div>
-              <h3 className="text-base font-semibold tracking-tight">Envelopes</h3>
-              <p className="text-xs text-muted-foreground">Spending categories — drained as you spend</p>
+              <h3 className="text-base font-semibold tracking-tight">Expenses</h3>
+              <p className="text-xs text-muted-foreground">Fixed commitments &amp; variable spending</p>
             </div>
           </div>
+
+          {/* Fixed sub-section */}
+          {fixedEnvBuckets.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground px-1">Fixed</p>
+              {fixedEnvBuckets.map(b => (
+                <BucketRow
+                  key={b.id}
+                  bucket={b}
+                  isOver={overTarget === b.id}
+                  pulse={pulse === b.id}
+                  onDragOver={onBucketDragOver(b.id)}
+                  onDragLeave={() => setOverTarget(null)}
+                  onDrop={onBucketDrop(b.id)}
+                  onSlider={(v) => setBucket(b.id, v)}
+                  onPullChip={onPullChipFromBucket(b.id)}
+                />
+              ))}
+            </div>
+          )}
+
+          {/* Variable sub-section */}
           <div className="space-y-2">
-            {envBuckets.map(b => (
+            {fixedEnvBuckets.length > 0 && (
+              <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground px-1">Variable</p>
+            )}
+            {variableEnvBuckets.length === 0 && (
+              <div className="rounded-xl border border-dashed p-4 text-center text-xs text-muted-foreground">
+                No variable expense categories yet.
+              </div>
+            )}
+            {variableEnvBuckets.map(b => (
               <BucketRow
                 key={b.id}
                 bucket={b}
@@ -635,7 +684,37 @@ function AllocateView({
           onCancel={() => setVaultUnlock(null)}
         />
       )}
+
+      {/* Confirm / Reset bar */}
+      <div className="flex items-center justify-between gap-3 pt-2 border-t">
+        <Button variant="ghost" size="sm" onClick={reset} className="text-xs gap-1">
+          <RotateCcw className="w-3 h-3" /> Reset to saved
+        </Button>
+        <div className="flex items-center gap-2">
+          {available < 0 && (
+            <span className="text-xs text-red-600 font-medium">
+              Over-allocated by {fmt(Math.abs(available))} — reduce spending before confirming.
+            </span>
+          )}
+          <ConfirmAllocationButton available={available} />
+        </div>
+      </div>
     </div>
+  );
+}
+
+function ConfirmAllocationButton({ available }: { available: number }) {
+  const [confirmed, setConfirmed] = useState(false);
+  return (
+    <Button
+      size="sm"
+      disabled={available < 0}
+      onClick={() => { setConfirmed(true); setTimeout(() => setConfirmed(false), 3000); }}
+      className={confirmed ? "bg-emerald-600 hover:bg-emerald-600" : ""}
+    >
+      <Check className="w-3.5 h-3.5 mr-1" />
+      {confirmed ? "Allocation saved!" : "Confirm allocation"}
+    </Button>
   );
 }
 
@@ -854,23 +933,13 @@ export default function Budgets() {
 
         <div className="flex items-center gap-2 flex-wrap">
           {view === "allocate" && (
-            <>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => { setResetSignal(s => s + 1); setConfirmed(false); }}
-              >
-                Reset
-              </Button>
-              <Button
-                size="sm"
-                onClick={() => { setConfirmed(true); setTimeout(() => setConfirmed(false), 3000); }}
-                className={confirmed ? "bg-emerald-600 hover:bg-emerald-600" : ""}
-              >
-                <Check className="w-3.5 h-3.5" />
-                {confirmed ? "Allocation saved!" : "Confirm allocation"}
-              </Button>
-            </>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setResetSignal(s => s + 1)}
+            >
+              <RotateCcw className="w-3 h-3 mr-1" /> Reset
+            </Button>
           )}
           {view === "annual" ? (
             <div className="flex items-center gap-2 bg-white border rounded-xl px-3 py-2">

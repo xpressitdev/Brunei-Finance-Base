@@ -456,12 +456,19 @@
   "goals": {
     "title": "Financial Goals",
     "subtitle": "Track your savings targets and milestones.",
-    "addButton": "Add Goal",
+    "addButton": "Add goal",
+    "addFirstButton": "Add your first goal",
     "loading": "Loading...",
+    "overallProgress": "Overall progress",
+    "goalsCount_one": "{{count}} goal",
+    "goalsCount_other": "{{count}} goals",
+    "empty": "No goals yet",
+    "emptySub": "Set your first financial goal to get started.",
+    "completed": "Goal reached!",
     "summary": {
-      "totalGoals": "Total Goals",
-      "totalTarget": "Total Target",
-      "totalSaved": "Total Saved",
+      "totalGoals": "Total goals",
+      "totalTarget": "Total target",
+      "totalSaved": "Total saved",
       "completed": "Completed",
       "activeGoal_one": "active goal",
       "activeGoal_other": "active goals",
@@ -469,10 +476,6 @@
       "pctOfTarget": "{{pct}}% of target",
       "goalReached_one": "goal reached",
       "goalReached_other": "goals reached"
-    },
-    "empty": {
-      "title": "No goals yet",
-      "subtitle": "Set your first financial goal to get started."
     },
     "card": {
       "saved": "Saved",
@@ -482,37 +485,59 @@
     },
     "targetDate": {
       "label": "Target date:",
-      "overdue_one": "({{count}} day overdue)",
-      "overdue_other": "({{count}} days overdue)",
-      "dueToday": "(due today)",
-      "daysLeft_one": "({{count}} day left)",
-      "daysLeft_other": "({{count}} days left)"
+      "overdue_one": "{{count}} day overdue",
+      "overdue_other": "{{count}} days overdue",
+      "today": "Due today",
+      "tomorrow": "Due tomorrow",
+      "inDays_one": "In {{count}} day",
+      "inDays_other": "In {{count}} days",
+      "inWeeks_one": "In {{count}} week",
+      "inWeeks_other": "In {{count}} weeks",
+      "inMonths_one": "In {{count}} month",
+      "inMonths_other": "In {{count}} months",
+      "inYears_one": "In {{count}} year",
+      "inYears_other": "In {{count}} years",
+      "dueToday": "Due today",
+      "daysLeft_one": "{{count}} day left",
+      "daysLeft_other": "{{count}} days left"
     },
     "deleteDialog": {
       "title": "Delete goal?",
-      "description": "This will permanently delete \"{{title}}\". This action cannot be undone."
+      "description": "This will permanently delete \"{{name}}\". This action cannot be undone."
     },
     "addDialog": {
-      "title": "Add Financial Goal",
-      "titleLabel": "Goal Title",
-      "titlePlaceholder": "e.g. Emergency Fund",
+      "title": "Add financial goal",
+      "nameLabel": "Goal name",
+      "namePlaceholder": "e.g. Emergency Fund",
       "categoryLabel": "Category",
-      "targetAmountLabel": "Target Amount ({{currency}})",
-      "savedAmountLabel": "Amount Saved ({{currency}})",
-      "deadlineLabel": "Target Date",
+      "targetLabel": "Target amount ({{currency}})",
+      "savedLabel": "Amount saved ({{currency}})",
+      "targetDateLabel": "Target date",
+      "titleLabel": "Goal name",
+      "titlePlaceholder": "e.g. Emergency Fund",
+      "targetAmountLabel": "Target amount ({{currency}})",
+      "savedAmountLabel": "Amount saved ({{currency}})",
+      "deadlineLabel": "Target date",
       "notesLabel": "Notes",
       "notesPlaceholder": "Any extra details...",
-      "submitAdd": "Add Goal"
+      "submitAdd": "Add goal"
     },
     "editDialog": {
-      "title": "Edit Goal",
-      "submit": "Save Changes"
+      "title": "Edit goal",
+      "submit": "Save changes"
     },
     "categories": {
-      "savings": "Savings",
-      "emergency": "Emergency Fund",
-      "debt_payoff": "Debt Payoff",
+      "emergency_fund": "Emergency fund",
+      "travel": "Travel",
+      "gadget": "Gadget",
+      "home": "Home",
+      "education": "Education",
+      "vehicle": "Vehicle",
       "investment": "Investment",
+      "other": "Other",
+      "savings": "Savings",
+      "emergency": "Emergency fund",
+      "debt_payoff": "Debt payoff",
       "custom": "Custom"
     }
   },

@@ -456,8 +456,15 @@
   "goals": {
     "title": "Matlamat Kewangan",
     "subtitle": "Jejak sasaran simpanan dan pencapaian anda.",
-    "addButton": "Tambah Matlamat",
+    "addButton": "Tambah matlamat",
+    "addFirstButton": "Tambah matlamat pertama anda",
     "loading": "Memuatkan...",
+    "overallProgress": "Kemajuan keseluruhan",
+    "goalsCount_one": "{{count}} matlamat",
+    "goalsCount_other": "{{count}} matlamat",
+    "empty": "Tiada matlamat lagi",
+    "emptySub": "Tetapkan matlamat kewangan pertama anda untuk bermula.",
+    "completed": "Matlamat dicapai!",
     "summary": {
       "totalGoals": "Jumlah Matlamat",
       "totalTarget": "Jumlah Sasaran",
@@ -470,10 +477,6 @@
       "goalReached_one": "matlamat dicapai",
       "goalReached_other": "matlamat dicapai"
     },
-    "empty": {
-      "title": "Tiada matlamat lagi",
-      "subtitle": "Tetapkan matlamat kewangan pertama anda untuk bermula."
-    },
     "card": {
       "saved": "Disimpan",
       "pctComplete": "{{pct}}% selesai",
@@ -482,21 +485,36 @@
     },
     "targetDate": {
       "label": "Tarikh sasaran:",
-      "overdue_one": "({{count}} hari lewat)",
-      "overdue_other": "({{count}} hari lewat)",
-      "dueToday": "(hari ini)",
-      "daysLeft_one": "({{count}} hari lagi)",
-      "daysLeft_other": "({{count}} hari lagi)"
+      "overdue_one": "{{count}} hari lewat",
+      "overdue_other": "{{count}} hari lewat",
+      "today": "Hari ini",
+      "tomorrow": "Esok",
+      "inDays_one": "Dalam {{count}} hari",
+      "inDays_other": "Dalam {{count}} hari",
+      "inWeeks_one": "Dalam {{count}} minggu",
+      "inWeeks_other": "Dalam {{count}} minggu",
+      "inMonths_one": "Dalam {{count}} bulan",
+      "inMonths_other": "Dalam {{count}} bulan",
+      "inYears_one": "Dalam {{count}} tahun",
+      "inYears_other": "Dalam {{count}} tahun",
+      "dueToday": "Hari ini",
+      "daysLeft_one": "{{count}} hari lagi",
+      "daysLeft_other": "{{count}} hari lagi"
     },
     "deleteDialog": {
       "title": "Padam matlamat?",
-      "description": "Ini akan memadam \"{{title}}\" secara kekal. Tindakan ini tidak boleh dibatalkan."
+      "description": "Ini akan memadam \"{{name}}\" secara kekal. Tindakan ini tidak boleh dibatalkan."
     },
     "addDialog": {
       "title": "Tambah Matlamat Kewangan",
-      "titleLabel": "Tajuk Matlamat",
+      "nameLabel": "Nama Matlamat",
+      "namePlaceholder": "cth. Dana Kecemasan",
+      "titleLabel": "Nama Matlamat",
       "titlePlaceholder": "cth. Dana Kecemasan",
       "categoryLabel": "Kategori",
+      "targetLabel": "Jumlah Sasaran ({{currency}})",
+      "savedLabel": "Jumlah Disimpan ({{currency}})",
+      "targetDateLabel": "Tarikh Sasaran",
       "targetAmountLabel": "Jumlah Sasaran ({{currency}})",
       "savedAmountLabel": "Jumlah Disimpan ({{currency}})",
       "deadlineLabel": "Tarikh Sasaran",
@@ -509,10 +527,17 @@
       "submit": "Simpan Perubahan"
     },
     "categories": {
+      "emergency_fund": "Dana Kecemasan",
+      "travel": "Pelancongan",
+      "gadget": "Gajet",
+      "home": "Rumah",
+      "education": "Pendidikan",
+      "vehicle": "Kenderaan",
+      "investment": "Pelaburan",
+      "other": "Lain-lain",
       "savings": "Simpanan",
       "emergency": "Dana Kecemasan",
       "debt_payoff": "Bayar Hutang",
-      "investment": "Pelaburan",
       "custom": "Tersuai"
     }
   },

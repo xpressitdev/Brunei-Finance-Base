@@ -456,8 +456,15 @@
   "goals": {
     "title": "Tujuan Keuangan",
     "subtitle": "Lacak target tabungan dan pencapaian Anda.",
-    "addButton": "Tambah Tujuan",
+    "addButton": "Tambah tujuan",
+    "addFirstButton": "Tambah tujuan pertama Anda",
     "loading": "Memuat...",
+    "overallProgress": "Kemajuan keseluruhan",
+    "goalsCount_one": "{{count}} tujuan",
+    "goalsCount_other": "{{count}} tujuan",
+    "empty": "Belum ada tujuan",
+    "emptySub": "Tetapkan tujuan keuangan pertama Anda untuk memulai.",
+    "completed": "Tujuan tercapai!",
     "summary": {
       "totalGoals": "Total Tujuan",
       "totalTarget": "Total Target",
@@ -470,10 +477,6 @@
       "goalReached_one": "tujuan tercapai",
       "goalReached_other": "tujuan tercapai"
     },
-    "empty": {
-      "title": "Belum ada tujuan",
-      "subtitle": "Tetapkan tujuan keuangan pertama Anda untuk memulai."
-    },
     "card": {
       "saved": "Tersimpan",
       "pctComplete": "{{pct}}% selesai",
@@ -482,21 +485,36 @@
     },
     "targetDate": {
       "label": "Tanggal target:",
-      "overdue_one": "({{count}} hari terlambat)",
-      "overdue_other": "({{count}} hari terlambat)",
-      "dueToday": "(hari ini)",
-      "daysLeft_one": "({{count}} hari lagi)",
-      "daysLeft_other": "({{count}} hari lagi)"
+      "overdue_one": "{{count}} hari terlambat",
+      "overdue_other": "{{count}} hari terlambat",
+      "today": "Hari ini",
+      "tomorrow": "Besok",
+      "inDays_one": "Dalam {{count}} hari",
+      "inDays_other": "Dalam {{count}} hari",
+      "inWeeks_one": "Dalam {{count}} minggu",
+      "inWeeks_other": "Dalam {{count}} minggu",
+      "inMonths_one": "Dalam {{count}} bulan",
+      "inMonths_other": "Dalam {{count}} bulan",
+      "inYears_one": "Dalam {{count}} tahun",
+      "inYears_other": "Dalam {{count}} tahun",
+      "dueToday": "Hari ini",
+      "daysLeft_one": "{{count}} hari lagi",
+      "daysLeft_other": "{{count}} hari lagi"
     },
     "deleteDialog": {
       "title": "Hapus tujuan?",
-      "description": "Ini akan menghapus \"{{title}}\" secara permanen. Tindakan ini tidak bisa dibatalkan."
+      "description": "Ini akan menghapus \"{{name}}\" secara permanen. Tindakan ini tidak bisa dibatalkan."
     },
     "addDialog": {
       "title": "Tambah Tujuan Keuangan",
-      "titleLabel": "Judul Tujuan",
+      "nameLabel": "Nama Tujuan",
+      "namePlaceholder": "mis. Dana Darurat",
+      "titleLabel": "Nama Tujuan",
       "titlePlaceholder": "mis. Dana Darurat",
       "categoryLabel": "Kategori",
+      "targetLabel": "Jumlah Target ({{currency}})",
+      "savedLabel": "Jumlah Tersimpan ({{currency}})",
+      "targetDateLabel": "Tanggal Target",
       "targetAmountLabel": "Jumlah Target ({{currency}})",
       "savedAmountLabel": "Jumlah Tersimpan ({{currency}})",
       "deadlineLabel": "Tanggal Target",
@@ -509,10 +527,17 @@
       "submit": "Simpan Perubahan"
     },
     "categories": {
+      "emergency_fund": "Dana Darurat",
+      "travel": "Perjalanan",
+      "gadget": "Gadget",
+      "home": "Rumah",
+      "education": "Pendidikan",
+      "vehicle": "Kendaraan",
+      "investment": "Investasi",
+      "other": "Lain-lain",
       "savings": "Tabungan",
       "emergency": "Dana Darurat",
       "debt_payoff": "Bayar Utang",
-      "investment": "Investasi",
       "custom": "Kustom"
     }
   },
