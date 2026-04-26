@@ -1,0 +1,253 @@
+Task: Phase 3 Prompt 2 — Build a payday auto-prompt feature with in-app banner only (no email, no push)
+When a user's configured payday arrives, the app proactively prompts them to confirm receipt of salary and auto-create the income transaction plus their debt repayment outflows. This reduces friction in monthly money management and increases data quality (more transactions logged).
+This is v1 — banner-only. Email reminders and web push notifications are explicitly out of scope and will be added in later phases (3.3b and 3.3c respectively).
+Read these files first to understand existing conventions:
+
+The user model / schema (look for payday, monthlyIncome, salary-related fields)
+The Debts page and debt model (looking for monthly_payment field)
+The Transactions API (how transactions get created)
+src/i18n/locales/en.json, ms.json, id.json (for established terminology)
+Existing banner/notification components if any
+
+
+What we're building
+A persistent in-app banner that appears at the top of every page when:
+
+Today's date matches the user's configured payday day-of-month, AND
+The user has an active record indicating they haven't yet acted on this month's prompt
+
+When the user clicks "Yes, I got paid", a review screen opens showing proposed salary income + debt repayment transactions. User can edit, deselect, and confirm. On confirmation, all selected transactions are batch-created.
+
+Step 1: Database schema — payday prompt lifecycle table
+Create a new table payday_prompts:
+id                  uuid (primary key)
+user_id             uuid (foreign key)
+year                integer (e.g., 2026)
+month               integer (1-12)
+state               enum ('pending', 'confirmed', 'skipped', 'remind_tomorrow')
+remind_after_date   date (nullable, used for 'remind_tomorrow')
+confirmed_at        timestamp (nullable)
+created_at          timestamp
+updated_at          timestamp
+
+Unique constraint: (user_id, year, month)
+When a user's payday arrives and they have no record for that month, the system creates a pending row. State transitions:
+
+User clicks "Yes, paid" + confirms transactions → confirmed
+User clicks "Skip this month" → skipped
+User clicks "Not yet, remind tomorrow" → remind_tomorrow with remind_after_date = today
+
+The next time the user opens the app:
+
+If state is pending and today is on or after their payday → show banner
+If state is remind_tomorrow and today > remind_after_date → show banner (revert to pending behavior)
+If state is confirmed or skipped → no banner
+Once month rolls over and there's no record for the new month → create new pending row when user's payday arrives
+
+
+Step 2: Backend API endpoints
+Create these endpoints:
+
+GET /api/payday-prompt/current — returns the active prompt for the user (or null if none)
+
+Response: { id, state, year, month, payday: number, monthlyIncome: number, debts: Debt[] }
+Logic: find or create the appropriate payday_prompts row based on today's date and user's payday. Return null if no banner should show.
+
+
+POST /api/payday-prompt/:id/confirm — confirms the prompt and creates transactions
+
+Body: { transactions: [{ type: 'income' | 'debt_payment', amount, accountId, debtId?, date, description }] }
+Logic: create each transaction in user's account. Update prompt state to confirmed. Return success.
+
+
+POST /api/payday-prompt/:id/skip — marks as skipped for this month
+POST /api/payday-prompt/:id/remind-tomorrow — marks as remind_tomorrow
+
+
+Step 3: The Banner component
+Create src/components/PaydayBanner.tsx. Renders at the top of the app's authenticated layout (above all pages).
+Visual design:
+
+Full-width banner, brand green background or subtle accent
+Wallet/calendar icon on the left
+Text: "Hari Gaji! Did you receive your salary today?" (translated per locale)
+Three buttons on the right: "Yes, I got paid" (primary), "Not yet" (secondary), "Skip this month" (subtle/text-only)
+Mobile responsive — stacks vertically on small screens
+
+Behavior:
+
+On mount, hits GET /api/payday-prompt/current to check if it should render
+If response is null, banner doesn't render
+"Yes, I got paid" → opens the Review modal (Step 4)
+"Not yet" → POST /api/payday-prompt/:id/remind-tomorrow → banner hides until tomorrow
+"Skip this month" → POST /api/payday-prompt/:id/skip → banner hides until next payday cycle
+
+Persistence:
+
+Banner state should refresh when user navigates between pages
+Should re-check on app boot
+No need for real-time updates — banner state changes on user action
+
+
+Step 4: The Review modal
+Create src/components/PaydayReviewModal.tsx. Opens when user clicks "Yes, I got paid".
+Layout:
+┌─────────────────────────────────────────────┐
+│ Hari Gaji confirmation                  [X] │
+│                                             │
+│ Review and confirm your monthly             │
+│ transactions. You can edit any item or      │
+│ deselect items you don't want.              │
+│                                             │
+│ ┌─────────────────────────────────────────┐ │
+│ │ ☑ Income                                │ │
+│ │   Salary - April 2026                   │ │
+│ │   BND 5,500.00              [Edit]      │ │
+│ │   To account: Main Current ▾            │ │
+│ └─────────────────────────────────────────┘ │
+│                                             │
+│ ┌─────────────────────────────────────────┐ │
+│ │ ☑ Debt Payments                         │ │
+│ │                                         │ │
+│ │   ☑ Car Loan                            │ │
+│ │     -BND 850.00            [Edit]       │ │
+│ │     From: Main Current ▾                │ │
+│ │                                         │ │
+│ │   ☑ Credit Card                         │ │
+│ │     -BND 250.00            [Edit]       │ │
+│ │     From: Main Current ▾                │ │
+│ │                                         │ │
+│ │   ☐ Personal Loan (deselected)          │ │
+│ │     -BND 400.00            [Edit]       │ │
+│ └─────────────────────────────────────────┘ │
+│                                             │
+│ Net cashflow: +BND 4,400.00                 │
+│                                             │
+│              [Cancel]   [Confirm All]       │
+└─────────────────────────────────────────────┘
+Behavior:
+
+Income line item:
+
+Pre-filled with user.monthlyIncome and the user's primary current account
+Editable amount, account, date (defaults to today), description (defaults to "Salary - {month} {year}")
+Deselectable (uncommon — for users who manually entered already)
+
+
+Debt payment line items:
+
+One per active debt with non-zero monthly_payment
+Pre-filled with each debt's monthly_payment and primary current account
+Editable amount, account, date, description
+Each individually deselectable
+Show debt name as the label
+
+
+Each "Edit" button opens an inline expansion or sub-modal with full transaction edit fields. Keep simple — small popover with: amount, account, date, description fields.
+"Net cashflow" footer: shows total selected income minus total selected debt payments, helpful preview of net effect on user's accounts
+"Cancel" closes modal without changes — banner remains as-is
+"Confirm All" creates all selected transactions, sets prompt state to confirmed, hides banner, shows toast: "Salary and debt payments logged. Net cashflow: +BND 4,400."
+
+Duplicate detection:
+Before showing the modal, check if user already has an income transaction in the past 24 hours. If yes, the modal should warn at the top:
+
+⚠ We noticed you've already logged a salary transaction today. You can still confirm to add debt payments, or skip if you've already done both.
+
+The income line item is pre-deselected in this case (debt payments stay selected). User can still re-select if they want both.
+
+Step 5: Translation keys
+Add to en.json, ms.json, id.json:
+json"paydayPrompt": {
+  "banner": {
+    "title": "Hari Gaji! Did you receive your salary today?",
+    "yesPaid": "Yes, I got paid",
+    "notYet": "Not yet",
+    "skipMonth": "Skip this month"
+  },
+  "modal": {
+    "title": "Hari Gaji confirmation",
+    "subtitle": "Review and confirm your monthly transactions. You can edit any item or deselect items you don't want.",
+    "income": "Income",
+    "salaryDescription": "Salary - {{month}} {{year}}",
+    "toAccount": "To account",
+    "fromAccount": "From account",
+    "debtPayments": "Debt Payments",
+    "netCashflow": "Net cashflow",
+    "cancel": "Cancel",
+    "confirmAll": "Confirm All",
+    "duplicateWarning": "We noticed you've already logged a salary transaction today. You can still confirm to add debt payments, or skip if you've already done both.",
+    "edit": "Edit",
+    "noDebts": "No active debts to pay this month."
+  },
+  "toast": {
+    "confirmed": "Salary and debt payments logged. Net cashflow: {{amount}}",
+    "skipped": "Payday prompt skipped for this month",
+    "remindTomorrow": "We'll remind you tomorrow"
+  },
+  "errors": {
+    "noMonthlyIncome": "Please set your monthly income in Settings before confirming",
+    "noPrimaryAccount": "Please set a primary account in Settings",
+    "transactionFailed": "Failed to create transactions. Please try again."
+  }
+}
+Translate naturally to Malay and Indonesian. Specific terminology:
+
+"Hari Gaji" → keep as-is in all three languages (it's the same phrase in MS/ID, and works in English context as a brand moment)
+Salary → MS: "Gaji" / ID: "Gaji"
+Income → MS: "Pendapatan" / ID: "Pemasukan"
+Debt Payment → MS: "Bayaran Hutang" / ID: "Pembayaran Utang"
+Account → MS: "Akaun" (matches existing) / ID: "Rekening" (matches existing)
+Confirm → MS: "Sahkan" / ID: "Konfirmasi"
+Cancel → MS: "Batal" / ID: "Batal"
+Edit → MS: "Edit" or "Sunting" / ID: "Edit"
+
+
+Step 6: Edge cases to handle
+
+User has no debts: modal still works, just income line only with helpful message: "No active debts to pay this month."
+User has no monthlyIncome configured: banner doesn't show, OR shows but Yes button leads to a Settings prompt: "Please configure your salary in Settings first."
+User has no payday configured: banner doesn't show. Add this to the audit — make sure payday is required in onboarding (existing functionality, just verify).
+Payday on 31st in a 30-day month: if user's payday is 31, treat it as "last day of month" for months without a 31st (so Feb users with payday=31 get prompted on Feb 28/29, April users get prompted on April 30, etc.). Don't skip the month entirely.
+User changes payday mid-month: existing prompt stays valid for current month. New payday applies starting next month.
+User confirms with deselected debts: only selected items get created. Deselected items are NOT carried forward — they're skipped for this month. User can manually add them later if needed.
+
+
+STRICT scope boundaries — do NOT do any of the following:
+
+Do NOT add email reminders (deferred to Phase 3.3b)
+Do NOT add web push notifications (deferred to Phase 3.3c)
+Do NOT add SMS or WhatsApp notifications
+Do NOT add commitments (rent, utilities) auto-creation — debts only for v1
+Do NOT add per-debt due day scheduling (logged as IDEA-002)
+Do NOT add envelope budget auto-allocation
+Do NOT modify the existing Transactions API beyond reusing it
+Do NOT modify the existing Debts schema
+Do NOT change the user's payday configuration UI (just consume what's already there)
+Do NOT add a payday prompt history page (users see logged transactions in Transactions page)
+
+
+Verification before reporting complete:
+
+As a test user with payday=15 — set system date to the 15th — open app — banner appears
+Click "Yes, I got paid" — modal opens with salary line + one line per active debt
+Edit a debt amount — confirms — transaction created with edited amount, not original
+Deselect a debt — confirm — that debt's payment is NOT created
+Click "Skip this month" on banner — banner disappears — refresh page — still gone
+Click "Not yet" on banner — banner disappears — set system date to next day — banner appears again
+Manually add a salary transaction first, then trigger banner — modal shows duplicate warning, income line pre-deselected
+Test as MY user — all text in Malay, MYR formatting throughout
+Test as ID user — Indonesian text, IDR formatting (no decimals)
+Roll over to next month — new payday — banner appears fresh with correct month/year
+User with no debts — modal shows just income line + "No active debts" message
+User with payday=31 in February — banner appears on Feb 28 (or 29 in leap year)
+
+
+Report back with:
+
+Files created and modified
+New database table confirmation (and migration if any)
+New API endpoints (4 total)
+Translation keys count (broken down by section)
+Verification results across all 12 test scenarios
+Screenshot of banner (English) and modal (with debt entries) so we can spot-check visual quality
+Any complications discovered (e.g., timezone handling, payday edge cases)

@@ -908,6 +908,44 @@
       "body": "This calculator uses standard cash Zakat rules under the Shafi'i school of jurisprudence (the dominant madhab in Southeast Asia). The calculation assumes the wealth has been held above nisab for one full hijri year (haul). For complex situations involving business assets, agricultural produce, debts owed to you, or different schools of jurisprudence, please consult your local Zakat authority."
     }
   },
+  "paydayPrompt": {
+    "banner": {
+      "title": "Hari Gaji! Did you receive your salary today?",
+      "yesPaid": "Yes, I got paid",
+      "notYet": "Not yet",
+      "skipMonth": "Skip this month"
+    },
+    "modal": {
+      "title": "Hari Gaji confirmation",
+      "subtitle": "Review and confirm your monthly transactions. You can edit any item or deselect items you don't want.",
+      "income": "Income",
+      "salaryDescription": "Salary - {{month}} {{year}}",
+      "toAccount": "To account",
+      "fromAccount": "From account",
+      "debtPayments": "Debt Payments",
+      "netCashflow": "Net cashflow",
+      "cancel": "Cancel",
+      "confirmAll": "Confirm All",
+      "duplicateWarning": "We noticed you've already logged a salary transaction today. You can still confirm to add debt payments, or skip if you've already done both.",
+      "edit": "Edit",
+      "done": "Done",
+      "noDebts": "No active debts to pay this month.",
+      "amount": "Amount",
+      "date": "Date",
+      "description": "Description",
+      "account": "Account"
+    },
+    "toast": {
+      "confirmed": "Salary and debt payments logged. Net cashflow: {{amount}}",
+      "skipped": "Payday prompt skipped for this month",
+      "remindTomorrow": "We'll remind you tomorrow"
+    },
+    "errors": {
+      "noMonthlyIncome": "Please set your monthly income in Settings before confirming",
+      "noPrimaryAccount": "Please add an account in Accounts before confirming",
+      "transactionFailed": "Failed to create transactions. Please try again."
+    }
+  },
   "onboarding": {
     "stepOf": "Step {{step}} of {{total}}",
     "back": "Back",

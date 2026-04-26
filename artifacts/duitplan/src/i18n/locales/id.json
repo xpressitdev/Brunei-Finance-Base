@@ -908,6 +908,44 @@
       "body": "Kalkulator ini menggunakan aturan zakat uang tunai standar berdasarkan mazhab Syafi'i (mazhab yang dominan di Asia Tenggara). Perhitungan ini mengasumsikan harta telah dimiliki di atas nisab selama satu tahun Hijriah penuh (haul). Untuk situasi kompleks seperti aset bisnis, hasil pertanian, utang yang perlu diterima, atau mazhab yang berbeda, silakan konsultasikan dengan lembaga zakat setempat Anda."
     }
   },
+  "paydayPrompt": {
+    "banner": {
+      "title": "Hari Gaji! Apakah Anda sudah menerima gaji hari ini?",
+      "yesPaid": "Ya, sudah dapat",
+      "notYet": "Belum",
+      "skipMonth": "Lewati bulan ini"
+    },
+    "modal": {
+      "title": "Konfirmasi Hari Gaji",
+      "subtitle": "Tinjau dan konfirmasi transaksi bulanan Anda. Anda dapat mengedit item apapun atau membatalkan pilihan item yang tidak diinginkan.",
+      "income": "Pemasukan",
+      "salaryDescription": "Gaji - {{month}} {{year}}",
+      "toAccount": "Ke rekening",
+      "fromAccount": "Dari rekening",
+      "debtPayments": "Pembayaran Utang",
+      "netCashflow": "Arus kas bersih",
+      "cancel": "Batal",
+      "confirmAll": "Konfirmasi Semua",
+      "duplicateWarning": "Kami mendeteksi Anda sudah mencatat transaksi gaji hari ini. Anda masih dapat mengkonfirmasi untuk menambah pembayaran utang, atau lewati jika keduanya sudah selesai.",
+      "edit": "Edit",
+      "done": "Selesai",
+      "noDebts": "Tidak ada utang aktif untuk dibayar bulan ini.",
+      "amount": "Jumlah",
+      "date": "Tanggal",
+      "description": "Keterangan",
+      "account": "Rekening"
+    },
+    "toast": {
+      "confirmed": "Gaji dan pembayaran utang dicatat. Arus kas bersih: {{amount}}",
+      "skipped": "Prompt Hari Gaji dilewati untuk bulan ini",
+      "remindTomorrow": "Kami akan mengingatkan Anda besok"
+    },
+    "errors": {
+      "noMonthlyIncome": "Harap atur pendapatan bulanan Anda di Pengaturan sebelum mengkonfirmasi",
+      "noPrimaryAccount": "Harap tambahkan rekening di menu Rekening sebelum mengkonfirmasi",
+      "transactionFailed": "Gagal membuat transaksi. Silakan coba lagi."
+    }
+  },
   "onboarding": {
     "stepOf": "Langkah {{step}} dari {{total}}",
     "back": "Kembali",

@@ -126,6 +126,15 @@ DuitPlan is being extended to serve BN/MY/ID regional subdomains with fixed per-
   - Free + Premium subscription plans seeded
   - Mock PDF parsers for BIBD and Baiduri (ready for real parser implementation)
 
+**Phase 3 Prompt 2 (complete):** Payday auto-prompt — in-app banner + review modal
+- `lib/db/src/schema/payday_prompts.ts` — new table with state machine (pending/confirmed/skipped/remind_tomorrow), unique per user/year/month
+- `artifacts/api-server/src/routes/payday-prompt.ts` — 4 endpoints: GET /current (find-or-create logic, end-of-month payday clamping), POST /:id/confirm (batch creates transactions + updates account balances), POST /:id/skip, POST /:id/remind-tomorrow
+- `artifacts/duitplan/src/hooks/usePaydayPrompt.ts` — React Query hook wrapping all 4 endpoints with cache invalidation
+- `artifacts/duitplan/src/components/PaydayBanner.tsx` — full-width green banner, shown only when GET /current returns non-null; "Yes, I got paid" → opens modal; "Not yet" → remind tomorrow; "Skip this month" → dismisses for this month
+- `artifacts/duitplan/src/components/PaydayReviewModal.tsx` — Dialog-based review modal: income line item (pre-filled with monthlyIncome), one line per active debt, inline edit panels (amount/account/date/description), duplicate detection (warns if salary already logged today), net cashflow footer, Confirm All batch-creates transactions
+- `artifacts/duitplan/src/components/layout/AppLayout.tsx` — PaydayBanner inserted above page content
+- i18n: paydayPrompt.* keys added to en/ms/id.json
+
 **Phase 3 Prompt 1 (complete):** Zakat calculator page
 - `src/config/zakatNisab.ts` — Nisab reference values (BN/MY/ID) for gold and silver thresholds, with last-updated date
 - `src/config/zakatAuthorities.ts` — Official Zakat authority metadata (MUIB/Brunei, LZS/Malaysia, BAZNAS/Indonesia)

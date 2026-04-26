@@ -908,6 +908,44 @@
       "body": "Kalkulator ini menggunakan kaedah zakat tunai standard mengikut mazhab Syafi'i (mazhab dominan di Asia Tenggara). Pengiraan ini mengandaikan harta telah dipegang melebihi nisab selama satu tahun Hijrah penuh (haul). Untuk situasi kompleks seperti aset perniagaan, hasil pertanian, hutang yang perlu diterima, atau mazhab yang berbeza, sila rujuk pihak berkuasa zakat tempatan anda."
     }
   },
+  "paydayPrompt": {
+    "banner": {
+      "title": "Hari Gaji! Adakah anda menerima gaji hari ini?",
+      "yesPaid": "Ya, saya sudah dapat",
+      "notYet": "Belum lagi",
+      "skipMonth": "Langkau bulan ini"
+    },
+    "modal": {
+      "title": "Pengesahan Hari Gaji",
+      "subtitle": "Semak dan sahkan transaksi bulanan anda. Anda boleh edit mana-mana item atau nyahpilih item yang tidak dikehendaki.",
+      "income": "Pendapatan",
+      "salaryDescription": "Gaji - {{month}} {{year}}",
+      "toAccount": "Ke akaun",
+      "fromAccount": "Dari akaun",
+      "debtPayments": "Bayaran Hutang",
+      "netCashflow": "Aliran tunai bersih",
+      "cancel": "Batal",
+      "confirmAll": "Sahkan Semua",
+      "duplicateWarning": "Kami perasan anda sudah merekod transaksi gaji hari ini. Anda masih boleh sahkan untuk tambah bayaran hutang, atau langkau jika kedua-duanya sudah selesai.",
+      "edit": "Edit",
+      "done": "Selesai",
+      "noDebts": "Tiada hutang aktif untuk dibayar bulan ini.",
+      "amount": "Jumlah",
+      "date": "Tarikh",
+      "description": "Penerangan",
+      "account": "Akaun"
+    },
+    "toast": {
+      "confirmed": "Gaji dan bayaran hutang direkod. Aliran tunai bersih: {{amount}}",
+      "skipped": "Prompt Hari Gaji dilangkau untuk bulan ini",
+      "remindTomorrow": "Kami akan ingatkan anda esok"
+    },
+    "errors": {
+      "noMonthlyIncome": "Sila tetapkan pendapatan bulanan anda dalam Tetapan sebelum mengesahkan",
+      "noPrimaryAccount": "Sila tambah akaun dalam Akaun sebelum mengesahkan",
+      "transactionFailed": "Gagal mencipta transaksi. Sila cuba lagi."
+    }
+  },
   "onboarding": {
     "stepOf": "Langkah {{step}} daripada {{total}}",
     "back": "Kembali",
