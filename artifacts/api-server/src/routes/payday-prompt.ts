@@ -48,12 +48,21 @@ router.get("/payday-prompt/current", requireAuth, async (req: AuthenticatedReque
     return;
   }
 
-  // Skip the payday banner for the calendar month in which the user onboarded.
-  // This prevents newly-created accounts from seeing the banner immediately on signup.
+  // Skip if the user onboarded on or after the current month's payday date.
+  // Rule: SKIP when current_month_payday_date <= user.onboarded_at
+  // (payday had already passed when they joined — their first banner is next month)
   const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1);
   if (user?.onboardedAt) {
     const oa = new Date(user.onboardedAt);
-    if (oa.getFullYear() === year && (oa.getMonth() + 1) === month) {
+    const oaYear = oa.getFullYear();
+    const oaMonth = oa.getMonth() + 1;
+    const oaDay = oa.getDate();
+    // paydayIsOnOrBeforeOnboarding: user joined on the payday day or later
+    const paydayIsOnOrBeforeOnboarding =
+      oaYear > year ||
+      (oaYear === year && oaMonth > month) ||
+      (oaYear === year && oaMonth === month && oaDay >= effectivePd);
+    if (paydayIsOnOrBeforeOnboarding) {
       res.json(null);
       return;
     }
