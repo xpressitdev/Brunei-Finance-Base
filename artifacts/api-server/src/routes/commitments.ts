@@ -36,7 +36,16 @@ router.post("/commitments", requireAuth, requireAccess, async (req: Authenticate
     amount: parsed.data.amount,
     dueDay: parsed.data.dueDay ?? null,
     recurrence: parsed.data.recurrence ?? "monthly",
-  }).returning();
+  })
+  .onConflictDoUpdate({
+    target: [commitmentsTable.userId, commitmentsTable.label],
+    set: {
+      amount: parsed.data.amount,
+      dueDay: parsed.data.dueDay ?? null,
+      recurrence: parsed.data.recurrence ?? "monthly",
+    },
+  })
+  .returning();
   res.status(201).json(formatCommitment(item));
 });
 

@@ -37,6 +37,50 @@ export async function runStartupMigrations(): Promise<void> {
     await client.query(`ALTER TABLE transactions ADD COLUMN IF NOT EXISTS linked_debt_id text;`);
     await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS onboarded_at timestamptz;`);
     await client.query(`UPDATE users SET onboarded_at = created_at WHERE onboarded_at IS NULL;`);
+
+    // Bug A1: Remove duplicate commitments — keep the earliest created per (user_id, label)
+    await client.query(`
+      DELETE FROM commitments
+      WHERE id NOT IN (
+        SELECT DISTINCT ON (user_id, label) id
+        FROM commitments
+        ORDER BY user_id, label, created_at ASC
+      );
+    `);
+    // Bug A1: Enforce uniqueness going forward
+    await client.query(`
+      DO $$ BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_constraint
+          WHERE conname = 'commitments_user_id_label_unique'
+        ) THEN
+          ALTER TABLE commitments ADD CONSTRAINT commitments_user_id_label_unique UNIQUE (user_id, label);
+        END IF;
+      END $$;
+    `);
+
+    // Bug A2: Backfill linked_debt_id on legacy payday_prompt debit transactions
+    // that pre-date M1.6 (created before linked_debt_id was being set).
+    // Match by amount to the user's debt with the same monthly_payment.
+    await client.query(`
+      UPDATE transactions t
+      SET linked_debt_id = (
+        SELECT d.id
+        FROM debts d
+        WHERE d.user_id = t.user_id
+          AND d.monthly_payment::numeric = t.amount::numeric
+        LIMIT 1
+      )
+      WHERE t.source = 'payday_prompt'
+        AND t.type = 'debit'
+        AND (t.linked_debt_id IS NULL OR t.linked_debt_id = '')
+        AND EXISTS (
+          SELECT 1 FROM debts d
+          WHERE d.user_id = t.user_id
+            AND d.monthly_payment::numeric = t.amount::numeric
+        );
+    `);
+
     logger.info("Startup migrations applied");
   } catch (err) {
     logger.error({ err }, "Startup migration failed — aborting server start");

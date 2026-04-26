@@ -49,7 +49,7 @@ router.get("/dashboard/summary", requireAuth, async (req: AuthenticatedRequest, 
   // (debts are reconciled when a payday-prompt transaction with linked_debt_id is created)
   const reconciledDebtIds = new Set(
     debitTxns
-      .filter(t => t.linkedDebtId !== null && t.linkedDebtId !== undefined)
+      .filter(t => t.linkedDebtId !== null && t.linkedDebtId !== undefined && t.linkedDebtId !== "")
       .map(t => t.linkedDebtId!)
   );
   const unreconciledDebtPayment = debts
