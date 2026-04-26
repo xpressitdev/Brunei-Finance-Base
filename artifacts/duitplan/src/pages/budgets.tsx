@@ -14,7 +14,7 @@
 // Tailwind setup (`bg-white border`, `text-emerald-700`, etc.) so it drops
 // straight in without touching globals.
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { format, addMonths, subMonths, addYears, subYears } from "date-fns";
 import {
   useListBudgets,
@@ -313,8 +313,8 @@ function AllocateView({
   const loanKeywords = ["loan", "financing", "credit", "mortgage", "hire purchase"];
   const isLoanLike = (label: string) => loanKeywords.some(k => label.toLowerCase().includes(k));
 
-  const expenseCats = categories.filter(c => c.kind === "expense");
-  const savingsCats = categories.filter(c => c.kind === "savings" || /vault|goal|saving/i.test(c.name));
+  const expenseCats = useMemo(() => categories.filter(c => c.kind === "expense"), [categories]);
+  const savingsCats = useMemo(() => categories.filter(c => c.kind === "savings" || /vault|goal|saving/i.test(c.name)), [categories]);
 
   const initialBuckets: Bucket[] = useMemo(() => {
     const loans: Bucket[] = commitments.filter(c => isLoanLike(c.label)).map(c => ({
@@ -366,7 +366,7 @@ function AllocateView({
   const [vaultUnlock, setVaultUnlock] = useState<{ fromId: string; toId: string; amount: number } | null>(null);
 
   // Re-sync when underlying data changes (month switch, etc)
-  useMemo(() => { setBuckets(initialBuckets); }, [initialBuckets]);
+  useEffect(() => { setBuckets(initialBuckets); }, [initialBuckets]);
 
   const totalIncome = salary;
   const allocated = buckets.reduce((s, b) => s + b.allocated, 0);
