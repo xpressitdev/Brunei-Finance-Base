@@ -70,7 +70,7 @@
     }
   },
   "expenseTracker": {
-    "title": "Penjejak Perbelanjaan",
+    "title": "Pengimbas Resit",
     "subtitle": "Jejak semua transaksi",
     "today": "Hari ini",
     "receipt": "Resit",
@@ -701,7 +701,7 @@
   },
   "nav": {
     "dashboard": "Dashboard",
-    "expenseTracker": "Penjejak Perbelanjaan",
+    "expenseTracker": "Pengimbas Resit",
     "duitplanAi": "DuitPlan AI",
     "accounts": "Akaun",
     "transactions": "Transaksi",

@@ -70,7 +70,7 @@
     }
   },
   "expenseTracker": {
-    "title": "Expense Tracker",
+    "title": "Receipt Scanner",
     "subtitle": "Track every transaction",
     "today": "Today",
     "receipt": "Receipt",
@@ -701,7 +701,7 @@
   },
   "nav": {
     "dashboard": "Dashboard",
-    "expenseTracker": "Expense Tracker",
+    "expenseTracker": "Receipt Scanner",
     "duitplanAi": "DuitPlan AI",
     "accounts": "Accounts",
     "transactions": "Transactions",

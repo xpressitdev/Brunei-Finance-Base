@@ -70,7 +70,7 @@
     }
   },
   "expenseTracker": {
-    "title": "Pelacak Pengeluaran",
+    "title": "Pemindai Struk",
     "subtitle": "Lacak semua transaksi",
     "today": "Hari ini",
     "receipt": "Kwitansi",
@@ -701,7 +701,7 @@
   },
   "nav": {
     "dashboard": "Dasbor",
-    "expenseTracker": "Pelacak Pengeluaran",
+    "expenseTracker": "Pemindai Struk",
     "duitplanAi": "DuitPlan AI",
     "accounts": "Rekening",
     "transactions": "Transaksi",
