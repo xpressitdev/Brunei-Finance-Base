@@ -84,12 +84,12 @@
   --card-foreground: 164 40% 15%;
   --card-border: 160 20% 92%;
   
-  --sidebar: 160 20% 97%;
+  --sidebar: 145 35% 94%;
   --sidebar-foreground: 164 40% 20%;
-  --sidebar-border: 160 20% 90%;
+  --sidebar-border: 145 30% 86%;
   --sidebar-primary: 162 70% 40%;
   --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 160 30% 92%;
+  --sidebar-accent: 145 40% 88%;
   --sidebar-accent-foreground: 164 40% 15%;
   --sidebar-ring: 162 70% 40%;
   
