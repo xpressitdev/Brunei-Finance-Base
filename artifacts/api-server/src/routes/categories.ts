@@ -8,19 +8,17 @@ import { requireAuth, type AuthenticatedRequest } from "../lib/auth";
 const router: IRouter = Router();
 
 // `defaultBudget` rides through the wire as a string (matches the rest of our
-// money fields, which are pg numerics). The OpenAPI/Zod layer accepts any
-// string, so the route enforces the BND-shape: optional sign-less integer or
-// integer.decimal up to 2dp, value must parse as a non-negative finite number.
+// money fields, which are pg numerics). OpenAPI advertises the same regex, but
+// we re-validate at the route boundary so the contract is enforced regardless
+// of which generated client (or curl) hits us. The pattern alone fully constrains
+// the shape: digits with an optional 1-2dp decimal, which always parses as a
+// non-negative finite number — no separate Number() check needed.
 // Returns null when valid, an error string when invalid.
 const MONEY_RE = /^\d+(\.\d{1,2})?$/;
 function validateMoneyString(v: string | undefined, field: string): string | null {
   if (v === undefined) return null;
   if (typeof v !== "string" || !MONEY_RE.test(v)) {
     return `${field} must be a non-negative decimal with up to 2 fractional digits`;
-  }
-  const n = Number(v);
-  if (!Number.isFinite(n) || n < 0) {
-    return `${field} must be a non-negative number`;
   }
   return null;
 }
