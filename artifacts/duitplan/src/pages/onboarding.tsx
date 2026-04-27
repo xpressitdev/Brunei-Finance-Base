@@ -73,7 +73,7 @@ const GOAL_PRESETS: { id: string; icon: string; category: CreateGoalBodyCategory
 type AccountRow = { id: string; name: string; type: string; bankName: string; balance: string };
 type SelectedCommitment = { id: string; label: string; amount: string; isCustom?: boolean };
 type SelectedDebt = { id: string; label: string; debtType: string; monthlyPayment: string; outstandingBalance: string };
-type SelectedGoal = { id: string; label: string; category: CreateGoalBodyCategory; targetAmount: string };
+type SelectedGoal = { id: string; label: string; category: CreateGoalBodyCategory; targetAmount: string; monthlyContribution: string };
 
 function toNum(s: string): number {
   const n = parseFloat(s);
@@ -244,7 +244,7 @@ export default function Onboarding() {
       setSelectedGoals(selectedGoals.filter((g) => g.id !== preset.id));
     } else {
       const label = t(`onboarding.goals.${preset.id}`);
-      setSelectedGoals([...selectedGoals, { id: preset.id, label, category: preset.category, targetAmount: "" }]);
+      setSelectedGoals([...selectedGoals, { id: preset.id, label, category: preset.category, targetAmount: "", monthlyContribution: "" }]);
     }
   };
 
@@ -252,10 +252,14 @@ export default function Onboarding() {
     setSelectedGoals(selectedGoals.map((g) => (g.id === id ? { ...g, targetAmount: value } : g)));
   };
 
+  const updateGoalMonthly = (id: string, value: string) => {
+    setSelectedGoals(selectedGoals.map((g) => (g.id === id ? { ...g, monthlyContribution: value } : g)));
+  };
+
   const totalDebts = selectedDebts.reduce((sum, d) => sum + toNum(d.monthlyPayment), 0);
   const totalBills = selectedCommitments.reduce((sum, c) => sum + toNum(c.amount), 0);
   const totalEnvelopes = Object.values(envelopes).reduce((sum, v) => sum + toNum(v), 0);
-  const totalGoals = selectedGoals.reduce((sum, g) => sum + toNum(g.targetAmount), 0);
+  const totalGoals = selectedGoals.reduce((sum, g) => sum + toNum(g.monthlyContribution), 0);
   const incomeNum = toNum(monthlyIncome);
   const leftover = incomeNum - totalDebts - totalBills - totalEnvelopes - totalGoals;
 
@@ -890,33 +894,67 @@ export default function Onboarding() {
                 </div>
 
                 {selectedGoals.length > 0 && (
-                  <div className="border rounded-xl bg-muted/20 p-4 mb-4 space-y-3">
+                  <div className="border rounded-xl bg-muted/20 p-4 mb-3 space-y-3">
                     {selectedGoals.map((g) => (
-                      <div key={g.id} className="flex items-center gap-3">
-                        <Target className="w-4 h-4 text-teal-600" />
-                        <span className="text-sm flex-1 font-medium">{g.label}</span>
-                        <div className="relative w-40">
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
-                            {region.currency}
-                          </span>
-                          <Input
-                            type="number"
-                            step={decimalStep}
-                            placeholder={decimalStep === "1" ? "target" : "0.00"}
-                            className="pl-12 h-9 text-sm"
-                            value={g.targetAmount}
-                            onChange={(e) => updateGoalTarget(g.id, e.target.value)}
-                          />
+                      <div key={g.id} className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <Target className="w-4 h-4 text-teal-600 shrink-0" />
+                          <span className="text-sm flex-1 font-medium truncate">{g.label}</span>
+                          <button
+                            onClick={() => setSelectedGoals(selectedGoals.filter((x) => x.id !== g.id))}
+                            className="text-muted-foreground hover:text-destructive shrink-0"
+                            aria-label={`Remove ${g.label}`}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
                         </div>
-                        <button
-                          onClick={() => setSelectedGoals(selectedGoals.filter((x) => x.id !== g.id))}
-                          className="text-muted-foreground hover:text-destructive"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <Label className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground mb-1 block">
+                              {t("onboarding.goals.targetShort")}
+                            </Label>
+                            <div className="relative">
+                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                                {region.currency}
+                              </span>
+                              <Input
+                                type="number"
+                                step={decimalStep}
+                                placeholder={decimalStep === "1" ? "8000" : "0.00"}
+                                className="pl-12 h-9 text-sm"
+                                value={g.targetAmount}
+                                onChange={(e) => updateGoalTarget(g.id, e.target.value)}
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <Label className="text-[10px] uppercase tracking-wider font-semibold text-teal-700 mb-1 block">
+                              {t("onboarding.goals.monthlyShort")}
+                            </Label>
+                            <div className="relative">
+                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                                {region.currency}
+                              </span>
+                              <Input
+                                type="number"
+                                step={decimalStep}
+                                placeholder={decimalStep === "1" ? "200" : "0.00"}
+                                className="pl-12 h-9 text-sm"
+                                value={g.monthlyContribution}
+                                onChange={(e) => updateGoalMonthly(g.id, e.target.value)}
+                              />
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     ))}
                   </div>
+                )}
+
+                {selectedGoals.length > 0 && (
+                  <p className="text-xs text-muted-foreground mb-4 px-1">
+                    {t("onboarding.goals.monthlyHint")}
+                  </p>
                 )}
 
                 {selectedGoals.length === 0 && (
