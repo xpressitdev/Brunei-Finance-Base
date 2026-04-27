@@ -24,8 +24,10 @@ import {
   useListCommitments,
   useListAccounts,
   useListDebts,
+  useListGoals,
+  useUpdateGoal,
 } from "@workspace/api-client-react";
-import type { Debt } from "@workspace/api-client-react";
+import type { Debt, Goal } from "@workspace/api-client-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -452,9 +454,12 @@ function AllocateView({
   commitments,
   debts,
   categories,
+  goals,
   budgetMap,
   upsert,
+  updateGoal,
   refetch,
+  refetchGoals,
   onTrialExpired,
   resetSignal,
 }: {
@@ -464,14 +469,16 @@ function AllocateView({
   commitments: Array<{ id: string; label: string; amount: string }>;
   debts: Debt[];
   categories: Array<{ id: string; name: string; kind: string }>;
+  goals: Goal[];
   budgetMap: Record<string, { categoryId: string; plannedAmount?: string; actualAmount?: string }>;
   upsert: ReturnType<typeof useUpsertBudget>;
+  updateGoal: ReturnType<typeof useUpdateGoal>;
   refetch: () => void;
+  refetchGoals: () => void;
   onTrialExpired: () => void;
   resetSignal: number;
 }) {
   const expenseCats = useMemo(() => categories.filter(c => c.kind === "expense"), [categories]);
-  const savingsCats = useMemo(() => categories.filter(c => c.kind === "savings" || /vault|goal|saving/i.test(c.name)), [categories]);
 
   const initialBuckets: Bucket[] = useMemo(() => {
     const loans: Bucket[] = debts.map(d => ({
@@ -500,21 +507,20 @@ function AllocateView({
         spent: safeNum(b?.actualAmount),
       };
     });
-    const vaults: Bucket[] = savingsCats.length > 0
-      ? savingsCats.map(cat => {
-          const b = budgetMap[cat.id];
-          return {
-            id: `V:${cat.id}`,
-            name: cat.name,
-            kind: "vault",
-            allocated: safeNum(b?.plannedAmount),
-            target: 5000,
-          };
-        })
-      : [];
+    // Vault column is sourced from /goals — each goal becomes a vault bucket.
+    // `allocated` reflects the cumulative savedAmount on the goal so the progress
+    // bar tracks lifetime progress toward the target. Dragging chips on/off the
+    // bucket bumps the goal's savedAmount via useUpdateGoal.
+    const vaults: Bucket[] = goals.map(g => ({
+      id: `V:${g.id}`,
+      name: g.title,
+      kind: "vault",
+      allocated: safeNum(g.savedAmount),
+      target: safeNum(g.targetAmount),
+    }));
 
     return [...loans, ...fixedEnvelopes, ...variableEnvelopes, ...vaults];
-  }, [debts, commitments, expenseCats, savingsCats, budgetMap]);
+  }, [debts, commitments, expenseCats, goals, budgetMap]);
 
   const [buckets, setBuckets] = useState<Bucket[]>(initialBuckets);
   const [dragging, setDragging] = useState<{ amount: number; fromId?: string } | null>(null);
@@ -548,6 +554,21 @@ function AllocateView({
     }
   };
 
+  // For vault buckets we persist the new cumulative savedAmount on the
+  // underlying goal. The bucket's `allocated` mirrors goal.savedAmount, so we
+  // forward that value verbatim.
+  const persistGoal = async (goalId: string, savedAmount: number) => {
+    try {
+      await updateGoal.mutateAsync({
+        id: goalId,
+        data: { savedAmount: savedAmount.toFixed(2) },
+      });
+      refetchGoals();
+    } catch (err) {
+      if (isTrialExpiredError(err)) onTrialExpired();
+    }
+  };
+
   const updateBucket = (id: string, delta: number) => {
     setBuckets(prev => {
       const next = prev.map(b => b.id === id ? { ...b, allocated: Math.max(0, b.allocated + delta) } : b);
@@ -557,8 +578,8 @@ function AllocateView({
         persistEnvelope(catId, target.allocated);
       }
       if (target && id.startsWith("V:")) {
-        const catId = id.slice(2);
-        persistEnvelope(catId, target.allocated);
+        const goalId = id.slice(2);
+        persistGoal(goalId, target.allocated);
       }
       return next;
     });
@@ -568,9 +589,12 @@ function AllocateView({
   const setBucket = (id: string, value: number) => {
     setBuckets(prev => {
       const next = prev.map(b => b.id === id ? { ...b, allocated: value } : b);
-      if (id.startsWith("E:") || id.startsWith("V:")) {
+      if (id.startsWith("E:")) {
         const catId = id.slice(2);
         persistEnvelope(catId, value);
+      } else if (id.startsWith("V:")) {
+        const goalId = id.slice(2);
+        persistGoal(goalId, value);
       }
       return next;
     });
@@ -832,7 +856,12 @@ function AllocateView({
         >
           {vaultBuckets.length === 0 && (
             <div className="rounded-xl border border-dashed p-6 text-center text-xs text-muted-foreground">
-              No vault categories yet. Add an expense category named "Savings" or wire up /goals.
+              No goals yet —{" "}
+              <a href="/goals" className="text-primary font-semibold underline underline-offset-2">
+                head to Goals
+              </a>{" "}
+              to add your first long-term savings target. Each goal you create
+              will appear here as a vault.
             </div>
           )}
           {vaultBuckets.map(b => (
@@ -1051,7 +1080,9 @@ export default function Budgets() {
   const { data: budgets, refetch } = useListBudgets({ month });
   const { data: categories } = useListCategories();
   const { data: accounts = [] } = useListAccounts();
+  const { data: goals = [], refetch: refetchGoals } = useListGoals();
   const upsert = useUpsertBudget();
+  const updateGoal = useUpdateGoal();
 
   const salary = safeNum(profile?.monthlyIncome);
   const totalCommitments = (commitments ?? []).reduce((s, c) => s + safeNum(c.amount), 0);
@@ -1144,9 +1175,12 @@ export default function Budgets() {
           commitments={commitments ?? []}
           debts={debts}
           categories={categories ?? []}
+          goals={goals ?? []}
           budgetMap={budgetMap}
           upsert={upsert}
+          updateGoal={updateGoal}
           refetch={refetch}
+          refetchGoals={refetchGoals}
           onTrialExpired={() => setTrialExpiredError(true)}
           resetSignal={resetSignal}
         />
