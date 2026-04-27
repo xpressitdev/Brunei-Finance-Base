@@ -282,6 +282,40 @@ function MoneyChip({ amount, disabled, onPointerDown }: {
   );
 }
 
+// Amounts available on the per-bucket pull-chip rail. Drag any chip onto
+// another bucket (or the bag) to physically move that much money out of the
+// source bucket.
+const PULL_AMOUNTS = [1, 3, 5, 10, 25, 50, 100, 250] as const;
+
+function PullChip({
+  amount,
+  enabled,
+  onPointerDown,
+}: {
+  amount: number;
+  enabled: boolean;
+  onPointerDown: (e: React.PointerEvent) => void;
+}) {
+  return (
+    <div
+      role="button"
+      tabIndex={enabled ? 0 : -1}
+      aria-label={enabled ? `Drag BND ${amount} out of this bucket` : `Not enough to drag BND ${amount}`}
+      title={enabled ? `Drag BND ${amount} elsewhere` : `Not enough in this bucket`}
+      onPointerDown={enabled ? onPointerDown : undefined}
+      style={{ touchAction: "none" }}
+      className={cn(
+        "select-none rounded-md border px-1.5 py-0.5 text-[11px] font-bold tabular-nums shrink-0 transition-all",
+        enabled
+          ? "bg-emerald-50 border-emerald-200 text-emerald-800 cursor-grab active:cursor-grabbing hover:-translate-y-0.5 active:scale-95 shadow-sm"
+          : "bg-muted/40 border-muted text-muted-foreground/50 cursor-not-allowed opacity-60"
+      )}
+    >
+      −{amount}
+    </div>
+  );
+}
+
 function CollapsibleColumn({
   title,
   subtitle,
@@ -553,17 +587,35 @@ function BucketRow({
             );
           })()}
 
-          {bucket.allocated >= 50 && !bucket.auto && !bucket.fixed && (
-            <div
-              role="button"
-              tabIndex={0}
-              onPointerDown={(e) => startPullDrag(50, bucket.id, e)}
-              style={{ touchAction: "none" }}
-              className="mt-2 text-[11px] font-semibold text-muted-foreground hover:text-foreground cursor-grab active:cursor-grabbing inline-flex items-center gap-1 select-none"
-            >
-              <RotateCcw className="w-3 h-3" /> drag −50 elsewhere
-            </div>
-          )}
+          {/* Pull-chips rail — drag any chip onto another bucket (or the bag)
+              to physically move money out of this one. Available on every
+              non-fixed bucket: loans (above the min payment), envelopes, and
+              vaults (vault drag triggers the unlock-confirmation modal). */}
+          {!bucket.fixed && bucket.allocated > 0 && (() => {
+            const minVal = isLoan ? (bucket.target ?? 0) : 0;
+            const headroom = Math.max(0, bucket.allocated - minVal);
+            if (headroom <= 0) return null;
+            return (
+              <div className="mt-3 pt-3 border-t border-dashed border-border">
+                <div className="flex items-center gap-1 mb-1.5">
+                  <RotateCcw className="w-3 h-3 text-muted-foreground" />
+                  <span className="text-[9px] uppercase tracking-wider font-bold text-muted-foreground">
+                    Drag out to move money
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-1">
+                  {PULL_AMOUNTS.map(amt => (
+                    <PullChip
+                      key={amt}
+                      amount={amt}
+                      enabled={amt <= headroom}
+                      onPointerDown={(e) => startPullDrag(amt, bucket.id, e)}
+                    />
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
         </div>
       </div>
     </div>
