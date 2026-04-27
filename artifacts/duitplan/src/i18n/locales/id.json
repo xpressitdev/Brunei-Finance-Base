@@ -370,6 +370,10 @@
       "totalAccountBalances": "Total Saldo Rekening",
       "minusFixedCommitments": "− Komitmen Tetap",
       "minusAssigned": "− Dialokasikan ke Kategori"
+    },
+    "pullChip": {
+      "dragOut": "Seret & lepas ke anggaran lain · kembalikan ke Money Bag",
+      "dragOutFixed": "Seret & lepas ke anggaran lain · kembalikan ke Money Bag (berubah setiap bulan)"
     }
   },
   "commitments": {

@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect, useRef, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { format, addMonths, subMonths, addYears, subYears } from "date-fns";
 import {
   useListBudgets,
@@ -407,6 +408,7 @@ function BucketRow({
   onChange: (v: number) => void;
   startPullDrag: (amount: number, fromId: string, e: React.PointerEvent) => void;
 }) {
+  const { t } = useTranslation();
   const isVault = bucket.kind === "vault";
   const isLoan  = bucket.kind === "loan";
   const isEnv   = bucket.kind === "envelope";
@@ -627,10 +629,12 @@ function BucketRow({
             if (headroom <= 0) return null;
             return (
               <div className="mt-3 pt-3 border-t border-dashed border-border">
-                <div className="flex items-center gap-1 mb-1.5">
-                  <RotateCcw className="w-3 h-3 text-muted-foreground" />
-                  <span className="text-[9px] uppercase tracking-wider font-bold text-muted-foreground">
-                    {bucket.fixed ? "Drag out (changes every month)" : "Drag out to move money"}
+                <div className="flex items-start gap-1 mb-1.5">
+                  <RotateCcw className="w-3 h-3 text-muted-foreground shrink-0 mt-px" />
+                  <span className="text-[9px] uppercase tracking-wider font-bold text-muted-foreground leading-tight break-words min-w-0">
+                    {bucket.fixed
+                      ? t("budgets.pullChip.dragOutFixed")
+                      : t("budgets.pullChip.dragOut")}
                   </span>
                 </div>
                 <div className="flex flex-wrap gap-1">

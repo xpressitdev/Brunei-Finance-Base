@@ -377,6 +377,10 @@
       "totalAccountBalances": "Total Account Balances",
       "minusFixedCommitments": "− Fixed Commitments",
       "minusAssigned": "− Assigned to Categories"
+    },
+    "pullChip": {
+      "dragOut": "Drag & drop to other budget · return to Money Bag",
+      "dragOutFixed": "Drag & drop to other budget · return to Money Bag (changes every month)"
     }
   },
   "commitments": {

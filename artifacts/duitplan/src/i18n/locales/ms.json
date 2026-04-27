@@ -370,6 +370,10 @@
       "totalAccountBalances": "Jumlah Baki Akaun",
       "minusFixedCommitments": "− Komitmen Tetap",
       "minusAssigned": "− Ditetapkan ke Kategori"
+    },
+    "pullChip": {
+      "dragOut": "Seret & lepas ke belanjawan lain · kembalikan ke Money Bag",
+      "dragOutFixed": "Seret & lepas ke belanjawan lain · kembalikan ke Money Bag (berubah setiap bulan)"
     }
   },
   "commitments": {
