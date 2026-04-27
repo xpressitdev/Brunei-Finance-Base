@@ -1,10 +1,11 @@
 import { pgTable, text, numeric, integer, timestamp, date } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
+import { usersTable } from "./users";
 
 export const debtsTable = pgTable("debts", {
   id: text("id").primaryKey(),
-  userId: text("user_id").notNull(),
+  userId: text("user_id").notNull().references(() => usersTable.id, { onDelete: "cascade" }),
   debtType: text("debt_type").notNull(),
   lender: text("lender").notNull(),
   outstandingBalance: numeric("outstanding_balance", { precision: 12, scale: 2 }).notNull(),

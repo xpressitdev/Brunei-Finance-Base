@@ -1,10 +1,11 @@
 import { pgTable, text, integer, numeric, timestamp, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
+import { usersTable } from "./users";
 
 export const profilesTable = pgTable("profiles", {
   id: text("id").primaryKey(),
-  userId: text("user_id").notNull().unique(),
+  userId: text("user_id").notNull().unique().references(() => usersTable.id, { onDelete: "cascade" }),
   fullName: text("full_name").notNull(),
   currency: text("currency").notNull().default("BND"),
   region: text("region").notNull().default("BN"),
