@@ -1,4 +1,3 @@
-import * as React from "react";
 import { Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { fmtBND } from "@/lib/format";
@@ -7,22 +6,19 @@ type Props = {
   available: number;
   total: number;
   isOver?: boolean;
-  onDragOver?: (e: React.DragEvent) => void;
-  onDragLeave?: () => void;
-  onDrop?: (e: React.DragEvent) => void;
+  /** When provided, the bag becomes a pointer-drag drop target with this id. */
+  dropId?: string;
   className?: string;
 };
 
-export function MoneyBag({ available, total, isOver, onDragOver, onDragLeave, onDrop, className }: Props) {
+export function MoneyBag({ available, total, isOver, dropId, className }: Props) {
   const pct = Math.max(0, Math.min(1, total > 0 ? available / total : 0));
   const empty = available <= 0;
   const fillY = 100 - pct * 78;
 
   return (
     <div
-      onDragOver={onDragOver}
-      onDragLeave={onDragLeave}
-      onDrop={onDrop}
+      data-drop-id={dropId}
       title="Drag chips back here to deallocate"
       className={cn(
         "relative flex flex-col items-center justify-center rounded-2xl border-2 border-dashed transition-colors px-4 py-3 w-44 select-none",

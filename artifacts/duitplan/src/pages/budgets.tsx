@@ -14,7 +14,7 @@
 // Tailwind setup (`bg-white border`, `text-emerald-700`, etc.) so it drops
 // straight in without touching globals.
 
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef, useCallback } from "react";
 import { format, addMonths, subMonths, addYears, subYears } from "date-fns";
 import {
   useListBudgets,
@@ -97,20 +97,176 @@ type Bucket = {
 
 const CHIP_AMOUNTS = [10, 25, 50, 100, 250, 500];
 
-function MoneyChip({ amount, disabled, onDragStart, onDragEnd }: {
+// ── Pointer-based drag layer ─────────────────────────────────────────────────
+// HTML5 drag-and-drop doesn't fire on touch devices. We use Pointer Events
+// (which work uniformly across mouse, touch and pen) and find the drop target
+// via document.elementFromPoint + a `data-drop-id` attribute on each target.
+
+type DragState = { amount: number; fromId?: string; x: number; y: number };
+
+function usePointerDrag(onDrop: (targetId: string, amount: number, fromId?: string) => void) {
+  const [drag, setDrag] = useState<DragState | null>(null);
+  const [over, setOver] = useState<string | null>(null);
+  const dragRef = useRef<DragState | null>(null);
+  const onDropRef = useRef(onDrop);
+
+  useEffect(() => { onDropRef.current = onDrop; }, [onDrop]);
+  useEffect(() => { dragRef.current = drag; }, [drag]);
+
+  const startDrag = useCallback(
+    (amount: number, fromId: string | undefined, e: React.PointerEvent) => {
+      // Stop the page from scrolling on touch while we drag
+      e.preventDefault();
+      e.stopPropagation();
+      setDrag({ amount, fromId, x: e.clientX, y: e.clientY });
+    },
+    []
+  );
+
+  const isActive = !!drag;
+
+  useEffect(() => {
+    if (!isActive) return;
+
+    const findTarget = (x: number, y: number): string | null => {
+      const el = document.elementFromPoint(x, y) as HTMLElement | null;
+      const drop = el?.closest("[data-drop-id]") as HTMLElement | null;
+      return drop?.getAttribute("data-drop-id") ?? null;
+    };
+
+    const move = (e: PointerEvent) => {
+      const x = e.clientX, y = e.clientY;
+      setDrag(d => (d ? { ...d, x, y } : null));
+      setOver(findTarget(x, y));
+    };
+
+    const up = (e: PointerEvent) => {
+      const target = findTarget(e.clientX, e.clientY);
+      const cur = dragRef.current;
+      if (target && cur) onDropRef.current(target, cur.amount, cur.fromId);
+      setDrag(null);
+      setOver(null);
+    };
+
+    const cancel = () => { setDrag(null); setOver(null); };
+
+    window.addEventListener("pointermove", move, { passive: true });
+    window.addEventListener("pointerup", up);
+    window.addEventListener("pointercancel", cancel);
+    return () => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+      window.removeEventListener("pointercancel", cancel);
+    };
+  }, [isActive]);
+
+  return { drag, over, startDrag };
+}
+
+function DragGhost({ drag }: { drag: DragState | null }) {
+  if (!drag) return null;
+  return (
+    <div
+      style={{
+        position: "fixed",
+        left: drag.x + 14,
+        top: drag.y - 18,
+        zIndex: 9999,
+        pointerEvents: "none",
+      }}
+      className="rounded-md px-3 py-2 text-sm font-bold tabular-nums shadow-lg border bg-emerald-100 border-emerald-400 text-emerald-900 select-none"
+    >
+      BND {drag.amount}
+    </div>
+  );
+}
+
+// ── Stepper: [−] [BND number] [+] ────────────────────────────────────────────
+function AmountStepper({
+  value,
+  min = 0,
+  step = 10,
+  onChange,
+  disabled,
+}: {
+  value: number;
+  min?: number;
+  step?: number;
+  onChange: (v: number) => void;
+  disabled?: boolean;
+}) {
+  const [text, setText] = useState(() => value.toFixed(0));
+  // Keep the visible text in sync with external updates (drag, reset, etc).
+  useEffect(() => {
+    setText(value === 0 ? "" : String(Math.round(value * 100) / 100));
+  }, [value]);
+
+  const commit = () => {
+    const v = parseFloat(text);
+    if (Number.isFinite(v) && v >= min) onChange(v);
+    else onChange(min);
+  };
+
+  return (
+    <div className="flex items-center gap-1.5 mt-2">
+      <button
+        type="button"
+        aria-label={`Decrease by ${step}`}
+        disabled={disabled || value <= min}
+        onClick={() => onChange(Math.max(min, value - step))}
+        className={cn(
+          "h-8 w-8 rounded-md border bg-background grid place-items-center text-base font-bold shrink-0 transition",
+          (disabled || value <= min)
+            ? "opacity-40 cursor-not-allowed"
+            : "hover:bg-accent active:scale-95"
+        )}
+      >
+        −
+      </button>
+      <div className="flex-1 flex items-center gap-1.5 rounded-md border border-border bg-background px-2 h-8 min-w-0">
+        <span className="text-[10px] font-bold text-muted-foreground tracking-wide shrink-0">BND</span>
+        <input
+          type="number"
+          inputMode="decimal"
+          min={min}
+          step="0.01"
+          value={text}
+          disabled={disabled}
+          placeholder="0"
+          onChange={e => setText(e.target.value)}
+          onBlur={commit}
+          onKeyDown={e => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
+          className="w-full bg-transparent outline-none text-sm font-bold tabular-nums text-right disabled:opacity-50"
+        />
+      </div>
+      <button
+        type="button"
+        aria-label={`Increase by ${step}`}
+        disabled={disabled}
+        onClick={() => onChange(value + step)}
+        className={cn(
+          "h-8 w-8 rounded-md border bg-background grid place-items-center text-base font-bold shrink-0 transition",
+          disabled ? "opacity-40 cursor-not-allowed" : "hover:bg-accent active:scale-95"
+        )}
+      >
+        +
+      </button>
+    </div>
+  );
+}
+
+function MoneyChip({ amount, disabled, onPointerDown }: {
   amount: number; disabled: boolean;
-  onDragStart: (e: React.DragEvent) => void;
-  onDragEnd: () => void;
+  onPointerDown: (e: React.PointerEvent) => void;
 }) {
   return (
     <div
-      draggable={!disabled}
-      onDragStart={onDragStart}
-      onDragEnd={onDragEnd}
+      onPointerDown={disabled ? undefined : onPointerDown}
+      style={{ touchAction: "none" }}
       className={cn(
-        "select-none cursor-grab active:cursor-grabbing rounded-md px-3 py-2 text-sm font-bold tabular-nums shadow-sm border transition-all",
+        "select-none rounded-md px-3 py-2 text-sm font-bold tabular-nums shadow-sm border transition-all",
         "bg-emerald-50 border-emerald-200 text-emerald-800 hover:-translate-y-0.5 active:scale-95",
-        disabled && "opacity-40 pointer-events-none"
+        disabled ? "opacity-40 cursor-not-allowed" : "cursor-grab active:cursor-grabbing"
       )}
     >
       BND {amount}
@@ -181,12 +337,11 @@ function CollapsibleColumn({
   );
 }
 
-function CustomMoneyChip({ available, value, onChange, onDragStart, onDragEnd }: {
+function CustomMoneyChip({ available, value, onChange, onPointerDown }: {
   available: number;
   value: string;
   onChange: (v: string) => void;
-  onDragStart: (amount: number, e: React.DragEvent) => void;
-  onDragEnd: () => void;
+  onPointerDown: (amount: number, e: React.PointerEvent) => void;
 }) {
   const num = Number(value);
   const valid = Number.isFinite(num) && num > 0;
@@ -195,9 +350,13 @@ function CustomMoneyChip({ available, value, onChange, onDragStart, onDragEnd }:
 
   return (
     <div
-      draggable={!disabled}
-      onDragStart={disabled ? undefined : (e) => onDragStart(num, e)}
-      onDragEnd={onDragEnd}
+      onPointerDown={(e) => {
+        // Don't start a drag from a click on the input itself; let the user type.
+        if ((e.target as HTMLElement).tagName === "INPUT") return;
+        if (disabled) return;
+        onPointerDown(num, e);
+      }}
+      style={{ touchAction: "none" }}
       title={tooMuch ? `Only BND ${available.toFixed(2)} left in the bag` : valid ? `Drag BND ${num} onto a bucket` : "Type any amount, then drag"}
       className={cn(
         "flex items-center gap-1 select-none rounded-md border px-2 py-1.5 transition-all",
@@ -216,11 +375,10 @@ function CustomMoneyChip({ available, value, onChange, onDragStart, onDragEnd }:
         step="0.01"
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        onPointerDown={(e) => e.stopPropagation()}
         onClick={(e) => e.stopPropagation()}
-        onMouseDown={(e) => e.stopPropagation()}
         placeholder="custom"
-        draggable={false}
-        onDragStart={(e) => e.stopPropagation()}
+        style={{ touchAction: "auto" }}
         className="w-16 bg-transparent outline-none text-sm font-bold tabular-nums placeholder:text-emerald-700/40 placeholder:font-medium"
       />
       {valid && !tooMuch && (
@@ -234,20 +392,14 @@ function BucketRow({
   bucket,
   isOver,
   pulse,
-  onDragOver,
-  onDragLeave,
-  onDrop,
-  onSlider,
-  onPullChip,
+  onChange,
+  startPullDrag,
 }: {
   bucket: Bucket;
   isOver: boolean;
   pulse: boolean;
-  onDragOver: (e: React.DragEvent) => void;
-  onDragLeave: () => void;
-  onDrop: (e: React.DragEvent) => void;
-  onSlider: (v: number) => void;
-  onPullChip: (amount: number, e: React.DragEvent) => void;
+  onChange: (v: number) => void;
+  startPullDrag: (amount: number, fromId: string, e: React.PointerEvent) => void;
 }) {
   const isVault = bucket.kind === "vault";
   const isLoan  = bucket.kind === "loan";
@@ -272,9 +424,7 @@ function BucketRow({
 
   return (
     <div
-      onDragOver={onDragOver}
-      onDragLeave={onDragLeave}
-      onDrop={onDrop}
+      data-drop-id={bucket.id}
       className={cn(
         "relative bg-white rounded-xl border p-4 shadow-sm transition-all",
         borderState,
@@ -348,44 +498,26 @@ function BucketRow({
             </>
           )}
 
-          {/* Slider for vault/loan rows; direct input for variable envelopes */}
-          {!isEnv && (
-            <input
-              type="range"
-              min={0}
-              max={Math.max((bucket.target ?? 1500) * 1.5, bucket.allocated * 2, 1500)}
-              step={10}
+          {/* Stepper: works on touch & desktop. Loans can't go below their min. */}
+          {!bucket.fixed && (
+            <AmountStepper
               value={bucket.allocated}
-              onChange={(e) => onSlider(Number(e.target.value))}
-              className="w-full mt-3 accent-primary"
+              min={isLoan ? (bucket.target ?? 0) : 0}
+              step={isLoan ? 50 : isVault ? 50 : 10}
+              onChange={onChange}
             />
-          )}
-          {isEnv && !bucket.fixed && (
-            <div className="flex items-center gap-1.5 mt-2">
-              <span className="text-[11px] text-muted-foreground">BND</span>
-              <input
-                type="number"
-                min={0}
-                step={10}
-                value={bucket.allocated === 0 ? "" : bucket.allocated}
-                placeholder="0.00"
-                onChange={(e) => {
-                  const v = parseFloat(e.target.value);
-                  onSlider(Number.isFinite(v) && v >= 0 ? v : 0);
-                }}
-                className="w-28 text-right text-sm h-7 rounded-md border border-border bg-background px-2 outline-none focus:ring-2 focus:ring-primary/40 tabular-nums"
-              />
-            </div>
           )}
 
           {bucket.allocated >= 50 && !bucket.auto && !bucket.fixed && (
-            <button
-              draggable
-              onDragStart={(e) => onPullChip(50, e)}
-              className="mt-1 text-[11px] font-semibold text-muted-foreground hover:text-foreground cursor-grab active:cursor-grabbing inline-flex items-center gap-1"
+            <div
+              role="button"
+              tabIndex={0}
+              onPointerDown={(e) => startPullDrag(50, bucket.id, e)}
+              style={{ touchAction: "none" }}
+              className="mt-2 text-[11px] font-semibold text-muted-foreground hover:text-foreground cursor-grab active:cursor-grabbing inline-flex items-center gap-1 select-none"
             >
               <RotateCcw className="w-3 h-3" /> drag −50 elsewhere
-            </button>
+            </div>
           )}
         </div>
       </div>
@@ -525,7 +657,6 @@ function AllocateView({
   }, [debts, commitments, expenseCats, goals, budgetMap]);
 
   const [buckets, setBuckets] = useState<Bucket[]>(initialBuckets);
-  const [dragging, setDragging] = useState<{ amount: number; fromId?: string } | null>(null);
   const [overTarget, setOverTarget] = useState<string | null>(null);
   const [pulse, setPulse] = useState<string | null>(null);
   const [vaultUnlock, setVaultUnlock] = useState<{ fromId: string; toId: string; amount: number } | null>(null);
@@ -602,40 +733,54 @@ function AllocateView({
     });
   };
 
-  const onChipDragStart = (amount: number) => (e: React.DragEvent) => {
-    if (available < amount) return;
-    setDragging({ amount });
-    e.dataTransfer.effectAllowed = "move";
-  };
+  // ── Pointer drag dispatch ─────────────────────────────────────────────────
+  // Drop targets are identified by `data-drop-id`:
+  //   "BAG"  → the money bag (deallocate)
+  //   "L:…"  → loan bucket
+  //   "E:…"  → envelope bucket
+  //   "F:…"  → fixed envelope bucket (commitment)
+  //   "V:…"  → vault bucket (goal)
+  const handleDrop = useCallback(
+    (targetId: string, amount: number, fromId?: string) => {
+      // Drag back to the bag = deallocate (vault drag-back triggers friction lock)
+      if (targetId === "BAG") {
+        if (!fromId) return; // dropping a fresh chip onto the bag is a no-op
+        if (fromId.startsWith("V:")) {
+          setVaultUnlock({ fromId, toId: "__BAG__", amount });
+          return;
+        }
+        updateBucket(fromId, -amount);
+        return;
+      }
 
-  const onPullChipFromBucket = (fromId: string) => (amount: number, e: React.DragEvent) => {
-    setDragging({ amount, fromId });
-    e.dataTransfer.effectAllowed = "move";
-  };
+      // Vault → anywhere else needs confirmation
+      if (fromId && fromId.startsWith("V:") && fromId !== targetId) {
+        setVaultUnlock({ fromId, toId: targetId, amount });
+        return;
+      }
 
-  const onBucketDragOver = (id: string) => (e: React.DragEvent) => {
-    e.preventDefault();
-    setOverTarget(id);
-  };
+      // Fresh chip from the bag — make sure the user actually has the money
+      if (!fromId && available < amount) return;
 
-  const onBucketDrop = (id: string) => (e: React.DragEvent) => {
-    e.preventDefault();
-    if (!dragging) return;
-    const { amount, fromId } = dragging;
+      if (fromId) updateBucket(fromId, -amount);
+      updateBucket(targetId, amount);
+    },
+    [available, updateBucket]
+  );
 
-    // Vault → elsewhere requires confirmation
-    if (fromId && fromId.startsWith("V:") && fromId !== id) {
-      setVaultUnlock({ fromId, toId: id, amount });
-      setDragging(null);
-      setOverTarget(null);
-      return;
-    }
+  const { drag, over: overTargetPtr, startDrag } = usePointerDrag(handleDrop);
+  // Keep the legacy `overTarget` state in sync with the pointer hook so the
+  // existing per-bucket border highlight keeps working.
+  useEffect(() => { setOverTarget(overTargetPtr); }, [overTargetPtr]);
+  useEffect(() => { setBagOver(overTargetPtr === "BAG" && !!drag?.fromId); }, [overTargetPtr, drag]);
 
-    if (fromId) updateBucket(fromId, -amount);
-    updateBucket(id, amount);
-    setDragging(null);
-    setOverTarget(null);
-  };
+  const startChipDrag = useCallback(
+    (amount: number) => (e: React.PointerEvent) => {
+      if (available < amount) return;
+      startDrag(amount, undefined, e);
+    },
+    [available, startDrag]
+  );
 
   const confirmVaultUnlock = (_reason: string) => {
     if (!vaultUnlock) return;
@@ -645,25 +790,6 @@ function AllocateView({
     }
     // TODO: POST reason to /api/vault-unlocks for audit log when endpoint exists
     setVaultUnlock(null);
-  };
-
-  const onBagDragOver = (e: React.DragEvent) => {
-    if (!dragging?.fromId) return;
-    e.preventDefault();
-    setBagOver(true);
-  };
-
-  const onBagDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setBagOver(false);
-    if (!dragging?.fromId) return;
-    if (dragging.fromId.startsWith("V:")) {
-      setVaultUnlock({ fromId: dragging.fromId, toId: "__BAG__", amount: dragging.amount });
-      setDragging(null);
-      return;
-    }
-    updateBucket(dragging.fromId, -dragging.amount);
-    setDragging(null);
   };
 
   const reset = () => setBuckets(initialBuckets);
@@ -717,33 +843,28 @@ function AllocateView({
               available={available}
               total={totalIncome}
               isOver={bagOver}
-              onDragOver={onBagDragOver}
-              onDragLeave={() => setBagOver(false)}
-              onDrop={onBagDrop}
+              dropId="BAG"
             />
           </div>
 
           <div className="flex flex-col gap-2 max-w-md">
-            <span className="text-xs text-muted-foreground font-medium">Drag a chip onto any bucket below ↓</span>
+            <span className="text-xs text-muted-foreground font-medium">
+              Drag a chip onto any bucket below, or use the +/− on each bucket ↓
+            </span>
             <div className="flex flex-wrap gap-2">
               {CHIP_AMOUNTS.map(amt => (
                 <MoneyChip
                   key={amt}
                   amount={amt}
                   disabled={available < amt}
-                  onDragStart={onChipDragStart(amt)}
-                  onDragEnd={() => setDragging(null)}
+                  onPointerDown={startChipDrag(amt)}
                 />
               ))}
               <CustomMoneyChip
                 available={available}
                 value={customAmount}
                 onChange={setCustomAmount}
-                onDragStart={(amt, e) => {
-                  setDragging({ amount: amt });
-                  e.dataTransfer.effectAllowed = "move";
-                }}
-                onDragEnd={() => setDragging(null)}
+                onPointerDown={(amt, e) => startDrag(amt, undefined, e)}
               />
             </div>
             <div className="flex items-center gap-2 mt-1">
@@ -789,11 +910,8 @@ function AllocateView({
               bucket={b}
               isOver={overTarget === b.id}
               pulse={pulse === b.id}
-              onDragOver={onBucketDragOver(b.id)}
-              onDragLeave={() => setOverTarget(null)}
-              onDrop={onBucketDrop(b.id)}
-              onSlider={(v) => setBucket(b.id, v)}
-              onPullChip={onPullChipFromBucket(b.id)}
+              onChange={(v) => setBucket(b.id, v)}
+              startPullDrag={startDrag}
             />
           ))}
         </CollapsibleColumn>
@@ -817,11 +935,8 @@ function AllocateView({
                   bucket={b}
                   isOver={overTarget === b.id}
                   pulse={pulse === b.id}
-                  onDragOver={onBucketDragOver(b.id)}
-                  onDragLeave={() => setOverTarget(null)}
-                  onDrop={onBucketDrop(b.id)}
-                  onSlider={(v) => setBucket(b.id, v)}
-                  onPullChip={onPullChipFromBucket(b.id)}
+                  onChange={(v) => setBucket(b.id, v)}
+                  startPullDrag={startDrag}
                 />
               ))}
             </>
@@ -840,11 +955,8 @@ function AllocateView({
               bucket={b}
               isOver={overTarget === b.id}
               pulse={pulse === b.id}
-              onDragOver={onBucketDragOver(b.id)}
-              onDragLeave={() => setOverTarget(null)}
-              onDrop={onBucketDrop(b.id)}
-              onSlider={(v) => setBucket(b.id, v)}
-              onPullChip={onPullChipFromBucket(b.id)}
+              onChange={(v) => setBucket(b.id, v)}
+              startPullDrag={startDrag}
             />
           ))}
         </CollapsibleColumn>
@@ -874,15 +986,15 @@ function AllocateView({
               bucket={b}
               isOver={overTarget === b.id}
               pulse={pulse === b.id}
-              onDragOver={onBucketDragOver(b.id)}
-              onDragLeave={() => setOverTarget(null)}
-              onDrop={onBucketDrop(b.id)}
-              onSlider={(v) => setBucket(b.id, v)}
-              onPullChip={onPullChipFromBucket(b.id)}
+              onChange={(v) => setBucket(b.id, v)}
+              startPullDrag={startDrag}
             />
           ))}
         </CollapsibleColumn>
       </div>
+
+      {/* Floating ghost that follows the pointer while dragging */}
+      <DragGhost drag={drag} />
 
       {vaultUnlock && (
         <VaultUnlockModal
