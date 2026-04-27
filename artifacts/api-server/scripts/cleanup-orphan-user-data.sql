@@ -33,10 +33,12 @@ FROM (
   UNION ALL SELECT 'goals',                  COUNT(*) FROM goals                   WHERE NOT EXISTS (SELECT 1 FROM users u WHERE u.id = goals.user_id)
   UNION ALL SELECT 'insights',               COUNT(*) FROM insights                WHERE NOT EXISTS (SELECT 1 FROM users u WHERE u.id = insights.user_id)
   UNION ALL SELECT 'monthly_budgets',        COUNT(*) FROM monthly_budgets         WHERE NOT EXISTS (SELECT 1 FROM users u WHERE u.id = monthly_budgets.user_id)
+  UNION ALL SELECT 'net_worth_snapshots',    COUNT(*) FROM net_worth_snapshots     WHERE NOT EXISTS (SELECT 1 FROM users u WHERE u.id = net_worth_snapshots.user_id)
   UNION ALL SELECT 'payday_prompts',         COUNT(*) FROM payday_prompts          WHERE NOT EXISTS (SELECT 1 FROM users u WHERE u.id = payday_prompts.user_id)
   UNION ALL SELECT 'profiles',               COUNT(*) FROM profiles                WHERE NOT EXISTS (SELECT 1 FROM users u WHERE u.id = profiles.user_id)
   UNION ALL SELECT 'transactions',           COUNT(*) FROM transactions            WHERE NOT EXISTS (SELECT 1 FROM users u WHERE u.id = transactions.user_id)
   UNION ALL SELECT 'uploaded_documents',     COUNT(*) FROM uploaded_documents      WHERE NOT EXISTS (SELECT 1 FROM users u WHERE u.id = uploaded_documents.user_id)
+  UNION ALL SELECT 'user_subscriptions',     COUNT(*) FROM user_subscriptions      WHERE NOT EXISTS (SELECT 1 FROM users u WHERE u.id = user_subscriptions.user_id)
   UNION ALL SELECT 'feedback (orphan link)', COUNT(*) FROM feedback                WHERE user_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM users u WHERE u.id = feedback.user_id)
 ) s
 ORDER BY orphans DESC, tbl;
@@ -54,8 +56,10 @@ DELETE FROM goals               WHERE NOT EXISTS (SELECT 1 FROM users u WHERE u.
 DELETE FROM insights            WHERE NOT EXISTS (SELECT 1 FROM users u WHERE u.id = insights.user_id);
 DELETE FROM accounts            WHERE NOT EXISTS (SELECT 1 FROM users u WHERE u.id = accounts.user_id);
 DELETE FROM asset_entries       WHERE NOT EXISTS (SELECT 1 FROM users u WHERE u.id = asset_entries.user_id);
+DELETE FROM net_worth_snapshots WHERE NOT EXISTS (SELECT 1 FROM users u WHERE u.id = net_worth_snapshots.user_id);
 DELETE FROM payday_prompts      WHERE NOT EXISTS (SELECT 1 FROM users u WHERE u.id = payday_prompts.user_id);
 DELETE FROM uploaded_documents  WHERE NOT EXISTS (SELECT 1 FROM users u WHERE u.id = uploaded_documents.user_id);
+DELETE FROM user_subscriptions  WHERE NOT EXISTS (SELECT 1 FROM users u WHERE u.id = user_subscriptions.user_id);
 DELETE FROM profiles            WHERE NOT EXISTS (SELECT 1 FROM users u WHERE u.id = profiles.user_id);
 
 -- ----------------------------------------------------------------------------

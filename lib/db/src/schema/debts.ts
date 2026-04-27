@@ -21,7 +21,7 @@ export const debtsTable = pgTable("debts", {
 
 export const debtScenariosTable = pgTable("debt_scenarios", {
   id: text("id").primaryKey(),
-  debtId: text("debt_id").notNull(),
+  debtId: text("debt_id").notNull().references(() => debtsTable.id, { onDelete: "cascade" }),
   extraMonthlyPayment: numeric("extra_monthly_payment", { precision: 12, scale: 2 }).notNull(),
   estimatedMonthsSaved: integer("estimated_months_saved"),
   estimatedPayoffDate: timestamp("estimated_payoff_date", { withTimezone: true }),

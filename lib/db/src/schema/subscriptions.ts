@@ -1,6 +1,7 @@
 import { pgTable, text, numeric, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
+import { usersTable } from "./users";
 
 export const subscriptionPlansTable = pgTable("subscription_plans", {
   id: text("id").primaryKey(),
@@ -14,7 +15,7 @@ export const subscriptionPlansTable = pgTable("subscription_plans", {
 
 export const userSubscriptionsTable = pgTable("user_subscriptions", {
   id: text("id").primaryKey(),
-  userId: text("user_id").notNull().unique(),
+  userId: text("user_id").notNull().unique().references(() => usersTable.id, { onDelete: "cascade" }),
   planId: text("plan_id").notNull(),
   status: text("status").notNull(),
   startDate: timestamp("start_date", { withTimezone: true }).notNull(),

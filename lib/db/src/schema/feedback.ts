@@ -1,11 +1,12 @@
 import { pgTable, text, integer, timestamp } from "drizzle-orm/pg-core";
+import { usersTable } from "./users";
 
 export const FEEDBACK_CATEGORIES = ["bug", "feature", "general", "praise"] as const;
 export type FeedbackCategory = typeof FEEDBACK_CATEGORIES[number];
 
 export const feedbackTable = pgTable("feedback", {
   id: text("id").primaryKey(),
-  userId: text("user_id"),
+  userId: text("user_id").references(() => usersTable.id, { onDelete: "set null" }),
   category: text("category").notNull().$type<FeedbackCategory>(),
   message: text("message").notNull(),
   rating: integer("rating"),

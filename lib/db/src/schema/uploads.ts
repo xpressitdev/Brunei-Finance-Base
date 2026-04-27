@@ -1,10 +1,11 @@
 import { pgTable, text, numeric, integer, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
+import { usersTable } from "./users";
 
 export const uploadedDocumentsTable = pgTable("uploaded_documents", {
   id: text("id").primaryKey(),
-  userId: text("user_id").notNull(),
+  userId: text("user_id").notNull().references(() => usersTable.id, { onDelete: "cascade" }),
   fileName: text("file_name").notNull(),
   storagePath: text("storage_path").notNull(),
   bankType: text("bank_type").notNull(),
@@ -14,7 +15,7 @@ export const uploadedDocumentsTable = pgTable("uploaded_documents", {
 
 export const importedTransactionRowsTable = pgTable("imported_transaction_rows", {
   id: text("id").primaryKey(),
-  uploadedDocumentId: text("uploaded_document_id").notNull(),
+  uploadedDocumentId: text("uploaded_document_id").notNull().references(() => uploadedDocumentsTable.id, { onDelete: "cascade" }),
   rawDate: text("raw_date"),
   rawDescription: text("raw_description"),
   rawAmount: text("raw_amount"),

@@ -1,13 +1,14 @@
 import { pgTable, text, integer, timestamp, date, uniqueIndex } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
+import { usersTable } from "./users";
 
 export const PAYDAY_PROMPT_STATES = ["pending", "confirmed", "skipped", "remind_tomorrow"] as const;
 export type PaydayPromptState = typeof PAYDAY_PROMPT_STATES[number];
 
 export const paydayPromptsTable = pgTable("payday_prompts", {
   id: text("id").primaryKey(),
-  userId: text("user_id").notNull(),
+  userId: text("user_id").notNull().references(() => usersTable.id, { onDelete: "cascade" }),
   year: integer("year").notNull(),
   month: integer("month").notNull(),
   state: text("state").notNull().default("pending"),

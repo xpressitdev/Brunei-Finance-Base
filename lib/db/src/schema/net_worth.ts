@@ -1,10 +1,11 @@
 import { pgTable, text, numeric, timestamp, unique } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
+import { usersTable } from "./users";
 
 export const netWorthSnapshotsTable = pgTable("net_worth_snapshots", {
   id: text("id").primaryKey(),
-  userId: text("user_id").notNull(),
+  userId: text("user_id").notNull().references(() => usersTable.id, { onDelete: "cascade" }),
   month: text("month").notNull(),
   netWorth: numeric("net_worth", { precision: 14, scale: 2 }).notNull(),
   notes: text("notes"),
@@ -23,7 +24,7 @@ export type AssetCategory = typeof ASSET_CATEGORIES[number];
 
 export const assetEntriesTable = pgTable("asset_entries", {
   id: text("id").primaryKey(),
-  userId: text("user_id").notNull(),
+  userId: text("user_id").notNull().references(() => usersTable.id, { onDelete: "cascade" }),
   category: text("category").notNull().$type<AssetCategory>(),
   name: text("name").notNull(),
   value: numeric("value", { precision: 14, scale: 2 }).notNull(),
