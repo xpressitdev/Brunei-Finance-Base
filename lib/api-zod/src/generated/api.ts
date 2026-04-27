@@ -246,6 +246,7 @@ export const ListCategoriesResponse = zod.array(ListCategoriesResponseItem);
 /**
  * @summary Create a custom category
  */
+export const createCategoryBodyDefaultBudgetDefault = `0`;
 export const createCategoryBodyDefaultBudgetRegExp = new RegExp(
   "^\\d+(\\.\\d{1,2})?$",
 );
@@ -256,7 +257,7 @@ export const CreateCategoryBody = zod.object({
   defaultBudget: zod
     .string()
     .regex(createCategoryBodyDefaultBudgetRegExp)
-    .optional()
+    .default(createCategoryBodyDefaultBudgetDefault)
     .describe(
       'BND\/month suggested target shown on the envelope bar. Stringified\nnon-negative decimal with up to 2 fractional digits. Defaults to \"0\".\n',
     ),

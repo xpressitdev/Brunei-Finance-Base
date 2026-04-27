@@ -1465,6 +1465,7 @@ components:
         defaultBudget:
           type: string
           pattern: '^\d+(\.\d{1,2})?$'
+          default: "0"
           description: |
             BND/month suggested target shown on the envelope bar. Stringified
             non-negative decimal with up to 2 fractional digits. Defaults to "0".

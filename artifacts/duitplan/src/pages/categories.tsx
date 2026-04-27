@@ -130,7 +130,7 @@ export default function Categories() {
       {/* Summary strip */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <KpiCard
-          label="Monthly envelope budget"
+          label="Total monthly budget"
           value={fmtBND(totalMonthlyBudget)}
           footer={`Sum of ${expenseCount} expense ${expenseCount === 1 ? "category" : "categories"} · Savings funded via Goals`}
           tone="emerald"
@@ -337,26 +337,29 @@ export default function Categories() {
                         </div>
                         <div className="text-[11px] text-muted-foreground mt-0.5 flex items-center gap-2">
                           <span>{isSavings ? "Long-term goal — friction-locked on Budgets" : "Funded from your monthly gaji"}</span>
-                          {isSavings ? (
+                          <span
+                            className={cn(
+                              "tabular-nums font-semibold px-1.5 py-0.5 rounded",
+                              safeNum(c.defaultBudget) > 0
+                                ? "bg-emerald-50 text-emerald-700"
+                                : "bg-muted text-muted-foreground"
+                            )}
+                            title={
+                              isSavings
+                                ? "Suggested monthly contribution — savings are actually funded via Goals"
+                                : "Suggested monthly budget shown on the envelope bar"
+                            }
+                          >
+                            {safeNum(c.defaultBudget) > 0
+                              ? `${fmtBND(safeNum(c.defaultBudget))} / mo`
+                              : "no budget set"}
+                          </span>
+                          {isSavings && (
                             <span
-                              className="tabular-nums font-semibold px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200"
+                              className="text-[10px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200"
                               title="Savings categories are funded via Goals, not the monthly envelope target"
                             >
-                              funded via Goals
-                            </span>
-                          ) : (
-                            <span
-                              className={cn(
-                                "tabular-nums font-semibold px-1.5 py-0.5 rounded",
-                                safeNum(c.defaultBudget) > 0
-                                  ? "bg-emerald-50 text-emerald-700"
-                                  : "bg-muted text-muted-foreground"
-                              )}
-                              title="Suggested monthly budget shown on the envelope bar"
-                            >
-                              {safeNum(c.defaultBudget) > 0
-                                ? `${fmtBND(safeNum(c.defaultBudget))} / mo`
-                                : "no budget set"}
+                              via Goals
                             </span>
                           )}
                         </div>
