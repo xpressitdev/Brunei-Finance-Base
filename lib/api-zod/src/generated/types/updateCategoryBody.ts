@@ -9,4 +9,6 @@
 export interface UpdateCategoryBody {
   name?: string;
   kind?: string;
+  /** BND/month suggested target shown on the envelope bar. */
+  defaultBudget?: string;
 }

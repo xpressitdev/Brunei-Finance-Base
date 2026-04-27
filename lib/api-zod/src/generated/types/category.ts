@@ -11,6 +11,8 @@ export interface Category {
   name: string;
   kind: string;
   isDefault: boolean;
+  /** BND/month suggested target shown on the envelope bar. */
+  defaultBudget: string;
   createdAt: string;
   updatedAt: string;
 }

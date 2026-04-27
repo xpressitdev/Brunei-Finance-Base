@@ -13,6 +13,7 @@ function formatCategory(c: typeof categoriesTable.$inferSelect) {
     name: c.name,
     kind: c.kind,
     isDefault: c.isDefault,
+    defaultBudget: c.defaultBudget ?? "0",
     createdAt: c.createdAt.toISOString(),
     updatedAt: c.updatedAt.toISOString(),
   };
@@ -34,6 +35,7 @@ router.post("/categories", requireAuth, async (req: AuthenticatedRequest, res): 
     name: parsed.data.name,
     kind: parsed.data.kind,
     isDefault: false,
+    defaultBudget: parsed.data.defaultBudget ?? "0",
   }).returning();
   res.status(201).json(formatCategory(cat));
 });
@@ -49,13 +51,16 @@ router.patch("/categories/:id", requireAuth, async (req: AuthenticatedRequest, r
     res.status(404).json({ error: "Category not found" });
     return;
   }
-  if (existing.isDefault) {
-    res.status(403).json({ error: "Default categories cannot be modified" });
+  // System defaults can't be renamed or have their kind changed, but their
+  // monthly default budget IS editable so users can budget their staples.
+  if (existing.isDefault && (parsed.data.name !== undefined || parsed.data.kind !== undefined)) {
+    res.status(403).json({ error: "Default categories cannot be renamed or re-typed" });
     return;
   }
   const updates: Partial<typeof categoriesTable.$inferInsert> = { updatedAt: new Date() };
   if (parsed.data.name !== undefined) updates.name = parsed.data.name;
   if (parsed.data.kind !== undefined) updates.kind = parsed.data.kind;
+  if (parsed.data.defaultBudget !== undefined) updates.defaultBudget = parsed.data.defaultBudget;
   const [cat] = await db
     .update(categoriesTable)
     .set(updates)

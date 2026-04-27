@@ -228,6 +228,9 @@ export const ListCategoriesResponseItem = zod.object({
   name: zod.string(),
   kind: zod.string(),
   isDefault: zod.boolean(),
+  defaultBudget: zod
+    .string()
+    .describe("BND\/month suggested target shown on the envelope bar."),
   createdAt: zod.string(),
   updatedAt: zod.string(),
 });
@@ -239,6 +242,12 @@ export const ListCategoriesResponse = zod.array(ListCategoriesResponseItem);
 export const CreateCategoryBody = zod.object({
   name: zod.string(),
   kind: zod.string(),
+  defaultBudget: zod
+    .string()
+    .optional()
+    .describe(
+      'BND\/month suggested target shown on the envelope bar. Defaults to \"0\".',
+    ),
 });
 
 /**
@@ -251,6 +260,10 @@ export const UpdateCategoryParams = zod.object({
 export const UpdateCategoryBody = zod.object({
   name: zod.string().optional(),
   kind: zod.string().optional(),
+  defaultBudget: zod
+    .string()
+    .optional()
+    .describe("BND\/month suggested target shown on the envelope bar."),
 });
 
 export const UpdateCategoryResponse = zod.object({
@@ -258,6 +271,9 @@ export const UpdateCategoryResponse = zod.object({
   name: zod.string(),
   kind: zod.string(),
   isDefault: zod.boolean(),
+  defaultBudget: zod
+    .string()
+    .describe("BND\/month suggested target shown on the envelope bar."),
   createdAt: zod.string(),
   updatedAt: zod.string(),
 });

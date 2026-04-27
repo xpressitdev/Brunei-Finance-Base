@@ -151,6 +151,8 @@ export interface Category {
   name: string;
   kind: string;
   isDefault: boolean;
+  /** BND/month suggested target shown on the envelope bar. */
+  defaultBudget: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -158,11 +160,15 @@ export interface Category {
 export interface CreateCategoryBody {
   name: string;
   kind: string;
+  /** BND/month suggested target shown on the envelope bar. Defaults to "0". */
+  defaultBudget?: string;
 }
 
 export interface UpdateCategoryBody {
   name?: string;
   kind?: string;
+  /** BND/month suggested target shown on the envelope bar. */
+  defaultBudget?: string;
 }
 
 export interface Commitment {

@@ -448,19 +448,39 @@ function BucketRow({
   const isLoan  = bucket.kind === "loan";
   const isEnv   = bucket.kind === "envelope";
 
-  const overspent = isEnv && (bucket.spent ?? 0) > bucket.allocated && bucket.allocated > 0;
-  const remaining = isEnv ? bucket.allocated - (bucket.spent ?? 0) : null;
+  const spent = bucket.spent ?? 0;
+  // Variable envelopes (not fixed/commitment-backed) carry an optional `target`
+  // = the category's defaultBudget. When present we measure the bar against
+  // that intended monthly budget. When absent (legacy / un-budgeted), we fall
+  // back to the depletion bar against the currently-allocated amount.
+  const isVariableEnv = isEnv && !bucket.fixed;
+  const hasTargetBudget = isVariableEnv && bucket.target !== undefined && bucket.target > 0;
+  const targetBudget = bucket.target ?? 0;
+
+  // overspent now considers BOTH thresholds: spending past the envelope's
+  // currently-funded amount AND spending past the intended target budget.
+  const overspentEnvelope = isEnv && spent > bucket.allocated && bucket.allocated > 0;
+  const overspentBudget = hasTargetBudget && spent > targetBudget;
+  const overspent = overspentEnvelope || overspentBudget;
+
+  const remaining = isEnv ? bucket.allocated - spent : null;
   const denom = bucket.target ?? Math.max(bucket.allocated, 1);
 
   // Vault progress = how full the goal is (saving model: bar fills as you save).
   const vaultPct = Math.min(100, (bucket.allocated / Math.max(denom, 1)) * 100);
 
-  // Envelope progress = how much money is LEFT (depletion model: bar starts full
-  // and shrinks as money is spent). Fixed envelopes have no spent tracking, so
-  // they always show 100% remaining — that makes the bar visible (it was
-  // invisible before with the fill model where 0% spent = 0% width).
+  // Tri-segment bar (target-anchored) for variable envelopes WITH a default
+  // budget set. Bar width represents `target`; segments are spent / funded
+  // headroom / unfunded headroom — capped at 100% in the spent overspend case.
+  const targetSpentPct = hasTargetBudget ? Math.min(100, (spent / targetBudget) * 100) : 0;
+  const targetFundedPct = hasTargetBudget
+    ? Math.max(0, Math.min(100 - targetSpentPct, ((bucket.allocated - spent) / targetBudget) * 100))
+    : 0;
+
+  // Legacy depletion bar — used by fixed envelopes AND by variable envelopes
+  // with no default budget set. Starts FULL and shrinks as money is spent.
   const envRemainingPct = bucket.allocated > 0
-    ? Math.max(0, Math.min(100, (1 - (bucket.spent ?? 0) / bucket.allocated) * 100))
+    ? Math.max(0, Math.min(100, (1 - spent / bucket.allocated) * 100))
     : 0;
 
   const isFunded = !isEnv && bucket.target !== undefined && bucket.allocated >= bucket.target;
@@ -508,15 +528,26 @@ function BucketRow({
 
           <div className="flex items-baseline justify-between mt-0.5">
             <span className="text-lg font-bold tabular-nums">{fmt(bucket.allocated)}</span>
-            {isEnv && remaining !== null && (
+            {isEnv && hasTargetBudget ? (
               <span className={cn(
                 "text-xs tabular-nums",
                 overspent ? "text-rose-600 font-semibold" : "text-muted-foreground"
               )}>
-                {overspent ? `${fmt((bucket.spent ?? 0) - bucket.allocated)} over`
+                {overspentBudget
+                  ? `${fmt(spent - targetBudget)} over budget`
+                  : overspentEnvelope
+                  ? `${fmt(spent - bucket.allocated)} past funded · ${fmt(targetBudget)} target`
+                  : `${fmt(spent)} spent · ${fmt(targetBudget)} target`}
+              </span>
+            ) : isEnv && remaining !== null ? (
+              <span className={cn(
+                "text-xs tabular-nums",
+                overspent ? "text-rose-600 font-semibold" : "text-muted-foreground"
+              )}>
+                {overspent ? `${fmt(spent - bucket.allocated)} over`
                            : `${fmt(remaining)} left`}
               </span>
-            )}
+            ) : null}
             {!isEnv && bucket.target !== undefined && (
               <span className="text-xs text-muted-foreground tabular-nums">
                 of {fmt(bucket.target)}{isVault ? " goal" : ""}
@@ -540,27 +571,70 @@ function BucketRow({
             </>
           ) : isEnv ? (
             <>
-              {/* Depletion bar — starts FULL (the allocated envelope) and
-                  shrinks as money is spent. Fixed envelopes have no spend
-                  tracking so they always show 100% remaining, which keeps
-                  the bar visible. */}
-              <div className={cn("h-1.5 rounded-full mt-2 overflow-hidden", overspent ? "bg-rose-100" : "bg-muted")}>
-                <div
-                  className={cn("h-full rounded-full transition-all", envFillColor)}
-                  style={{ width: `${envRemainingPct}%` }}
-                />
-              </div>
-              {bucket.fixed ? (
-                <p className="text-[10px] mt-1 tabular-nums text-muted-foreground">
-                  fixed monthly · {fmt(bucket.allocated)} reserved
-                </p>
-              ) : bucket.allocated > 0 ? (
-                <p className={cn("text-[10px] mt-1 tabular-nums", overspent ? "text-rose-600 font-semibold" : "text-muted-foreground")}>
-                  {overspent
-                    ? `${fmt((bucket.spent ?? 0) - bucket.allocated)} over · envelope empty`
-                    : `${fmt(Math.max(0, bucket.allocated - (bucket.spent ?? 0)))} left of ${fmt(bucket.allocated)}`}
-                </p>
-              ) : null}
+              {hasTargetBudget ? (
+                <>
+                  {/* Tri-segment target-anchored bar (variable envelopes with a
+                      defaultBudget set on /categories). Bar width = target.
+                        ▰ solid green / rose  — already spent
+                        ▱ lighter green       — funded but unspent (still in envelope)
+                        ░ muted               — unfunded headroom toward the target
+                  */}
+                  <div className={cn(
+                    "h-1.5 rounded-full mt-2 overflow-hidden flex",
+                    overspent ? "bg-rose-100" : "bg-muted"
+                  )}>
+                    {targetSpentPct > 0 && (
+                      <div
+                        className={cn(
+                          "h-full transition-all",
+                          overspent ? "bg-rose-500" : "bg-emerald-500"
+                        )}
+                        style={{ width: `${targetSpentPct}%` }}
+                      />
+                    )}
+                    {targetFundedPct > 0 && !overspent && (
+                      <div
+                        className="h-full transition-all bg-emerald-200"
+                        style={{ width: `${targetFundedPct}%` }}
+                      />
+                    )}
+                  </div>
+                  <p className={cn(
+                    "text-[10px] mt-1 tabular-nums",
+                    overspent ? "text-rose-600 font-semibold" : "text-muted-foreground"
+                  )}>
+                    {overspentBudget
+                      ? `${fmt(spent - targetBudget)} over budget · ${fmt(spent)} spent of ${fmt(targetBudget)}`
+                      : overspentEnvelope
+                      ? `${fmt(spent)} spent · envelope empty (${fmt(spent - bucket.allocated)} past funded) · ${fmt(Math.max(0, targetBudget - spent))} left to target`
+                      : `${fmt(spent)} spent · ${fmt(Math.max(0, bucket.allocated - spent))} left in envelope · ${fmt(Math.max(0, targetBudget - bucket.allocated))} unfunded`}
+                  </p>
+                </>
+              ) : (
+                <>
+                  {/* Legacy depletion bar — fixed envelopes (no spend tracking
+                      against commitments) AND variable envelopes with no
+                      defaultBudget set. Starts FULL and shrinks as money is
+                      spent. */}
+                  <div className={cn("h-1.5 rounded-full mt-2 overflow-hidden", overspent ? "bg-rose-100" : "bg-muted")}>
+                    <div
+                      className={cn("h-full rounded-full transition-all", envFillColor)}
+                      style={{ width: `${envRemainingPct}%` }}
+                    />
+                  </div>
+                  {bucket.fixed ? (
+                    <p className="text-[10px] mt-1 tabular-nums text-muted-foreground">
+                      fixed monthly · {fmt(bucket.allocated)} reserved
+                    </p>
+                  ) : bucket.allocated > 0 ? (
+                    <p className={cn("text-[10px] mt-1 tabular-nums", overspent ? "text-rose-600 font-semibold" : "text-muted-foreground")}>
+                      {overspent
+                        ? `${fmt(spent - bucket.allocated)} over · envelope empty`
+                        : `${fmt(Math.max(0, bucket.allocated - spent))} left of ${fmt(bucket.allocated)}`}
+                    </p>
+                  ) : null}
+                </>
+              )}
             </>
           ) : (
             <>
@@ -705,7 +779,7 @@ function AllocateView({
   accountCount: number;
   commitments: Array<{ id: string; label: string; amount: string }>;
   debts: Debt[];
-  categories: Array<{ id: string; name: string; kind: string }>;
+  categories: Array<{ id: string; name: string; kind: string; defaultBudget?: string }>;
   goals: Goal[];
   budgetMap: Record<string, { categoryId: string; plannedAmount?: string; actualAmount?: string }>;
   upsert: ReturnType<typeof useUpsertBudget>;
@@ -738,12 +812,18 @@ function AllocateView({
     }));
     const variableEnvelopes: Bucket[] = expenseCats.map(cat => {
       const b = budgetMap[cat.id];
+      const tgt = safeNum(cat.defaultBudget);
       return {
         id: `E:${cat.id}`,
         name: cat.name,
         kind: "envelope",
         allocated: safeNum(b?.plannedAmount),
         spent: safeNum(b?.actualAmount),
+        // For variable envelopes, `target` is the default monthly budget set on
+        // /categories — the bar measures spend against this, not the
+        // currently-funded amount. Omitted when 0 so the legacy depletion bar
+        // is used as a fallback.
+        target: tgt > 0 ? tgt : undefined,
       };
     });
     // Vault column is sourced from /goals — each goal becomes a vault bucket.

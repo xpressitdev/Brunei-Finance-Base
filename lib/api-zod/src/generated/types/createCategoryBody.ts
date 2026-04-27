@@ -9,4 +9,6 @@
 export interface CreateCategoryBody {
   name: string;
   kind: string;
+  /** BND/month suggested target shown on the envelope bar. Defaults to "0". */
+  defaultBudget?: string;
 }

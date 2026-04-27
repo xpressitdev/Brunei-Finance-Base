@@ -46,7 +46,7 @@ Tables in `lib/db/src/schema/`:
 - `users` — email/password auth, onboarding status
 - `profiles` — fullName, currency (BND), region (BN), locale (en-BN), language (en), payday, monthlyIncome
 - `accounts` — bank accounts
-- `categories` — 15 default spending categories (seeded)
+- `categories` — 15 default spending categories (seeded). Each row carries `default_budget` (numeric, BND/month) — the suggested target shown on the envelope bar in `/budgets`. Editable per row on `/categories`; for default rows only the budget is editable (name/kind locked).
 - `commitments` — monthly recurring obligations (rent, bills, etc.)
 - `goals` — financial goals with target amount, saved amount, deadline, and category
 - `net_worth_snapshots` — monthly net worth entries (YYYY-MM key, unique per user per month)

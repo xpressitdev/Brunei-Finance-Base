@@ -1435,6 +1435,9 @@ components:
           type: string
         isDefault:
           type: boolean
+        defaultBudget:
+          type: string
+          description: BND/month suggested target shown on the envelope bar.
         createdAt:
           type: string
         updatedAt:
@@ -1444,6 +1447,7 @@ components:
         - name
         - kind
         - isDefault
+        - defaultBudget
         - createdAt
         - updatedAt
 
@@ -1454,6 +1458,9 @@ components:
           type: string
         kind:
           type: string
+        defaultBudget:
+          type: string
+          description: BND/month suggested target shown on the envelope bar. Defaults to "0".
       required:
         - name
         - kind
@@ -1465,6 +1472,9 @@ components:
           type: string
         kind:
           type: string
+        defaultBudget:
+          type: string
+          description: BND/month suggested target shown on the envelope bar.
 
     # Commitment
     Commitment:
