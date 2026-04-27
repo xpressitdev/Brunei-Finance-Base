@@ -35,6 +35,7 @@ import {
   PiggyBank,
   Sparkles,
   RotateCcw,
+  GripVertical,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { TrialExpiredPrompt } from "@/components/subscription/TrialExpiredPrompt";
@@ -52,6 +53,23 @@ function fmtShort(n: number) {
 function safeNum(x: unknown): number {
   const n = typeof x === "number" ? x : parseFloat(String(x ?? "0"));
   return Number.isFinite(n) ? n : 0;
+}
+
+// Stable per-group sort: items whose ID is in `order` come first in that
+// order; anything not yet ordered keeps its original position appended at
+// the end. Lets the user manually reorder buckets via the drag handle while
+// brand-new buckets (added later) still show up in a sensible spot.
+function sortByOrder<T extends { id: string }>(items: T[], order: string[]): T[] {
+  if (!order.length) return items;
+  const orderIdx = new Map(order.map((id, i) => [id, i]));
+  const ordered: T[] = [];
+  const rest: T[] = [];
+  for (const it of items) {
+    if (orderIdx.has(it.id)) ordered.push(it);
+    else rest.push(it);
+  }
+  ordered.sort((a, b) => orderIdx.get(a.id)! - orderIdx.get(b.id)!);
+  return [...ordered, ...rest];
 }
 
 function SummaryCard({ label, value, sub, color }: { label: string; value: string; sub?: string; color?: string }) {
@@ -401,12 +419,20 @@ function BucketRow({
   pulse,
   onChange,
   startPullDrag,
+  groupKey,
+  isReordering,
+  dropPos,
+  onStartReorder,
 }: {
   bucket: Bucket;
   isOver: boolean;
   pulse: boolean;
   onChange: (v: number) => void;
   startPullDrag: (amount: number, fromId: string, e: React.PointerEvent) => void;
+  groupKey: string;
+  isReordering: boolean;
+  dropPos: "before" | "after" | null;
+  onStartReorder: (e: React.PointerEvent) => void;
 }) {
   const { t } = useTranslation();
   const isVault = bucket.kind === "vault";
@@ -458,15 +484,34 @@ function BucketRow({
   return (
     <div
       data-drop-id={bucket.id}
+      data-row-id={bucket.id}
+      data-row-group={groupKey}
       className={cn(
         "relative bg-white rounded-xl border p-4 shadow-sm transition-all",
         borderState,
-        pulse && "scale-[1.015]"
+        pulse && "scale-[1.015]",
+        isReordering && "opacity-50"
       )}
     >
       {pulse && <div className="absolute inset-0 rounded-xl bg-primary/10 pointer-events-none animate-pulse" />}
+      {dropPos === "before" && (
+        <div className="absolute -top-1 left-2 right-2 h-0.5 bg-primary rounded-full pointer-events-none" />
+      )}
+      {dropPos === "after" && (
+        <div className="absolute -bottom-1 left-2 right-2 h-0.5 bg-primary rounded-full pointer-events-none" />
+      )}
 
-      <div className="flex items-start gap-3">
+      <div className="flex items-start gap-2">
+        <button
+          type="button"
+          onPointerDown={onStartReorder}
+          aria-label={`Drag ${bucket.name} to reorder`}
+          title="Drag to reorder"
+          style={{ touchAction: "none" }}
+          className="-ml-1 self-stretch flex items-center justify-center px-0.5 text-muted-foreground/40 hover:text-foreground cursor-grab active:cursor-grabbing select-none"
+        >
+          <GripVertical className="w-4 h-4" />
+        </button>
         <img
           src={isVault ? "/illustration-vault.png" : isLoan ? "/illustration-bank.png" : "/illustration-payslip.png"}
           className="w-9 h-9 object-contain shrink-0"
@@ -799,6 +844,113 @@ function AllocateView({
 
   useEffect(() => { setBuckets(initialBuckets); }, [initialBuckets, resetSignal]);
 
+  // -------- Manual bucket reordering ---------------------------------------
+  // The user drags a bucket card by its left-side handle to move it up/down
+  // *within its column* (loan / fixed-envelope / variable-envelope / vault).
+  // The chosen order is persisted to localStorage so refetches and reloads
+  // never auto-shuffle the columns.
+  const ORDER_KEY = "duitplan:budgetBucketOrder:v1";
+  const [bucketOrder, setBucketOrder] = useState<Record<string, string[]>>(() => {
+    try {
+      const raw = localStorage.getItem(ORDER_KEY);
+      return raw ? (JSON.parse(raw) ?? {}) : {};
+    } catch { return {}; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem(ORDER_KEY, JSON.stringify(bucketOrder)); } catch { /* noop */ }
+  }, [bucketOrder]);
+
+  type RowDrag = { id: string; group: string };
+  type RowOver = { id: string; pos: "before" | "after" };
+  const [rowDrag, setRowDrag] = useState<RowDrag | null>(null);
+  const [rowOver, setRowOver] = useState<RowOver | null>(null);
+  const rowDragRef = useRef<RowDrag | null>(null);
+  const rowOverRef = useRef<RowOver | null>(null);
+  const bucketsRef = useRef<Bucket[]>(buckets);
+  useEffect(() => { rowDragRef.current = rowDrag; }, [rowDrag]);
+  useEffect(() => { rowOverRef.current = rowOver; }, [rowOver]);
+  useEffect(() => { bucketsRef.current = buckets; }, [buckets]);
+
+  const bucketGroupKey = (b: Bucket): string => {
+    if (b.kind === "loan") return "loan";
+    if (b.kind === "vault") return "vault";
+    return b.fixed ? "envFixed" : "envVar";
+  };
+
+  const applyRowDrop = useCallback(
+    (groupKey: string, draggedId: string, targetId: string, pos: "before" | "after") => {
+      setBucketOrder(prev => {
+        const groupItems = bucketsRef.current.filter(b => bucketGroupKey(b) === groupKey);
+        const sorted = sortByOrder(groupItems, prev[groupKey] ?? []).map(b => b.id);
+        const without = sorted.filter(id => id !== draggedId);
+        const targetIdx = without.indexOf(targetId);
+        if (targetIdx < 0) return prev;
+        const insertAt = pos === "after" ? targetIdx + 1 : targetIdx;
+        const next = [...without.slice(0, insertAt), draggedId, ...without.slice(insertAt)];
+        return { ...prev, [groupKey]: next };
+      });
+    },
+    []
+  );
+
+  const startRowDrag = useCallback(
+    (id: string, group: string) => (e: React.PointerEvent) => {
+      // Stop chip-drag and click-through on inputs / buttons inside the card.
+      e.preventDefault();
+      e.stopPropagation();
+      setRowDrag({ id, group });
+      setRowOver(null);
+    },
+    []
+  );
+
+  // Global pointer listeners while a row is being dragged. Mirrors the
+  // pattern used by `usePointerDrag` above so we don't fight React's event
+  // batching when the pointer leaves the originating element.
+  const rowDragActive = !!rowDrag;
+  useEffect(() => {
+    if (!rowDragActive) return;
+
+    const move = (e: PointerEvent) => {
+      const grp = rowDragRef.current?.group;
+      const dragId = rowDragRef.current?.id;
+      if (!grp || !dragId) return;
+      const els = document.elementsFromPoint(e.clientX, e.clientY);
+      let found: RowOver | null = null;
+      for (const el of els) {
+        const node = el as HTMLElement;
+        const elId = node.getAttribute?.("data-row-id");
+        const elGrp = node.getAttribute?.("data-row-group");
+        if (elId && elGrp === grp && elId !== dragId) {
+          const rect = node.getBoundingClientRect();
+          const mid = rect.top + rect.height / 2;
+          found = { id: elId, pos: e.clientY < mid ? "before" : "after" };
+          break;
+        }
+      }
+      setRowOver(found);
+    };
+    const up = () => {
+      const d = rowDragRef.current;
+      const o = rowOverRef.current;
+      if (d && o && o.id !== d.id) {
+        applyRowDrop(d.group, d.id, o.id, o.pos);
+      }
+      setRowDrag(null);
+      setRowOver(null);
+    };
+    const cancel = () => { setRowDrag(null); setRowOver(null); };
+
+    window.addEventListener("pointermove", move, { passive: true });
+    window.addEventListener("pointerup", up);
+    window.addEventListener("pointercancel", cancel);
+    return () => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+      window.removeEventListener("pointercancel", cancel);
+    };
+  }, [rowDragActive, applyRowDrop]);
+
   const totalIncome = availablePool;
   const allocated = buckets.reduce((s, b) => s + b.allocated, 0);
   const available = totalIncome - allocated;
@@ -939,11 +1091,23 @@ function AllocateView({
 
   const reset = () => setBuckets(initialBuckets);
 
-  const loanBuckets = buckets.filter(b => b.kind === "loan");
+  const loanBuckets = sortByOrder(
+    buckets.filter(b => b.kind === "loan"),
+    bucketOrder.loan ?? []
+  );
   const envBuckets  = buckets.filter(b => b.kind === "envelope");
-  const fixedEnvBuckets = envBuckets.filter(b => b.fixed);
-  const variableEnvBuckets = envBuckets.filter(b => !b.fixed);
-  const vaultBuckets = buckets.filter(b => b.kind === "vault");
+  const fixedEnvBuckets = sortByOrder(
+    envBuckets.filter(b => b.fixed),
+    bucketOrder.envFixed ?? []
+  );
+  const variableEnvBuckets = sortByOrder(
+    envBuckets.filter(b => !b.fixed),
+    bucketOrder.envVar ?? []
+  );
+  const vaultBuckets = sortByOrder(
+    buckets.filter(b => b.kind === "vault"),
+    bucketOrder.vault ?? []
+  );
 
   return (
     <div className="space-y-5">
@@ -1057,6 +1221,10 @@ function AllocateView({
               pulse={pulse === b.id}
               onChange={(v) => setBucket(b.id, v)}
               startPullDrag={startDrag}
+              groupKey="loan"
+              isReordering={rowDrag?.id === b.id}
+              dropPos={rowOver?.id === b.id ? rowOver.pos : null}
+              onStartReorder={startRowDrag(b.id, "loan")}
             />
           ))}
         </CollapsibleColumn>
@@ -1082,6 +1250,10 @@ function AllocateView({
                   pulse={pulse === b.id}
                   onChange={(v) => setBucket(b.id, v)}
                   startPullDrag={startDrag}
+                  groupKey="envFixed"
+                  isReordering={rowDrag?.id === b.id}
+                  dropPos={rowOver?.id === b.id ? rowOver.pos : null}
+                  onStartReorder={startRowDrag(b.id, "envFixed")}
                 />
               ))}
             </>
@@ -1102,6 +1274,10 @@ function AllocateView({
               pulse={pulse === b.id}
               onChange={(v) => setBucket(b.id, v)}
               startPullDrag={startDrag}
+              groupKey="envVar"
+              isReordering={rowDrag?.id === b.id}
+              dropPos={rowOver?.id === b.id ? rowOver.pos : null}
+              onStartReorder={startRowDrag(b.id, "envVar")}
             />
           ))}
         </CollapsibleColumn>
@@ -1133,6 +1309,10 @@ function AllocateView({
               pulse={pulse === b.id}
               onChange={(v) => setBucket(b.id, v)}
               startPullDrag={startDrag}
+              groupKey="vault"
+              isReordering={rowDrag?.id === b.id}
+              dropPos={rowOver?.id === b.id ? rowOver.pos : null}
+              onStartReorder={startRowDrag(b.id, "vault")}
             />
           ))}
         </CollapsibleColumn>
