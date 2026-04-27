@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useListAccounts, useCreateAccount, useUpdateAccount, useDeleteAccount, useGetAccountBalanceHistory } from "@workspace/api-client-react";
+import { useListAccounts, useCreateAccount, useUpdateAccount, useDeleteAccount, useGetAccountBalanceHistory, useListAssets, useListDebts } from "@workspace/api-client-react";
 import type { Account } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -295,11 +295,19 @@ function BalanceHistoryChart({ account }: { account: Account }) {
   );
 }
 
+function currentMonth() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+
 export default function Accounts() {
   const { t } = useTranslation();
   const qc = useQueryClient();
   const { formatCurrency } = useRegion();
   const { data: accounts = [], isLoading } = useListAccounts();
+  // Source of truth shared with /net-worth: asset entries (current month) + debts.
+  const { data: assetEntries = [] } = useListAssets({ month: currentMonth() });
+  const { data: debts = [] } = useListDebts();
   const createMut = useCreateAccount();
   const updateMut = useUpdateAccount();
   const deleteMut = useDeleteAccount();
@@ -312,10 +320,12 @@ export default function Accounts() {
 
   const invalidate = () => qc.invalidateQueries({ queryKey: ["/api/accounts"] });
 
-  const totalBalance = accounts.reduce((s, a) => s + parseFloat(a.balance ?? "0"), 0);
-  const assets      = accounts.filter(a => parseFloat(a.balance ?? "0") >= 0).reduce((s, a) => s + parseFloat(a.balance ?? "0"), 0);
-  const liabilities = accounts.filter(a => parseFloat(a.balance ?? "0") < 0).reduce((s, a) => s + Math.abs(parseFloat(a.balance ?? "0")), 0);
-  const netWorth    = assets - liabilities;
+  // Mirror of /net-worth computation so the strip is consistent across tabs.
+  const totalAccountBalance = accounts.reduce((s, a) => s + parseFloat(a.balance ?? "0"), 0);
+  const totalAssetEntries   = assetEntries.reduce((s, a) => s + parseFloat(a.value ?? "0"), 0);
+  const assets              = totalAccountBalance + totalAssetEntries;
+  const liabilities         = debts.reduce((s, d) => s + parseFloat(d.outstandingBalance ?? "0"), 0);
+  const netWorth            = assets - liabilities;
 
   function safeBalance(raw: string): string {
     const n = parseFloat(raw);
@@ -413,7 +423,8 @@ export default function Accounts() {
         </div>
       </div>
 
-      {/* Summary strip — KpiCards aligned with Dashboard / Goals / Net Worth */}
+      {/* Summary strip — KpiCards aligned with Dashboard / Goals / Net Worth.
+          Totals mirror /net-worth so the same numbers appear on both tabs. */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <KpiCard
           label="Net Worth"
@@ -432,7 +443,10 @@ export default function Accounts() {
           tone="emerald"
           footer={
             <p className="text-[11px] text-muted-foreground">
-              {assetAccounts.length} account{assetAccounts.length !== 1 ? "s" : ""}
+              {accounts.length} account{accounts.length !== 1 ? "s" : ""}
+              {assetEntries.length > 0
+                ? ` · ${assetEntries.length} asset${assetEntries.length !== 1 ? "s" : ""}`
+                : ""}
             </p>
           }
         />
@@ -442,8 +456,7 @@ export default function Accounts() {
           tone="rose"
           footer={
             <p className="text-[11px] text-muted-foreground">
-              {accounts.length - assetAccounts.length} account
-              {accounts.length - assetAccounts.length !== 1 ? "s" : ""}
+              {debts.length} debt{debts.length !== 1 ? "s" : ""}
             </p>
           }
         />
