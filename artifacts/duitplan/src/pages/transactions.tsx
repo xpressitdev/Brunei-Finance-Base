@@ -157,44 +157,57 @@ export default function Transactions() {
     amount: "",
     type: "debit",
     description: "",
-    categoryId: "none",
-    accountId: "none",
+    categoryId: "",
+    accountId: "",
   });
+  const [formError, setFormError] = useState<string | null>(null);
 
   const [editData, setEditData] = useState({
     date: "",
     amount: "",
     type: "debit",
     description: "",
-    categoryId: "none",
-    accountId: "none",
+    categoryId: "",
+    accountId: "",
   });
+  const [editError, setEditError] = useState<string | null>(null);
 
   const openEdit = (tx: TransactionItem) => {
     setEditingTx(tx);
     setEditTrialExpiredError(false);
+    setEditError(null);
     setEditData({
       date: format(new Date(tx.date), "yyyy-MM-dd"),
       amount: String(tx.amount),
       type: tx.type,
       description: tx.description,
-      categoryId: tx.categoryId || "none",
-      accountId: tx.accountId || "none",
+      categoryId: tx.categoryId || "",
+      accountId: tx.accountId || "",
     });
   };
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     setTrialExpiredError(false);
+    setFormError(null);
+    if (!formData.accountId) {
+      setFormError("Please choose the account this transaction comes from.");
+      return;
+    }
+    if (formData.type === "debit" && (!formData.categoryId || formData.categoryId === "none")) {
+      setFormError("Please choose a category so this expense actualises a budget envelope.");
+      return;
+    }
     try {
+      const cat = formData.categoryId && formData.categoryId !== "none" ? formData.categoryId : undefined;
       await createMutation.mutateAsync({
         data: {
           date: new Date(formData.date).toISOString(),
           amount: formData.amount,
           type: formData.type,
           description: formData.description,
-          categoryId: formData.categoryId === "none" ? undefined : formData.categoryId,
-          accountId: formData.accountId === "none" ? undefined : formData.accountId,
+          categoryId: cat,
+          accountId: formData.accountId,
           source: "manual"
         }
       });
@@ -206,8 +219,8 @@ export default function Transactions() {
         amount: "",
         type: "debit",
         description: "",
-        categoryId: "none",
-        accountId: "none",
+        categoryId: "",
+        accountId: "",
       });
     } catch (err) {
       if (isTrialExpiredError(err)) {
@@ -220,7 +233,17 @@ export default function Transactions() {
     e.preventDefault();
     if (!editingTx) return;
     setEditTrialExpiredError(false);
+    setEditError(null);
+    if (!editData.accountId) {
+      setEditError("Please choose the account this transaction comes from.");
+      return;
+    }
+    if (editData.type === "debit" && (!editData.categoryId || editData.categoryId === "none")) {
+      setEditError("Please choose a category so this expense actualises a budget envelope.");
+      return;
+    }
     try {
+      const cat = editData.categoryId && editData.categoryId !== "none" ? editData.categoryId : null;
       await updateMutation.mutateAsync({
         id: editingTx.id,
         data: {
@@ -228,8 +251,8 @@ export default function Transactions() {
           amount: editData.amount,
           type: editData.type,
           description: editData.description,
-          categoryId: editData.categoryId === "none" ? null : editData.categoryId,
-          accountId: editData.accountId === "none" ? null : editData.accountId,
+          categoryId: cat,
+          accountId: editData.accountId,
         }
       });
       setEditingTx(null);
@@ -316,31 +339,80 @@ export default function Transactions() {
               <div className="space-y-2">
                 <Label>
                   {t("transactions.addDialog.account")}{" "}
-                  <span className="text-muted-foreground text-xs">{t("transactions.addDialog.optional")}</span>
+                  <span className="text-rose-600 text-xs">*</span>
                 </Label>
-                <Select value={formData.accountId} onValueChange={(val) => setFormData({...formData, accountId: val})}>
-                  <SelectTrigger><SelectValue placeholder={t("transactions.addDialog.noAccount")} /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">{t("transactions.addDialog.noAccount")}</SelectItem>
-                    {accounts?.map(a => (
-                      <SelectItem key={a.id} value={a.id}>{a.name}{a.bankName ? ` — ${a.bankName}` : ""}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                {accounts && accounts.length === 0 ? (
+                  <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800 flex items-start gap-2">
+                    <Info className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
+                    <div className="flex-1">
+                      You need at least one account before adding a transaction.
+                      <button
+                        type="button"
+                        onClick={() => { setIsAddOpen(false); setLocation("/accounts"); }}
+                        className="block mt-1 underline font-semibold"
+                      >
+                        Add an account →
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <Select value={formData.accountId} onValueChange={(val) => setFormData({...formData, accountId: val})}>
+                    <SelectTrigger><SelectValue placeholder="Choose an account" /></SelectTrigger>
+                    <SelectContent>
+                      {accounts?.map(a => (
+                        <SelectItem key={a.id} value={a.id}>{a.name}{a.bankName ? ` — ${a.bankName}` : ""}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
               </div>
               <div className="space-y-2">
-                <Label>{t("transactions.addDialog.category")}</Label>
+                <Label>
+                  {t("transactions.addDialog.category")}
+                  {formData.type === "debit" && <span className="text-rose-600 text-xs"> *</span>}
+                </Label>
                 <Select value={formData.categoryId} onValueChange={(val) => setFormData({...formData, categoryId: val})}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger>
+                    <SelectValue placeholder={formData.type === "debit" ? "Choose an envelope category" : "Optional — leave blank for income"} />
+                  </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">{t("transactions.addDialog.uncategorized")}</SelectItem>
+                    {formData.type === "credit" && (
+                      <SelectItem value="none">{t("transactions.addDialog.uncategorized")}</SelectItem>
+                    )}
                     {categories?.map(c => (
                       <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
+                {categories && categories.length === 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    No categories yet —{" "}
+                    <button
+                      type="button"
+                      onClick={() => { setIsAddOpen(false); setLocation("/categories"); }}
+                      className="underline font-semibold text-foreground"
+                    >
+                      manage categories
+                    </button>
+                  </p>
+                )}
               </div>
-              <Button type="submit" className="w-full" disabled={createMutation.isPending}>
+              <div className="rounded-md bg-muted/50 border border-border/60 px-3 py-2 text-[11px] text-muted-foreground flex items-start gap-2">
+                <Info className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
+                <span>
+                  When you save, the amount is deducted from the chosen account, and your envelope's spent total updates automatically. One transaction, one source of truth.
+                </span>
+              </div>
+              {formError && (
+                <div className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">
+                  {formError}
+                </div>
+              )}
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={createMutation.isPending || (accounts?.length ?? 0) === 0}
+              >
                 {createMutation.isPending ? t("transactions.addDialog.saving") : t("transactions.addDialog.save")}
               </Button>
             </form>
@@ -417,42 +489,63 @@ export default function Transactions() {
             <div className="space-y-2">
               <Label>
                 {t("transactions.addDialog.account")}{" "}
-                <span className="text-muted-foreground text-xs">{t("transactions.addDialog.optional")}</span>
+                <span className="text-rose-600 text-xs">*</span>
               </Label>
               <Select value={editData.accountId} onValueChange={(val) => setEditData({...editData, accountId: val})}>
-                <SelectTrigger><SelectValue placeholder={t("transactions.editDialog.noAccount")} /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="Choose an account" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">{t("transactions.editDialog.noAccount")}</SelectItem>
                   {accounts?.map(a => (
                     <SelectItem key={a.id} value={a.id}>{a.name}{a.bankName ? ` — ${a.bankName}` : ""}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              {editingTx && editData.accountId !== (editingTx.accountId || "none") && (
+              {editingTx && editData.accountId && editData.accountId !== (editingTx.accountId || "") && (
                 <div className="flex items-start gap-1.5 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-3 py-2">
                   <Info className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
                   <span>
-                    {editData.accountId !== "none" && (editingTx.accountId || "none") !== "none"
+                    {(editingTx.accountId || "") !== ""
                       ? t("transactions.editDialog.accountWarningBoth")
-                      : editData.accountId === "none"
-                        ? t("transactions.editDialog.accountWarningRemoved")
-                        : t("transactions.editDialog.accountWarningAdded")}
+                      : t("transactions.editDialog.accountWarningAdded")}
                   </span>
                 </div>
               )}
             </div>
             <div className="space-y-2">
-              <Label>{t("transactions.addDialog.category")}</Label>
+              <Label>
+                {t("transactions.addDialog.category")}
+                {editData.type === "debit" && <span className="text-rose-600 text-xs"> *</span>}
+              </Label>
               <Select value={editData.categoryId} onValueChange={(val) => setEditData({...editData, categoryId: val})}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger>
+                  <SelectValue placeholder={editData.type === "debit" ? "Choose an envelope category" : "Optional — leave blank for income"} />
+                </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">{t("transactions.editDialog.uncategorized")}</SelectItem>
+                  {editData.type === "credit" && (
+                    <SelectItem value="none">{t("transactions.editDialog.uncategorized")}</SelectItem>
+                  )}
                   {categories?.map(c => (
                     <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+              {categories && categories.length === 0 && editData.type === "debit" && (
+                <p className="text-xs text-muted-foreground">
+                  No categories yet —{" "}
+                  <button
+                    type="button"
+                    onClick={() => { setEditingTx(null); setLocation("/categories"); }}
+                    className="underline font-semibold text-foreground"
+                  >
+                    manage categories
+                  </button>
+                </p>
+              )}
             </div>
+            {editError && (
+              <div className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">
+                {editError}
+              </div>
+            )}
             <Button type="submit" className="w-full" disabled={updateMutation.isPending}>
               {updateMutation.isPending ? t("transactions.editDialog.saving") : t("transactions.editDialog.save")}
             </Button>
