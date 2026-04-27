@@ -1,19 +1,3 @@
-// Production-ready replacement for artifacts/duitplan/src/pages/budgets.tsx
-//
-// Drop this file in over the existing one. It KEEPS your existing tabs
-// (Forecast Plan / Actual vs Plan / Annual Report) and ADDS a fourth tab
-// "Allocate" — the drag-and-drop allocation UX from the design system mockup.
-//
-// Data model: uses the existing API surface — useListBudgets / useUpsertBudget
-// per categoryId+month. Loans are pulled from useListCommitments where
-// label includes 'loan' / 'financing' / 'credit', otherwise treated as fixed.
-// Vault entries are read from useListGoals if available; falls back to a
-// "Savings" expense category if you haven't built goals yet.
-//
-// Design system tokens are not needed here — this file uses your existing
-// Tailwind setup (`bg-white border`, `text-emerald-700`, etc.) so it drops
-// straight in without touching globals.
-
 import { useMemo, useState, useEffect, useRef, useCallback } from "react";
 import { format, addMonths, subMonths, addYears, subYears } from "date-fns";
 import {
@@ -81,27 +65,18 @@ function SummaryCard({ label, value, sub, color }: { label: string; value: strin
 
 const MONTH_LABELS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
-// ─────────────────────────────────────────────────────────────────────────────
-// AllocateView — the new drag-and-drop allocation surface
-// ─────────────────────────────────────────────────────────────────────────────
-
 type Bucket = {
   id: string;
   name: string;
   kind: "loan" | "envelope" | "vault";
-  allocated: number;       // current per-month allocation
-  target?: number;         // suggested / required amount
-  spent?: number;          // actual spent this month (envelopes only)
-  fixed?: boolean;         // user can't reduce below target (rent, etc)
-  auto?: boolean;          // auto-deducted on Hari Gaji
+  allocated: number;
+  target?: number;
+  spent?: number;
+  fixed?: boolean;
+  auto?: boolean;
 };
 
 const CHIP_AMOUNTS = [10, 25, 50, 100, 250, 500];
-
-// ── Pointer-based drag layer ─────────────────────────────────────────────────
-// HTML5 drag-and-drop doesn't fire on touch devices. We use Pointer Events
-// (which work uniformly across mouse, touch and pen) and find the drop target
-// via document.elementFromPoint + a `data-drop-id` attribute on each target.
 
 type DragState = { amount: number; fromId?: string; x: number; y: number };
 
@@ -116,7 +91,6 @@ function usePointerDrag(onDrop: (targetId: string, amount: number, fromId?: stri
 
   const startDrag = useCallback(
     (amount: number, fromId: string | undefined, e: React.PointerEvent) => {
-      // Stop the page from scrolling on touch while we drag
       e.preventDefault();
       e.stopPropagation();
       setDrag({ amount, fromId, x: e.clientX, y: e.clientY });
@@ -182,13 +156,6 @@ function DragGhost({ drag }: { drag: DragState | null }) {
   );
 }
 
-// ── Stepper: [−] [+ BND amount-to-add] [+] ───────────────────────────────────
-// Delta-based: the input represents the amount the user wants to ADD to the
-// bucket, not the bucket's current total. The default is 0/blank so it never
-// pre-fills with the existing allocation. The +/− buttons step by `step` and
-// apply the delta immediately; typing a number + Enter (or blur) commits that
-// amount as a one-shot add. `canSubtract` clamps subtractions (e.g. loans
-// can't go below their min payment).
 function AmountStepper({
   step = 10,
   onAdjust,
@@ -283,9 +250,6 @@ function MoneyChip({ amount, disabled, onPointerDown }: {
   );
 }
 
-// Amounts available on the per-bucket pull-chip rail. Drag any chip onto
-// another bucket (or the bag) to physically move that much money out of the
-// source bucket.
 const PULL_AMOUNTS = [1, 3, 5, 10, 25, 50, 100, 250] as const;
 
 function PullChip({
@@ -394,7 +358,6 @@ function CustomMoneyChip({ available, value, onChange, onPointerDown }: {
   return (
     <div
       onPointerDown={(e) => {
-        // Don't start a drag from a click on the input itself; let the user type.
         if ((e.target as HTMLElement).tagName === "INPUT") return;
         if (disabled) return;
         onPointerDown(num, e);
@@ -449,19 +412,13 @@ function BucketRow({
   const isEnv   = bucket.kind === "envelope";
 
   const spent = bucket.spent ?? 0;
-  // Variable envelopes (not fixed/commitment-backed) carry an optional `target`
-  // = the category's defaultBudget. When present we measure the bar against
-  // that intended monthly budget. When absent (legacy / un-budgeted), we fall
-  // back to the depletion bar against the currently-allocated amount.
+  // Variable envelopes carry an optional `target` (= category defaultBudget).
+  // Present → bar measured against target; absent → fallback to depletion bar.
   const isVariableEnv = isEnv && !bucket.fixed;
   const hasTargetBudget = isVariableEnv && bucket.target !== undefined && bucket.target > 0;
   const targetBudget = bucket.target ?? 0;
 
-  // overspent considers BOTH thresholds: spending past the envelope's
-  // currently-funded amount AND spending past the intended target budget.
-  // In target mode, an unfunded envelope with any spend (allocated=0, spent>0)
-  // is also overspent. The legacy depletion fallback keeps the historical
-  // `allocated > 0` guard so an unconfigured envelope doesn't render rose.
+  // Overspent if past funded amount OR past target budget.
   const overspentEnvelope = isEnv && spent > bucket.allocated &&
     (hasTargetBudget || bucket.allocated > 0);
   const overspentBudget = hasTargetBudget && spent > targetBudget;
@@ -470,26 +427,21 @@ function BucketRow({
   const remaining = isEnv ? bucket.allocated - spent : null;
   const denom = bucket.target ?? Math.max(bucket.allocated, 1);
 
-  // Vault progress = how full the goal is (saving model: bar fills as you save).
   const vaultPct = Math.min(100, (bucket.allocated / Math.max(denom, 1)) * 100);
 
-  // Tri-segment bar (target-anchored) for variable envelopes WITH a default
-  // budget set. Bar width represents `target`; segments are spent / funded
-  // headroom / unfunded headroom — capped at 100% in the spent overspend case.
+  // Tri-segment bar (target-anchored): spent / funded-unspent / unfunded.
   const targetSpentPct = hasTargetBudget ? Math.min(100, (spent / targetBudget) * 100) : 0;
   const targetFundedPct = hasTargetBudget
     ? Math.max(0, Math.min(100 - targetSpentPct, ((bucket.allocated - spent) / targetBudget) * 100))
     : 0;
 
-  // Legacy depletion bar — used by fixed envelopes AND by variable envelopes
-  // with no default budget set. Starts FULL and shrinks as money is spent.
+  // Legacy depletion bar (fixed envelopes / variable without target).
   const envRemainingPct = bucket.allocated > 0
     ? Math.max(0, Math.min(100, (1 - spent / bucket.allocated) * 100))
     : 0;
 
   const isFunded = !isEnv && bucket.target !== undefined && bucket.allocated >= bucket.target;
 
-  // Envelope fill color reflects HOW MUCH IS LEFT, not how much is spent.
   const envFillColor = overspent             ? "bg-rose-300"
                      : envRemainingPct > 50  ? "bg-emerald-500"
                      : envRemainingPct > 25  ? "bg-amber-400"
@@ -533,10 +485,6 @@ function BucketRow({
           <div className="flex items-baseline justify-between mt-0.5">
             <span className="text-lg font-bold tabular-nums">{fmt(bucket.allocated)}</span>
             {isEnv && hasTargetBudget ? (
-              // Header text stays in `spent · target` form across all states —
-              // rose styling and the "over" Badge in the row above are the
-              // overspent signals. The bar legend below carries the
-              // diagnostic detail (over budget vs past funded).
               <span className={cn(
                 "text-xs tabular-nums",
                 overspent ? "text-rose-600 font-semibold" : "text-muted-foreground"
@@ -823,17 +771,10 @@ function AllocateView({
         kind: "envelope",
         allocated: safeNum(b?.plannedAmount),
         spent: safeNum(b?.actualAmount),
-        // For variable envelopes, `target` is the default monthly budget set on
-        // /categories — the bar measures spend against this, not the
-        // currently-funded amount. Omitted when 0 so the legacy depletion bar
-        // is used as a fallback.
         target: tgt > 0 ? tgt : undefined,
       };
     });
-    // Vault column is sourced from /goals — each goal becomes a vault bucket.
-    // `allocated` reflects the cumulative savedAmount on the goal so the progress
-    // bar tracks lifetime progress toward the target. Dragging chips on/off the
-    // bucket bumps the goal's savedAmount via useUpdateGoal.
+    // Vaults sourced from /goals — `allocated` mirrors goal.savedAmount.
     const vaults: Bucket[] = goals.map(g => ({
       id: `V:${g.id}`,
       name: g.title,
@@ -852,7 +793,6 @@ function AllocateView({
   const [customAmount, setCustomAmount] = useState<string>("");
   const [bagOver, setBagOver] = useState(false);
 
-  // Re-sync when underlying data changes (month switch, etc) or reset is triggered
   useEffect(() => { setBuckets(initialBuckets); }, [initialBuckets, resetSignal]);
 
   const totalIncome = availablePool;
@@ -876,9 +816,7 @@ function AllocateView({
     }
   };
 
-  // For vault buckets we persist the new cumulative savedAmount on the
-  // underlying goal. The bucket's `allocated` mirrors goal.savedAmount, so we
-  // forward that value verbatim.
+  // Vault adjustments persist as goal.savedAmount via useUpdateGoal.
   const persistGoal = async (goalId: string, savedAmount: number) => {
     try {
       await updateGoal.mutateAsync({
@@ -891,9 +829,7 @@ function AllocateView({
     }
   };
 
-  // Fixed envelopes are backed by Commitments. Adjusting one rewrites the
-  // monthly amount on the underlying commitment record. NOTE: commitments are
-  // global (no per-month override), so the new amount applies to every month.
+  // Fixed envelopes are backed by Commitments (global, not per-month).
   const persistCommitment = async (commitmentId: string, amount: number) => {
     try {
       await updateCommitment.mutateAsync({
@@ -944,7 +880,6 @@ function AllocateView({
     });
   };
 
-  // ── Pointer drag dispatch ─────────────────────────────────────────────────
   // Drop targets are identified by `data-drop-id`:
   //   "BAG"  → the money bag (deallocate)
   //   "L:…"  → loan bucket
@@ -953,7 +888,6 @@ function AllocateView({
   //   "V:…"  → vault bucket (goal)
   const handleDrop = useCallback(
     (targetId: string, amount: number, fromId?: string) => {
-      // Drag back to the bag = deallocate (vault drag-back triggers friction lock)
       if (targetId === "BAG") {
         if (!fromId) return; // dropping a fresh chip onto the bag is a no-op
         if (fromId.startsWith("V:")) {
@@ -964,13 +898,11 @@ function AllocateView({
         return;
       }
 
-      // Vault → anywhere else needs confirmation
       if (fromId && fromId.startsWith("V:") && fromId !== targetId) {
         setVaultUnlock({ fromId, toId: targetId, amount });
         return;
       }
 
-      // Fresh chip from the bag — make sure the user actually has the money
       if (!fromId && available < amount) return;
 
       if (fromId) updateBucket(fromId, -amount);
@@ -980,8 +912,6 @@ function AllocateView({
   );
 
   const { drag, over: overTargetPtr, startDrag } = usePointerDrag(handleDrop);
-  // Keep the legacy `overTarget` state in sync with the pointer hook so the
-  // existing per-bucket border highlight keeps working.
   useEffect(() => { setOverTarget(overTargetPtr); }, [overTargetPtr]);
   useEffect(() => { setBagOver(overTargetPtr === "BAG" && !!drag?.fromId); }, [overTargetPtr, drag]);
 
@@ -1234,10 +1164,6 @@ function ConfirmAllocationButton({ available }: { available: number }) {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// AnnualView (unchanged from your existing file — preserved verbatim)
-// ─────────────────────────────────────────────────────────────────────────────
-
 function AnnualView({
   year, salary, commitments, categories,
 }: {
@@ -1383,10 +1309,6 @@ function AnnualView({
     </div>
   );
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Main page
-// ─────────────────────────────────────────────────────────────────────────────
 
 export default function Budgets() {
   const [activeDate, setActiveDate] = useState(new Date());
