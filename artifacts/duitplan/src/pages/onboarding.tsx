@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
@@ -100,6 +100,32 @@ function toNum(s: string): number {
   return isFinite(n) ? n : 0;
 }
 
+let __idCounter = 0;
+/**
+ * Returns a unique-per-session id suffix. Date.now() collides on rapid
+ * synchronous clicks (resolution = 1ms), which would break our
+ * "each preset click adds a new instance" UX. Pairing time with a counter
+ * guarantees uniqueness even under React batching.
+ */
+function uniqueId(): string {
+  __idCounter += 1;
+  return `${Date.now()}_${__idCounter}`;
+}
+
+/**
+ * Returns true when today's day-of-month is at or past the user's payday for
+ * the current month, with the payday clamped to the last day of the month so
+ * payday=31 is treated as the last day in shorter months (e.g. Feb 28/29).
+ */
+function computePaidThisMonth(paydayStr: string): boolean {
+  const payday = parseInt(paydayStr, 10);
+  if (!isFinite(payday) || payday <= 0) return false;
+  const now = new Date();
+  const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  const effectivePayday = Math.min(payday, lastDayOfMonth);
+  return now.getDate() >= effectivePayday;
+}
+
 function formatMoney(n: number, currency: string): string {
   const sign = n < 0 ? "-" : "";
   return `${sign}${currency} ${Math.abs(n).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -166,6 +192,23 @@ export default function Onboarding() {
   const [payday, setPayday] = useState("25");
 
   const [selectedDebts, setSelectedDebts] = useState<SelectedDebt[]>([]);
+  // When the user changes their payday on step 3 we must recompute the
+  // "paid this month" default for any debts they've already added — but only
+  // for ones they haven't manually toggled (tracked in manuallyTouchedDebtsRef).
+  const manuallyTouchedDebtsRef = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    setSelectedDebts((debts) => {
+      const next = computePaidThisMonth(payday);
+      let changed = false;
+      const updated = debts.map((d) => {
+        if (manuallyTouchedDebtsRef.current.has(d.id)) return d;
+        if (d.paidThisMonth === next) return d;
+        changed = true;
+        return { ...d, paidThisMonth: next };
+      });
+      return changed ? updated : debts;
+    });
+  }, [payday]);
   const [selectedCommitments, setSelectedCommitments] = useState<SelectedCommitment[]>([]);
   const [customCommitment, setCustomCommitment] = useState({ label: "", amount: "" });
   const [showCustomCommitment, setShowCustomCommitment] = useState(false);
@@ -219,7 +262,7 @@ export default function Onboarding() {
   };
 
   const addAccount = (preset?: typeof ACCOUNT_PRESETS[0]) => {
-    const id = `acct_${Date.now()}`;
+    const id = `acct_${uniqueId()}`;
     if (preset) {
       setAccounts((a) => [
         ...a,
@@ -243,7 +286,7 @@ export default function Onboarding() {
     const baseLabel = t(`onboarding.commitmentPresets.${preset.id}`);
     const existingOfPreset = selectedCommitments.filter((c) => c.presetKey === preset.id).length;
     const label = existingOfPreset === 0 ? baseLabel : `${baseLabel} ${existingOfPreset + 1}`;
-    const id = `${preset.id}_${Date.now()}`;
+    const id = `${preset.id}_${uniqueId()}`;
     setSelectedCommitments([...selectedCommitments, { id, presetKey: preset.id, label, amount: "" }]);
   };
 
@@ -257,7 +300,7 @@ export default function Onboarding() {
 
   const addCustomCommitment = () => {
     if (!customCommitment.label) return;
-    const id = `custom_${Date.now()}`;
+    const id = `custom_${uniqueId()}`;
     setSelectedCommitments([
       ...selectedCommitments,
       { id, presetKey: null, label: customCommitment.label, amount: customCommitment.amount, isCustom: true },
@@ -270,12 +313,11 @@ export default function Onboarding() {
     const baseLabel = t(`onboarding.debtPresets.${preset.id}`);
     const existingOfPreset = selectedDebts.filter((d) => d.presetKey === preset.id).length;
     const label = existingOfPreset === 0 ? baseLabel : `${baseLabel} ${existingOfPreset + 1}`;
-    const id = `${preset.id}_${Date.now()}`;
-    // Auto-tick "already paid this month" when today's day-of-month >= payday
-    // (their bank has already auto-deducted this month's repayment).
-    const todayDay = new Date().getDate();
-    const paydayNum = parseInt(payday, 10);
-    const paidThisMonth = isFinite(paydayNum) && paydayNum > 0 && todayDay >= paydayNum;
+    const id = `${preset.id}_${uniqueId()}`;
+    // Auto-tick "already paid this month" when today's day-of-month >= the
+    // payday clamped to this month's length (e.g. payday=31 in Feb means
+    // payday is treated as the last day of Feb).
+    const paidThisMonth = computePaidThisMonth(payday);
     setSelectedDebts([
       ...selectedDebts,
       {
@@ -731,7 +773,10 @@ export default function Onboarding() {
                           <input
                             type="checkbox"
                             checked={d.paidThisMonth}
-                            onChange={(e) => updateDebt(d.id, "paidThisMonth", e.target.checked)}
+                            onChange={(e) => {
+                              manuallyTouchedDebtsRef.current.add(d.id);
+                              updateDebt(d.id, "paidThisMonth", e.target.checked);
+                            }}
                             className="mt-0.5 h-4 w-4 rounded border-emerald-400 text-emerald-600 focus:ring-emerald-500"
                           />
                           <span className="flex-1 text-xs text-emerald-900 leading-snug">

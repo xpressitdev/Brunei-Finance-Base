@@ -42,38 +42,45 @@ router.post("/debts", requireAuth, requireAccess, async (req: AuthenticatedReque
   const parsed = CreateDebtBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
 
-  const [debt] = await db.insert(debtsTable).values({
-    id: uuidv4(),
-    userId: req.userId!,
-    debtType: parsed.data.debtType,
-    lender: parsed.data.lender,
-    outstandingBalance: parsed.data.outstandingBalance,
-    monthlyPayment: parsed.data.monthlyPayment,
-    interestRate: parsed.data.interestRate ?? null,
-    startDate: parsed.data.startDate ?? null,
-  }).returning();
-
-  // If the user indicated this debt's repayment was already auto-deducted this
-  // month (e.g. they signed up after their Hari Gaji), create a debit
-  // transaction linked to this debt so the dashboard's reconciliation logic
-  // (linked_debt_id check in routes/dashboard.ts) treats it as paid for the
-  // current month. We deliberately leave accountId null so account balances
-  // (which the user enters as their CURRENT post-deduction balance during
-  // onboarding) are not adjusted again.
-  if (parsed.data.paidThisMonth && parseFloat(debt.monthlyPayment) > 0) {
-    await db.insert(transactionsTable).values({
+  // Wrap debt insert + optional linked "already paid this month" txn in a
+  // single transaction so we never leave a debt unreconciled if the linked
+  // txn fails (and a retry would otherwise duplicate it).
+  const debt = await db.transaction(async (tx) => {
+    const [created] = await tx.insert(debtsTable).values({
       id: uuidv4(),
       userId: req.userId!,
-      date: new Date(),
-      amount: debt.monthlyPayment,
-      type: "debit",
-      description: `${debt.lender} (auto-deducted on payday)`,
-      accountId: null,
-      categoryId: null,
-      linkedDebtId: debt.id,
-      source: "onboarding",
-    });
-  }
+      debtType: parsed.data.debtType,
+      lender: parsed.data.lender,
+      outstandingBalance: parsed.data.outstandingBalance,
+      monthlyPayment: parsed.data.monthlyPayment,
+      interestRate: parsed.data.interestRate ?? null,
+      startDate: parsed.data.startDate ?? null,
+    }).returning();
+
+    // If the user indicated this debt's repayment was already auto-deducted
+    // this month (e.g. they signed up after their Hari Gaji), create a debit
+    // transaction linked to this debt so the dashboard's reconciliation logic
+    // (linked_debt_id check in routes/dashboard.ts) treats it as paid for the
+    // current month. We deliberately leave accountId null so account balances
+    // (which the user enters as their CURRENT post-deduction balance during
+    // onboarding) are not adjusted again.
+    if (parsed.data.paidThisMonth && parseFloat(created.monthlyPayment) > 0) {
+      await tx.insert(transactionsTable).values({
+        id: uuidv4(),
+        userId: req.userId!,
+        date: new Date(),
+        amount: created.monthlyPayment,
+        type: "debit",
+        description: `${created.lender} (auto-deducted on payday)`,
+        accountId: null,
+        categoryId: null,
+        linkedDebtId: created.id,
+        source: "onboarding",
+      });
+    }
+
+    return created;
+  });
 
   res.status(201).json(formatDebt(debt));
 });
