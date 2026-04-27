@@ -370,8 +370,8 @@ function LoanRow({
 
   return (
     <div className="border-b last:border-b-0">
-      <div className="p-5">
-        <div className="flex items-start gap-4">
+      <div className="p-4 sm:p-5">
+        <div className="flex items-start gap-3 sm:gap-4">
           {/* Type icon */}
           <div className="w-9 h-9 rounded-md bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-600 shrink-0">
             <Icon className="w-4 h-4" />
@@ -404,8 +404,8 @@ function LoanRow({
             </div>
           </div>
 
-          {/* Right — Min/mo + actions */}
-          <div className="flex items-start gap-3 shrink-0">
+          {/* Right — Min/mo + actions (desktop only; mobile renders below) */}
+          <div className="hidden sm:flex items-start gap-3 shrink-0">
             <div className="text-right">
               <div className="text-[9px] uppercase tracking-wider font-semibold text-muted-foreground">
                 Min /mo
@@ -414,6 +414,39 @@ function LoanRow({
                 {formatCurrency(minPay)}
               </div>
             </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5"
+              onClick={onEdit}
+              aria-label={`Edit ${debt.lender}`}
+            >
+              <Pencil className="w-3.5 h-3.5" />
+              Edit
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onDelete}
+              aria-label={`Delete ${debt.lender}`}
+              className="text-rose-600 hover:text-rose-700 hover:bg-rose-50"
+            >
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+
+        {/* Mobile-only action row — keeps Min/mo readable and gives buttons full tap targets */}
+        <div className="flex sm:hidden items-center justify-between gap-3 mt-3 pt-3 border-t">
+          <div>
+            <div className="text-[9px] uppercase tracking-wider font-semibold text-muted-foreground">
+              Min /mo
+            </div>
+            <div className="text-base font-bold tabular-nums">
+              {formatCurrency(minPay)}
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
             <Button
               variant="outline"
               size="sm"
