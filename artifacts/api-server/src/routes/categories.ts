@@ -7,13 +7,8 @@ import { requireAuth, type AuthenticatedRequest } from "../lib/auth";
 
 const router: IRouter = Router();
 
-// `defaultBudget` rides through the wire as a string (matches the rest of our
-// money fields, which are pg numerics). OpenAPI advertises the same regex, but
-// we re-validate at the route boundary so the contract is enforced regardless
-// of which generated client (or curl) hits us. The pattern alone fully constrains
-// the shape: digits with an optional 1-2dp decimal, which always parses as a
-// non-negative finite number — no separate Number() check needed.
-// Returns null when valid, an error string when invalid.
+// Money fields are wire-serialized as strings (pg numeric). Mirror the OpenAPI
+// pattern at the route boundary so non-conformant payloads are rejected.
 const MONEY_RE = /^\d+(\.\d{1,2})?$/;
 function validateMoneyString(v: string | undefined, field: string): string | null {
   if (v === undefined) return null;
