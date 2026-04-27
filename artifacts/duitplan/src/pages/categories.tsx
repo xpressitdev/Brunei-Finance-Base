@@ -34,9 +34,7 @@ export default function Categories() {
 
   const expenseCount = categories.filter((c) => c.kind === "expense").length;
   const savingsCount = categories.filter((c) => c.kind === "savings").length;
-  const totalMonthlyBudget = categories
-    .filter((c) => c.kind === "expense")
-    .reduce((s, c) => s + safeNum(c.defaultBudget), 0);
+  const totalMonthlyBudget = categories.reduce((s, c) => s + safeNum(c.defaultBudget), 0);
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -132,7 +130,7 @@ export default function Categories() {
         <KpiCard
           label="Total monthly budget"
           value={fmtBND(totalMonthlyBudget)}
-          footer={`Sum of ${expenseCount} expense ${expenseCount === 1 ? "category" : "categories"} · Savings funded via Goals`}
+          footer={`Across ${expenseCount} expense + ${savingsCount} savings · Savings actually funded via Goals`}
           tone="emerald"
         />
         <KpiCard
