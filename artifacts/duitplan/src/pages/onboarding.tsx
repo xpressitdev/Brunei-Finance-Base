@@ -180,7 +180,7 @@ export default function Onboarding() {
   const [step, setStep] = useState(1);
   const [, setLocation] = useLocation();
   const { region, decimalStep } = useRegion();
-  const { data: user } = useGetMe({ query: { enabled: true } });
+  const { data: user } = useGetMe();
   const { data: existingCategories } = useListCategories();
 
   const [accounts, setAccounts] = useState<AccountRow[]>([
