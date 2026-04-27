@@ -1062,6 +1062,12 @@ export const ScanReceiptResponse = zod.object({
   date: zod.string().nullish(),
   description: zod.string().nullish(),
   category: zod.string().nullish(),
+  categoryId: zod
+    .string()
+    .nullish()
+    .describe(
+      "Server-resolved category id for `category` (exact or case-insensitive name match), or null if no match.",
+    ),
 });
 
 /**

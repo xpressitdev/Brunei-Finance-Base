@@ -11,7 +11,10 @@ import {
   useUpdateTransaction,
   useDeleteTransaction,
   useScanReceipt,
+  useUpdateCategory,
   getListAccountsQueryKey,
+  getListCategoriesQueryKey,
+  getListBudgetsQueryKey,
   useGetProfile,
 } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
@@ -168,6 +171,15 @@ export default function Expenses() {
 
   const [editingTx, setEditingTx] = useState<TransactionItem | null>(null);
   const [editTrialExpiredError, setEditTrialExpiredError] = useState(false);
+  // Prompt the user to set a monthly budget on the first expense for a
+  // category that has none yet. We don't re-prompt within the same session
+  // for categories the user already dismissed.
+  const [allocatePrompt, setAllocatePrompt] = useState<
+    | { categoryId: string; categoryName: string; suggestedAmount: string }
+    | null
+  >(null);
+  const [allocateAmount, setAllocateAmount] = useState("");
+  const dismissedAllocatePromptsRef = useRef<Set<string>>(new Set());
   const [editData, setEditData] = useState({
     date: "",
     amount: "",
@@ -186,6 +198,7 @@ export default function Expenses() {
   const updateMutation = useUpdateTransaction();
   const deleteMutation = useDeleteTransaction();
   const scanMutation = useScanReceipt();
+  const updateCategoryMutation = useUpdateCategory();
 
   const expenses = (transactions ?? []).filter((t) => t.type === "debit");
   const income = (transactions ?? []).filter((t) => t.type === "credit");
@@ -295,12 +308,12 @@ export default function Expenses() {
       if (result.date) updates.date = result.date;
       if (result.description) updates.description = result.description;
 
-      if (result.category && categories) {
-        const matched = categories.find((c) =>
-          c.name.toLowerCase().includes(result.category!.toLowerCase()) ||
-          result.category!.toLowerCase().includes(c.name.toLowerCase())
-        );
-        if (matched) updates.categoryId = matched.id;
+      // Trust the server-resolved categoryId. The /receipt/scan route now
+      // matches the AI-returned name back to a real category id (exact then
+      // case-insensitive) so the saved txn reduces the right envelope; do
+      // not run a second client-side fuzzy match that could mis-map.
+      if (result.categoryId) {
+        updates.categoryId = result.categoryId;
       }
 
       setForm((prev) => ({ ...prev, ...updates }));
@@ -338,6 +351,30 @@ export default function Expenses() {
         },
       });
       refetch();
+
+      // If this expense was logged against a category that has no monthly
+      // budget (defaultBudget == 0) and the user hasn't already dismissed the
+      // prompt for that category in this session, offer to allocate one now
+      // — otherwise the spend silently won't reduce any envelope on the
+      // Budget tab. Income transactions and uncategorised expenses are
+      // skipped.
+      if (
+        form.type === "debit" &&
+        form.categoryId !== "none" &&
+        !dismissedAllocatePromptsRef.current.has(form.categoryId)
+      ) {
+        const cat = categories?.find((c) => c.id === form.categoryId);
+        if (cat && parseFloat(cat.defaultBudget || "0") <= 0) {
+          const spent = parseFloat(form.amount).toFixed(2);
+          setAllocatePrompt({
+            categoryId: cat.id,
+            categoryName: cat.name,
+            suggestedAmount: spent,
+          });
+          setAllocateAmount(spent);
+        }
+      }
+
       setIsAddOpen(false);
       setReceiptPreview(null);
       setForm(defaultForm);
@@ -349,6 +386,39 @@ export default function Expenses() {
         toast({ title: "Failed to add expense", variant: "destructive" });
       }
     }
+  };
+
+  const handleAllocateBudget = async () => {
+    if (!allocatePrompt) return;
+    const amt = parseFloat(allocateAmount);
+    if (!isFinite(amt) || amt <= 0) {
+      toast({ title: "Enter a valid amount", variant: "destructive" });
+      return;
+    }
+    try {
+      await updateCategoryMutation.mutateAsync({
+        id: allocatePrompt.categoryId,
+        data: { defaultBudget: amt.toFixed(2) },
+      });
+      // Refresh both the categories list (so subsequent prompts skip this
+      // category) and the budget tab (so the new envelope shows up).
+      await queryClient.invalidateQueries({ queryKey: getListCategoriesQueryKey() });
+      await queryClient.invalidateQueries({ queryKey: getListBudgetsQueryKey() });
+      toast({
+        title: "Budget set!",
+        description: `${allocatePrompt.categoryName} now has a monthly budget of ${region.currency} ${amt.toFixed(2)}.`,
+      });
+      setAllocatePrompt(null);
+    } catch {
+      toast({ title: "Failed to set budget", variant: "destructive" });
+    }
+  };
+
+  const handleSkipAllocate = () => {
+    if (allocatePrompt) {
+      dismissedAllocatePromptsRef.current.add(allocatePrompt.categoryId);
+    }
+    setAllocatePrompt(null);
   };
 
   const handleDelete = async (id: string) => {
@@ -487,7 +557,7 @@ export default function Expenses() {
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-foreground truncate">{tx.description}</p>
                         <p className="text-xs text-muted-foreground truncate">
-                          {tx.merchant ? tx.merchant : (tx.categoryName ?? t("expenseTracker.uncategorised"))}
+                          {tx.merchant ? tx.merchant : (tx.categoryName ?? t("expenseTracker.uncategorized"))}
                           {tx.receiptUrl && (
                             <span className="ml-1.5 inline-flex items-center gap-0.5 text-primary">
                               <Receipt className="w-3 h-3" /> {t("expenseTracker.receipt")}
@@ -688,7 +758,7 @@ export default function Expenses() {
                   <SelectValue placeholder={t("expenseTracker.addDialog.selectCategory")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">{t("expenseTracker.uncategorised")}</SelectItem>
+                  <SelectItem value="none">{t("expenseTracker.uncategorized")}</SelectItem>
                   {(categories ?? []).map((c) => (
                     <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
                   ))}
@@ -816,7 +886,7 @@ export default function Expenses() {
                   <SelectValue placeholder={t("expenseTracker.editDialog.selectCategory")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">{t("expenseTracker.editDialog.uncategorised")}</SelectItem>
+                  <SelectItem value="none">{t("expenseTracker.uncategorized")}</SelectItem>
                   {(categories ?? []).map((c) => (
                     <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
                   ))}
@@ -830,6 +900,54 @@ export default function Expenses() {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Allocate-budget prompt (shown after logging an expense in a category with no monthly budget) */}
+      {/* IMPORTANT: onOpenChange must NOT mark the prompt as skipped, because
+          AlertDialogAction (Allocate) auto-closes the dialog and would otherwise
+          flag the category as dismissed even on success. Only the explicit
+          Skip button calls handleSkipAllocate. */}
+      <AlertDialog open={!!allocatePrompt} onOpenChange={(o) => { if (!o) setAllocatePrompt(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {allocatePrompt
+                ? t("expenseTracker.allocateDialog.title", { category: allocatePrompt.categoryName })
+                : ""}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {allocatePrompt
+                ? t("expenseTracker.allocateDialog.description", {
+                    currency: region.currency,
+                    spent: allocatePrompt.suggestedAmount,
+                    category: allocatePrompt.categoryName,
+                  })
+                : ""}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-1.5">
+            <Label htmlFor="allocate-amount">
+              {t("expenseTracker.allocateDialog.amountLabel", { currency: region.currency })}
+            </Label>
+            <Input
+              id="allocate-amount"
+              type="number"
+              step={decimalStep}
+              min="0"
+              value={allocateAmount}
+              onChange={(e) => setAllocateAmount(e.target.value)}
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={handleSkipAllocate}>
+              {t("expenseTracker.allocateDialog.skip")}
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleAllocateBudget} disabled={updateCategoryMutation.isPending}>
+              {updateCategoryMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+              {t("expenseTracker.allocateDialog.save")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Delete confirmation */}
       <AlertDialog open={!!deleteId} onOpenChange={(o) => !o && setDeleteId(null)}>

@@ -115,6 +115,13 @@
       "selectCategory": "Select category",
       "save": "Save Expense"
     },
+    "allocateDialog": {
+      "title": "Set a budget for {{category}}?",
+      "description": "You just spent {{currency}} {{spent}} on {{category}}, but it has no monthly budget yet. Allocate one now and the Budget tab will start tracking how much you have left each month.",
+      "amountLabel": "Monthly budget ({{currency}})",
+      "skip": "Not now",
+      "save": "Allocate"
+    },
     "editDialog": {
       "title": "Edit Transaction",
       "expense": "Expense",

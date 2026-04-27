@@ -1191,6 +1191,9 @@ components:
           type: ["string", "null"]
         category:
           type: ["string", "null"]
+        categoryId:
+          type: ["string", "null"]
+          description: Server-resolved category id for `category` (exact or case-insensitive name match), or null if no match.
 
     RequestUploadUrlBody:
       type: object

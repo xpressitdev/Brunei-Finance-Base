@@ -17,4 +17,9 @@ export interface ScanReceiptResponse {
   description?: string | null;
   /** @nullable */
   category?: string | null;
+  /**
+   * Server-resolved category id for `category` (exact or case-insensitive name match), or null if no match.
+   * @nullable
+   */
+  categoryId?: string | null;
 }
