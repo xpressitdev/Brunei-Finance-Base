@@ -7,6 +7,24 @@ import { requireAuth, type AuthenticatedRequest } from "../lib/auth";
 
 const router: IRouter = Router();
 
+// `defaultBudget` rides through the wire as a string (matches the rest of our
+// money fields, which are pg numerics). The OpenAPI/Zod layer accepts any
+// string, so the route enforces the BND-shape: optional sign-less integer or
+// integer.decimal up to 2dp, value must parse as a non-negative finite number.
+// Returns null when valid, an error string when invalid.
+const MONEY_RE = /^\d+(\.\d{1,2})?$/;
+function validateMoneyString(v: string | undefined, field: string): string | null {
+  if (v === undefined) return null;
+  if (typeof v !== "string" || !MONEY_RE.test(v)) {
+    return `${field} must be a non-negative decimal with up to 2 fractional digits`;
+  }
+  const n = Number(v);
+  if (!Number.isFinite(n) || n < 0) {
+    return `${field} must be a non-negative number`;
+  }
+  return null;
+}
+
 function formatCategory(c: typeof categoriesTable.$inferSelect) {
   return {
     id: c.id,
@@ -28,6 +46,11 @@ router.post("/categories", requireAuth, async (req: AuthenticatedRequest, res): 
   const parsed = CreateCategoryBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+  const moneyErr = validateMoneyString(parsed.data.defaultBudget, "defaultBudget");
+  if (moneyErr) {
+    res.status(400).json({ error: moneyErr });
     return;
   }
   const [cat] = await db.insert(categoriesTable).values({
@@ -55,6 +78,11 @@ router.patch("/categories/:id", requireAuth, async (req: AuthenticatedRequest, r
   // monthly default budget IS editable so users can budget their staples.
   if (existing.isDefault && (parsed.data.name !== undefined || parsed.data.kind !== undefined)) {
     res.status(403).json({ error: "Default categories cannot be renamed or re-typed" });
+    return;
+  }
+  const moneyErr = validateMoneyString(parsed.data.defaultBudget, "defaultBudget");
+  if (moneyErr) {
+    res.status(400).json({ error: moneyErr });
     return;
   }
   const updates: Partial<typeof categoriesTable.$inferInsert> = { updatedAt: new Date() };
