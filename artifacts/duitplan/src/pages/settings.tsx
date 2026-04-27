@@ -7,7 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, User, Tag, Globe } from "lucide-react";
+import { Plus, User, Tag, Globe, Shield, ArrowRight } from "lucide-react";
+import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useRegion } from "@/hooks/useRegion";
 import i18n from "@/i18n";
@@ -107,6 +108,9 @@ export default function Settings() {
           </TabsTrigger>
           <TabsTrigger value="preferences" className="flex gap-2">
             <Globe className="w-4 h-4"/> {t("settings.tabs.preferences")}
+          </TabsTrigger>
+          <TabsTrigger value="privacy" className="flex gap-2">
+            <Shield className="w-4 h-4"/> {t("settings.tabs.privacy", "Privacy")}
           </TabsTrigger>
         </TabsList>
 
@@ -220,6 +224,37 @@ export default function Settings() {
                   </SelectContent>
                 </Select>
               </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="privacy">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Shield className="w-5 h-5 text-emerald-700" />
+                {t("settings.privacy.title", "Privacy & Trust")}
+              </CardTitle>
+              <CardDescription>
+                {t(
+                  "settings.privacy.description",
+                  "How DuitPlan handles your data — in plain language.",
+                )}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <ul className="text-sm space-y-2 text-muted-foreground">
+                <li>• {t("settings.privacy.point1", "Your data is never sold or shared with advertisers.")}</li>
+                <li>• {t("settings.privacy.point2", "Encrypted in transit (HTTPS) and at rest.")}</li>
+                <li>• {t("settings.privacy.point3", "DuitPlan AI reads only your data, and AI provider terms forbid training on it.")}</li>
+                <li>• {t("settings.privacy.point4", "Want your data deleted or exported? Email hello@duitplan.com — we'll handle it.")}</li>
+              </ul>
+              <Link href="/privacy">
+                <Button variant="outline" className="gap-2">
+                  {t("settings.privacy.readFull", "Read the full Privacy & Trust page")}
+                  <ArrowRight className="w-4 h-4" />
+                </Button>
+              </Link>
             </CardContent>
           </Card>
         </TabsContent>

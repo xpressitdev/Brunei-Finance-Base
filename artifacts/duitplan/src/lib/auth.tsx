@@ -41,7 +41,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (
         location !== "/" &&
         location !== "/login" &&
-        location !== "/register"
+        location !== "/register" &&
+        location !== "/privacy"
       ) {
         setLocation("/login");
       }

@@ -391,9 +391,9 @@ export default function Landing() {
             </span>
           </div>
           <div className="flex gap-5 text-sm text-muted-foreground">
-            <a href="#" className="hover:text-foreground transition-colors">Privacy</a>
+            <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
             <a href="#" className="hover:text-foreground transition-colors">Terms</a>
-            <a href="#" className="hover:text-foreground transition-colors">Contact</a>
+            <a href="mailto:hello@duitplan.com" className="hover:text-foreground transition-colors">Contact</a>
           </div>
         </div>
       </footer>

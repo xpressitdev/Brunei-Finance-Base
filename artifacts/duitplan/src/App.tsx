@@ -35,6 +35,7 @@ import SubscriptionSuccess from "@/pages/subscription/success";
 import SubscriptionFailed from "@/pages/subscription/failed";
 import AgentPage from "@/pages/agent";
 import ZakatPage from "@/pages/zakat";
+import PrivacyPage from "@/pages/privacy";
 import NotFound from "@/pages/not-found";
 
 function ProtectedRoute({ component: Component, ...rest }: any) {
@@ -74,6 +75,7 @@ function Router() {
       <Route path="/login" component={Login} />
       <Route path="/register" component={Register} />
       <Route path="/onboarding" component={Onboarding} />
+      <Route path="/privacy" component={PrivacyPage} />
       
       {/* Payment return pages */}
       <SubscriptionCallbackRoute path="/subscription/success" component={SubscriptionSuccess} />
