@@ -457,9 +457,13 @@ function BucketRow({
   const hasTargetBudget = isVariableEnv && bucket.target !== undefined && bucket.target > 0;
   const targetBudget = bucket.target ?? 0;
 
-  // overspent now considers BOTH thresholds: spending past the envelope's
+  // overspent considers BOTH thresholds: spending past the envelope's
   // currently-funded amount AND spending past the intended target budget.
-  const overspentEnvelope = isEnv && spent > bucket.allocated && bucket.allocated > 0;
+  // In target mode, an unfunded envelope with any spend (allocated=0, spent>0)
+  // is also overspent. The legacy depletion fallback keeps the historical
+  // `allocated > 0` guard so an unconfigured envelope doesn't render rose.
+  const overspentEnvelope = isEnv && spent > bucket.allocated &&
+    (hasTargetBudget || bucket.allocated > 0);
   const overspentBudget = hasTargetBudget && spent > targetBudget;
   const overspent = overspentEnvelope || overspentBudget;
 
@@ -529,15 +533,15 @@ function BucketRow({
           <div className="flex items-baseline justify-between mt-0.5">
             <span className="text-lg font-bold tabular-nums">{fmt(bucket.allocated)}</span>
             {isEnv && hasTargetBudget ? (
+              // Header text stays in `spent · target` form across all states —
+              // rose styling and the "over" Badge in the row above are the
+              // overspent signals. The bar legend below carries the
+              // diagnostic detail (over budget vs past funded).
               <span className={cn(
                 "text-xs tabular-nums",
                 overspent ? "text-rose-600 font-semibold" : "text-muted-foreground"
               )}>
-                {overspentBudget
-                  ? `${fmt(spent - targetBudget)} over budget`
-                  : overspentEnvelope
-                  ? `${fmt(spent - bucket.allocated)} past funded · ${fmt(targetBudget)} target`
-                  : `${fmt(spent)} spent · ${fmt(targetBudget)} target`}
+                {`${fmt(spent)} spent · ${fmt(targetBudget)} target`}
               </span>
             ) : isEnv && remaining !== null ? (
               <span className={cn(
