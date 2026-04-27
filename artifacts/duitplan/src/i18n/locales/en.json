@@ -885,6 +885,22 @@
         "desc": "Every Hari Gaji, the cycle resets. Your loans get paid, your goals get fed, and you know exactly what's safe to spend."
       }
     },
+    "zakatSection": {
+      "eyebrow": "Built-in Zakat",
+      "title": "Zakat, calculated correctly.",
+      "subtitle": "DuitPlan reads your savings balances, applies the current nisab, and tells you exactly what's owed — paired with the right authority for your country.",
+      "feature1Title": "Reads your savings",
+      "feature1Desc": "Pulls live balances from the cash, savings, and current accounts you've added — pick which ones count.",
+      "feature2Title": "Applies the right nisab",
+      "feature2Desc": "Gold-based (85g) and silver-based (595g) thresholds, kept current so the 2.5% calculation is accurate.",
+      "feature3Title": "Pay the right authority",
+      "feature3Desc": "Each country has its own — DuitPlan points you to MUIB, LZS, or BAZNAS so your Zakat reaches the right hands.",
+      "authoritiesTitle": "Connected authorities",
+      "authorityBn": "MUIB · Majlis Ugama Islam Brunei",
+      "authorityMy": "LZS · Lembaga Zakat Selangor (and state equivalents)",
+      "authorityId": "BAZNAS · Badan Amil Zakat Nasional",
+      "cta": "Calculate my Zakat"
+    },
     "cta": {
       "title": "Ready to plan your gaji?",
       "subtitle": "Join thousands of Bruneians, Malaysians, and Indonesians taking control of their money — calmly.",

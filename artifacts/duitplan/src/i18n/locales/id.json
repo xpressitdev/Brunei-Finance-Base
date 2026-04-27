@@ -885,6 +885,22 @@
         "desc": "Setiap Hari Gaji, siklus dimulai ulang. Pinjaman terbayar, tujuan bertambah, dan Anda tahu persis mana yang aman untuk dibelanjakan."
       }
     },
+    "zakatSection": {
+      "eyebrow": "Zakat bawaan",
+      "title": "Zakat, dihitung dengan benar.",
+      "subtitle": "DuitPlan membaca saldo tabungan Anda, menerapkan nisab terkini, dan memberi tahu Anda jumlah Zakat yang harus dibayarkan — dipasangkan dengan otoritas yang tepat untuk negara Anda.",
+      "feature1Title": "Membaca tabungan Anda",
+      "feature1Desc": "Mengambil saldo langsung dari rekening tunai, tabungan, dan giro yang sudah Anda tambahkan — pilih mana yang dihitung.",
+      "feature2Title": "Menerapkan nisab yang tepat",
+      "feature2Desc": "Nisab berbasis emas (85g) dan perak (595g), diperbarui agar perhitungan 2,5% akurat.",
+      "feature3Title": "Bayar ke otoritas yang tepat",
+      "feature3Desc": "Tiap negara punya otoritasnya — DuitPlan mengarahkan Anda ke MUIB, LZS, atau BAZNAS agar Zakat sampai ke tangan yang tepat.",
+      "authoritiesTitle": "Otoritas yang terhubung",
+      "authorityBn": "MUIB · Majlis Ugama Islam Brunei",
+      "authorityMy": "LZS · Lembaga Zakat Selangor (dan setara negara bagian)",
+      "authorityId": "BAZNAS · Badan Amil Zakat Nasional",
+      "cta": "Hitung Zakat saya"
+    },
     "cta": {
       "title": "Siap merencanakan gaji Anda?",
       "subtitle": "Bergabung dengan ribuan orang Brunei, Malaysia, dan Indonesia yang mengelola keuangan mereka — dengan tenang.",

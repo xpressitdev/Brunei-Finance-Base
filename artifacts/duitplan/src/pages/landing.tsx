@@ -268,8 +268,98 @@ export default function Landing() {
           </div>
         </section>
 
-        {/* Zakat anchor (keeps nav link valid) */}
-        <div id="zakat" />
+        {/* Zakat */}
+        <section id="zakat" className="px-6 py-20 bg-muted/40 border-t">
+          <div className="max-w-6xl mx-auto">
+            <div className="grid lg:grid-cols-2 gap-12 items-center">
+              <div>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-semibold mb-5">
+                  {t('landing.zakatSection.eyebrow')}
+                </span>
+                <h2 className="text-3xl lg:text-4xl font-bold tracking-tight mb-4">
+                  {t('landing.zakatSection.title')}
+                </h2>
+                <p className="text-muted-foreground leading-relaxed mb-8">
+                  {t('landing.zakatSection.subtitle')}
+                </p>
+                <ul className="space-y-5 mb-8">
+                  {([
+                    { title: t('landing.zakatSection.feature1Title'), desc: t('landing.zakatSection.feature1Desc') },
+                    { title: t('landing.zakatSection.feature2Title'), desc: t('landing.zakatSection.feature2Desc') },
+                    { title: t('landing.zakatSection.feature3Title'), desc: t('landing.zakatSection.feature3Desc') },
+                  ] as const).map((feat) => (
+                    <li key={feat.title} className="flex gap-3">
+                      <div className="w-6 h-6 rounded-full bg-emerald-100 flex items-center justify-center shrink-0 mt-0.5">
+                        <Check className="w-3.5 h-3.5 text-emerald-700" />
+                      </div>
+                      <div>
+                        <div className="font-semibold text-sm mb-0.5">{feat.title}</div>
+                        <p className="text-sm text-muted-foreground leading-relaxed">{feat.desc}</p>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+                <Link href="/zakat">
+                  <Button size="lg" className="bg-emerald-700 hover:bg-emerald-800 text-white inline-flex items-center gap-2">
+                    {t('landing.zakatSection.cta')}
+                    <ArrowRight className="w-4 h-4" />
+                  </Button>
+                </Link>
+              </div>
+
+              {/* Zakat card mockup */}
+              <div className="relative">
+                <div className="absolute inset-0 bg-emerald-200/40 rounded-3xl -rotate-1" />
+                <div className="relative bg-white border border-card-border rounded-2xl p-6 shadow-xl">
+                  <div className="flex items-center justify-between mb-5">
+                    <div>
+                      <div className="text-[11px] uppercase tracking-wider font-semibold text-emerald-700">Zakat al-Mal</div>
+                      <div className="text-sm font-semibold mt-0.5">1447 H</div>
+                    </div>
+                    <span className="text-xs px-2 py-1 rounded-full bg-emerald-100 text-emerald-800 font-semibold">Above nisab</span>
+                  </div>
+                  <div className="space-y-2 text-sm mb-4">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Cash & savings</span>
+                      <span className="font-medium tabular-nums">BND 8,420.55</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Investments</span>
+                      <span className="font-medium tabular-nums">BND 1,200.00</span>
+                    </div>
+                    <div className="flex justify-between border-t pt-2 mt-2">
+                      <span className="text-muted-foreground">Nisab (85g gold)</span>
+                      <span className="font-medium tabular-nums">BND 7,820.00</span>
+                    </div>
+                  </div>
+                  <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-4 mb-5">
+                    <div className="text-[11px] uppercase tracking-wider font-semibold text-emerald-700">Zakat owed (2.5%)</div>
+                    <div className="text-3xl font-bold text-emerald-700 tabular-nums mt-1">BND 240.51</div>
+                  </div>
+                  <div>
+                    <div className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground mb-2">
+                      {t('landing.zakatSection.authoritiesTitle')}
+                    </div>
+                    <ul className="space-y-1.5 text-xs">
+                      <li className="flex items-center gap-2">
+                        <span aria-hidden>🇧🇳</span>
+                        <span className="text-muted-foreground">{t('landing.zakatSection.authorityBn')}</span>
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <span aria-hidden>🇲🇾</span>
+                        <span className="text-muted-foreground">{t('landing.zakatSection.authorityMy')}</span>
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <span aria-hidden>🇮🇩</span>
+                        <span className="text-muted-foreground">{t('landing.zakatSection.authorityId')}</span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
 
         {/* CTA band */}
         <section className="bg-primary py-16">

@@ -885,6 +885,22 @@
         "desc": "Setiap Hari Gaji, kitaran dimulakan semula. Pinjaman dibayar, matlamat bertambah, dan anda tahu tepat apa yang selamat untuk dibelanjakan."
       }
     },
+    "zakatSection": {
+      "eyebrow": "Zakat terbina",
+      "title": "Zakat, dikira dengan betul.",
+      "subtitle": "DuitPlan membaca baki simpanan anda, menggunakan nisab semasa, dan memberitahu anda jumlah Zakat yang perlu dibayar — dipasangkan dengan pihak berkuasa yang betul untuk negara anda.",
+      "feature1Title": "Membaca simpanan anda",
+      "feature1Desc": "Mengambil baki langsung dari akaun tunai, simpanan, dan semasa yang anda tambah — pilih yang mana untuk dikira.",
+      "feature2Title": "Menggunakan nisab yang betul",
+      "feature2Desc": "Nisab berdasarkan emas (85g) dan perak (595g), dikemas kini supaya pengiraan 2.5% adalah tepat.",
+      "feature3Title": "Bayar pihak berkuasa yang betul",
+      "feature3Desc": "Setiap negara ada pihak berkuasanya — DuitPlan menunjukkan MUIB, LZS, atau BAZNAS supaya Zakat anda sampai ke tangan yang tepat.",
+      "authoritiesTitle": "Pihak berkuasa yang disambungkan",
+      "authorityBn": "MUIB · Majlis Ugama Islam Brunei",
+      "authorityMy": "LZS · Lembaga Zakat Selangor (dan setara negeri)",
+      "authorityId": "BAZNAS · Badan Amil Zakat Nasional",
+      "cta": "Kira Zakat saya"
+    },
     "cta": {
       "title": "Bersedia merancang gaji anda?",
       "subtitle": "Sertai ribuan orang Brunei, Malaysia, dan Indonesia yang mengawal kewangan mereka — dengan tenang.",
