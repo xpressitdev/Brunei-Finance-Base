@@ -22,6 +22,7 @@ import {
   useListCategories,
   useGetProfile,
   useListCommitments,
+  useUpdateCommitment,
   useListAccounts,
   useListDebts,
   useListGoals,
@@ -589,9 +590,12 @@ function BucketRow({
 
           {/* Pull-chips rail — drag any chip onto another bucket (or the bag)
               to physically move money out of this one. Available on every
-              non-fixed bucket: loans (above the min payment), envelopes, and
-              vaults (vault drag triggers the unlock-confirmation modal). */}
-          {!bucket.fixed && bucket.allocated > 0 && (() => {
+              bucket with a positive allocation: loans (above the min payment),
+              envelopes, fixed commitments, and vaults (vault drag triggers
+              the unlock-confirmation modal). Fixed commitments are global,
+              so editing them changes every month — that caveat is shown in
+              the bucket subtitle above. */}
+          {bucket.allocated > 0 && (() => {
             const minVal = isLoan ? (bucket.target ?? 0) : 0;
             const headroom = Math.max(0, bucket.allocated - minVal);
             if (headroom <= 0) return null;
@@ -600,7 +604,7 @@ function BucketRow({
                 <div className="flex items-center gap-1 mb-1.5">
                   <RotateCcw className="w-3 h-3 text-muted-foreground" />
                   <span className="text-[9px] uppercase tracking-wider font-bold text-muted-foreground">
-                    Drag out to move money
+                    {bucket.fixed ? "Drag out (changes every month)" : "Drag out to move money"}
                   </span>
                 </div>
                 <div className="flex flex-wrap gap-1">
@@ -688,8 +692,10 @@ function AllocateView({
   budgetMap,
   upsert,
   updateGoal,
+  updateCommitment,
   refetch,
   refetchGoals,
+  refetchCommitments,
   onTrialExpired,
   resetSignal,
 }: {
@@ -704,8 +710,10 @@ function AllocateView({
   budgetMap: Record<string, { categoryId: string; plannedAmount?: string; actualAmount?: string }>;
   upsert: ReturnType<typeof useUpsertBudget>;
   updateGoal: ReturnType<typeof useUpdateGoal>;
+  updateCommitment: ReturnType<typeof useUpdateCommitment>;
   refetch: () => void;
   refetchGoals: () => void;
+  refetchCommitments: () => void;
   onTrialExpired: () => void;
   resetSignal: number;
 }) {
@@ -799,6 +807,21 @@ function AllocateView({
     }
   };
 
+  // Fixed envelopes are backed by Commitments. Adjusting one rewrites the
+  // monthly amount on the underlying commitment record. NOTE: commitments are
+  // global (no per-month override), so the new amount applies to every month.
+  const persistCommitment = async (commitmentId: string, amount: number) => {
+    try {
+      await updateCommitment.mutateAsync({
+        id: commitmentId,
+        data: { amount: amount.toFixed(2) },
+      });
+      refetchCommitments();
+    } catch (err) {
+      if (isTrialExpiredError(err)) onTrialExpired();
+    }
+  };
+
   const updateBucket = (id: string, delta: number) => {
     setBuckets(prev => {
       const next = prev.map(b => b.id === id ? { ...b, allocated: Math.max(0, b.allocated + delta) } : b);
@@ -806,6 +829,10 @@ function AllocateView({
       if (target && id.startsWith("E:")) {
         const catId = id.slice(2);
         persistEnvelope(catId, target.allocated);
+      }
+      if (target && id.startsWith("F:")) {
+        const commitmentId = id.slice(2);
+        persistCommitment(commitmentId, target.allocated);
       }
       if (target && id.startsWith("V:")) {
         const goalId = id.slice(2);
@@ -822,6 +849,9 @@ function AllocateView({
       if (id.startsWith("E:")) {
         const catId = id.slice(2);
         persistEnvelope(catId, value);
+      } else if (id.startsWith("F:")) {
+        const commitmentId = id.slice(2);
+        persistCommitment(commitmentId, value);
       } else if (id.startsWith("V:")) {
         const goalId = id.slice(2);
         persistGoal(goalId, value);
@@ -1288,7 +1318,7 @@ export default function Budgets() {
   const year = activeDate.getFullYear();
 
   const { data: profile } = useGetProfile();
-  const { data: commitments } = useListCommitments();
+  const { data: commitments, refetch: refetchCommitments } = useListCommitments();
   const { data: debts = [] } = useListDebts();
   const { data: budgets, refetch } = useListBudgets({ month });
   const { data: categories } = useListCategories();
@@ -1296,6 +1326,7 @@ export default function Budgets() {
   const { data: goals = [], refetch: refetchGoals } = useListGoals();
   const upsert = useUpsertBudget();
   const updateGoal = useUpdateGoal();
+  const updateCommitment = useUpdateCommitment();
 
   const salary = safeNum(profile?.monthlyIncome);
   const totalCommitments = (commitments ?? []).reduce((s, c) => s + safeNum(c.amount), 0);
@@ -1393,8 +1424,10 @@ export default function Budgets() {
           budgetMap={budgetMap}
           upsert={upsert}
           updateGoal={updateGoal}
+          updateCommitment={updateCommitment}
           refetch={refetch}
           refetchGoals={refetchGoals}
+          refetchCommitments={refetchCommitments}
           onTrialExpired={() => setTrialExpiredError(true)}
           resetSignal={resetSignal}
         />
