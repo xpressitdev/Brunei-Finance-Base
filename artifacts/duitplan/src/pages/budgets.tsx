@@ -181,42 +181,50 @@ function DragGhost({ drag }: { drag: DragState | null }) {
   );
 }
 
-// ── Stepper: [−] [BND number] [+] ────────────────────────────────────────────
+// ── Stepper: [−] [+ BND amount-to-add] [+] ───────────────────────────────────
+// Delta-based: the input represents the amount the user wants to ADD to the
+// bucket, not the bucket's current total. The default is 0/blank so it never
+// pre-fills with the existing allocation. The +/− buttons step by `step` and
+// apply the delta immediately; typing a number + Enter (or blur) commits that
+// amount as a one-shot add. `canSubtract` clamps subtractions (e.g. loans
+// can't go below their min payment).
 function AmountStepper({
-  value,
-  min = 0,
   step = 10,
-  onChange,
+  onAdjust,
   disabled,
+  canSubtract = true,
+  maxAdd,
 }: {
-  value: number;
-  min?: number;
   step?: number;
-  onChange: (v: number) => void;
+  onAdjust: (delta: number) => void;
   disabled?: boolean;
+  canSubtract?: boolean;
+  maxAdd?: number;
 }) {
-  const [text, setText] = useState(() => value.toFixed(0));
-  // Keep the visible text in sync with external updates (drag, reset, etc).
-  useEffect(() => {
-    setText(value === 0 ? "" : String(Math.round(value * 100) / 100));
-  }, [value]);
+  const [text, setText] = useState("");
 
   const commit = () => {
     const v = parseFloat(text);
-    if (Number.isFinite(v) && v >= min) onChange(v);
-    else onChange(min);
+    if (Number.isFinite(v) && v > 0) {
+      const capped = typeof maxAdd === "number" ? Math.min(v, maxAdd) : v;
+      onAdjust(capped);
+    }
+    setText("");
   };
+
+  const subDisabled = disabled || !canSubtract;
+  const addDisabled = disabled || (typeof maxAdd === "number" && maxAdd <= 0);
 
   return (
     <div className="flex items-center gap-1.5 mt-2">
       <button
         type="button"
-        aria-label={`Decrease by ${step}`}
-        disabled={disabled || value <= min}
-        onClick={() => onChange(Math.max(min, value - step))}
+        aria-label={`Subtract ${step}`}
+        disabled={subDisabled}
+        onClick={() => onAdjust(-step)}
         className={cn(
           "h-8 w-8 rounded-md border bg-background grid place-items-center text-base font-bold shrink-0 transition",
-          (disabled || value <= min)
+          subDisabled
             ? "opacity-40 cursor-not-allowed"
             : "hover:bg-accent active:scale-95"
         )}
@@ -224,11 +232,11 @@ function AmountStepper({
         −
       </button>
       <div className="flex-1 flex items-center gap-1.5 rounded-md border border-border bg-background px-2 h-8 min-w-0">
-        <span className="text-[10px] font-bold text-muted-foreground tracking-wide shrink-0">BND</span>
+        <span className="text-[10px] font-bold text-muted-foreground tracking-wide shrink-0">+ BND</span>
         <input
           type="number"
           inputMode="decimal"
-          min={min}
+          min={0}
           step="0.01"
           value={text}
           disabled={disabled}
@@ -241,12 +249,12 @@ function AmountStepper({
       </div>
       <button
         type="button"
-        aria-label={`Increase by ${step}`}
-        disabled={disabled}
-        onClick={() => onChange(value + step)}
+        aria-label={`Add ${step}`}
+        disabled={addDisabled}
+        onClick={() => onAdjust(step)}
         className={cn(
           "h-8 w-8 rounded-md border bg-background grid place-items-center text-base font-bold shrink-0 transition",
-          disabled ? "opacity-40 cursor-not-allowed" : "hover:bg-accent active:scale-95"
+          addDisabled ? "opacity-40 cursor-not-allowed" : "hover:bg-accent active:scale-95"
         )}
       >
         +
@@ -408,15 +416,27 @@ function BucketRow({
   const overspent = isEnv && (bucket.spent ?? 0) > bucket.allocated && bucket.allocated > 0;
   const remaining = isEnv ? bucket.allocated - (bucket.spent ?? 0) : null;
   const denom = bucket.target ?? Math.max(bucket.allocated, 1);
-  const pct = isEnv && bucket.allocated > 0
-    ? Math.min(100, ((bucket.spent ?? 0) / bucket.allocated) * 100)
-    : Math.min(100, (bucket.allocated / Math.max(denom, 1)) * 100);
+
+  // Vault progress = how full the goal is (saving model: bar fills as you save).
+  const vaultPct = Math.min(100, (bucket.allocated / Math.max(denom, 1)) * 100);
+
+  // Envelope progress = how much money is LEFT (depletion model: bar starts full
+  // and shrinks as money is spent). Fixed envelopes have no spent tracking, so
+  // they always show 100% remaining — that makes the bar visible (it was
+  // invisible before with the fill model where 0% spent = 0% width).
+  const envRemainingPct = bucket.allocated > 0
+    ? Math.max(0, Math.min(100, (1 - (bucket.spent ?? 0) / bucket.allocated) * 100))
+    : 0;
+
   const isFunded = !isEnv && bucket.target !== undefined && bucket.allocated >= bucket.target;
 
-  const fillColor = overspent ? "bg-rose-500"
-                  : isVault   ? "bg-amber-400"
-                  : isLoan    ? "bg-rose-400"
-                  :             "bg-primary";
+  // Envelope fill color reflects HOW MUCH IS LEFT, not how much is spent.
+  const envFillColor = overspent             ? "bg-rose-300"
+                     : envRemainingPct > 50  ? "bg-emerald-500"
+                     : envRemainingPct > 25  ? "bg-amber-400"
+                     :                         "bg-rose-400";
+
+  const vaultFillColor = isVault ? "bg-amber-400" : "bg-primary";
 
   const borderState = overspent ? "border-rose-400"
                     : isOver    ? "border-primary ring-2 ring-primary/25"
@@ -483,30 +503,55 @@ function BucketRow({
                 )}
               </div>
             </>
-          ) : (
+          ) : isEnv ? (
             <>
+              {/* Depletion bar — starts FULL (the allocated envelope) and
+                  shrinks as money is spent. Fixed envelopes have no spend
+                  tracking so they always show 100% remaining, which keeps
+                  the bar visible. */}
               <div className={cn("h-1.5 rounded-full mt-2 overflow-hidden", overspent ? "bg-rose-100" : "bg-muted")}>
-                <div className={cn("h-full rounded-full transition-all", fillColor)} style={{ width: `${pct}%` }} />
+                <div
+                  className={cn("h-full rounded-full transition-all", envFillColor)}
+                  style={{ width: `${envRemainingPct}%` }}
+                />
               </div>
-              {isEnv && (bucket.spent ?? 0) > 0 && (
+              {bucket.fixed ? (
+                <p className="text-[10px] mt-1 tabular-nums text-muted-foreground">
+                  fixed monthly · {fmt(bucket.allocated)} reserved
+                </p>
+              ) : bucket.allocated > 0 ? (
                 <p className={cn("text-[10px] mt-1 tabular-nums", overspent ? "text-rose-600 font-semibold" : "text-muted-foreground")}>
                   {overspent
                     ? `${fmt((bucket.spent ?? 0) - bucket.allocated)} over · envelope empty`
-                    : `${fmt(bucket.spent ?? 0)} spent of ${fmt(bucket.allocated)} allocated`}
+                    : `${fmt(Math.max(0, bucket.allocated - (bucket.spent ?? 0)))} left of ${fmt(bucket.allocated)}`}
                 </p>
-              )}
+              ) : null}
+            </>
+          ) : (
+            <>
+              {/* Vault: bar fills as you save toward the goal. */}
+              <div className="h-1.5 rounded-full mt-2 overflow-hidden bg-muted">
+                <div
+                  className={cn("h-full rounded-full transition-all", vaultFillColor)}
+                  style={{ width: `${vaultPct}%` }}
+                />
+              </div>
             </>
           )}
 
-          {/* Stepper: works on touch & desktop. Loans can't go below their min. */}
-          {!bucket.fixed && (
-            <AmountStepper
-              value={bucket.allocated}
-              min={isLoan ? (bucket.target ?? 0) : 0}
-              step={isLoan ? 50 : isVault ? 50 : 10}
-              onChange={onChange}
-            />
-          )}
+          {/* Stepper: type or step the amount you want to ADD to this bucket.
+              Default is 0 — never the current allocation. Loans can't shrink
+              below their minimum payment. */}
+          {!bucket.fixed && (() => {
+            const minVal = isLoan ? (bucket.target ?? 0) : 0;
+            return (
+              <AmountStepper
+                step={isLoan ? 50 : isVault ? 50 : 10}
+                canSubtract={bucket.allocated > minVal}
+                onAdjust={(delta) => onChange(Math.max(minVal, bucket.allocated + delta))}
+              />
+            );
+          })()}
 
           {bucket.allocated >= 50 && !bucket.auto && !bucket.fixed && (
             <div
