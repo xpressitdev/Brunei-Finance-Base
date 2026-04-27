@@ -93,6 +93,18 @@ export default function Register() {
             <span className="text-primary font-medium hover:underline cursor-pointer">{t('auth.register.signIn')}</span>
           </Link>
         </div>
+
+        <p className="mt-6 text-center text-xs text-muted-foreground">
+          {t(
+            'auth.register.privacyNote',
+            'Your data is encrypted and never sold.',
+          )}{' '}
+          <Link href="/privacy">
+            <span className="text-emerald-700 font-medium hover:underline cursor-pointer">
+              {t('auth.register.privacyLink', 'Privacy & Trust')}
+            </span>
+          </Link>
+        </p>
       </div>
     </div>
   );

@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useLocation } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -30,6 +30,7 @@ import {
   Building2,
   CreditCard,
   Target,
+  ShieldCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRegion } from "@/hooks/useRegion";
@@ -1072,6 +1073,24 @@ export default function Onboarding() {
 
           </CardContent>
         </Card>
+
+        <div className="mt-4 flex items-center justify-center gap-2 text-xs text-muted-foreground">
+          <ShieldCheck className="w-3.5 h-3.5 text-emerald-700" />
+          <span>
+            {t(
+              "onboarding.trustStrip.text",
+              "Your data is encrypted and never sold.",
+            )}
+          </span>
+          <Link
+            href="/privacy"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-medium text-emerald-700 hover:text-emerald-800 hover:underline"
+          >
+            {t("onboarding.trustStrip.link", "Privacy & Trust")}
+          </Link>
+        </div>
       </div>
     </div>
   );
