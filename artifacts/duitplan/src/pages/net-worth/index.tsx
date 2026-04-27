@@ -346,131 +346,207 @@ export default function NetWorth() {
         </div>
       </div>
 
-      {/* Net Worth Hero — balance scale + deltas */}
+      {/* Net Worth Hero — proportion bar + deltas */}
       {(() => {
-        const maxSide = Math.max(totalAssets, totalLiabilities, 1);
-        const tiltDeg = Math.max(-22, Math.min(22, ((totalLiabilities - totalAssets) / maxSide) * 22));
         const debtToAsset = totalAssets > 0 ? (totalLiabilities / totalAssets) : null;
         const equityPct = totalAssets > 0 ? ((netWorth / totalAssets) * 100) : null;
-        const debtLoadPct = (totalAssets + totalLiabilities) > 0 ? (totalLiabilities / (totalAssets + totalLiabilities) * 100) : null;
         const lastMonthVal = trendData[trendData.length - 2]?.value ?? null;
         const yearAgoVal = trendData[0]?.value ?? null;
-        const vsLastMonthStr = trendData.length >= 2 && lastMonthVal !== null
-          ? ((totalAssetEntries - lastMonthVal) >= 0 ? "+" : "") + formatCurrency(totalAssetEntries - lastMonthVal)
+        const monthChange = trendData.length >= 2 && lastMonthVal !== null
+          ? totalAssetEntries - lastMonthVal
           : null;
-        const vsYearStr = trendData.length >= 12 && yearAgoVal !== null
-          ? ((totalAssetEntries - yearAgoVal) >= 0 ? "+" : "") + formatCurrency(totalAssetEntries - yearAgoVal)
+        const yearChange = trendData.length >= 12 && yearAgoVal !== null
+          ? totalAssetEntries - yearAgoVal
           : null;
+        const yearChangePct = yearChange !== null && yearAgoVal !== null && yearAgoVal !== 0
+          ? (yearChange / Math.abs(yearAgoVal)) * 100
+          : null;
+
+        const sumAL = totalAssets + totalLiabilities;
+        const pctA = sumAL > 0 ? (totalAssets / sumAL) * 100 : 50;
+        const pctL = 100 - pctA;
+        const ratio = sumAL > 0 ? totalAssets / sumAL : 0.5;
+        // Liquid runway = cash assets / assumed monthly burn (proxy: monthly debt min payments, fallback 1)
+        const monthlyBurn = (debts as Debt[]).reduce(
+          (s, d) => s + parseFloat(d.monthlyPayment ?? "0"),
+          0,
+        );
+        const runwayMonths = monthlyBurn > 0
+          ? totalAccountBalance / monthlyBurn
+          : null;
+
+        const healthLabel = debtToAsset === null
+          ? "—"
+          : debtToAsset < 1
+            ? "Solvent"
+            : debtToAsset < 5
+              ? "Highly leveraged"
+              : "Critical";
+        const healthClass = debtToAsset === null
+          ? "bg-muted text-muted-foreground"
+          : debtToAsset < 1
+            ? "bg-emerald-100 text-emerald-700"
+            : debtToAsset < 5
+              ? "bg-amber-100 text-amber-700"
+              : "bg-rose-100 text-rose-700";
 
         return (
           <>
             {/* Hero card */}
-            <div className="grid lg:grid-cols-5 gap-4">
-              <div className="lg:col-span-3 rounded-xl border bg-card p-6">
-                <div className="flex items-start justify-between gap-6">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Today's Net Worth</p>
-                    <div className={cn("text-4xl font-extrabold tabular-nums mt-1", netWorthPositive ? "text-primary" : "text-rose-600")}>
-                      {formatCurrency(netWorth)}
-                    </div>
-                    <span className={cn("inline-flex items-center gap-1 mt-2 px-2.5 py-0.5 rounded-full text-xs font-semibold", netWorthPositive ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700")}>
-                      {netWorthPositive ? "✓ Healthy" : "⚠ Critical"}
+            <div className="rounded-xl border bg-card p-6 relative overflow-hidden">
+              <div className="absolute right-0 top-0 w-72 h-72 rounded-full bg-emerald-100/40 blur-3xl pointer-events-none" />
+              <div className="relative grid lg:grid-cols-5 gap-6 items-start">
+                {/* Left: Net worth headline + deltas */}
+                <div className="lg:col-span-2">
+                  <div className="flex items-center gap-2 mb-1">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-primary">Today's net worth</p>
+                    <span className={cn("text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full", healthClass)}>
+                      {healthLabel}
                     </span>
-                    <div className="mt-4 flex gap-6">
-                      {vsLastMonthStr && (
-                        <div>
-                          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">vs Last Month</p>
-                          <p className={cn("text-sm font-bold tabular-nums mt-0.5", (totalAssetEntries - (lastMonthVal ?? 0)) >= 0 ? "text-primary" : "text-rose-600")}>{vsLastMonthStr}</p>
+                  </div>
+                  <div className={cn("text-4xl font-extrabold tabular-nums leading-tight whitespace-nowrap", netWorthPositive ? "text-primary" : "text-rose-700")}>
+                    {netWorth < 0 ? "−" : ""}{formatCurrency(Math.abs(netWorth))}
+                  </div>
+                  <div className="grid grid-cols-2 gap-3 mt-4">
+                    <div className="bg-white/70 rounded-lg p-2.5 border">
+                      <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">vs last month</div>
+                      {monthChange !== null ? (
+                        <div className={cn("text-sm font-bold tabular-nums mt-0.5", monthChange >= 0 ? "text-emerald-700" : "text-rose-600")}>
+                          {monthChange >= 0 ? "+" : "−"}{formatCurrency(Math.abs(monthChange))}
                         </div>
+                      ) : (
+                        <div className="text-sm font-bold tabular-nums mt-0.5 text-muted-foreground">—</div>
                       )}
-                      {vsYearStr && (
-                        <div>
-                          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">vs 12 Months Ago</p>
-                          <p className={cn("text-sm font-bold tabular-nums mt-0.5", (totalAssetEntries - (yearAgoVal ?? 0)) >= 0 ? "text-primary" : "text-rose-600")}>{vsYearStr}</p>
+                    </div>
+                    <div className="bg-white/70 rounded-lg p-2.5 border">
+                      <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">vs 12 months ago</div>
+                      {yearChange !== null ? (
+                        <div className={cn("text-sm font-bold tabular-nums mt-0.5", yearChange >= 0 ? "text-emerald-700" : "text-rose-600")}>
+                          {yearChange >= 0 ? "+" : "−"}{formatCurrency(Math.abs(yearChange))}
+                          {yearChangePct !== null && (
+                            <span className="text-[10px] font-semibold text-muted-foreground ml-1">
+                              ({yearChangePct >= 0 ? "+" : ""}{yearChangePct.toFixed(1)}%)
+                            </span>
+                          )}
                         </div>
+                      ) : (
+                        <div className="text-sm font-bold tabular-nums mt-0.5 text-muted-foreground">—</div>
                       )}
                     </div>
-                    <div className="mt-4 pt-4 border-t flex gap-6 text-xs text-muted-foreground">
-                      <span>Assets: <span className="font-semibold text-foreground">{formatCurrency(totalAssets)}</span></span>
-                      <span>Liabilities: <span className="font-semibold text-foreground">{formatCurrency(totalLiabilities)}</span></span>
-                    </div>
                   </div>
+                </div>
 
-                  {/* Balance scale SVG */}
-                  <div className="flex-shrink-0 flex flex-col items-center select-none" aria-label={`Balance scale: Assets ${formatCurrency(totalAssets)}, Liabilities ${formatCurrency(totalLiabilities)}`}>
-                    <svg width="160" height="130" viewBox="0 0 160 130" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <defs>
-                        <linearGradient id="assetGrad" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#15a06e" stopOpacity="0.9" />
-                          <stop offset="100%" stopColor="#0d7a52" stopOpacity="1" />
-                        </linearGradient>
-                        <linearGradient id="liabGrad" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#ef4444" stopOpacity="0.9" />
-                          <stop offset="100%" stopColor="#dc2626" stopOpacity="1" />
-                        </linearGradient>
-                      </defs>
-                      {/* Stand */}
-                      <rect x="77" y="80" width="6" height="42" rx="3" fill="#94a3b8" />
-                      <ellipse cx="80" cy="122" rx="20" ry="5" fill="#e2e8f0" />
-                      {/* Pivot circle */}
-                      <circle cx="80" cy="80" r="5" fill="#64748b" />
-                      {/* Beam — rotates from pivot (80,80) */}
-                      <g transform={`rotate(${tiltDeg} 80 80)`}>
-                        <rect x="14" y="77" width="132" height="6" rx="3" fill="#64748b" />
-                        {/* Left string + pan (Assets) */}
-                        <line x1="22" y1="80" x2="22" y2="98" stroke="#94a3b8" strokeWidth="1.5" />
-                        <rect x="8" y="98" width="28" height="16" rx="4" fill="url(#assetGrad)" />
-                        <text x="22" y="110" textAnchor="middle" fill="white" fontSize="7" fontWeight="bold">ASSETS</text>
-                        {/* Right string + pan (Liabilities) */}
-                        <line x1="138" y1="80" x2="138" y2="98" stroke="#94a3b8" strokeWidth="1.5" />
-                        <rect x="124" y="98" width="28" height="16" rx="4" fill="url(#liabGrad)" />
-                        <text x="138" y="110" textAnchor="middle" fill="white" fontSize="6.5" fontWeight="bold">LIAB.</text>
-                      </g>
-                    </svg>
-                    <p className="text-[10px] text-muted-foreground -mt-1 font-medium">
-                      {Math.abs(tiltDeg) < 2 ? "Balanced" : netWorthPositive ? "Assets outweigh debts" : "Debts outweigh assets"}
-                    </p>
-                  </div>
-                </div>
-              </div>
+                {/* Right: Assets vs Liabilities proportion bar */}
+                <div className="lg:col-span-3">
+                  <div className="bg-white rounded-xl p-5 border shadow-sm">
+                    <div className="flex items-center justify-between mb-4">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Assets vs liabilities</p>
+                      <span className="text-[10px] text-muted-foreground">
+                        {totalLiabilities > totalAssets ? (
+                          <>Liabilities exceed assets by{" "}
+                            <span className="font-semibold text-rose-700 tabular-nums">
+                              {formatCurrency(totalLiabilities - totalAssets)}
+                            </span>
+                          </>
+                        ) : (
+                          <>Assets exceed liabilities by{" "}
+                            <span className="font-semibold text-emerald-700 tabular-nums">
+                              {formatCurrency(totalAssets - totalLiabilities)}
+                            </span>
+                          </>
+                        )}
+                      </span>
+                    </div>
 
-              {/* Metrics */}
-              <div className="lg:col-span-2 grid grid-cols-1 gap-3">
-                <div className="rounded-xl border bg-card p-4">
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Debt-to-Asset Ratio</p>
-                  <div className={cn("text-3xl font-extrabold tabular-nums mt-1", debtToAsset !== null && debtToAsset > 0.5 ? "text-rose-600" : "text-primary")}>
-                    {debtToAsset !== null ? debtToAsset.toFixed(2) : "—"}
-                  </div>
-                  <p className="text-[11px] text-muted-foreground mt-1">{debtToAsset !== null ? (debtToAsset <= 0.3 ? "Excellent — well under control" : debtToAsset <= 0.6 ? "Manageable" : "High — focus on reducing debt") : "Add assets to track"}</p>
-                  {debtToAsset !== null && (
-                    <div className="mt-2 h-1.5 rounded-full bg-accent overflow-hidden">
-                      <div className={cn("h-full rounded-full", debtToAsset <= 0.3 ? "bg-emerald-500" : debtToAsset <= 0.6 ? "bg-amber-500" : "bg-rose-500")} style={{ width: `${Math.min(debtToAsset * 100, 100)}%` }} />
+                    {/* Stat blocks */}
+                    <div className="grid grid-cols-2 gap-3 mb-3">
+                      <div className="rounded-lg border border-emerald-200 bg-gradient-to-br from-emerald-50 to-white p-3">
+                        <div className="flex items-center gap-1.5 mb-1">
+                          <span className="w-2 h-2 rounded-full bg-emerald-600" />
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700">Assets</span>
+                        </div>
+                        <div className="text-xl font-bold text-emerald-800 tabular-nums leading-tight">
+                          {formatCurrency(totalAssets)}
+                        </div>
+                        <div className="text-[10px] text-emerald-700/70 mt-0.5 tabular-nums">
+                          {formatCurrency(totalAccountBalance)} cash · {formatCurrency(totalAssetEntries)} other
+                        </div>
+                      </div>
+                      <div className="rounded-lg border border-rose-200 bg-gradient-to-br from-rose-50 to-white p-3">
+                        <div className="flex items-center gap-1.5 mb-1">
+                          <span className="w-2 h-2 rounded-full bg-rose-600" />
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-rose-700">Liabilities</span>
+                        </div>
+                        <div className="text-xl font-bold text-rose-800 tabular-nums leading-tight">
+                          {formatCurrency(totalLiabilities)}
+                        </div>
+                        <div className="text-[10px] text-rose-700/70 mt-0.5 tabular-nums">
+                          {(debts as Debt[]).length} {(debts as Debt[]).length === 1 ? "obligation" : "obligations"}
+                        </div>
+                      </div>
                     </div>
-                  )}
-                </div>
-                <div className="rounded-xl border bg-card p-4">
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Equity %</p>
-                  <div className={cn("text-3xl font-extrabold tabular-nums mt-1", equityPct !== null && equityPct < 40 ? "text-rose-600" : "text-primary")}>
-                    {equityPct !== null ? `${equityPct.toFixed(1)}%` : "—"}
-                  </div>
-                  <p className="text-[11px] text-muted-foreground mt-1">of total assets owned free of debt</p>
-                  {equityPct !== null && (
-                    <div className="mt-2 h-1.5 rounded-full bg-accent overflow-hidden">
-                      <div className="h-full rounded-full bg-primary" style={{ width: `${Math.max(0, Math.min(equityPct, 100))}%` }} />
+
+                    {/* Proportion bar with 50% equilibrium tick */}
+                    <div>
+                      <div className="flex items-center text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">
+                        <span className="text-emerald-700 tabular-nums">{pctA.toFixed(1)}%</span>
+                        <span className="flex-1 text-center">share of total</span>
+                        <span className="text-rose-700 tabular-nums">{pctL.toFixed(1)}%</span>
+                      </div>
+                      <div className="relative h-7 rounded-full overflow-hidden bg-muted ring-1 ring-inset ring-border flex shadow-inner">
+                        <div
+                          className="bg-gradient-to-r from-emerald-500 to-emerald-600 transition-all duration-700 ease-out flex items-center justify-start pl-2"
+                          style={{ width: `${pctA}%` }}
+                        >
+                          {pctA > 12 && (
+                            <span className="text-[10px] font-bold text-white tabular-nums">
+                              {formatCurrency(totalAssets)}
+                            </span>
+                          )}
+                        </div>
+                        <div
+                          className="bg-gradient-to-r from-rose-600 to-rose-500 transition-all duration-700 ease-out flex items-center justify-end pr-2"
+                          style={{ width: `${pctL}%` }}
+                        >
+                          {pctL > 12 && (
+                            <span className="text-[10px] font-bold text-white tabular-nums">
+                              {formatCurrency(totalLiabilities)}
+                            </span>
+                          )}
+                        </div>
+                        {/* Equilibrium tick at 50% */}
+                        <div className="absolute top-0 bottom-0 left-1/2 w-px bg-white/60 pointer-events-none" />
+                        <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 rotate-45 bg-foreground rounded-[1px]" />
+                      </div>
+                      <div className="flex items-center justify-center mt-1">
+                        <span className="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold">
+                          Break-even at 50%
+                        </span>
+                      </div>
                     </div>
-                  )}
-                </div>
-                <div className="rounded-xl border bg-card p-4">
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Debt Load</p>
-                  <div className={cn("text-3xl font-extrabold tabular-nums mt-1", debtLoadPct !== null && debtLoadPct > 50 ? "text-rose-600" : "text-amber-600")}>
-                    {debtLoadPct !== null ? `${debtLoadPct.toFixed(1)}%` : "—"}
-                  </div>
-                  <p className="text-[11px] text-muted-foreground mt-1">of total portfolio is liabilities</p>
-                  {debtLoadPct !== null && (
-                    <div className="mt-2 h-1.5 rounded-full bg-accent overflow-hidden">
-                      <div className={cn("h-full rounded-full", debtLoadPct <= 30 ? "bg-emerald-500" : debtLoadPct <= 50 ? "bg-amber-500" : "bg-rose-500")} style={{ width: `${debtLoadPct}%` }} />
+
+                    {/* Health stats row */}
+                    <div className="mt-4 grid grid-cols-3 gap-3 pt-3 border-t">
+                      <div>
+                        <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Debt-to-asset</div>
+                        <div className="text-sm font-bold tabular-nums mt-0.5">
+                          {debtToAsset !== null ? `${debtToAsset.toFixed(2)}×` : "—"}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Liquid runway</div>
+                        <div className="text-sm font-bold tabular-nums mt-0.5">
+                          {runwayMonths !== null ? `${runwayMonths.toFixed(1)} mo` : "—"}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Equity share</div>
+                        <div className="text-sm font-bold tabular-nums mt-0.5">
+                          {equityPct !== null ? `${(ratio * 100).toFixed(1)}%` : "—"}
+                        </div>
+                      </div>
                     </div>
-                  )}
+                  </div>
                 </div>
               </div>
             </div>

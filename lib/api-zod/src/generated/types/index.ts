@@ -66,6 +66,7 @@ export * from "./transaction";
 export * from "./updateAccountBody";
 export * from "./updateAssetBody";
 export * from "./updateAssetBodyCategory";
+export * from "./updateCategoryBody";
 export * from "./updateCommitmentBody";
 export * from "./updateDebtBody";
 export * from "./updateGoalBody";

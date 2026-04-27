@@ -160,6 +160,11 @@ export interface CreateCategoryBody {
   kind: string;
 }
 
+export interface UpdateCategoryBody {
+  name?: string;
+  kind?: string;
+}
+
 export interface Commitment {
   id: string;
   userId: string;

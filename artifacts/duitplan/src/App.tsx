@@ -19,7 +19,7 @@ import Onboarding from "@/pages/onboarding";
 import Dashboard from "@/pages/dashboard";
 import Transactions from "@/pages/transactions";
 import Budgets from "@/pages/budgets";
-import Commitments from "@/pages/commitments";
+import Categories from "@/pages/categories";
 import Debts from "@/pages/debts";
 import DebtDetail from "@/pages/debts/[id]";
 import Upload from "@/pages/upload";
@@ -83,7 +83,9 @@ function Router() {
       <ProtectedRoute path="/dashboard" component={Dashboard} />
       <ProtectedRoute path="/transactions" component={Transactions} />
       <ProtectedRoute path="/budgets" component={Budgets} />
-      <ProtectedRoute path="/commitments" component={Commitments} />
+      <ProtectedRoute path="/categories" component={Categories} />
+      {/* Commitments collapsed into Budgets per Claude Design redesign */}
+      <Route path="/commitments"><Redirect to="/budgets" /></Route>
       <ProtectedRoute path="/debts" component={Debts} />
       <ProtectedRoute path="/debts/:id" component={DebtDetail} />
       <ProtectedRoute path="/upload" component={Upload} />

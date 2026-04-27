@@ -242,6 +242,34 @@ export const CreateCategoryBody = zod.object({
 });
 
 /**
+ * @summary Rename a custom category
+ */
+export const UpdateCategoryParams = zod.object({
+  id: zod.coerce.string(),
+});
+
+export const UpdateCategoryBody = zod.object({
+  name: zod.string().optional(),
+  kind: zod.string().optional(),
+});
+
+export const UpdateCategoryResponse = zod.object({
+  id: zod.string(),
+  name: zod.string(),
+  kind: zod.string(),
+  isDefault: zod.boolean(),
+  createdAt: zod.string(),
+  updatedAt: zod.string(),
+});
+
+/**
+ * @summary Delete a custom category (defaults are protected)
+ */
+export const DeleteCategoryParams = zod.object({
+  id: zod.coerce.string(),
+});
+
+/**
  * @summary List user monthly commitments
  */
 export const ListCommitmentsResponseItem = zod.object({

@@ -3,9 +3,12 @@ import { Link, useLocation } from "wouter";
 import { useAuth } from "@/lib/auth";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
-import { Menu, X, LayoutDashboard, Receipt, PieChart, CalendarDays, Wallet, Upload, Lightbulb, Settings, Trophy, Target, TrendingUp, ScanLine, Building2, Bot, HandCoins } from "lucide-react";
+import { Menu, X, LayoutDashboard, Receipt, PieChart, Wallet, Upload, Lightbulb, Settings, Trophy, Target, TrendingUp, ScanLine, Building2, Bot, Tag } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+// Per Claude Design redesign: AI / Dashboard / Accounts / Transactions / Budgets /
+// Categories / Debts / Goals / Net Worth / Upload / Insights / Achievements / Settings.
+// Commitments collapsed into Budgets; Zakat removed (out of scope).
 const navigation = [
   { key: "duitplanAi", href: "/agent", icon: Bot },
   { key: "expenseTracker", href: "/expenses", icon: ScanLine },
@@ -13,10 +16,9 @@ const navigation = [
   { key: "accounts", href: "/accounts", icon: Building2 },
   { key: "transactions", href: "/transactions", icon: Receipt },
   { key: "budgets", href: "/budgets", icon: PieChart },
-  { key: "commitments", href: "/commitments", icon: CalendarDays },
+  { key: "categories", href: "/categories", icon: Tag },
   { key: "debts", href: "/debts", icon: Wallet },
   { key: "goals", href: "/goals", icon: Target },
-  { key: "zakat", href: "/zakat", icon: HandCoins },
   { key: "netWorth", href: "/net-worth", icon: TrendingUp },
   { key: "upload", href: "/upload", icon: Upload },
   { key: "insights", href: "/insights", icon: Lightbulb },

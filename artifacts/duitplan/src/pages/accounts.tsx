@@ -45,6 +45,7 @@ import { Building2, Plus, Pencil, Trash2, Upload, Wallet, PiggyBank, Landmark, T
 import { Link } from "wouter";
 import { cn } from "@/lib/utils";
 import { useRegion } from "@/hooks/useRegion";
+import { KpiCard } from "@/components/redesign/KpiCard";
 
 const ACCOUNT_TYPES = [
   { value: "cash", icon: Wallet, color: "bg-emerald-100 text-emerald-800" },
@@ -412,50 +413,81 @@ export default function Accounts() {
         </div>
       </div>
 
-      {/* Net Worth hero strip */}
-      <Card className="border-primary/20 bg-primary/5 overflow-hidden">
-        <CardContent className="p-6">
-          <div className="grid md:grid-cols-3 gap-6 items-center">
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-primary">Net Worth</p>
-              <div className="text-4xl font-bold text-primary mt-1 tabular-nums">{formatCurrency(netWorth)}</div>
-              <p className="text-xs text-muted-foreground mt-1.5">
-                across {accounts.length} account{accounts.length !== 1 ? "s" : ""}
-              </p>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Assets</p>
-                <div className="text-xl font-bold text-emerald-700 mt-0.5 tabular-nums">{formatCurrency(assets)}</div>
-                <p className="text-[11px] text-muted-foreground">{assetAccounts.length} accounts</p>
-              </div>
-              <div>
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Liabilities</p>
-                <div className="text-xl font-bold text-rose-600 mt-0.5 tabular-nums">{formatCurrency(liabilities)}</div>
-                <p className="text-[11px] text-muted-foreground">{accounts.length - assetAccounts.length} accounts</p>
-              </div>
-            </div>
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">Composition</p>
-              <div className="flex h-2.5 rounded-full overflow-hidden shadow-inner bg-muted">
-                {assetAccounts.map(a => {
-                  const pct = totalAssetForComposition > 0 ? (parseFloat(a.balance ?? "0") / totalAssetForComposition) * 100 : 0;
-                  const color = bankColor(a) ?? "#94a3b8";
-                  return <div key={a.id} className="h-full" style={{ width: `${pct}%`, background: color }} title={a.name} />;
-                })}
-              </div>
-              <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2">
-                {assetAccounts.map(a => (
-                  <div key={a.id} className="flex items-center gap-1.5 text-[11px]">
-                    <span className="w-2 h-2 rounded-sm" style={{ background: bankColor(a) ?? "#94a3b8" }} />
-                    <span className="text-muted-foreground">{a.bankName ?? a.name}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
+      {/* Summary strip — KpiCards aligned with Dashboard / Goals / Net Worth */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <KpiCard
+          label="Net Worth"
+          value={formatCurrency(netWorth)}
+          tone="primary"
+          hero
+          footer={
+            <p className="text-[11px] text-muted-foreground">
+              across {accounts.length} account{accounts.length !== 1 ? "s" : ""}
+            </p>
+          }
+        />
+        <KpiCard
+          label="Assets"
+          value={formatCurrency(assets)}
+          tone="emerald"
+          footer={
+            <p className="text-[11px] text-muted-foreground">
+              {assetAccounts.length} account{assetAccounts.length !== 1 ? "s" : ""}
+            </p>
+          }
+        />
+        <KpiCard
+          label="Liabilities"
+          value={formatCurrency(liabilities)}
+          tone="rose"
+          footer={
+            <p className="text-[11px] text-muted-foreground">
+              {accounts.length - assetAccounts.length} account
+              {accounts.length - assetAccounts.length !== 1 ? "s" : ""}
+            </p>
+          }
+        />
+        <div className="rounded-xl border bg-card p-4 shadow-sm">
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Composition
+          </p>
+          <div className="flex h-2.5 rounded-full overflow-hidden shadow-inner bg-muted mt-3">
+            {assetAccounts.map((a) => {
+              const pct =
+                totalAssetForComposition > 0
+                  ? (parseFloat(a.balance ?? "0") / totalAssetForComposition) * 100
+                  : 0;
+              const color = bankColor(a) ?? "#94a3b8";
+              return (
+                <div
+                  key={a.id}
+                  className="h-full"
+                  style={{ width: `${pct}%`, background: color }}
+                  title={a.name}
+                />
+              );
+            })}
           </div>
-        </CardContent>
-      </Card>
+          <div className="flex flex-wrap gap-x-2 gap-y-1 mt-2">
+            {assetAccounts.slice(0, 4).map((a) => (
+              <div key={a.id} className="flex items-center gap-1 text-[10px]">
+                <span
+                  className="w-2 h-2 rounded-sm"
+                  style={{ background: bankColor(a) ?? "#94a3b8" }}
+                />
+                <span className="text-muted-foreground truncate max-w-[90px]">
+                  {a.bankName ?? a.name}
+                </span>
+              </div>
+            ))}
+            {assetAccounts.length > 4 && (
+              <span className="text-[10px] text-muted-foreground">
+                +{assetAccounts.length - 4} more
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
 
       {/* Account cards */}
       <div>

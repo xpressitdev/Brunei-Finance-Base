@@ -6,7 +6,8 @@ import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { Link } from "wouter";
-import { ArrowDownRight, CreditCard, Activity, ArrowRight, Upload, Flame, Trophy, Landmark, ArrowUpRight } from "lucide-react";
+import { ArrowDownRight, CreditCard, Activity, ArrowRight, Upload, Flame, Trophy, Landmark, ArrowUpRight, Calendar } from "lucide-react";
+import { KpiCard } from "@/components/redesign/KpiCard";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useRegion } from "@/hooks/useRegion";
@@ -79,6 +80,7 @@ export default function Dashboard() {
     );
   }
 
+  const firstName = profile?.fullName?.trim().split(/\s+/)[0] ?? "";
   const hasTransactions = recentTransactions && recentTransactions.length > 0;
   const hasSpending = spending && spending.length > 0;
   const hasRealSpending = hasSpending && spending!.some(s => !/^uncategorized$/i.test(s.categoryName ?? "uncategorized"));
@@ -94,7 +96,7 @@ export default function Dashboard() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">{t("dashboard.overview.title")}</h1>
           <p className="text-muted-foreground">
-            Here's how your money is moving in {currentMonthName}{profile?.firstName ? `, ${profile.firstName}` : ""}.
+            Here's how your money is moving in {currentMonthName}{firstName ? `, ${firstName}` : ""}.
           </p>
         </div>
         <div className="flex gap-2">
@@ -120,7 +122,7 @@ export default function Dashboard() {
             </div>
             <div>
               <div className="text-sm font-semibold">
-                Hari Gaji is today{profile?.firstName ? `, ${profile.firstName}` : ""}.
+                Hari Gaji is today{firstName ? `, ${firstName}` : ""}.
               </div>
               <div className="text-[13px] text-muted-foreground">
                 Did you receive your {formatCurrency(parseFloat(paydayPrompt.monthlyIncome))} salary? We'll log it and deduct your auto-debits.
@@ -141,81 +143,75 @@ export default function Dashboard() {
 
       {/* 5 KPI Cards */}
       {(() => {
-        const income = parseFloat(String(summary?.monthlyIncome ?? 0));
         const remaining = parseFloat(String(summary?.remaining ?? 0));
-        const remainingPct = income > 0 ? (remaining / income) * 100 : 0;
         const remainingPositive = remaining >= 0;
+        const debtMonthly = parseFloat(String(summary?.totalDebtMonthlyPayment ?? 0));
+        const txCount = recentTransactions?.length ?? 0;
         return (
           <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-            {/* Monthly Salary */}
-            <div className="rounded-xl border bg-card p-4 shadow-sm">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                <Activity className="w-3 h-3" /> Monthly Salary
-              </p>
-              <div className="text-xl font-bold mt-1.5 tabular-nums leading-tight">{formatCurrency(summary?.monthlyIncome)}</div>
-              {summary?.actualIncomeThisMonth !== undefined && (
-                <div className="mt-1 flex items-center gap-1 text-xs text-emerald-600">
-                  <ArrowUpRight className="w-3 h-3" />
-                  <span>+{formatCurrency(summary.actualIncomeThisMonth)}</span>
-                  <span className="text-muted-foreground">received</span>
+            <KpiCard
+              label="Monthly Salary"
+              value={formatCurrency(summary?.monthlyIncome)}
+              icon={<Activity className="w-3.5 h-3.5" />}
+              delta={
+                summary?.actualIncomeThisMonth !== undefined
+                  ? `+${formatCurrency(summary.actualIncomeThisMonth)}`
+                  : undefined
+              }
+              deltaLabel="received"
+              deltaTone="up"
+            />
+            <KpiCard
+              label="Commitments"
+              value={formatCurrency(summary?.totalCommitments)}
+              icon={<Calendar className="w-3.5 h-3.5" />}
+              footer={<div className="text-[11px] text-muted-foreground">fixed</div>}
+            />
+            <KpiCard
+              label="Liabilities"
+              value={formatCurrency(summary?.totalDebtMonthlyPayment)}
+              icon={<Landmark className="w-3.5 h-3.5" />}
+              footer={
+                <div className="text-[11px] text-muted-foreground">
+                  {summary?.debtToIncomeRatio ?? 0}% of income
                 </div>
-              )}
-            </div>
-
-            {/* Commitments */}
-            <div className="rounded-xl border bg-card p-4 shadow-sm">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                <CreditCard className="w-3 h-3" /> Commitments
-              </p>
-              <div className="text-xl font-bold mt-1.5 tabular-nums leading-tight">{formatCurrency(summary?.totalCommitments)}</div>
-              <p className="text-xs text-muted-foreground mt-1">fixed</p>
-            </div>
-
-            {/* Liabilities */}
-            <div className="rounded-xl border bg-card p-4 shadow-sm">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                <Landmark className="w-3 h-3" /> Liabilities
-              </p>
-              <div className="text-xl font-bold mt-1.5 tabular-nums leading-tight">{formatCurrency(summary?.totalDebtMonthlyPayment)}</div>
-              <p className="text-xs text-muted-foreground mt-1">{summary?.debtToIncomeRatio ?? 0}% of income</p>
-            </div>
-
-            {/* This Month */}
-            <div className="rounded-xl border bg-card p-4 shadow-sm">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                <ArrowDownRight className="w-3 h-3" /> This Month
-              </p>
-              <div className="text-xl font-bold mt-1.5 tabular-nums leading-tight">{formatCurrency(summary?.totalSpent)}</div>
-              <p className="text-xs text-muted-foreground mt-1">transactions</p>
-            </div>
-
-            {/* Remaining — hero */}
-            <div className={cn(
-              "rounded-xl border p-4 shadow-sm",
-              remainingPositive ? "border-emerald-200 bg-emerald-50/60" : "border-rose-200 bg-rose-50/60"
-            )}>
-              <p className={cn("text-[10px] font-semibold uppercase tracking-wider flex items-center gap-1.5",
-                remainingPositive ? "text-primary" : "text-rose-600")}>
-                <Activity className="w-3 h-3" /> Remaining
-              </p>
-              <div className={cn("text-xl font-bold mt-1.5 tabular-nums leading-tight",
-                remainingPositive ? "text-primary" : "text-rose-600")}>
-                {formatCurrency(Math.abs(remaining))}
-              </div>
-              <div className="border-t border-black/5 mt-2 pt-2 space-y-0.5">
-                <div className="flex justify-between text-[11px] text-muted-foreground">
-                  <span>Commitments</span><span>−{formatCurrency(summary?.totalCommitments)}</span>
+              }
+            />
+            <KpiCard
+              label="This Month"
+              value={formatCurrency(summary?.totalSpent)}
+              icon={<CreditCard className="w-3.5 h-3.5" />}
+              footer={
+                <div className="text-[11px] text-muted-foreground">
+                  {txCount} {txCount === 1 ? "transaction" : "transactions"}
                 </div>
-                <div className="flex justify-between text-[11px] text-muted-foreground">
-                  <span>Spending</span><span>−{formatCurrency(summary?.totalSpent)}</span>
-                </div>
-                {(summary?.totalDebtMonthlyPayment ?? 0) > 0 && (
+              }
+            />
+            <KpiCard
+              hero
+              label="Remaining"
+              value={`${remaining < 0 ? "−" : ""}${formatCurrency(Math.abs(remaining))}`}
+              icon={<ArrowDownRight className="w-3.5 h-3.5" />}
+              tone={remainingPositive ? "primary" : "rose"}
+              footer={
+                <div className="border-t border-black/5 mt-2 pt-2 space-y-0.5">
                   <div className="flex justify-between text-[11px] text-muted-foreground">
-                    <span>Loan repayments due</span><span>−{formatCurrency(summary?.totalDebtMonthlyPayment)}</span>
+                    <span>Commitments</span>
+                    <span>−{formatCurrency(summary?.totalCommitments)}</span>
                   </div>
-                )}
-              </div>
-            </div>
+                  <div className="flex justify-between text-[11px] text-muted-foreground">
+                    <span>Spending</span>
+                    <span>−{formatCurrency(summary?.totalSpent)}</span>
+                  </div>
+                  {debtMonthly > 0 && (
+                    <div className="flex justify-between text-[11px] text-muted-foreground">
+                      <span>Loan repayments</span>
+                      <span>−{formatCurrency(summary?.totalDebtMonthlyPayment)}</span>
+                    </div>
+                  )}
+                </div>
+              }
+            />
           </div>
         );
       })()}

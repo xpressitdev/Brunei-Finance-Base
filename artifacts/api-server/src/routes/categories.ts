@@ -1,7 +1,8 @@
 import { Router, type IRouter } from "express";
+import { eq } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
 import { db, categoriesTable } from "@workspace/db";
-import { CreateCategoryBody } from "@workspace/api-zod";
+import { CreateCategoryBody, UpdateCategoryBody } from "@workspace/api-zod";
 import { requireAuth, type AuthenticatedRequest } from "../lib/auth";
 
 const router: IRouter = Router();
@@ -35,6 +36,46 @@ router.post("/categories", requireAuth, async (req: AuthenticatedRequest, res): 
     isDefault: false,
   }).returning();
   res.status(201).json(formatCategory(cat));
+});
+
+router.patch("/categories/:id", requireAuth, async (req: AuthenticatedRequest, res): Promise<void> => {
+  const parsed = UpdateCategoryBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+  const [existing] = await db.select().from(categoriesTable).where(eq(categoriesTable.id, req.params.id));
+  if (!existing) {
+    res.status(404).json({ error: "Category not found" });
+    return;
+  }
+  if (existing.isDefault) {
+    res.status(403).json({ error: "Default categories cannot be modified" });
+    return;
+  }
+  const updates: Partial<typeof categoriesTable.$inferInsert> = { updatedAt: new Date() };
+  if (parsed.data.name !== undefined) updates.name = parsed.data.name;
+  if (parsed.data.kind !== undefined) updates.kind = parsed.data.kind;
+  const [cat] = await db
+    .update(categoriesTable)
+    .set(updates)
+    .where(eq(categoriesTable.id, req.params.id))
+    .returning();
+  res.json(formatCategory(cat));
+});
+
+router.delete("/categories/:id", requireAuth, async (req: AuthenticatedRequest, res): Promise<void> => {
+  const [existing] = await db.select().from(categoriesTable).where(eq(categoriesTable.id, req.params.id));
+  if (!existing) {
+    res.status(404).json({ error: "Category not found" });
+    return;
+  }
+  if (existing.isDefault) {
+    res.status(403).json({ error: "Default categories cannot be deleted" });
+    return;
+  }
+  await db.delete(categoriesTable).where(eq(categoriesTable.id, req.params.id));
+  res.status(204).send();
 });
 
 export default router;

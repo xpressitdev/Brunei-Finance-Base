@@ -11,6 +11,10 @@ import {
   useUpdateTransaction,
   useDeleteTransaction,
   getListAccountsQueryKey,
+  getListBudgetsQueryKey,
+  getGetDashboardSummaryQueryKey,
+  getGetSpendingByCategoryQueryKey,
+  getGetRecentTransactionsQueryKey,
 } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -138,6 +142,16 @@ export default function Transactions() {
   const updateMutation = useUpdateTransaction();
   const deleteMutation = useDeleteTransaction();
 
+  // Invalidate budget/dashboard caches so envelope `spent`, dashboard KPIs and
+  // spending-by-category update live whenever a transaction is created/edited/deleted.
+  const invalidateRelated = () => {
+    queryClient.invalidateQueries({ queryKey: getListAccountsQueryKey() });
+    queryClient.invalidateQueries({ queryKey: getListBudgetsQueryKey() });
+    queryClient.invalidateQueries({ queryKey: getGetDashboardSummaryQueryKey() });
+    queryClient.invalidateQueries({ queryKey: getGetSpendingByCategoryQueryKey() });
+    queryClient.invalidateQueries({ queryKey: getGetRecentTransactionsQueryKey() });
+  };
+
   const [formData, setFormData] = useState({
     date: format(new Date(), "yyyy-MM-dd"),
     amount: "",
@@ -186,6 +200,7 @@ export default function Transactions() {
       });
       setIsAddOpen(false);
       refetch();
+      invalidateRelated();
       setFormData({
         date: format(new Date(), "yyyy-MM-dd"),
         amount: "",
@@ -219,7 +234,7 @@ export default function Transactions() {
       });
       setEditingTx(null);
       refetch();
-      queryClient.invalidateQueries({ queryKey: getListAccountsQueryKey() });
+      invalidateRelated();
     } catch (err) {
       if (isTrialExpiredError(err)) {
         setEditTrialExpiredError(true);
@@ -232,6 +247,7 @@ export default function Transactions() {
       try {
         await deleteMutation.mutateAsync({ id });
         refetch();
+        invalidateRelated();
       } catch (err) {
         if (isTrialExpiredError(err)) setLocation("/premium");
       }
@@ -649,48 +665,115 @@ export default function Transactions() {
               </Button>
             )}
           </div>
-        ) : (
-          <div className="divide-y">
-            {transactions.map(tx => (
-              <div key={tx.id} className="p-4 flex items-center justify-between hover:bg-muted/30 transition-colors">
-                <div className="flex items-start gap-4">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${tx.type === 'credit' ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-500'}`}>
-                    {tx.type === 'credit'
-                      ? <TrendingUp className="w-5 h-5" />
-                      : <TrendingDown className="w-5 h-5" />
-                    }
-                  </div>
-                  <div>
-                    <div className="font-medium text-foreground">{tx.description}</div>
-                    <div className="text-sm text-muted-foreground flex items-center gap-2 flex-wrap">
-                      {formatDate(tx.date)}
-                      <span>&bull;</span>
-                      <span className="bg-muted px-2 py-0.5 rounded-full text-xs">
-                        {tx.categoryName || t("transactions.uncategorized")}
+        ) : (() => {
+          // Group transactions by ISO day; render with sticky header per day
+          // ("Today" / "Yesterday" / "Tuesday 14 April").
+          const groups = new Map<string, typeof transactions>();
+          for (const tx of transactions) {
+            const day = (tx.date ?? "").slice(0, 10);
+            if (!groups.has(day)) groups.set(day, []);
+            groups.get(day)!.push(tx);
+          }
+          const sortedDays = Array.from(groups.keys()).sort((a, b) => (a < b ? 1 : -1));
+          const today = format(new Date(), "yyyy-MM-dd");
+          const yesterday = format(new Date(Date.now() - 86400000), "yyyy-MM-dd");
+          const dayLabel = (day: string) => {
+            if (day === today) return "Today";
+            if (day === yesterday) return "Yesterday";
+            try {
+              return format(new Date(day), "EEEE d MMMM");
+            } catch {
+              return day;
+            }
+          };
+          return (
+            <div className="divide-y">
+              {sortedDays.map((day) => {
+                const dayTxs = groups.get(day)!;
+                const dayNet = dayTxs.reduce(
+                  (s, tx) => s + (tx.type === "credit" ? 1 : -1) * Number(tx.amount),
+                  0,
+                );
+                return (
+                  <div key={day}>
+                    <div className="px-4 py-2 bg-muted/40 flex items-center justify-between sticky top-0 z-[1] border-b">
+                      <span className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground">
+                        {dayLabel(day)}
                       </span>
-                      {tx.accountName && (
-                        <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-xs">{tx.accountName}</span>
-                      )}
+                      <span
+                        className={`text-[11px] font-bold tabular-nums ${dayNet >= 0 ? "text-emerald-700" : "text-rose-600"}`}
+                      >
+                        {dayNet >= 0 ? "+" : "−"}
+                        {formatCurrency(Math.abs(dayNet))}
+                      </span>
+                    </div>
+                    <div className="divide-y">
+                      {dayTxs.map((tx) => (
+                        <div
+                          key={tx.id}
+                          className="p-4 flex items-center justify-between hover:bg-muted/30 transition-colors"
+                        >
+                          <div className="flex items-start gap-4">
+                            <div
+                              className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${tx.type === "credit" ? "bg-emerald-100 text-emerald-600" : "bg-red-100 text-red-500"}`}
+                            >
+                              {tx.type === "credit" ? (
+                                <TrendingUp className="w-5 h-5" />
+                              ) : (
+                                <TrendingDown className="w-5 h-5" />
+                              )}
+                            </div>
+                            <div>
+                              <div className="font-medium text-foreground">{tx.description}</div>
+                              <div className="text-sm text-muted-foreground flex items-center gap-2 flex-wrap mt-0.5">
+                                {formatDate(tx.date)}
+                                <span>&bull;</span>
+                                <span className="bg-sky-50 text-sky-700 px-2 py-0.5 rounded-full text-[11px] font-bold">
+                                  {tx.categoryName || t("transactions.uncategorized")}
+                                </span>
+                                {tx.accountName && (
+                                  <span className="bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full text-[11px] font-bold">
+                                    {tx.accountName}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <div
+                              className={`font-semibold tabular-nums ${tx.type === "credit" ? "text-emerald-600" : "text-red-500"}`}
+                            >
+                              {tx.type === "credit" ? "+" : "−"}
+                              {formatCurrency(Number(tx.amount))}
+                            </div>
+                            <div className="flex gap-1">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                                onClick={() => openEdit(tx)}
+                              >
+                                <Pencil className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                                onClick={() => handleDelete(tx.id)}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
-                </div>
-                <div className="flex items-center gap-4">
-                  <div className={`font-semibold ${tx.type === 'credit' ? 'text-emerald-600' : 'text-red-500'}`}>
-                    {tx.type === 'credit' ? '+' : '−'}{formatCurrency(Number(tx.amount))}
-                  </div>
-                  <div className="flex gap-1">
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => openEdit(tx)}>
-                      <Pencil className="w-4 h-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => handleDelete(tx.id)}>
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+                );
+              })}
+            </div>
+          );
+        })()}
       </div>
     </div>
   );

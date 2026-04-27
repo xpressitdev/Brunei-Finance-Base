@@ -51,6 +51,9 @@ import {
 import { cn } from "@/lib/utils";
 import { TrialExpiredPrompt } from "@/components/subscription/TrialExpiredPrompt";
 import { isTrialExpiredError } from "@/lib/trialExpired";
+import { MoneyBag } from "@/components/redesign/MoneyBag";
+import { MinPaymentBar } from "@/components/redesign/MinPaymentBar";
+import { fmtBND } from "@/lib/format";
 
 function fmt(n: number) {
   return "BND " + n.toLocaleString("en-BN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -109,6 +112,118 @@ function MoneyChip({ amount, disabled, onDragStart, onDragEnd }: {
       )}
     >
       BND {amount}
+    </div>
+  );
+}
+
+function CollapsibleColumn({
+  title,
+  subtitle,
+  illoSrc,
+  iconBg,
+  count,
+  total,
+  children,
+}: {
+  title: string;
+  subtitle: string;
+  illoSrc: string;
+  iconBg: string;
+  count?: number;
+  total?: number;
+  children: React.ReactNode;
+}) {
+  const storageKey = `duitplan-budget-col-collapsed:${title}`;
+  const [collapsed, setCollapsed] = useState(() => {
+    try { return localStorage.getItem(storageKey) === "1"; } catch { return false; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem(storageKey, collapsed ? "1" : "0"); } catch { /* noop */ }
+  }, [collapsed, storageKey]);
+
+  return (
+    <section className="space-y-3">
+      <button
+        type="button"
+        onClick={() => setCollapsed(c => !c)}
+        aria-expanded={!collapsed}
+        className="w-full flex items-center gap-3 px-1 group text-left"
+      >
+        <div className={cn("w-9 h-9 rounded-lg flex items-center justify-center shrink-0", iconBg)}>
+          <img src={illoSrc} className="w-7 h-7 object-contain" alt="" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <h3 className="text-base font-semibold tracking-tight truncate">{title}</h3>
+            {typeof count === "number" && (
+              <span className="text-[10px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded bg-muted text-muted-foreground tabular-nums">
+                {count}
+              </span>
+            )}
+          </div>
+          <p className="text-xs text-muted-foreground truncate">
+            {collapsed && typeof total === "number"
+              ? <>{fmt(total)} allocated · click to expand</>
+              : subtitle}
+          </p>
+        </div>
+        <div className={cn(
+          "w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground group-hover:bg-accent/50 transition-transform",
+          !collapsed && "rotate-180"
+        )}>
+          <ChevronDown className="w-4 h-4" />
+        </div>
+      </button>
+      {!collapsed && <div className="space-y-2 animate-in fade-in duration-200">{children}</div>}
+    </section>
+  );
+}
+
+function CustomMoneyChip({ available, value, onChange, onDragStart, onDragEnd }: {
+  available: number;
+  value: string;
+  onChange: (v: string) => void;
+  onDragStart: (amount: number, e: React.DragEvent) => void;
+  onDragEnd: () => void;
+}) {
+  const num = Number(value);
+  const valid = Number.isFinite(num) && num > 0;
+  const tooMuch = valid && num > available;
+  const disabled = !valid || tooMuch;
+
+  return (
+    <div
+      draggable={!disabled}
+      onDragStart={disabled ? undefined : (e) => onDragStart(num, e)}
+      onDragEnd={onDragEnd}
+      title={tooMuch ? `Only BND ${available.toFixed(2)} left in the bag` : valid ? `Drag BND ${num} onto a bucket` : "Type any amount, then drag"}
+      className={cn(
+        "flex items-center gap-1 select-none rounded-md border px-2 py-1.5 transition-all",
+        disabled
+          ? tooMuch
+            ? "border-rose-200 bg-rose-50/60 text-rose-700 cursor-not-allowed"
+            : "border-dashed border-emerald-300 bg-white/60 text-emerald-700/80 cursor-text"
+          : "border-emerald-300 bg-emerald-100 text-emerald-900 cursor-grab active:cursor-grabbing shadow-sm hover:-translate-y-0.5"
+      )}
+    >
+      <span className="text-[11px] font-bold tracking-wide shrink-0">BND</span>
+      <input
+        type="number"
+        inputMode="decimal"
+        min="0"
+        step="0.01"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        onClick={(e) => e.stopPropagation()}
+        onMouseDown={(e) => e.stopPropagation()}
+        placeholder="custom"
+        draggable={false}
+        onDragStart={(e) => e.stopPropagation()}
+        className="w-16 bg-transparent outline-none text-sm font-bold tabular-nums placeholder:text-emerald-700/40 placeholder:font-medium"
+      />
+      {valid && !tooMuch && (
+        <span className="text-[10px] font-semibold uppercase tracking-wider opacity-60 shrink-0">drag →</span>
+      )}
     </div>
   );
 }
@@ -202,13 +317,33 @@ function BucketRow({
             )}
           </div>
 
-          <div className="h-1.5 rounded-full bg-muted mt-2 overflow-hidden">
-            <div className={cn("h-full rounded-full transition-all", fillColor)} style={{ width: `${pct}%` }} />
-          </div>
-          {isEnv && (bucket.spent ?? 0) > 0 && (
-            <p className="text-[10px] text-muted-foreground mt-1 tabular-nums">
-              {fmt(bucket.spent ?? 0)} spent of {fmt(bucket.allocated)} allocated
-            </p>
+          {isLoan ? (
+            <>
+              <MinPaymentBar paid={bucket.allocated} minimum={bucket.target ?? 0} className="mt-2" />
+              <div className="text-[10px] text-muted-foreground mt-1 tabular-nums flex items-center justify-between gap-2">
+                <span>min {fmt(bucket.target ?? 0)}/mo · paying {fmt(bucket.allocated)}</span>
+                {bucket.target !== undefined && bucket.allocated > bucket.target ? (
+                  <span className="text-emerald-700 font-semibold">
+                    −{Math.max(1, Math.round((bucket.allocated - bucket.target) / 50))} mo on tail
+                  </span>
+                ) : (
+                  <span>add to shorten loan</span>
+                )}
+              </div>
+            </>
+          ) : (
+            <>
+              <div className={cn("h-1.5 rounded-full mt-2 overflow-hidden", overspent ? "bg-rose-100" : "bg-muted")}>
+                <div className={cn("h-full rounded-full transition-all", fillColor)} style={{ width: `${pct}%` }} />
+              </div>
+              {isEnv && (bucket.spent ?? 0) > 0 && (
+                <p className={cn("text-[10px] mt-1 tabular-nums", overspent ? "text-rose-600 font-semibold" : "text-muted-foreground")}>
+                  {overspent
+                    ? `${fmt((bucket.spent ?? 0) - bucket.allocated)} over · envelope empty`
+                    : `${fmt(bucket.spent ?? 0)} spent of ${fmt(bucket.allocated)} allocated`}
+                </p>
+              )}
+            </>
           )}
 
           {/* Slider for vault/loan rows; direct input for variable envelopes */}
@@ -386,6 +521,8 @@ function AllocateView({
   const [overTarget, setOverTarget] = useState<string | null>(null);
   const [pulse, setPulse] = useState<string | null>(null);
   const [vaultUnlock, setVaultUnlock] = useState<{ fromId: string; toId: string; amount: number } | null>(null);
+  const [customAmount, setCustomAmount] = useState<string>("");
+  const [bagOver, setBagOver] = useState(false);
 
   // Re-sync when underlying data changes (month switch, etc) or reset is triggered
   useEffect(() => { setBuckets(initialBuckets); }, [initialBuckets, resetSignal]);
@@ -477,9 +614,30 @@ function AllocateView({
   const confirmVaultUnlock = (_reason: string) => {
     if (!vaultUnlock) return;
     updateBucket(vaultUnlock.fromId, -vaultUnlock.amount);
-    updateBucket(vaultUnlock.toId,    vaultUnlock.amount);
+    if (vaultUnlock.toId !== "__BAG__") {
+      updateBucket(vaultUnlock.toId, vaultUnlock.amount);
+    }
     // TODO: POST reason to /api/vault-unlocks for audit log when endpoint exists
     setVaultUnlock(null);
+  };
+
+  const onBagDragOver = (e: React.DragEvent) => {
+    if (!dragging?.fromId) return;
+    e.preventDefault();
+    setBagOver(true);
+  };
+
+  const onBagDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setBagOver(false);
+    if (!dragging?.fromId) return;
+    if (dragging.fromId.startsWith("V:")) {
+      setVaultUnlock({ fromId: dragging.fromId, toId: "__BAG__", amount: dragging.amount });
+      setDragging(null);
+      return;
+    }
+    updateBucket(dragging.fromId, -dragging.amount);
+    setDragging(null);
   };
 
   const reset = () => setBuckets(initialBuckets);
@@ -492,20 +650,20 @@ function AllocateView({
 
   return (
     <div className="space-y-5">
-      {/* Available strip */}
+      {/* Available strip with MoneyBag */}
       <div className={cn(
         "rounded-xl p-5 border-2",
         available < 0 ? "bg-red-50 border-red-300" : "bg-primary/5 border-primary/30"
       )}>
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          <div className="flex-1">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+          <div className="flex-1 min-w-0">
             <span className={cn(
               "text-xs font-semibold uppercase tracking-wider",
               available < 0 ? "text-red-700" : "text-primary"
             )}>
               Available to allocate
             </span>
-            <div className="flex items-baseline gap-3 mt-1">
+            <div className="flex items-baseline gap-3 mt-1 flex-wrap">
               <span className={cn(
                 "text-4xl font-bold tabular-nums",
                 available < 0 ? "text-red-700" : "text-primary"
@@ -525,6 +683,18 @@ function AllocateView({
             </p>
           </div>
 
+          {/* Drop-back money bag */}
+          <div className="shrink-0">
+            <MoneyBag
+              available={available}
+              total={totalIncome}
+              isOver={bagOver}
+              onDragOver={onBagDragOver}
+              onDragLeave={() => setBagOver(false)}
+              onDrop={onBagDrop}
+            />
+          </div>
+
           <div className="flex flex-col gap-2 max-w-md">
             <span className="text-xs text-muted-foreground font-medium">Drag a chip onto any bucket below ↓</span>
             <div className="flex flex-wrap gap-2">
@@ -537,6 +707,16 @@ function AllocateView({
                   onDragEnd={() => setDragging(null)}
                 />
               ))}
+              <CustomMoneyChip
+                available={available}
+                value={customAmount}
+                onChange={setCustomAmount}
+                onDragStart={(amt, e) => {
+                  setDragging({ amount: amt });
+                  e.dataTransfer.effectAllowed = "move";
+                }}
+                onDragEnd={() => setDragging(null)}
+              />
             </div>
             <div className="flex items-center gap-2 mt-1">
               <Button variant="ghost" size="sm" onClick={reset} className="text-xs gap-1">
@@ -567,49 +747,41 @@ function AllocateView({
       <div className={cn("grid gap-5", loanBuckets.length > 0 ? "lg:grid-cols-3" : "lg:grid-cols-2")}>
         {/* Bank / loans — only shown when debts exist */}
         {loanBuckets.length > 0 && (
-        <section className="space-y-3">
-          <div className="flex items-center gap-3 px-1">
-            <div className="w-9 h-9 rounded-lg bg-rose-50 flex items-center justify-center">
-              <img src="/illustration-bank.png" className="w-7 h-7 object-contain" alt="" />
-            </div>
-            <div>
-              <h3 className="text-base font-semibold tracking-tight">Bank</h3>
-              <p className="text-xs text-muted-foreground">Loan repayments — auto on Hari Gaji</p>
-            </div>
-          </div>
-          <div className="space-y-2">
-            {loanBuckets.map(b => (
-              <BucketRow
-                key={b.id}
-                bucket={b}
-                isOver={overTarget === b.id}
-                pulse={pulse === b.id}
-                onDragOver={onBucketDragOver(b.id)}
-                onDragLeave={() => setOverTarget(null)}
-                onDrop={onBucketDrop(b.id)}
-                onSlider={(v) => setBucket(b.id, v)}
-                onPullChip={onPullChipFromBucket(b.id)}
-              />
-            ))}
-          </div>
-        </section>
+        <CollapsibleColumn
+          title="Bank"
+          subtitle="Loan repayments — auto on Hari Gaji"
+          illoSrc="/illustration-bank.png"
+          iconBg="bg-rose-50"
+          count={loanBuckets.length}
+          total={loanBuckets.reduce((s, b) => s + b.allocated, 0)}
+        >
+          {loanBuckets.map(b => (
+            <BucketRow
+              key={b.id}
+              bucket={b}
+              isOver={overTarget === b.id}
+              pulse={pulse === b.id}
+              onDragOver={onBucketDragOver(b.id)}
+              onDragLeave={() => setOverTarget(null)}
+              onDrop={onBucketDrop(b.id)}
+              onSlider={(v) => setBucket(b.id, v)}
+              onPullChip={onPullChipFromBucket(b.id)}
+            />
+          ))}
+        </CollapsibleColumn>
         )}
 
         {/* Expenses (Fixed + Variable) */}
-        <section className="space-y-3">
-          <div className="flex items-center gap-3 px-1">
-            <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
-              <img src="/illustration-payslip.png" className="w-7 h-7 object-contain" alt="" />
-            </div>
-            <div>
-              <h3 className="text-base font-semibold tracking-tight">Expenses</h3>
-              <p className="text-xs text-muted-foreground">Fixed commitments &amp; variable spending</p>
-            </div>
-          </div>
-
-          {/* Fixed sub-section */}
+        <CollapsibleColumn
+          title="Expenses"
+          subtitle="Fixed commitments & variable spending"
+          illoSrc="/illustration-payslip.png"
+          iconBg="bg-primary/10"
+          count={envBuckets.length}
+          total={envBuckets.reduce((s, b) => s + b.allocated, 0)}
+        >
           {fixedEnvBuckets.length > 0 && (
-            <div className="space-y-2">
+            <>
               <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground px-1">Fixed</p>
               {fixedEnvBuckets.map(b => (
                 <BucketRow
@@ -624,67 +796,59 @@ function AllocateView({
                   onPullChip={onPullChipFromBucket(b.id)}
                 />
               ))}
+            </>
+          )}
+          {fixedEnvBuckets.length > 0 && (
+            <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground px-1">Variable</p>
+          )}
+          {variableEnvBuckets.length === 0 && (
+            <div className="rounded-xl border border-dashed p-4 text-center text-xs text-muted-foreground">
+              No variable expense categories yet.
             </div>
           )}
-
-          {/* Variable sub-section */}
-          <div className="space-y-2">
-            {fixedEnvBuckets.length > 0 && (
-              <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground px-1">Variable</p>
-            )}
-            {variableEnvBuckets.length === 0 && (
-              <div className="rounded-xl border border-dashed p-4 text-center text-xs text-muted-foreground">
-                No variable expense categories yet.
-              </div>
-            )}
-            {variableEnvBuckets.map(b => (
-              <BucketRow
-                key={b.id}
-                bucket={b}
-                isOver={overTarget === b.id}
-                pulse={pulse === b.id}
-                onDragOver={onBucketDragOver(b.id)}
-                onDragLeave={() => setOverTarget(null)}
-                onDrop={onBucketDrop(b.id)}
-                onSlider={(v) => setBucket(b.id, v)}
-                onPullChip={onPullChipFromBucket(b.id)}
-              />
-            ))}
-          </div>
-        </section>
+          {variableEnvBuckets.map(b => (
+            <BucketRow
+              key={b.id}
+              bucket={b}
+              isOver={overTarget === b.id}
+              pulse={pulse === b.id}
+              onDragOver={onBucketDragOver(b.id)}
+              onDragLeave={() => setOverTarget(null)}
+              onDrop={onBucketDrop(b.id)}
+              onSlider={(v) => setBucket(b.id, v)}
+              onPullChip={onPullChipFromBucket(b.id)}
+            />
+          ))}
+        </CollapsibleColumn>
 
         {/* Vault */}
-        <section className="space-y-3">
-          <div className="flex items-center gap-3 px-1">
-            <div className="w-9 h-9 rounded-lg bg-amber-50 flex items-center justify-center">
-              <img src="/illustration-vault.png" className="w-7 h-7 object-contain" alt="" />
+        <CollapsibleColumn
+          title="Vault"
+          subtitle="Long-term goals — friction-locked"
+          illoSrc="/illustration-vault.png"
+          iconBg="bg-amber-50"
+          count={vaultBuckets.length}
+          total={vaultBuckets.reduce((s, b) => s + b.allocated, 0)}
+        >
+          {vaultBuckets.length === 0 && (
+            <div className="rounded-xl border border-dashed p-6 text-center text-xs text-muted-foreground">
+              No vault categories yet. Add an expense category named "Savings" or wire up /goals.
             </div>
-            <div>
-              <h3 className="text-base font-semibold tracking-tight">Vault</h3>
-              <p className="text-xs text-muted-foreground">Long-term goals — friction-locked</p>
-            </div>
-          </div>
-          <div className="space-y-2">
-            {vaultBuckets.length === 0 && (
-              <div className="rounded-xl border border-dashed p-6 text-center text-xs text-muted-foreground">
-                No vault categories yet. Add an expense category named "Savings" or wire up /goals.
-              </div>
-            )}
-            {vaultBuckets.map(b => (
-              <BucketRow
-                key={b.id}
-                bucket={b}
-                isOver={overTarget === b.id}
-                pulse={pulse === b.id}
-                onDragOver={onBucketDragOver(b.id)}
-                onDragLeave={() => setOverTarget(null)}
-                onDrop={onBucketDrop(b.id)}
-                onSlider={(v) => setBucket(b.id, v)}
-                onPullChip={onPullChipFromBucket(b.id)}
-              />
-            ))}
-          </div>
-        </section>
+          )}
+          {vaultBuckets.map(b => (
+            <BucketRow
+              key={b.id}
+              bucket={b}
+              isOver={overTarget === b.id}
+              pulse={pulse === b.id}
+              onDragOver={onBucketDragOver(b.id)}
+              onDragLeave={() => setOverTarget(null)}
+              onDrop={onBucketDrop(b.id)}
+              onSlider={(v) => setBucket(b.id, v)}
+              onPullChip={onPullChipFromBucket(b.id)}
+            />
+          ))}
+        </CollapsibleColumn>
       </div>
 
       {vaultUnlock && (
