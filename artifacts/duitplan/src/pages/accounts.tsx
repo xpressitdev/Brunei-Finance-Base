@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useListAccounts, useCreateAccount, useUpdateAccount, useDeleteAccount, useGetAccountBalanceHistory, useListAssets, useListDebts } from "@workspace/api-client-react";
-import type { Account } from "@workspace/api-client-react";
+import { useListAccounts, useCreateAccount, useUpdateAccount, useDeleteAccount, useGetAccountBalanceHistory, useListAssets, useListDebts, useListTransactions } from "@workspace/api-client-react";
+import type { Account, Transaction } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -41,7 +41,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { Building2, Plus, Pencil, Trash2, Upload, Wallet, PiggyBank, Landmark, TrendingUp, Lock, BarChart2 } from "lucide-react";
+import { Building2, Plus, Pencil, Trash2, Upload, Wallet, PiggyBank, Landmark, TrendingUp, Lock } from "lucide-react";
 import { Link } from "wouter";
 import { cn } from "@/lib/utils";
 import { useRegion } from "@/hooks/useRegion";
@@ -66,9 +66,10 @@ const BANKS = [
 ];
 
 const PERIOD_OPTIONS = [
-  { value: 7 },
-  { value: 30 },
-  { value: 90 },
+  { value: 30, label: "1M" },
+  { value: 90, label: "3M" },
+  { value: 180, label: "6M" },
+  { value: 365, label: "1Y" },
 ];
 
 function getTypeInfo(type: string) {
@@ -223,7 +224,7 @@ function BalanceHistoryChart({ account }: { account: Account }) {
               className="h-7 px-2.5 text-xs"
               onClick={() => setDays(opt.value)}
             >
-              {t(`accounts.periods.${opt.value}`)}
+              {opt.label}
             </Button>
           ))}
         </div>
@@ -300,6 +301,178 @@ function currentMonth() {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
 
+// Per-account detail card shown below the grid when a card is selected.
+function AccountDetail({
+  account,
+  onEdit,
+}: {
+  account: Account;
+  onEdit: () => void;
+}) {
+  const { t } = useTranslation();
+  const { formatCurrency, region } = useRegion();
+  const { data: txs = [] } = useListTransactions({ accountId: account.id });
+
+  const typeInfo = getTypeInfo(account.type);
+  const Icon = typeInfo.icon;
+  const isCredit = account.type === "credit";
+  const bal = parseFloat(account.balance ?? "0");
+
+  const since30 = Date.now() - 30 * 86400_000;
+  const recent30: Transaction[] = txs.filter(
+    (tx) => new Date(tx.date).getTime() >= since30,
+  );
+  const net30 = recent30.reduce((s, tx) => {
+    const amt = parseFloat(tx.amount ?? "0");
+    return s + (tx.type === "credit" ? amt : -amt);
+  }, 0);
+  const lastTxDate = txs.length > 0
+    ? txs.reduce((a, b) => (a.date > b.date ? a : b)).date
+    : null;
+  const recentList = [...txs]
+    .sort((a, b) => (a.date > b.date ? -1 : 1))
+    .slice(0, 5);
+
+  function fmtShortDate(d: string) {
+    return new Date(d + (d.length === 10 ? "T00:00:00" : "")).toLocaleDateString(
+      region.locale,
+      { day: "numeric", month: "short" },
+    );
+  }
+
+  function StatBox({
+    label,
+    value,
+    tone,
+  }: {
+    label: string;
+    value: string;
+    tone?: "default" | "rose" | "emerald";
+  }) {
+    const valueClr =
+      tone === "rose"
+        ? "text-rose-700"
+        : tone === "emerald"
+          ? "text-emerald-700"
+          : "text-foreground";
+    return (
+      <div className="rounded-xl border bg-muted/30 p-3">
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          {label}
+        </p>
+        <p className={cn("mt-1 text-lg font-bold tabular-nums", valueClr)}>
+          {value}
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-2xl border bg-card p-5 shadow-sm space-y-5 animate-in fade-in duration-300">
+      {/* Header */}
+      <div className="flex items-start justify-between gap-3 flex-wrap">
+        <div className="flex items-start gap-3 min-w-0">
+          <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+            <Icon className="w-5 h-5" />
+          </div>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="text-base font-semibold truncate">{account.name}</h3>
+              <Badge variant="secondary" className="text-[10px]">
+                {t(`accounts.types.${account.type}`)}
+              </Badge>
+            </div>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {account.bankName ?? "—"} · {recent30.length} transaction
+              {recent30.length !== 1 ? "s" : ""} in last 30 days
+            </p>
+          </div>
+        </div>
+        <Button variant="outline" size="sm" className="gap-1.5" onClick={onEdit}>
+          <Pencil className="w-3.5 h-3.5" /> Edit
+        </Button>
+      </div>
+
+      {/* Stat strip — uses only fields available in the schema. */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <StatBox
+          label={isCredit ? "Outstanding" : "Balance"}
+          value={formatCurrency(Math.abs(bal))}
+          tone={isCredit ? "rose" : "default"}
+        />
+        <StatBox
+          label="Net (30 days)"
+          value={`${net30 < 0 ? "−" : ""}${formatCurrency(Math.abs(net30))}`}
+          tone={net30 >= 0 ? "emerald" : "rose"}
+        />
+        <StatBox
+          label="Last activity"
+          value={lastTxDate ? fmtShortDate(lastTxDate) : "—"}
+        />
+        <StatBox label="Transactions (30d)" value={String(recent30.length)} />
+      </div>
+
+      {/* Balance history */}
+      <div className="rounded-xl border bg-background p-4">
+        <BalanceHistoryChart account={account} />
+      </div>
+
+      {/* Recent activity */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Recent activity
+          </p>
+          <Link
+            href="/transactions"
+            className="text-xs text-primary hover:underline"
+          >
+            View all →
+          </Link>
+        </div>
+        {recentList.length === 0 ? (
+          <p className="text-sm text-muted-foreground py-6 text-center">
+            No transactions yet for this account.
+          </p>
+        ) : (
+          <ul className="divide-y">
+            {recentList.map((tx) => {
+              const amt = parseFloat(tx.amount ?? "0");
+              const isCredit = tx.type === "credit";
+              return (
+                <li key={tx.id} className="flex items-center justify-between py-2.5">
+                  <div className="min-w-0 flex-1 pr-3">
+                    <p className="text-sm font-medium truncate">
+                      {tx.description}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5 flex items-center gap-2 flex-wrap">
+                      <span className="tabular-nums">{fmtShortDate(tx.date)}</span>
+                      {tx.categoryName && (
+                        <span className="inline-flex items-center rounded-full border px-1.5 py-0.5 text-[10px] font-medium bg-muted/50">
+                          {tx.categoryName}
+                        </span>
+                      )}
+                    </p>
+                  </div>
+                  <span
+                    className={cn(
+                      "text-sm font-semibold tabular-nums shrink-0",
+                      isCredit ? "text-emerald-700" : "text-rose-700",
+                    )}
+                  >
+                    {isCredit ? "+" : "−"}
+                    {formatCurrency(Math.abs(amt))}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function Accounts() {
   const { t } = useTranslation();
   const qc = useQueryClient();
@@ -315,8 +488,22 @@ export default function Accounts() {
   const [addOpen, setAddOpen] = useState(false);
   const [editAccount, setEditAccount] = useState<Account | null>(null);
   const [deleteAccount, setDeleteAccount] = useState<Account | null>(null);
-  const [historyAccount, setHistoryAccount] = useState<Account | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+
+  // Auto-select the first account once loaded so the detail panel never
+  // appears empty. If the selection is deleted, fall back to the first one.
+  useEffect(() => {
+    if (accounts.length === 0) {
+      if (selectedId !== null) setSelectedId(null);
+      return;
+    }
+    if (!selectedId || !accounts.some((a) => a.id === selectedId)) {
+      setSelectedId(accounts[0].id);
+    }
+  }, [accounts, selectedId]);
+
+  const selectedAccount = accounts.find((a) => a.id === selectedId) ?? null;
 
   const invalidate = () => qc.invalidateQueries({ queryKey: ["/api/accounts"] });
 
@@ -528,12 +715,24 @@ export default function Accounts() {
               const bal        = parseFloat(account.balance ?? "0");
               const utilPct    = 0; // creditLimit not tracked in schema yet
 
+              const isSelected = selectedId === account.id;
               return (
                 <div
                   key={account.id}
+                  role="button"
+                  tabIndex={0}
+                  aria-pressed={isSelected}
+                  onClick={() => setSelectedId(account.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      setSelectedId(account.id);
+                    }
+                  }}
                   className={cn(
-                    "relative rounded-2xl overflow-hidden p-5 shadow-sm group",
+                    "relative rounded-2xl overflow-hidden p-5 shadow-sm group cursor-pointer",
                     "transition-all hover:shadow-md",
+                    isSelected && "ring-2 ring-primary ring-offset-2 ring-offset-background shadow-lg",
                   )}
                   style={{
                     background: isCash
@@ -585,23 +784,19 @@ export default function Accounts() {
                   </div>
 
                   {/* Hover action row */}
-                  <div className="absolute inset-x-0 bottom-0 flex items-center justify-end gap-1 p-2 opacity-0 group-hover:opacity-100 transition-opacity bg-black/10 rounded-b-2xl">
+                  <div
+                    className="absolute inset-x-0 bottom-0 flex items-center justify-end gap-1 p-2 opacity-0 group-hover:opacity-100 transition-opacity bg-black/10 rounded-b-2xl"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <button
                       className="h-7 w-7 rounded flex items-center justify-center text-white/80 hover:text-white hover:bg-white/20"
-                      title="Balance history"
-                      onClick={() => setHistoryAccount(account)}
-                    >
-                      <BarChart2 className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      className="h-7 w-7 rounded flex items-center justify-center text-white/80 hover:text-white hover:bg-white/20"
-                      onClick={() => setEditAccount(account)}
+                      onClick={(e) => { e.stopPropagation(); setEditAccount(account); }}
                     >
                       <Pencil className="w-3.5 h-3.5" />
                     </button>
                     <button
                       className="h-7 w-7 rounded flex items-center justify-center text-white/80 hover:text-rose-300 hover:bg-white/20"
-                      onClick={() => setDeleteAccount(account)}
+                      onClick={(e) => { e.stopPropagation(); setDeleteAccount(account); }}
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -626,18 +821,14 @@ export default function Accounts() {
         )}
       </div>
 
-      {/* Balance history dialog */}
-      <Dialog open={!!historyAccount} onOpenChange={open => { if (!open) setHistoryAccount(null); }}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <BarChart2 className="w-4 h-4 text-primary" />
-              {t("accounts.history.dialogTitle", { name: historyAccount?.name })}
-            </DialogTitle>
-          </DialogHeader>
-          {historyAccount && <BalanceHistoryChart account={historyAccount} />}
-        </DialogContent>
-      </Dialog>
+      {/* Inline detail for the selected account */}
+      {selectedAccount && (
+        <AccountDetail
+          key={selectedAccount.id}
+          account={selectedAccount}
+          onEdit={() => setEditAccount(selectedAccount)}
+        />
+      )}
 
       {/* Add account dialog */}
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
