@@ -9,6 +9,11 @@
 export interface CreateCategoryBody {
   name: string;
   kind: string;
-  /** BND/month suggested target shown on the envelope bar. Defaults to "0". */
+  /**
+   * BND/month suggested target shown on the envelope bar. Stringified
+non-negative decimal with up to 2 fractional digits. Defaults to "0".
+
+   * @pattern ^\d+(\.\d{1,2})?$
+   */
   defaultBudget?: string;
 }

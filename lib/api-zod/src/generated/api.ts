@@ -223,6 +223,10 @@ export const DeleteAccountParams = zod.object({
 /**
  * @summary List all categories
  */
+export const listCategoriesResponseDefaultBudgetRegExp = new RegExp(
+  "^\\d+(\\.\\d{1,2})?$",
+);
+
 export const ListCategoriesResponseItem = zod.object({
   id: zod.string(),
   name: zod.string(),
@@ -230,7 +234,10 @@ export const ListCategoriesResponseItem = zod.object({
   isDefault: zod.boolean(),
   defaultBudget: zod
     .string()
-    .describe("BND\/month suggested target shown on the envelope bar."),
+    .regex(listCategoriesResponseDefaultBudgetRegExp)
+    .describe(
+      'BND\/month suggested target shown on the envelope bar. Stringified\nnon-negative decimal with up to 2 fractional digits (matches the\npg numeric(12,2) backing column). Example: \"150.00\".\n',
+    ),
   createdAt: zod.string(),
   updatedAt: zod.string(),
 });
@@ -239,14 +246,19 @@ export const ListCategoriesResponse = zod.array(ListCategoriesResponseItem);
 /**
  * @summary Create a custom category
  */
+export const createCategoryBodyDefaultBudgetRegExp = new RegExp(
+  "^\\d+(\\.\\d{1,2})?$",
+);
+
 export const CreateCategoryBody = zod.object({
   name: zod.string(),
   kind: zod.string(),
   defaultBudget: zod
     .string()
+    .regex(createCategoryBodyDefaultBudgetRegExp)
     .optional()
     .describe(
-      'BND\/month suggested target shown on the envelope bar. Defaults to \"0\".',
+      'BND\/month suggested target shown on the envelope bar. Stringified\nnon-negative decimal with up to 2 fractional digits. Defaults to \"0\".\n',
     ),
 });
 
@@ -257,14 +269,25 @@ export const UpdateCategoryParams = zod.object({
   id: zod.coerce.string(),
 });
 
+export const updateCategoryBodyDefaultBudgetRegExp = new RegExp(
+  "^\\d+(\\.\\d{1,2})?$",
+);
+
 export const UpdateCategoryBody = zod.object({
   name: zod.string().optional(),
   kind: zod.string().optional(),
   defaultBudget: zod
     .string()
+    .regex(updateCategoryBodyDefaultBudgetRegExp)
     .optional()
-    .describe("BND\/month suggested target shown on the envelope bar."),
+    .describe(
+      "BND\/month suggested target shown on the envelope bar. Stringified\nnon-negative decimal with up to 2 fractional digits.\n",
+    ),
 });
+
+export const updateCategoryResponseDefaultBudgetRegExp = new RegExp(
+  "^\\d+(\\.\\d{1,2})?$",
+);
 
 export const UpdateCategoryResponse = zod.object({
   id: zod.string(),
@@ -273,7 +296,10 @@ export const UpdateCategoryResponse = zod.object({
   isDefault: zod.boolean(),
   defaultBudget: zod
     .string()
-    .describe("BND\/month suggested target shown on the envelope bar."),
+    .regex(updateCategoryResponseDefaultBudgetRegExp)
+    .describe(
+      'BND\/month suggested target shown on the envelope bar. Stringified\nnon-negative decimal with up to 2 fractional digits (matches the\npg numeric(12,2) backing column). Example: \"150.00\".\n',
+    ),
   createdAt: zod.string(),
   updatedAt: zod.string(),
 });

@@ -11,7 +11,13 @@ export interface Category {
   name: string;
   kind: string;
   isDefault: boolean;
-  /** BND/month suggested target shown on the envelope bar. */
+  /**
+   * BND/month suggested target shown on the envelope bar. Stringified
+non-negative decimal with up to 2 fractional digits (matches the
+pg numeric(12,2) backing column). Example: "150.00".
+
+   * @pattern ^\d+(\.\d{1,2})?$
+   */
   defaultBudget: string;
   createdAt: string;
   updatedAt: string;

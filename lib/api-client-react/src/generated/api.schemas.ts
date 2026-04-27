@@ -151,7 +151,13 @@ export interface Category {
   name: string;
   kind: string;
   isDefault: boolean;
-  /** BND/month suggested target shown on the envelope bar. */
+  /**
+   * BND/month suggested target shown on the envelope bar. Stringified
+non-negative decimal with up to 2 fractional digits (matches the
+pg numeric(12,2) backing column). Example: "150.00".
+
+   * @pattern ^\d+(\.\d{1,2})?$
+   */
   defaultBudget: string;
   createdAt: string;
   updatedAt: string;
@@ -160,14 +166,24 @@ export interface Category {
 export interface CreateCategoryBody {
   name: string;
   kind: string;
-  /** BND/month suggested target shown on the envelope bar. Defaults to "0". */
+  /**
+   * BND/month suggested target shown on the envelope bar. Stringified
+non-negative decimal with up to 2 fractional digits. Defaults to "0".
+
+   * @pattern ^\d+(\.\d{1,2})?$
+   */
   defaultBudget?: string;
 }
 
 export interface UpdateCategoryBody {
   name?: string;
   kind?: string;
-  /** BND/month suggested target shown on the envelope bar. */
+  /**
+   * BND/month suggested target shown on the envelope bar. Stringified
+non-negative decimal with up to 2 fractional digits.
+
+   * @pattern ^\d+(\.\d{1,2})?$
+   */
   defaultBudget?: string;
 }
 
