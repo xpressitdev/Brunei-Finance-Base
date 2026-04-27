@@ -1046,7 +1046,7 @@
     },
     "commitments": {
       "title": "Monthly fixed bills",
-      "subtitle": "Recurring bills that come out every month — rent, utilities, subscriptions. These eat into your pool first.",
+      "subtitle": "Recurring bills that come out every month — rent, utilities, subscriptions. Tap a type to add (you can add the same type more than once).",
       "loansHelperNote": "Loans and financing aren't here — you've already added them as Debts in the previous step.",
       "amountHeader": "Enter monthly amounts ({{currency}})",
       "addCustom": "Add a custom bill",
@@ -1054,22 +1054,29 @@
       "customPlaceholder": "e.g. Gym membership",
       "customAmount": "{{currency}}/month",
       "add": "Add",
-      "cancel": "Cancel"
+      "cancel": "Cancel",
+      "labelPlaceholder": "Label (e.g. BIBD home loan)"
     },
     "envelopes": {
       "title": "Set your envelope targets",
       "subtitle": "For each variable spending category, set a monthly target. When you make a transaction, the matching envelope drains.",
       "monthlyTargetLabel": "Monthly target ({{currency}})",
       "helperNote": "💡 Leave any envelope at 0 if you don't want a target. You can adjust these later in the Categories tab.",
-      "skipNote": "These power the spent / funded / headroom bars on your Budgets page."
+      "skipNote": "These power the spent / funded / headroom bars on your Budgets page.",
+      "coveredByCommitments": "Hidden because already covered by your monthly bills: {{names}}"
     },
     "loans": {
       "title": "Loans & financing",
-      "subtitle": "Select any active loans or financing. We'll track your payoff progress.",
+      "subtitle": "Tap a type to add a loan. You can add the same type more than once (e.g. two car loans from different banks).",
       "monthlyPaymentLabel": "Monthly Payment ({{currency}})",
       "outstandingLabel": "Outstanding Balance (optional)",
+      "lenderLabel": "Lender / Nickname",
+      "lenderPlaceholder": "e.g. BIBD car loan",
       "noLoans": "No active loans? Great — tap Skip and move on.",
-      "hariGajiHint": "Loan payments that auto-deduct on Hari Gaji will be actualised in your Plan vs Actual view automatically."
+      "hariGajiHint": "Loan payments that auto-deduct on Hari Gaji will be actualised in your Plan vs Actual view automatically.",
+      "tapToAdd": "Tap to add",
+      "paidThisMonthLabel": "Already auto-deducted this month",
+      "paidThisMonthHint": "Tick if your payday already passed this month and the bank has taken this repayment. We'll log it as paid for {{month}} so it doesn't show as pending."
     },
     "goals": {
       "title": "What are you saving for?",

@@ -72,9 +72,28 @@ const GOAL_PRESETS: { id: string; icon: string; category: CreateGoalBodyCategory
 ];
 
 type AccountRow = { id: string; name: string; type: string; bankName: string; balance: string };
-type SelectedCommitment = { id: string; label: string; amount: string; isCustom?: boolean };
-type SelectedDebt = { id: string; label: string; debtType: string; monthlyPayment: string; outstandingBalance: string };
+type SelectedCommitment = { id: string; presetKey: string | null; label: string; amount: string; isCustom?: boolean };
+type SelectedDebt = {
+  id: string;
+  presetKey: string;
+  label: string;
+  debtType: string;
+  monthlyPayment: string;
+  outstandingBalance: string;
+  paidThisMonth: boolean;
+};
 type SelectedGoal = { id: string; label: string; category: CreateGoalBodyCategory; targetAmount: string; monthlyContribution: string };
+
+// Default expense categories (seeded in api-server/src/lib/seed.ts) that are
+// already covered by the corresponding fixed-bill commitment preset. When the
+// user picks one of these commitments in step 5, we hide the matching envelope
+// in step 6 so they don't budget the same money twice.
+const COMMITMENT_TO_CATEGORY_NAMES: Record<string, string[]> = {
+  utilities: ["Bills and Utilities"],
+  internet_phone: ["Phone and Internet"],
+  insurance_takaful: ["Insurance and Takaful"],
+  family_support: ["Family Support"],
+};
 
 function toNum(s: string): number {
   const n = parseFloat(s);
@@ -163,9 +182,33 @@ export default function Onboarding() {
   const completeOnboardingMutation = useCompleteOnboarding();
   const queryClient = useQueryClient();
 
-  const expenseCategories = useMemo(
+  // Names of categories already covered by the user's selected commitments.
+  // These envelopes are hidden in step 6 to avoid double-budgeting (a fixed
+  // bill in step 5 + a variable envelope target for the same category).
+  const hiddenCategoryNames = useMemo(() => {
+    const names = new Set<string>();
+    for (const c of selectedCommitments) {
+      if (!c.presetKey) continue;
+      const overlaps = COMMITMENT_TO_CATEGORY_NAMES[c.presetKey];
+      if (overlaps) overlaps.forEach((n) => names.add(n));
+    }
+    return names;
+  }, [selectedCommitments]);
+
+  const allDefaultExpenseCategories = useMemo(
     () => (existingCategories ?? []).filter((c) => c.kind === "expense" && c.isDefault),
     [existingCategories],
+  );
+
+  const expenseCategories = useMemo(
+    () => allDefaultExpenseCategories.filter((c) => !hiddenCategoryNames.has(c.name)),
+    [allDefaultExpenseCategories, hiddenCategoryNames],
+  );
+
+  const hiddenCategoryNamesList = useMemo(
+    () =>
+      allDefaultExpenseCategories.filter((c) => hiddenCategoryNames.has(c.name)).map((c) => c.name),
+    [allDefaultExpenseCategories, hiddenCategoryNames],
   );
 
   const handleNext = () => setStep((s) => Math.min(s + 1, TOTAL_STEPS));
@@ -193,18 +236,23 @@ export default function Onboarding() {
 
   const poolTotal = accounts.reduce((sum, a) => sum + toNum(a.balance), 0);
 
-  const toggleCommitmentPreset = (preset: typeof COMMITMENT_PRESETS[0]) => {
-    const exists = selectedCommitments.find((c) => c.id === preset.id);
-    if (exists) {
-      setSelectedCommitments(selectedCommitments.filter((c) => c.id !== preset.id));
-    } else {
-      const label = t(`onboarding.commitmentPresets.${preset.id}`);
-      setSelectedCommitments([...selectedCommitments, { id: preset.id, label, amount: "" }]);
-    }
+  // Each preset click adds a NEW instance. The user can have multiple loans /
+  // bills of the same type (e.g. two car loans from different banks) and the
+  // unique instance id keeps them independent.
+  const addCommitmentFromPreset = (preset: typeof COMMITMENT_PRESETS[0]) => {
+    const baseLabel = t(`onboarding.commitmentPresets.${preset.id}`);
+    const existingOfPreset = selectedCommitments.filter((c) => c.presetKey === preset.id).length;
+    const label = existingOfPreset === 0 ? baseLabel : `${baseLabel} ${existingOfPreset + 1}`;
+    const id = `${preset.id}_${Date.now()}`;
+    setSelectedCommitments([...selectedCommitments, { id, presetKey: preset.id, label, amount: "" }]);
   };
 
   const updateCommitmentAmount = (id: string, amount: string) => {
     setSelectedCommitments(selectedCommitments.map((c) => (c.id === id ? { ...c, amount } : c)));
+  };
+
+  const updateCommitmentLabel = (id: string, label: string) => {
+    setSelectedCommitments(selectedCommitments.map((c) => (c.id === id ? { ...c, label } : c)));
   };
 
   const addCustomCommitment = () => {
@@ -212,28 +260,43 @@ export default function Onboarding() {
     const id = `custom_${Date.now()}`;
     setSelectedCommitments([
       ...selectedCommitments,
-      { id, label: customCommitment.label, amount: customCommitment.amount, isCustom: true },
+      { id, presetKey: null, label: customCommitment.label, amount: customCommitment.amount, isCustom: true },
     ]);
     setCustomCommitment({ label: "", amount: "" });
     setShowCustomCommitment(false);
   };
 
-  const toggleDebtPreset = (preset: typeof DEBT_PRESETS[0]) => {
-    const exists = selectedDebts.find((d) => d.id === preset.id);
-    if (exists) {
-      setSelectedDebts(selectedDebts.filter((d) => d.id !== preset.id));
-    } else {
-      const label = t(`onboarding.debtPresets.${preset.id}`);
-      setSelectedDebts([
-        ...selectedDebts,
-        { id: preset.id, label, debtType: preset.debtType, monthlyPayment: "", outstandingBalance: "" },
-      ]);
-    }
+  const addDebtFromPreset = (preset: typeof DEBT_PRESETS[0]) => {
+    const baseLabel = t(`onboarding.debtPresets.${preset.id}`);
+    const existingOfPreset = selectedDebts.filter((d) => d.presetKey === preset.id).length;
+    const label = existingOfPreset === 0 ? baseLabel : `${baseLabel} ${existingOfPreset + 1}`;
+    const id = `${preset.id}_${Date.now()}`;
+    // Auto-tick "already paid this month" when today's day-of-month >= payday
+    // (their bank has already auto-deducted this month's repayment).
+    const todayDay = new Date().getDate();
+    const paydayNum = parseInt(payday, 10);
+    const paidThisMonth = isFinite(paydayNum) && paydayNum > 0 && todayDay >= paydayNum;
+    setSelectedDebts([
+      ...selectedDebts,
+      {
+        id,
+        presetKey: preset.id,
+        label,
+        debtType: preset.debtType,
+        monthlyPayment: "",
+        outstandingBalance: "",
+        paidThisMonth,
+      },
+    ]);
   };
 
-  const updateDebt = (id: string, field: "monthlyPayment" | "outstandingBalance", value: string) => {
+  function updateDebt<K extends keyof Omit<SelectedDebt, "id" | "presetKey" | "debtType">>(
+    id: string,
+    field: K,
+    value: SelectedDebt[K],
+  ) {
     setSelectedDebts(selectedDebts.map((d) => (d.id === id ? { ...d, [field]: value } : d)));
-  };
+  }
 
   const setEnvelope = (categoryId: string, value: string) => {
     setEnvelopes((prev) => ({ ...prev, [categoryId]: value }));
@@ -287,10 +350,11 @@ export default function Onboarding() {
         if (d.monthlyPayment) {
           await createDebtMutation.mutateAsync({
             data: {
-              lender: d.label,
+              lender: d.label || t(`onboarding.debtPresets.${d.presetKey}`),
               debtType: d.debtType,
               outstandingBalance: d.outstandingBalance || "0",
               monthlyPayment: d.monthlyPayment,
+              paidThisMonth: d.paidThisMonth,
             },
           });
         }
@@ -583,35 +647,54 @@ export default function Onboarding() {
 
                 <div className="flex flex-wrap gap-2 mb-5">
                   {DEBT_PRESETS.map((preset) => {
-                    const selected = selectedDebts.find((d) => d.id === preset.id);
+                    const count = selectedDebts.filter((d) => d.presetKey === preset.id).length;
                     const label = t(`onboarding.debtPresets.${preset.id}`);
                     return (
                       <button
                         key={preset.id}
                         type="button"
-                        onClick={() => toggleDebtPreset(preset)}
+                        onClick={() => addDebtFromPreset(preset)}
+                        title={t("onboarding.loans.tapToAdd")}
                         className={cn(
                           "flex items-center gap-2 px-4 py-2 rounded-full border text-sm font-medium transition-all",
-                          selected ? "bg-primary text-white border-primary" : "bg-white hover:bg-muted/30 text-foreground",
+                          count > 0
+                            ? "bg-primary/10 border-primary/40 text-primary"
+                            : "bg-white hover:bg-muted/30 text-foreground",
                         )}
                       >
                         <span>{preset.icon}</span>
                         {label}
-                        {selected && <Check className="w-3 h-3" />}
+                        <Plus className="w-3 h-3 opacity-70" />
+                        {count > 0 && (
+                          <span className="ml-1 text-[10px] font-bold bg-primary/20 text-primary px-1.5 py-0.5 rounded-full">
+                            ×{count}
+                          </span>
+                        )}
                       </button>
                     );
                   })}
                 </div>
 
                 {selectedDebts.length > 0 && (
-                  <div className="space-y-3 mb-4 overflow-y-auto max-h-[260px] pr-1">
+                  <div className="space-y-3 mb-4 overflow-y-auto max-h-[340px] pr-1">
                     {selectedDebts.map((d) => (
                       <div key={d.id} className="p-4 rounded-xl border bg-muted/20">
-                        <div className="flex justify-between items-center mb-3">
-                          <span className="font-semibold text-sm">{d.label}</span>
+                        <div className="flex justify-between items-start gap-2 mb-3">
+                          <div className="flex-1 space-y-1">
+                            <Label className="text-xs text-muted-foreground">
+                              {t("onboarding.loans.lenderLabel")}
+                            </Label>
+                            <Input
+                              className="h-9 text-sm font-medium"
+                              placeholder={t("onboarding.loans.lenderPlaceholder")}
+                              value={d.label}
+                              onChange={(e) => updateDebt(d.id, "label", e.target.value)}
+                            />
+                          </div>
                           <button
                             onClick={() => setSelectedDebts(selectedDebts.filter((x) => x.id !== d.id))}
-                            className="text-muted-foreground hover:text-destructive"
+                            className="text-muted-foreground hover:text-destructive mt-6"
+                            aria-label="Remove debt"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -644,6 +727,23 @@ export default function Onboarding() {
                             />
                           </div>
                         </div>
+                        <label className="mt-3 flex items-start gap-2 p-2.5 rounded-lg bg-white border border-emerald-200 cursor-pointer hover:bg-emerald-50/50 transition-colors">
+                          <input
+                            type="checkbox"
+                            checked={d.paidThisMonth}
+                            onChange={(e) => updateDebt(d.id, "paidThisMonth", e.target.checked)}
+                            className="mt-0.5 h-4 w-4 rounded border-emerald-400 text-emerald-600 focus:ring-emerald-500"
+                          />
+                          <span className="flex-1 text-xs text-emerald-900 leading-snug">
+                            <span className="font-semibold">{t("onboarding.loans.paidThisMonthLabel")}</span>
+                            <br />
+                            <span className="text-emerald-800/80">
+                              {t("onboarding.loans.paidThisMonthHint", {
+                                month: new Date().toLocaleDateString(undefined, { month: "long" }),
+                              })}
+                            </span>
+                          </span>
+                        </label>
                       </div>
                     ))}
                   </div>
@@ -695,39 +795,52 @@ export default function Onboarding() {
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
                   {COMMITMENT_PRESETS.map((preset) => {
-                    const selected = selectedCommitments.find((c) => c.id === preset.id);
+                    const count = selectedCommitments.filter((c) => c.presetKey === preset.id).length;
                     const label = t(`onboarding.commitmentPresets.${preset.id}`);
                     return (
                       <button
                         key={preset.id}
                         type="button"
-                        onClick={() => toggleCommitmentPreset(preset)}
+                        onClick={() => addCommitmentFromPreset(preset)}
+                        title={t("onboarding.loans.tapToAdd")}
                         className={cn(
-                          "p-3 rounded-xl border text-left text-sm transition-all",
-                          selected
+                          "p-3 rounded-xl border text-left text-sm transition-all relative",
+                          count > 0
                             ? "border-primary bg-primary/8 ring-1 ring-primary/40"
                             : "border-border bg-white hover:bg-muted/30",
                         )}
                       >
                         <div className="text-xl mb-1">{preset.icon}</div>
-                        <div className={cn("font-medium text-xs", selected ? "text-primary" : "text-foreground")}>
+                        <div className={cn("font-medium text-xs", count > 0 ? "text-primary" : "text-foreground")}>
                           {label}
                         </div>
-                        {selected && <Check className="w-3 h-3 text-primary mt-1" />}
+                        <div className="flex items-center gap-1 mt-1">
+                          <Plus className="w-3 h-3 text-muted-foreground" />
+                          {count > 0 && (
+                            <span className="text-[10px] font-bold bg-primary/20 text-primary px-1.5 py-0.5 rounded-full">
+                              ×{count}
+                            </span>
+                          )}
+                        </div>
                       </button>
                     );
                   })}
                 </div>
 
                 {selectedCommitments.length > 0 && (
-                  <div className="border rounded-xl bg-muted/20 p-4 mb-4 space-y-3">
+                  <div className="border rounded-xl bg-muted/20 p-4 mb-4 space-y-2 max-h-[300px] overflow-y-auto">
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                       {t("onboarding.commitments.amountHeader", { currency: region.currency })}
                     </p>
                     {selectedCommitments.map((c) => (
-                      <div key={c.id} className="flex items-center gap-3">
-                        <span className="text-sm flex-1 font-medium">{c.label}</span>
-                        <div className="relative w-36">
+                      <div key={c.id} className="flex items-center gap-2">
+                        <Input
+                          className="flex-1 h-9 text-sm font-medium bg-white"
+                          placeholder={t("onboarding.commitments.labelPlaceholder")}
+                          value={c.label}
+                          onChange={(e) => updateCommitmentLabel(c.id, e.target.value)}
+                        />
+                        <div className="relative w-32 shrink-0">
                           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
                             {region.currency}
                           </span>
@@ -735,14 +848,15 @@ export default function Onboarding() {
                             type="number"
                             step={decimalStep}
                             placeholder={decimalStep === "1" ? "0" : "0.00"}
-                            className="pl-12 h-9 text-sm"
+                            className="pl-12 h-9 text-sm bg-white"
                             value={c.amount}
                             onChange={(e) => updateCommitmentAmount(c.id, e.target.value)}
                           />
                         </div>
                         <button
                           onClick={() => setSelectedCommitments(selectedCommitments.filter((x) => x.id !== c.id))}
-                          className="text-muted-foreground hover:text-destructive"
+                          className="text-muted-foreground hover:text-destructive shrink-0"
+                          aria-label="Remove bill"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -839,6 +953,16 @@ export default function Onboarding() {
                   ))}
                 </div>
 
+                {hiddenCategoryNamesList.length > 0 && (
+                  <div className="flex items-start gap-2 bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 mb-3 text-xs text-blue-900">
+                    <span className="mt-0.5 shrink-0">💡</span>
+                    <span>
+                      {t("onboarding.envelopes.coveredByCommitments", {
+                        names: hiddenCategoryNamesList.join(", "),
+                      })}
+                    </span>
+                  </div>
+                )}
                 <p className="text-xs text-muted-foreground mb-1">{t("onboarding.envelopes.helperNote")}</p>
                 <p className="text-xs text-muted-foreground">{t("onboarding.envelopes.skipNote")}</p>
 

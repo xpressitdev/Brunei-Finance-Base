@@ -565,6 +565,12 @@ export const CreateDebtBody = zod.object({
     .string()
     .nullish()
     .describe("Debt start date in YYYY-MM-DD format"),
+  paidThisMonth: zod
+    .boolean()
+    .nullish()
+    .describe(
+      "If true, the server creates a linked debit transaction for the current month so dashboard reconciliation treats this debt as already paid.",
+    ),
 });
 
 /**

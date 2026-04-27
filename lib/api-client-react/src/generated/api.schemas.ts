@@ -333,6 +333,11 @@ export interface CreateDebtBody {
    * @nullable
    */
   startDate?: string | null;
+  /**
+   * If true, the server creates a linked debit transaction for the current month so dashboard reconciliation treats this debt as already paid.
+   * @nullable
+   */
+  paidThisMonth?: boolean | null;
 }
 
 export interface UpdateDebtBody {

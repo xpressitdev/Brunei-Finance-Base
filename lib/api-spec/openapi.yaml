@@ -1741,6 +1741,9 @@ components:
         startDate:
           type: ["string", "null"]
           description: "Debt start date in YYYY-MM-DD format"
+        paidThisMonth:
+          type: ["boolean", "null"]
+          description: "If true, the server creates a linked debit transaction for the current month so dashboard reconciliation treats this debt as already paid."
       required:
         - debtType
         - lender

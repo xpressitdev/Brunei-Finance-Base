@@ -1,7 +1,7 @@
 import { Router, type IRouter } from "express";
 import { eq, and } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
-import { db, debtsTable, debtScenariosTable } from "@workspace/db";
+import { db, debtsTable, debtScenariosTable, transactionsTable } from "@workspace/db";
 import {
   CreateDebtBody,
   UpdateDebtBody,
@@ -52,6 +52,28 @@ router.post("/debts", requireAuth, requireAccess, async (req: AuthenticatedReque
     interestRate: parsed.data.interestRate ?? null,
     startDate: parsed.data.startDate ?? null,
   }).returning();
+
+  // If the user indicated this debt's repayment was already auto-deducted this
+  // month (e.g. they signed up after their Hari Gaji), create a debit
+  // transaction linked to this debt so the dashboard's reconciliation logic
+  // (linked_debt_id check in routes/dashboard.ts) treats it as paid for the
+  // current month. We deliberately leave accountId null so account balances
+  // (which the user enters as their CURRENT post-deduction balance during
+  // onboarding) are not adjusted again.
+  if (parsed.data.paidThisMonth && parseFloat(debt.monthlyPayment) > 0) {
+    await db.insert(transactionsTable).values({
+      id: uuidv4(),
+      userId: req.userId!,
+      date: new Date(),
+      amount: debt.monthlyPayment,
+      type: "debit",
+      description: `${debt.lender} (auto-deducted on payday)`,
+      accountId: null,
+      categoryId: null,
+      linkedDebtId: debt.id,
+      source: "onboarding",
+    });
+  }
 
   res.status(201).json(formatDebt(debt));
 });
