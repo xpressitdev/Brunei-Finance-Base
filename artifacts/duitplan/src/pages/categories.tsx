@@ -130,9 +130,9 @@ export default function Categories() {
       {/* Summary strip */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <KpiCard
-          label="Total monthly budget"
+          label="Monthly envelope budget"
           value={fmtBND(totalMonthlyBudget)}
-          footer={`Across ${expenseCount} expense ${expenseCount === 1 ? "category" : "categories"}`}
+          footer={`Sum of ${expenseCount} expense ${expenseCount === 1 ? "category" : "categories"} · Savings funded via Goals`}
           tone="emerald"
         />
         <KpiCard
@@ -337,7 +337,14 @@ export default function Categories() {
                         </div>
                         <div className="text-[11px] text-muted-foreground mt-0.5 flex items-center gap-2">
                           <span>{isSavings ? "Long-term goal — friction-locked on Budgets" : "Funded from your monthly gaji"}</span>
-                          {!isSavings && (
+                          {isSavings ? (
+                            <span
+                              className="tabular-nums font-semibold px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200"
+                              title="Savings categories are funded via Goals, not the monthly envelope target"
+                            >
+                              funded via Goals
+                            </span>
+                          ) : (
                             <span
                               className={cn(
                                 "tabular-nums font-semibold px-1.5 py-0.5 rounded",
