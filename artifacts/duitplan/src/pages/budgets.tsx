@@ -450,7 +450,8 @@ function VaultUnlockModal({
 function AllocateView({
   month,
   monthLabel,
-  salary,
+  availablePool,
+  accountCount,
   commitments,
   debts,
   categories,
@@ -465,7 +466,8 @@ function AllocateView({
 }: {
   month: string;
   monthLabel: string;
-  salary: number;
+  availablePool: number;
+  accountCount: number;
   commitments: Array<{ id: string; label: string; amount: string }>;
   debts: Debt[];
   categories: Array<{ id: string; name: string; kind: string }>;
@@ -533,7 +535,7 @@ function AllocateView({
   // Re-sync when underlying data changes (month switch, etc) or reset is triggered
   useEffect(() => { setBuckets(initialBuckets); }, [initialBuckets, resetSignal]);
 
-  const totalIncome = salary;
+  const totalIncome = availablePool;
   const allocated = buckets.reduce((s, b) => s + b.allocated, 0);
   const available = totalIncome - allocated;
   const pctAlloc = totalIncome > 0 ? Math.min(100, (allocated / totalIncome) * 100) : 0;
@@ -694,7 +696,9 @@ function AllocateView({
               )}>
                 {available < 0 ? "−" : ""}{fmt(Math.abs(available))}
               </span>
-              <span className="text-sm text-muted-foreground">of {fmt(totalIncome)} {monthLabel} gaji</span>
+              <span className="text-sm text-muted-foreground">
+                of {fmt(totalIncome)} across {accountCount} account{accountCount === 1 ? "" : "s"}
+              </span>
             </div>
             <div className="mt-3 h-2 rounded-full bg-muted overflow-hidden w-full lg:w-96">
               <div
@@ -1115,7 +1119,7 @@ export default function Budgets() {
           <h1 className="text-3xl font-bold text-foreground tracking-tight">Budgets</h1>
           <p className="text-muted-foreground">
             {view === "allocate"
-              ? "Allocate your gaji. Drag from Available into Bank, Envelopes, or Vault."
+              ? "Allocate from your accounts. Drag from Available into Bank, Envelopes, or Vault."
               : view === "annual"
               ? "Annual overview of your income and spending."
               : "Plan your income and spending each month."}
@@ -1171,7 +1175,8 @@ export default function Budgets() {
         <AllocateView
           month={month}
           monthLabel={format(activeDate, "MMMM")}
-          salary={salary}
+          availablePool={totalAccountBalance}
+          accountCount={accounts.length}
           commitments={commitments ?? []}
           debts={debts}
           categories={categories ?? []}
