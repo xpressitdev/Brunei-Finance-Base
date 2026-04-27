@@ -555,24 +555,24 @@ export default function Transactions() {
 
       {/* Hero stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <div className="rounded-xl border bg-card p-4 relative overflow-hidden">
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Income · {format(new Date(), "MMMM")}</p>
-          <div className="text-2xl font-bold tabular-nums text-emerald-700 mt-1">+{formatCurrency(hmIncome)}</div>
+        <div className="rounded-xl border bg-card p-3 sm:p-4 relative overflow-hidden min-w-0">
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground truncate">Income · {format(new Date(), "MMMM")}</p>
+          <div className="text-lg sm:text-2xl font-bold tabular-nums text-emerald-700 mt-1 break-words">+{formatCurrency(hmIncome)}</div>
           <div className="text-[11px] text-muted-foreground mt-0.5">{currentMonthTxs?.filter(t => t.type === "credit").length ?? 0} deposits</div>
         </div>
-        <div className="rounded-xl border bg-card p-4 relative overflow-hidden">
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Spent · {format(new Date(), "MMMM")}</p>
-          <div className="text-2xl font-bold tabular-nums text-rose-600 mt-1">−{formatCurrency(hmSpent)}</div>
+        <div className="rounded-xl border bg-card p-3 sm:p-4 relative overflow-hidden min-w-0">
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground truncate">Spent · {format(new Date(), "MMMM")}</p>
+          <div className="text-lg sm:text-2xl font-bold tabular-nums text-rose-600 mt-1 break-words">−{formatCurrency(hmSpent)}</div>
           <div className="text-[11px] text-muted-foreground mt-0.5">{currentMonthTxs?.filter(t => t.type === "debit").length ?? 0} purchases</div>
         </div>
-        <div className={`rounded-xl border p-4 relative overflow-hidden ${hmNet >= 0 ? "bg-emerald-50/60 border-emerald-200" : "bg-rose-50/60 border-rose-200"}`}>
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Net flow</p>
-          <div className={`text-2xl font-bold tabular-nums mt-1 ${hmNet >= 0 ? "text-primary" : "text-rose-600"}`}>{hmNet >= 0 ? "+" : "−"}{formatCurrency(Math.abs(hmNet))}</div>
+        <div className={`rounded-xl border p-3 sm:p-4 relative overflow-hidden min-w-0 ${hmNet >= 0 ? "bg-emerald-50/60 border-emerald-200" : "bg-rose-50/60 border-rose-200"}`}>
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground truncate">Net flow</p>
+          <div className={`text-lg sm:text-2xl font-bold tabular-nums mt-1 break-words ${hmNet >= 0 ? "text-primary" : "text-rose-600"}`}>{hmNet >= 0 ? "+" : "−"}{formatCurrency(Math.abs(hmNet))}</div>
           <div className="text-[11px] text-muted-foreground mt-0.5">{hmNet >= 0 ? "Saving this month" : "Overspending"}</div>
         </div>
-        <div className="rounded-xl border bg-card p-4 relative overflow-hidden">
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Avg per day</p>
-          <div className="text-2xl font-bold tabular-nums mt-1">{formatCurrency(avgPerDay)}</div>
+        <div className="rounded-xl border bg-card p-3 sm:p-4 relative overflow-hidden min-w-0">
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground truncate">Avg per day</p>
+          <div className="text-lg sm:text-2xl font-bold tabular-nums mt-1 break-words">{formatCurrency(avgPerDay)}</div>
           <div className="text-[11px] text-muted-foreground mt-0.5">over {daysInMonth} days</div>
         </div>
       </div>
