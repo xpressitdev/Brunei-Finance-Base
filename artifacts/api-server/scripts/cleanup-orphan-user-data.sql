@@ -80,6 +80,30 @@ UPDATE feedback
 --  WHERE user_id IS NOT NULL
 --    AND NOT EXISTS (SELECT 1 FROM users u WHERE u.id = feedback.user_id);
 
+-- ----------------------------------------------------------------------------
+-- Child-of-child orphan cleanup: tables that reference a parent row (not the
+-- user). When the parent rows were deleted earlier in this session (or in a
+-- prior orphan sweep), the children were left behind. They must be removed
+-- before the cascade FK to the parent can be created, otherwise drizzle-kit
+-- push fails with "violates foreign key constraint".
+--
+-- Currently:
+--   - imported_transaction_rows.uploaded_document_id → uploaded_documents.id
+--   - debt_scenarios.debt_id                        → debts.id
+-- ----------------------------------------------------------------------------
+
+DELETE FROM imported_transaction_rows
+ WHERE NOT EXISTS (
+   SELECT 1 FROM uploaded_documents d
+    WHERE d.id = imported_transaction_rows.uploaded_document_id
+ );
+
+DELETE FROM debt_scenarios
+ WHERE NOT EXISTS (
+   SELECT 1 FROM debts d
+    WHERE d.id = debt_scenarios.debt_id
+ );
+
 -- Show the same counts AFTER cleanup — every row should read 0
 SELECT 'AFTER' AS phase, tbl, orphans
 FROM (
