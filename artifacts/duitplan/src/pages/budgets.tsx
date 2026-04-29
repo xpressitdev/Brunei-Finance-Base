@@ -5,11 +5,9 @@ import {
   useListBudgets,
   useUpsertBudget,
   useListCategories,
-  useDeleteCategory,
   useGetProfile,
   useListCommitments,
   useUpdateCommitment,
-  useDeleteCommitment,
   useListAccounts,
   useListDebts,
   useListGoals,
@@ -96,7 +94,6 @@ type Bucket = {
   spent?: number;
   fixed?: boolean;
   auto?: boolean;
-  isDeletable?: boolean;
 };
 
 const CHIP_AMOUNTS = [10, 25, 50, 100, 250, 500];
@@ -427,7 +424,6 @@ function BucketRow({
   isReordering,
   dropPos,
   onStartReorder,
-  onDelete,
 }: {
   bucket: Bucket;
   isOver: boolean;
@@ -438,7 +434,6 @@ function BucketRow({
   isReordering: boolean;
   dropPos: "before" | "after" | null;
   onStartReorder: (e: React.PointerEvent) => void;
-  onDelete?: (bucket: Bucket) => void;
 }) {
   const { t } = useTranslation();
   const isVault = bucket.kind === "vault";
@@ -532,17 +527,6 @@ function BucketRow({
               {bucket.auto && <Badge variant="outline" className="text-[10px] py-0 h-4">auto</Badge>}
               {isFunded && <Badge className="text-[10px] py-0 h-4 bg-emerald-50 text-emerald-700 hover:bg-emerald-50">funded</Badge>}
               {overspent && <Badge variant="destructive" className="text-[10px] py-0 h-4">over</Badge>}
-              {bucket.isDeletable && onDelete && (
-                <button
-                  type="button"
-                  onClick={(e) => { e.stopPropagation(); onDelete(bucket); }}
-                  aria-label={`Delete ${bucket.name}`}
-                  title={bucket.fixed ? "Delete commitment" : "Delete envelope"}
-                  className="text-muted-foreground/50 hover:text-rose-600 transition-colors p-0.5 -m-0.5 rounded"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
-              )}
             </div>
           </div>
 
@@ -813,40 +797,6 @@ function AllocateView({
 }) {
   const expenseCats = useMemo(() => categories.filter(c => c.kind === "expense"), [categories]);
 
-  const deleteCategory = useDeleteCategory();
-  const deleteCommitment = useDeleteCommitment();
-
-  const handleDeleteBucket = useCallback(async (bucket: Bucket) => {
-    const [prefix, rawId] = bucket.id.split(":");
-    if (!rawId) return;
-    if (prefix === "E") {
-      const ok = window.confirm(
-        `Delete envelope "${bucket.name}"?\n\nExisting transactions and budgets in this category will become uncategorized. This cannot be undone.`
-      );
-      if (!ok) return;
-      try {
-        await deleteCategory.mutateAsync({ id: rawId });
-        refetchCategories();
-        refetch();
-      } catch (err) {
-        if (isTrialExpiredError(err)) { onTrialExpired(); return; }
-        window.alert(err instanceof Error ? err.message : "Failed to delete envelope");
-      }
-    } else if (prefix === "F") {
-      const ok = window.confirm(
-        `Delete fixed commitment "${bucket.name}"?\n\nThis cannot be undone.`
-      );
-      if (!ok) return;
-      try {
-        await deleteCommitment.mutateAsync({ id: rawId });
-        refetchCommitments();
-      } catch (err) {
-        if (isTrialExpiredError(err)) { onTrialExpired(); return; }
-        window.alert(err instanceof Error ? err.message : "Failed to delete commitment");
-      }
-    }
-  }, [deleteCategory, deleteCommitment, refetch, refetchCategories, refetchCommitments, onTrialExpired]);
-
   const initialBuckets: Bucket[] = useMemo(() => {
     const loans: Bucket[] = debts.map(d => ({
       id: `L:${d.id}`,
@@ -863,7 +813,6 @@ function AllocateView({
       allocated: safeNum(c.amount),
       target: safeNum(c.amount),
       fixed: true,
-      isDeletable: true,
     }));
     const variableEnvelopes: Bucket[] = expenseCats.map(cat => {
       const b = budgetMap[cat.id];
@@ -875,7 +824,6 @@ function AllocateView({
         allocated: safeNum(b?.plannedAmount),
         spent: safeNum(b?.actualAmount),
         target: tgt > 0 ? tgt : undefined,
-        isDeletable: !cat.isDefault,
       };
     });
     // Vaults sourced from /goals — `allocated` mirrors goal.savedAmount.
@@ -1283,7 +1231,6 @@ function AllocateView({
               isReordering={rowDrag?.id === b.id}
               dropPos={rowOver?.id === b.id ? rowOver.pos : null}
               onStartReorder={startRowDrag(b.id, "loan")}
-              onDelete={handleDeleteBucket}
             />
           ))}
         </CollapsibleColumn>
@@ -1313,7 +1260,6 @@ function AllocateView({
                   isReordering={rowDrag?.id === b.id}
                   dropPos={rowOver?.id === b.id ? rowOver.pos : null}
                   onStartReorder={startRowDrag(b.id, "envFixed")}
-                  onDelete={handleDeleteBucket}
                 />
               ))}
             </>
@@ -1338,7 +1284,6 @@ function AllocateView({
               isReordering={rowDrag?.id === b.id}
               dropPos={rowOver?.id === b.id ? rowOver.pos : null}
               onStartReorder={startRowDrag(b.id, "envVar")}
-              onDelete={handleDeleteBucket}
             />
           ))}
         </CollapsibleColumn>
@@ -1374,7 +1319,6 @@ function AllocateView({
               isReordering={rowDrag?.id === b.id}
               dropPos={rowOver?.id === b.id ? rowOver.pos : null}
               onStartReorder={startRowDrag(b.id, "vault")}
-              onDelete={handleDeleteBucket}
             />
           ))}
         </CollapsibleColumn>
