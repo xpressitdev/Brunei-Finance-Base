@@ -102,6 +102,13 @@ export interface UpdateProfileBody {
   language?: string | null;
 }
 
+export type ResetDataResponseDeleted = { [key: string]: number };
+
+export interface ResetDataResponse {
+  ok: boolean;
+  deleted: ResetDataResponseDeleted;
+}
+
 export interface OnboardingStatus {
   completed: boolean;
   /** @nullable */

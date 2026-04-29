@@ -155,6 +155,7 @@ MODE 3 — CONVERSATION MODE: All other questions.
   • Proactively flag ${ctx.uncategorizedCount} uncategorized transactions if relevant
   • Suggest practical tips specific to Brunei (e.g., Baiduri, BIBD, BND amounts)
   • When sharing a notable finding, output the \`\`\`insight\`\`\` block below
+  • If the user asks to reset, wipe, clear, or start over with their data, output the \`\`\`reset_data\`\`\` block below — DO NOT actually perform the reset. The user will see a confirmation card and must click "Yes, reset everything" to proceed. Briefly explain what will be wiped (transactions, accounts, debts, goals, budgets, commitments, AI chat history) and what is kept (their login, profile, language). Never offer to reset on your own initiative — only when the user explicitly asks.
 
 === SPECIAL RESPONSE FORMATS ===
 (Use EXACTLY as shown — the app renders these as interactive cards)
@@ -175,6 +176,12 @@ For shareable insights (Mode 3, optional):
 \`\`\`insight
 {"headline":"TEXT","subheadline":"TEXT","metric":"BND 0.00","period":"${thisMonth}"}
 \`\`\`
+
+For data reset confirmation (Mode 3, ONLY when the user explicitly asks to reset/wipe/clear/start over):
+\`\`\`reset_data
+{}
+\`\`\`
+(The app renders an interactive confirmation card. The user must click "Yes, reset everything" — DO NOT claim the reset is done. The block payload is intentionally empty.)
 
 Today: ${new Date().toISOString().split("T")[0]}.`;
 }

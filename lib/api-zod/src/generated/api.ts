@@ -123,6 +123,14 @@ export const UpdateProfileResponse = zod.object({
 });
 
 /**
+ * @summary Wipe all of the current user's financial data while keeping their account, profile, and subscription
+ */
+export const ResetUserDataResponse = zod.object({
+  ok: zod.boolean(),
+  deleted: zod.record(zod.string(), zod.number()),
+});
+
+/**
  * @summary Get user onboarding completion status
  */
 export const GetOnboardingStatusResponse = zod.object({

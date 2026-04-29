@@ -184,6 +184,19 @@ paths:
               schema:
                 $ref: "#/components/schemas/Profile"
 
+  /profile/reset-data:
+    post:
+      operationId: resetUserData
+      tags: [profile]
+      summary: Wipe all of the current user's financial data while keeping their account, profile, and subscription
+      responses:
+        "200":
+          description: Reset summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResetDataResponse"
+
   # Onboarding
   /onboarding/status:
     get:
@@ -1342,6 +1355,19 @@ components:
           type: ["string", "null"]
         language:
           type: ["string", "null"]
+
+    ResetDataResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+        deleted:
+          type: object
+          additionalProperties:
+            type: integer
+      required:
+        - ok
+        - deleted
 
     # Onboarding
     OnboardingStatus:

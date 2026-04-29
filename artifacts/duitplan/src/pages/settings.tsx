@@ -1,13 +1,24 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { useGetProfile, useUpdateProfile, useListCategories, useCreateCategory } from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useGetProfile, useUpdateProfile, useListCategories, useCreateCategory, useResetUserData } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, User, Tag, Globe, Shield, ArrowRight } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Plus, User, Tag, Globe, Shield, ArrowRight, Trash2, AlertTriangle } from "lucide-react";
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useRegion } from "@/hooks/useRegion";
@@ -21,7 +32,11 @@ export default function Settings() {
   
   const updateProfileMutation = useUpdateProfile();
   const createCategoryMutation = useCreateCategory();
+  const resetDataMutation = useResetUserData();
+  const queryClient = useQueryClient();
   const { toast } = useToast();
+  const [resetConfirmText, setResetConfirmText] = useState("");
+  const [resetDialogOpen, setResetDialogOpen] = useState(false);
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -68,6 +83,27 @@ export default function Settings() {
       await updateProfileMutation.mutateAsync({ data: { language: lang } });
     } catch {
       // silent — language change already applied locally
+    }
+  };
+
+  const handleResetData = async () => {
+    if (resetConfirmText !== "RESET") return;
+    try {
+      const result = await resetDataMutation.mutateAsync();
+      const total = Object.values(result.deleted).reduce((a, b) => a + b, 0);
+      toast({
+        title: t("settings.privacy.resetSuccessTitle", "Your data has been reset"),
+        description: t("settings.privacy.resetSuccessDesc", { count: total, defaultValue: "{{count}} records cleared. Your account, profile, and language are intact." }),
+      });
+      setResetConfirmText("");
+      setResetDialogOpen(false);
+      await queryClient.invalidateQueries();
+    } catch (err) {
+      toast({
+        title: t("settings.privacy.resetFailedTitle", "Reset failed"),
+        description: err instanceof Error ? err.message : "Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -255,6 +291,91 @@ export default function Settings() {
                   <ArrowRight className="w-4 h-4" />
                 </Button>
               </Link>
+            </CardContent>
+          </Card>
+
+          <Card className="border-destructive/50 mt-4">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-destructive">
+                <AlertTriangle className="w-5 h-5" />
+                {t("settings.privacy.dangerTitle", "Danger zone")}
+              </CardTitle>
+              <CardDescription>
+                {t(
+                  "settings.privacy.dangerDescription",
+                  "Wipe all your financial data and start fresh. Your login, profile, and language stay the same.",
+                )}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="rounded-md bg-muted/40 p-4 text-sm space-y-2 border">
+                <p className="font-medium">{t("settings.privacy.willDeleteTitle", "What gets deleted:")}</p>
+                <ul className="text-muted-foreground space-y-1 list-disc list-inside">
+                  <li>{t("settings.privacy.willDelete1", "All transactions, accounts, and balances")}</li>
+                  <li>{t("settings.privacy.willDelete2", "All debts, goals, monthly bills, and budgets")}</li>
+                  <li>{t("settings.privacy.willDelete3", "Net worth history and asset entries")}</li>
+                  <li>{t("settings.privacy.willDelete4", "Insights, achievements, and AI chat history")}</li>
+                  <li>{t("settings.privacy.willDelete5", "Uploaded statements and import history")}</li>
+                </ul>
+                <p className="font-medium pt-2">{t("settings.privacy.willKeepTitle", "What is kept:")}</p>
+                <ul className="text-muted-foreground space-y-1 list-disc list-inside">
+                  <li>{t("settings.privacy.willKeep1", "Your account and login")}</li>
+                  <li>{t("settings.privacy.willKeep2", "Your name, region, and language")}</li>
+                  <li>{t("settings.privacy.willKeep3", "Your category list (shared across all users)")}</li>
+                  <li>{t("settings.privacy.willKeep4", "Your subscription, if any")}</li>
+                </ul>
+              </div>
+
+              <AlertDialog open={resetDialogOpen} onOpenChange={(open) => { setResetDialogOpen(open); if (!open) setResetConfirmText(""); }}>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" className="gap-2" data-testid="button-open-reset-dialog">
+                    <Trash2 className="w-4 h-4" />
+                    {t("settings.privacy.resetButton", "Reset my data")}
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle className="flex items-center gap-2">
+                      <AlertTriangle className="w-5 h-5 text-destructive" />
+                      {t("settings.privacy.resetDialogTitle", "Reset all your data?")}
+                    </AlertDialogTitle>
+                    <AlertDialogDescription>
+                      {t(
+                        "settings.privacy.resetDialogDesc",
+                        "This permanently deletes every transaction, account, debt, goal, budget, commitment, insight, achievement, and AI conversation tied to your account. This cannot be undone.",
+                      )}
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <div className="space-y-2 py-2">
+                    <Label htmlFor="reset-confirm">
+                      {t("settings.privacy.resetConfirmLabel", "Type RESET to confirm")}
+                    </Label>
+                    <Input
+                      id="reset-confirm"
+                      value={resetConfirmText}
+                      onChange={(e) => setResetConfirmText(e.target.value)}
+                      placeholder="RESET"
+                      autoComplete="off"
+                      data-testid="input-reset-confirm"
+                    />
+                  </div>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel disabled={resetDataMutation.isPending} data-testid="button-cancel-reset">
+                      {t("common.cancel", "Cancel")}
+                    </AlertDialogCancel>
+                    <Button
+                      onClick={handleResetData}
+                      disabled={resetConfirmText !== "RESET" || resetDataMutation.isPending}
+                      variant="destructive"
+                      data-testid="button-confirm-reset"
+                    >
+                      {resetDataMutation.isPending
+                        ? t("settings.privacy.resetting", "Resetting…")
+                        : t("settings.privacy.resetConfirm", "Yes, reset everything")}
+                    </Button>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </CardContent>
           </Card>
         </TabsContent>

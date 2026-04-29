@@ -8,9 +8,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import {
   Bot, Send, Paperclip, X, Download, Copy, Share2, Plus,
   AlertTriangle, ChevronRight, Loader2, FileText, CheckSquare,
+  Trash2, Check,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRegion } from "@/hooks/useRegion";
+import { useResetUserData } from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
 import html2canvas from "html2canvas";
 
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
@@ -125,11 +128,16 @@ function parseInsight(content: string): InsightData | null {
   try { return JSON.parse(match[1]) as InsightData; } catch { return null; }
 }
 
+function hasResetBlock(content: string): boolean {
+  return /```reset_data\n[\s\S]*?\n```/.test(content);
+}
+
 function stripSpecialBlocks(content: string): string {
   return content
     .replace(/```discrepancy\n[\s\S]*?\n```/g, "")
     .replace(/```insight\n[\s\S]*?\n```/g, "")
     .replace(/```transactions\n[\s\S]*?\n```/g, "")
+    .replace(/```reset_data\n[\s\S]*?\n```/g, "")
     .trim();
 }
 
@@ -261,6 +269,100 @@ function DiscrepancyCard({ data }: { data: DiscrepancyData }) {
           </Button>
         </Link>
       </div>
+    </div>
+  );
+}
+
+function ResetDataCard() {
+  const { t } = useTranslation();
+  const resetMutation = useResetUserData();
+  const queryClient = useQueryClient();
+  const [confirmed, setConfirmed] = useState(false);
+  const [done, setDone] = useState<{ count: number } | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleReset = async () => {
+    setError(null);
+    try {
+      const result = await resetMutation.mutateAsync();
+      const count = Object.values(result.deleted).reduce((a, b) => a + b, 0);
+      setDone({ count });
+      await queryClient.invalidateQueries();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Reset failed");
+    }
+  };
+
+  if (done) {
+    return (
+      <div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4 dark:bg-emerald-950/20 dark:border-emerald-800">
+        <div className="flex items-center gap-2">
+          <Check className="w-5 h-5 text-emerald-600" />
+          <span className="font-semibold text-emerald-800 dark:text-emerald-300">
+            {t("agent.reset.done", "Your data has been reset")}
+          </span>
+        </div>
+        <p className="text-sm text-emerald-700 dark:text-emerald-400 mt-1">
+          {t("agent.reset.doneDesc", { count: done.count, defaultValue: "{{count}} records cleared. Your account, profile, and language are intact." })}
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-3 rounded-xl border border-red-200 bg-red-50 p-4 dark:bg-red-950/20 dark:border-red-800">
+      <div className="flex items-center gap-2 mb-2">
+        <AlertTriangle className="w-5 h-5 text-red-600" />
+        <span className="font-semibold text-red-800 dark:text-red-300">
+          {t("agent.reset.title", "Reset all your data?")}
+        </span>
+      </div>
+      <p className="text-sm text-red-700 dark:text-red-400 mb-3">
+        {t(
+          "agent.reset.subtitle",
+          "This permanently deletes every transaction, account, debt, goal, budget, commitment, insight, achievement, and AI conversation tied to your account. This cannot be undone. Your login, profile, and language stay the same.",
+        )}
+      </p>
+      {error && (
+        <div className="text-xs text-red-700 dark:text-red-400 mb-2">{error}</div>
+      )}
+      {!confirmed ? (
+        <Button
+          size="sm"
+          variant="destructive"
+          className="gap-1"
+          onClick={() => setConfirmed(true)}
+          data-testid="button-agent-reset-init"
+        >
+          <Trash2 className="w-3 h-3" /> {t("agent.reset.button", "Reset my data")}
+        </Button>
+      ) : (
+        <div className="flex gap-2">
+          <Button
+            size="sm"
+            variant="destructive"
+            className="gap-1"
+            onClick={handleReset}
+            disabled={resetMutation.isPending}
+            data-testid="button-agent-reset-confirm"
+          >
+            {resetMutation.isPending ? (
+              <><Loader2 className="w-3 h-3 animate-spin" /> {t("agent.reset.resetting", "Resetting…")}</>
+            ) : (
+              <><Trash2 className="w-3 h-3" /> {t("agent.reset.confirm", "Yes, reset everything")}</>
+            )}
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setConfirmed(false)}
+            disabled={resetMutation.isPending}
+            data-testid="button-agent-reset-cancel"
+          >
+            {t("common.cancel", "Cancel")}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
@@ -399,6 +501,7 @@ function MessageBubble({ message, onShare }: { message: Message; onShare?: (id: 
   const isUser = message.role === "user";
   const discrepancy = !isUser ? parseDiscrepancy(message.content) : null;
   const insight = !isUser ? parseInsight(message.content) : null;
+  const showReset = !isUser && !message.isStreaming && hasResetBlock(message.content);
   const displayContent = !isUser ? stripSpecialBlocks(message.content) : message.content;
 
   return (
@@ -446,6 +549,8 @@ function MessageBubble({ message, onShare }: { message: Message; onShare?: (id: 
         </div>
 
         {discrepancy && <DiscrepancyCard data={discrepancy} />}
+
+        {showReset && <ResetDataCard />}
 
         {message.pendingUploadId && !message.isStreaming && (
           <TransactionReviewCard uploadId={message.pendingUploadId} />

@@ -62,6 +62,7 @@ import type {
   RegisterBody,
   RequestUploadUrlBody,
   RequestUploadUrlResponse,
+  ResetDataResponse,
   ScanReceiptBody,
   ScanReceiptResponse,
   SubscriptionPlan,
@@ -635,6 +636,87 @@ export const useUpdateProfile = <
   TContext
 > => {
   return useMutation(getUpdateProfileMutationOptions(options));
+};
+
+/**
+ * @summary Wipe all of the current user's financial data while keeping their account, profile, and subscription
+ */
+export const getResetUserDataUrl = () => {
+  return `/api/profile/reset-data`;
+};
+
+export const resetUserData = async (
+  options?: RequestInit,
+): Promise<ResetDataResponse> => {
+  return customFetch<ResetDataResponse>(getResetUserDataUrl(), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getResetUserDataMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof resetUserData>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof resetUserData>>,
+  TError,
+  void,
+  TContext
+> => {
+  const mutationKey = ["resetUserData"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof resetUserData>>,
+    void
+  > = () => {
+    return resetUserData(requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ResetUserDataMutationResult = NonNullable<
+  Awaited<ReturnType<typeof resetUserData>>
+>;
+
+export type ResetUserDataMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Wipe all of the current user's financial data while keeping their account, profile, and subscription
+ */
+export const useResetUserData = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof resetUserData>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof resetUserData>>,
+  TError,
+  void,
+  TContext
+> => {
+  return useMutation(getResetUserDataMutationOptions(options));
 };
 
 /**

@@ -1,6 +1,23 @@
 import { Router, type IRouter } from "express";
 import { eq } from "drizzle-orm";
-import { db, profilesTable } from "@workspace/db";
+import {
+  db,
+  profilesTable,
+  accountsTable,
+  transactionsTable,
+  monthlyBudgetsTable,
+  commitmentsTable,
+  goalsTable,
+  debtsTable,
+  insightsTable,
+  paydayPromptsTable,
+  userAchievementsTable,
+  feedbackTable,
+  netWorthSnapshotsTable,
+  assetEntriesTable,
+  uploadedDocumentsTable,
+  agentConversations,
+} from "@workspace/db";
 import { UpdateProfileBody } from "@workspace/api-zod";
 import { requireAuth, type AuthenticatedRequest } from "../lib/auth";
 
@@ -68,6 +85,39 @@ router.put("/profile", requireAuth, async (req: AuthenticatedRequest, res): Prom
 router.post("/profile/dismiss-migration-notice", requireAuth, async (req: AuthenticatedRequest, res): Promise<void> => {
   await db.update(profilesTable).set({ migrationNoticeDismissed: true }).where(eq(profilesTable.userId, req.userId!));
   res.json({ ok: true });
+});
+
+router.post("/profile/reset-data", requireAuth, async (req: AuthenticatedRequest, res): Promise<void> => {
+  const userId = req.userId!;
+  const deleted: Record<string, number> = {};
+
+  await db.transaction(async (tx) => {
+    // Delete in dependency order. Tables with FKs that don't cascade need to go first.
+    const wipes = [
+      ["transactions", transactionsTable] as const,
+      ["uploadedDocuments", uploadedDocumentsTable] as const, // cascades to importedTransactionRows
+      ["budgets", monthlyBudgetsTable] as const,
+      ["commitments", commitmentsTable] as const,
+      ["goals", goalsTable] as const,
+      ["debts", debtsTable] as const, // cascades to debtScenarios
+      ["insights", insightsTable] as const,
+      ["paydayPrompts", paydayPromptsTable] as const,
+      ["achievements", userAchievementsTable] as const,
+      ["feedback", feedbackTable] as const,
+      ["assets", assetEntriesTable] as const,
+      ["netWorthSnapshots", netWorthSnapshotsTable] as const,
+      ["accounts", accountsTable] as const,
+      ["agentConversations", agentConversations] as const, // cascades to agentMessages
+    ];
+
+    for (const [label, table] of wipes) {
+      const result = await tx.delete(table).where(eq(table.userId, userId)).returning({ id: table.id });
+      deleted[label] = result.length;
+    }
+  });
+
+  req.log.info({ userId, deleted }, "User data reset complete");
+  res.json({ ok: true, deleted });
 });
 
 export default router;

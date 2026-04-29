@@ -59,6 +59,8 @@ export * from "./profile";
 export * from "./registerBody";
 export * from "./requestUploadUrlBody";
 export * from "./requestUploadUrlResponse";
+export * from "./resetDataResponse";
+export * from "./resetDataResponseDeleted";
 export * from "./scanReceiptBody";
 export * from "./scanReceiptResponse";
 export * from "./subscriptionPlan";
