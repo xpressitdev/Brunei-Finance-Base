@@ -30,13 +30,13 @@ args = "Design System"
 name = "Design System"
 author = "agent"
 
+[workflows.workflow.metadata]
+outputType = "console"
+
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "PORT=8008 BASE_PATH=/design-system/ node design-system/server.mjs"
 waitForPort = 8008
-
-[workflows.workflow.metadata]
-outputType = "webview"
 
 [agent]
 stack = "PNPM_WORKSPACE"
