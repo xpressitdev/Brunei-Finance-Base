@@ -1166,11 +1166,14 @@ function AllocateView({
 
   return (
     <div className="space-y-5">
-      {/* Available strip with MoneyBag */}
-      <div className={cn(
-        "rounded-xl p-5 border-2 sticky top-2 z-30 backdrop-blur-md shadow-sm",
-        available < 0 ? "bg-red-50/95 border-red-300" : "bg-primary/10 border-primary/40"
-      )}>
+      {/* Available strip with MoneyBag — sticky so it stays visible while scrolling buckets */}
+      <div
+        style={{ position: "sticky", top: 0, zIndex: 40 }}
+        className={cn(
+          "rounded-xl p-5 border-2 shadow-md -mx-1 px-6",
+          available < 0 ? "bg-red-50 border-red-300" : "bg-white border-primary/40"
+        )}
+      >
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
           <div className="flex-1 min-w-0">
             <span className={cn(
