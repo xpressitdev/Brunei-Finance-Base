@@ -844,6 +844,7 @@ function AllocateView({
   const [vaultUnlock, setVaultUnlock] = useState<{ fromId: string; toId: string; amount: number } | null>(null);
   const [customAmount, setCustomAmount] = useState<string>("");
   const [bagOver, setBagOver] = useState(false);
+  const [mobileChipsOpen, setMobileChipsOpen] = useState<boolean>(false);
 
   useEffect(() => { setBuckets(initialBuckets); }, [initialBuckets, resetSignal]);
 
@@ -1118,11 +1119,12 @@ function AllocateView({
       <div
         style={{ position: "sticky", top: 0, zIndex: 40 }}
         className={cn(
-          "rounded-xl p-5 border-2 shadow-sm",
+          "rounded-xl p-3 sm:p-5 border-2 shadow-sm",
           available < 0 ? "bg-red-50 border-red-300" : "bg-emerald-50 border-primary/40"
         )}
       >
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+        {/* ───────── DESKTOP / TABLET (md+) ───────── */}
+        <div className="hidden md:flex flex-col lg:flex-row lg:items-center justify-between gap-5">
           <div className="flex-1 min-w-0">
             <span className={cn(
               "text-xs font-semibold uppercase tracking-wider",
@@ -1196,6 +1198,87 @@ function AllocateView({
               </div>
             </div>
           </div>
+        </div>
+
+        {/* ───────── MOBILE (< md) — compact, collapsible ───────── */}
+        <div className="md:hidden">
+          {/* Top row: balance + Confirm */}
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex-1 min-w-0">
+              <span className={cn(
+                "text-[10px] font-semibold uppercase tracking-wider",
+                available < 0 ? "text-red-700" : "text-primary"
+              )}>
+                Available to allocate
+              </span>
+              <div className={cn(
+                "text-2xl font-bold tabular-nums leading-tight mt-0.5",
+                available < 0 ? "text-red-700" : "text-primary"
+              )}>
+                {available < 0 ? "−" : ""}{fmt(Math.abs(available))}
+              </div>
+              <div className="text-[11px] text-muted-foreground mt-0.5">
+                of {fmt(totalIncome)} · {accountCount} acct{accountCount === 1 ? "" : "s"}
+              </div>
+            </div>
+            <ConfirmAllocationButton available={available} />
+          </div>
+
+          {/* Slim progress bar */}
+          <div className="mt-2 h-1.5 rounded-full bg-muted overflow-hidden">
+            <div
+              className={cn("h-full rounded-full transition-all", available < 0 ? "bg-red-500" : "bg-primary")}
+              style={{ width: `${pctAlloc}%` }}
+            />
+          </div>
+          <p className="text-[10px] text-muted-foreground mt-1 tabular-nums">
+            {fmt(allocated)} allocated · {Math.round(pctAlloc)}%
+            {available < 0 && (
+              <span className="ml-2 text-red-600 font-medium">
+                · Over by {fmt(Math.abs(available))}
+              </span>
+            )}
+          </p>
+
+          {/* Quick-allocate toggle — full-width tap target */}
+          <button
+            type="button"
+            onClick={() => setMobileChipsOpen(v => !v)}
+            className="mt-2 w-full min-h-10 flex items-center justify-center gap-1.5 rounded-lg border border-primary/30 bg-white/60 active:bg-white/80 text-xs font-semibold text-primary"
+            data-testid="button-mobile-chips-toggle"
+          >
+            <ChevronDown className={cn("w-4 h-4 transition-transform", mobileChipsOpen && "rotate-180")} />
+            {mobileChipsOpen ? "Hide quick amounts" : "Quick allocate"}
+          </button>
+
+          {mobileChipsOpen && (
+            <div className="mt-2 pt-2 border-t border-primary/20">
+              <span className="text-[11px] text-muted-foreground font-medium block mb-1.5">
+                Drag a chip onto a bucket below, or tap +/− on each bucket.
+              </span>
+              <div className="flex flex-wrap gap-1.5">
+                {CHIP_AMOUNTS.map(amt => (
+                  <MoneyChip
+                    key={amt}
+                    amount={amt}
+                    disabled={available < amt}
+                    onPointerDown={startChipDrag(amt)}
+                  />
+                ))}
+                <CustomMoneyChip
+                  available={available}
+                  value={customAmount}
+                  onChange={setCustomAmount}
+                  onPointerDown={(amt, e) => startDrag(amt, undefined, e)}
+                />
+              </div>
+              <div className="flex items-center justify-end mt-2">
+                <Button variant="ghost" size="sm" onClick={reset} className="text-xs gap-1 h-7 px-2">
+                  <RotateCcw className="w-3 h-3" /> Reset
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
