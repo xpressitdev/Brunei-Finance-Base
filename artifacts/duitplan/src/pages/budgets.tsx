@@ -100,6 +100,81 @@ const CHIP_AMOUNTS = [10, 25, 50, 100, 250, 500];
 
 type DragState = { amount: number; fromId?: string; x: number; y: number };
 
+/**
+ * Smart pointerdown handler that distinguishes a tap from a drag.
+ *  - If the pointer moves more than `threshold` px before release → invokes
+ *    `onDragStart` with synthesized event coordinates (compatible with
+ *    `usePointerDrag.startDrag`).
+ *  - If the pointer is released without moving → invokes `onTap`.
+ *
+ * This avoids the "ghost flash on tap" issue and lets the same chip
+ * support both drag-to-allocate (desktop) and tap-to-select (mobile).
+ */
+function useTapOrDrag(
+  onTap: (() => void) | undefined,
+  onDragStart: (synth: {
+    preventDefault: () => void;
+    stopPropagation: () => void;
+    clientX: number;
+    clientY: number;
+  }) => void,
+  threshold = 6,
+) {
+  const onTapRef = useRef(onTap);
+  const onDragRef = useRef(onDragStart);
+  useEffect(() => { onTapRef.current = onTap; }, [onTap]);
+  useEffect(() => { onDragRef.current = onDragStart; }, [onDragStart]);
+
+  return useCallback((e: React.PointerEvent) => {
+    const startX = e.clientX, startY = e.clientY;
+    // Track the originating pointer so concurrent touches/mice don't
+    // hijack this gesture (multi-touch correctness).
+    const startPointerId = e.pointerId;
+    let dragStarted = false;
+    let cleaned = false;
+
+    const cleanup = () => {
+      if (cleaned) return;
+      cleaned = true;
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+      window.removeEventListener("pointercancel", up);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+
+    const move = (ev: PointerEvent) => {
+      if (ev.pointerId !== startPointerId) return;
+      if (dragStarted) return;
+      if (Math.hypot(ev.clientX - startX, ev.clientY - startY) > threshold) {
+        dragStarted = true;
+        onDragRef.current({
+          preventDefault: () => {},
+          stopPropagation: () => {},
+          clientX: ev.clientX,
+          clientY: ev.clientY,
+        });
+      }
+    };
+    const up = (ev: PointerEvent) => {
+      if (ev.pointerId !== startPointerId) return;
+      const wasDrag = dragStarted;
+      cleanup();
+      if (!wasDrag) onTapRef.current?.();
+    };
+    // If the tab is hidden mid-gesture (user switched apps / answered a
+    // call), abort silently — no phantom tap, no leaked listeners.
+    // Note: we deliberately do NOT listen for window "blur" — focus moves
+    // happen too easily (devtools, iframe handoff, automation tooling) and
+    // would cancel legitimate gestures.
+    const onVisibility = () => { if (document.hidden) cleanup(); };
+
+    window.addEventListener("pointermove", move, { passive: true });
+    window.addEventListener("pointerup", up);
+    window.addEventListener("pointercancel", up);
+    document.addEventListener("visibilitychange", onVisibility);
+  }, [threshold]);
+}
+
 function usePointerDrag(onDrop: (targetId: string, amount: number, fromId?: string) => void) {
   const [drag, setDrag] = useState<DragState | null>(null);
   const [over, setOver] = useState<string | null>(null);
@@ -251,18 +326,34 @@ function AmountStepper({
   );
 }
 
-function MoneyChip({ amount, disabled, onPointerDown }: {
-  amount: number; disabled: boolean;
-  onPointerDown: (e: React.PointerEvent) => void;
+function MoneyChip({ amount, disabled, selected, onDragStart, onTap }: {
+  amount: number;
+  disabled: boolean;
+  selected?: boolean;
+  onDragStart: (synth: { preventDefault: () => void; stopPropagation: () => void; clientX: number; clientY: number }) => void;
+  onTap?: () => void;
 }) {
+  const handle = useTapOrDrag(onTap, onDragStart);
   return (
     <div
-      onPointerDown={disabled ? undefined : onPointerDown}
+      onPointerDown={disabled ? undefined : handle}
       style={{ touchAction: "none" }}
+      role="button"
+      tabIndex={disabled ? -1 : 0}
+      aria-pressed={selected}
+      data-testid={`chip-${amount}`}
+      onKeyDown={(e) => {
+        if (disabled) return;
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onTap?.();
+        }
+      }}
       className={cn(
         "select-none rounded-md px-3 py-2 text-sm font-bold tabular-nums shadow-sm border transition-all",
         "bg-emerald-50 border-emerald-200 text-emerald-800 hover:-translate-y-0.5 active:scale-95",
-        disabled ? "opacity-40 cursor-not-allowed" : "cursor-grab active:cursor-grabbing"
+        selected && "ring-2 ring-emerald-500 ring-offset-1 -translate-y-0.5 shadow-md bg-emerald-100",
+        disabled ? "opacity-40 cursor-not-allowed" : "cursor-pointer"
       )}
     >
       BND {amount}
@@ -364,25 +455,33 @@ function CollapsibleColumn({
   );
 }
 
-function CustomMoneyChip({ available, value, onChange, onPointerDown }: {
+function CustomMoneyChip({ available, value, onChange, selected, onDragStart, onTap }: {
   available: number;
   value: string;
   onChange: (v: string) => void;
-  onPointerDown: (amount: number, e: React.PointerEvent) => void;
+  selected?: boolean;
+  onDragStart: (amount: number, synth: { preventDefault: () => void; stopPropagation: () => void; clientX: number; clientY: number }) => void;
+  onTap?: (amount: number) => void;
 }) {
   const num = Number(value);
   const valid = Number.isFinite(num) && num > 0;
   const tooMuch = valid && num > available;
   const disabled = !valid || tooMuch;
 
+  const handle = useTapOrDrag(
+    onTap && !disabled ? () => onTap(num) : undefined,
+    (synth) => onDragStart(num, synth),
+  );
+
   return (
     <div
       onPointerDown={(e) => {
         if ((e.target as HTMLElement).tagName === "INPUT") return;
         if (disabled) return;
-        onPointerDown(num, e);
+        handle(e);
       }}
       style={{ touchAction: "none" }}
+      aria-pressed={selected}
       title={tooMuch ? `Only BND ${available.toFixed(2)} left in the bag` : valid ? `Drag BND ${num} onto a bucket` : "Type any amount, then drag"}
       className={cn(
         "flex items-center gap-1 select-none rounded-md border px-2 py-1.5 transition-all",
@@ -403,12 +502,43 @@ function CustomMoneyChip({ available, value, onChange, onPointerDown }: {
         onChange={(e) => onChange(e.target.value)}
         onPointerDown={(e) => e.stopPropagation()}
         onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => {
+          // Enter on the input acts as a tap-to-select shortcut so keyboard
+          // users have parity with the preset MoneyChip buttons.
+          if (e.key === "Enter" && !disabled && onTap) {
+            e.preventDefault();
+            onTap(num);
+          }
+        }}
+        aria-label={valid ? `Custom amount BND ${num}` : "Custom amount in BND"}
         placeholder="custom"
         style={{ touchAction: "auto" }}
         className="w-16 bg-transparent outline-none text-sm font-bold tabular-nums placeholder:text-emerald-700/40 placeholder:font-medium"
       />
       {valid && !tooMuch && (
-        <span className="text-[10px] font-semibold uppercase tracking-wider opacity-60 shrink-0">drag →</span>
+        // Explicit pointer target so users (and screen readers / automation)
+        // have a clearly hit-testable way to tap-select the custom amount.
+        // Without this, the visible BND label is the only non-input tap area
+        // and is too narrow to land reliably with a touch.
+        <button
+          type="button"
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.stopPropagation();
+            if (!disabled && onTap) onTap(num);
+          }}
+          aria-label={selected ? `Deselect BND ${num}` : `Select BND ${num}`}
+          aria-pressed={selected}
+          data-testid="chip-custom-select"
+          className={cn(
+            "shrink-0 inline-flex items-center justify-center rounded-md border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider transition",
+            selected
+              ? "border-emerald-700 bg-emerald-700 text-white"
+              : "border-emerald-400 bg-white/70 text-emerald-800 hover:bg-emerald-50"
+          )}
+        >
+          {selected ? "✓" : "Use"}
+        </button>
       )}
     </div>
   );
@@ -424,6 +554,8 @@ function BucketRow({
   isReordering,
   dropPos,
   onStartReorder,
+  tapAddAmount,
+  onTapAdd,
 }: {
   bucket: Bucket;
   isOver: boolean;
@@ -434,6 +566,10 @@ function BucketRow({
   isReordering: boolean;
   dropPos: "before" | "after" | null;
   onStartReorder: (e: React.PointerEvent) => void;
+  /** Amount of the currently tap-selected chip (mobile flow). Null when nothing selected. */
+  tapAddAmount?: number | null;
+  /** Fires when the user taps the inline "+ BND X" pill on this bucket. */
+  onTapAdd?: () => void;
 }) {
   const { t } = useTranslation();
   const isVault = bucket.kind === "vault";
@@ -482,6 +618,8 @@ function BucketRow({
                     : isOver    ? "border-primary ring-2 ring-primary/25"
                     :             "border-border";
 
+  const tapModeActive = typeof tapAddAmount === "number" && tapAddAmount > 0 && !!onTapAdd;
+
   return (
     <div
       data-drop-id={bucket.id}
@@ -490,10 +628,23 @@ function BucketRow({
       className={cn(
         "relative bg-white rounded-xl border p-4 shadow-sm transition-all",
         borderState,
+        tapModeActive && "ring-2 ring-emerald-300/70",
         pulse && "scale-[1.015]",
         isReordering && "opacity-50"
       )}
     >
+      {/* Tap-allocate pill — only rendered when a chip is tap-selected. */}
+      {tapModeActive && (
+        <button
+          type="button"
+          onClick={onTapAdd}
+          aria-label={`Add BND ${tapAddAmount} to ${bucket.name}`}
+          data-testid={`button-tap-add-${bucket.id}`}
+          className="absolute top-2 right-2 z-10 inline-flex items-center gap-1 rounded-full bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-bold px-3 py-1.5 shadow-md ring-2 ring-white/70 transition"
+        >
+          + BND {tapAddAmount}
+        </button>
+      )}
       {pulse && <div className="absolute inset-0 rounded-xl bg-primary/10 pointer-events-none animate-pulse" />}
       {dropPos === "before" && (
         <div className="absolute -top-1 left-2 right-2 h-0.5 bg-primary rounded-full pointer-events-none" />
@@ -1076,12 +1227,49 @@ function AllocateView({
   useEffect(() => { setBagOver(overTargetPtr === "BAG" && !!drag?.fromId); }, [overTargetPtr, drag]);
 
   const startChipDrag = useCallback(
-    (amount: number) => (e: React.PointerEvent) => {
+    (amount: number) => (synth: { preventDefault: () => void; stopPropagation: () => void; clientX: number; clientY: number }) => {
       if (available < amount) return;
-      startDrag(amount, undefined, e);
+      startDrag(amount, undefined, synth as React.PointerEvent);
     },
     [available, startDrag]
   );
+
+  // ── Tap-to-allocate (mobile-friendly alternative to drag) ───────────────
+  // The user taps a chip to "select" an amount, then taps any bucket's
+  // explicit "+ BND X" button to allocate. The chip stays selected so they
+  // can fund multiple buckets in quick succession. Auto-deselects when
+  // the available pool drops below the selected amount.
+  const [tapAmount, setTapAmount] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (tapAmount !== null && tapAmount > available) setTapAmount(null);
+  }, [available, tapAmount]);
+
+  // If the user picked a custom amount via the custom chip, then later
+  // edited the input to a different/invalid value, the chip stops looking
+  // selected — but stale pills/bar would otherwise linger. Clear when
+  // the live custom value diverges and the active tapAmount isn't a preset.
+  const isPresetTap = tapAmount !== null && CHIP_AMOUNTS.includes(tapAmount);
+  useEffect(() => {
+    if (tapAmount === null || isPresetTap) return;
+    const liveCustom = Number(customAmount);
+    if (!Number.isFinite(liveCustom) || liveCustom <= 0 || liveCustom !== tapAmount) {
+      setTapAmount(null);
+    }
+  }, [customAmount, tapAmount, isPresetTap]);
+
+  const toggleTapChip = useCallback((amount: number) => {
+    if (amount <= 0) return;
+    setTapAmount(prev => (prev === amount ? null : amount));
+  }, []);
+
+  // Tap-allocate routes through handleDrop so it inherits vault-unlock
+  // protection for V:* buckets and "not enough available" guards.
+  const tapAllocate = useCallback((bucketId: string) => {
+    if (tapAmount === null) return;
+    if (tapAmount > available) return;
+    handleDrop(bucketId, tapAmount, undefined);
+  }, [tapAmount, available, handleDrop]);
 
   const confirmVaultUnlock = (_reason: string) => {
     if (!vaultUnlock) return;
@@ -1174,14 +1362,18 @@ function AllocateView({
                   key={amt}
                   amount={amt}
                   disabled={available < amt}
-                  onPointerDown={startChipDrag(amt)}
+                  selected={tapAmount === amt}
+                  onTap={() => toggleTapChip(amt)}
+                  onDragStart={startChipDrag(amt)}
                 />
               ))}
               <CustomMoneyChip
                 available={available}
                 value={customAmount}
                 onChange={setCustomAmount}
-                onPointerDown={(amt, e) => startDrag(amt, undefined, e)}
+                selected={tapAmount !== null && tapAmount === Number(customAmount)}
+                onTap={(amt) => toggleTapChip(amt)}
+                onDragStart={(amt, e) => startDrag(amt, undefined, e as React.PointerEvent)}
               />
             </div>
             <div className="flex items-center gap-2 mt-1">
@@ -1254,7 +1446,7 @@ function AllocateView({
           {mobileChipsOpen && (
             <div className="mt-2 pt-2 border-t border-primary/20">
               <span className="text-[11px] text-muted-foreground font-medium block mb-1.5">
-                Drag a chip onto a bucket below, or tap +/− on each bucket.
+                Tap an amount, then tap “+ BND X” on a bucket. Or drag the chip.
               </span>
               <div className="flex flex-wrap gap-1.5">
                 {CHIP_AMOUNTS.map(amt => (
@@ -1262,14 +1454,18 @@ function AllocateView({
                     key={amt}
                     amount={amt}
                     disabled={available < amt}
-                    onPointerDown={startChipDrag(amt)}
+                    selected={tapAmount === amt}
+                    onTap={() => toggleTapChip(amt)}
+                    onDragStart={startChipDrag(amt)}
                   />
                 ))}
                 <CustomMoneyChip
                   available={available}
                   value={customAmount}
                   onChange={setCustomAmount}
-                  onPointerDown={(amt, e) => startDrag(amt, undefined, e)}
+                  selected={tapAmount !== null && tapAmount === Number(customAmount)}
+                  onTap={(amt) => toggleTapChip(amt)}
+                  onDragStart={(amt, e) => startDrag(amt, undefined, e as React.PointerEvent)}
                 />
               </div>
               <div className="flex items-center justify-end mt-2">
@@ -1314,6 +1510,8 @@ function AllocateView({
               isReordering={rowDrag?.id === b.id}
               dropPos={rowOver?.id === b.id ? rowOver.pos : null}
               onStartReorder={startRowDrag(b.id, "loan")}
+              tapAddAmount={tapAmount}
+              onTapAdd={() => tapAllocate(b.id)}
             />
           ))}
         </CollapsibleColumn>
@@ -1343,6 +1541,8 @@ function AllocateView({
                   isReordering={rowDrag?.id === b.id}
                   dropPos={rowOver?.id === b.id ? rowOver.pos : null}
                   onStartReorder={startRowDrag(b.id, "envFixed")}
+                  tapAddAmount={tapAmount}
+                  onTapAdd={() => tapAllocate(b.id)}
                 />
               ))}
             </>
@@ -1367,6 +1567,8 @@ function AllocateView({
               isReordering={rowDrag?.id === b.id}
               dropPos={rowOver?.id === b.id ? rowOver.pos : null}
               onStartReorder={startRowDrag(b.id, "envVar")}
+              tapAddAmount={tapAmount}
+              onTapAdd={() => tapAllocate(b.id)}
             />
           ))}
         </CollapsibleColumn>
@@ -1402,6 +1604,8 @@ function AllocateView({
               isReordering={rowDrag?.id === b.id}
               dropPos={rowOver?.id === b.id ? rowOver.pos : null}
               onStartReorder={startRowDrag(b.id, "vault")}
+              tapAddAmount={tapAmount}
+              onTapAdd={() => tapAllocate(b.id)}
             />
           ))}
         </CollapsibleColumn>
@@ -1409,6 +1613,44 @@ function AllocateView({
 
       {/* Floating ghost that follows the pointer while dragging */}
       <DragGhost drag={drag} />
+
+      {/* When the floating tap bar is visible on mobile it sits over the
+          last bucket row. Reserve safe-area room so users can still reach
+          every bucket's stepper / pull-chip controls. */}
+      {tapAmount !== null && <div className="md:hidden h-20" aria-hidden="true" />}
+
+      {/* Mobile tap-allocate status bar — sticky at the bottom of the viewport
+          so the user always knows what amount is selected and can clear it.
+          Hidden on md+ where drag-and-drop is the primary interaction. */}
+      {tapAmount !== null && (
+        <div
+          className="md:hidden fixed left-2 right-2 bottom-2 z-50 rounded-xl bg-emerald-600 text-white shadow-2xl ring-1 ring-emerald-700/30 flex items-center justify-between gap-3 px-3 py-2.5 animate-in slide-in-from-bottom-2 duration-200"
+          data-testid="tap-allocate-bar"
+        >
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="inline-flex w-7 h-7 rounded-full bg-white/20 items-center justify-center text-sm font-bold tabular-nums shrink-0">
+              ✓
+            </span>
+            <div className="min-w-0">
+              <div className="text-sm font-bold tabular-nums leading-tight">
+                BND {tapAmount} selected
+              </div>
+              <div className="text-[11px] text-white/80 leading-tight">
+                Tap “+ BND {tapAmount}” on any bucket
+              </div>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setTapAmount(null)}
+            aria-label="Clear selection"
+            data-testid="button-clear-tap-amount"
+            className="shrink-0 rounded-full bg-white/15 hover:bg-white/25 active:scale-95 w-8 h-8 grid place-items-center transition"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
 
       {vaultUnlock && (
         <VaultUnlockModal
