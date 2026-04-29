@@ -389,10 +389,9 @@ export default function Categories() {
                       </>
                     ) : c.isDefault ? (
                       <>
-                        {/* Default categories: only the budget is editable
-                            (name/kind are locked in the form), so the pencil
-                            opens the same edit row but with disabled inputs
-                            for name/kind. */}
+                        {/* Default categories: name/kind are locked in the
+                            edit form (only budget is editable), but the row
+                            can still be deleted. */}
                         <Button
                           size="sm"
                           variant="ghost"
@@ -402,11 +401,16 @@ export default function Categories() {
                         >
                           <Pencil className="w-4 h-4" />
                         </Button>
-                        <Link href="/budgets">
-                          <Button size="sm" variant="ghost" className="text-[11px]">
-                            Allocate →
-                          </Button>
-                        </Link>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 w-8 p-0 text-muted-foreground hover:text-rose-600"
+                          onClick={() => handleDelete(c.id, c.name)}
+                          disabled={deleteMutation.isPending}
+                          title="Delete"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
                       </>
                     ) : (
                       <>

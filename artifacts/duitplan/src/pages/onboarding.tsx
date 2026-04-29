@@ -12,6 +12,7 @@ import {
   useCreateGoal,
   useListCategories,
   useUpdateCategory,
+  useDeleteCategory,
   useGetMe,
   type CreateGoalBodyCategory,
 } from "@workspace/api-client-react";
@@ -222,6 +223,7 @@ export default function Onboarding() {
   const createDebtMutation = useCreateDebt();
   const createGoalMutation = useCreateGoal();
   const updateCategoryMutation = useUpdateCategory();
+  const deleteCategoryMutation = useDeleteCategory();
   const completeOnboardingMutation = useCompleteOnboarding();
   const queryClient = useQueryClient();
 
@@ -415,6 +417,25 @@ export default function Onboarding() {
             id: categoryId,
             data: { defaultBudget: normalized },
           });
+        }
+      }
+      // Onboarding cleanup: if the user actively chose envelopes (set at least
+      // one budget > 0), delete the default expense categories they didn't pick
+      // so /categories only shows what they chose. If they skipped step 6
+      // entirely (no values at all), keep all defaults so they're not left with
+      // an empty list.
+      const userPickedEnvelopes = Object.values(envelopes).some((v) => toNum(v) > 0);
+      if (userPickedEnvelopes) {
+        for (const cat of allDefaultExpenseCategories) {
+          const picked = toNum(envelopes[cat.id] ?? "") > 0;
+          if (!picked) {
+            try {
+              await deleteCategoryMutation.mutateAsync({ id: cat.id });
+            } catch {
+              // Non-fatal: if a default can't be deleted (e.g. already used by
+              // a transaction) just leave it; user can clean up later.
+            }
+          }
         }
       }
       for (const g of selectedGoals) {

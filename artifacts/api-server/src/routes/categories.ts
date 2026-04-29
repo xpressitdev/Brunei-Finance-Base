@@ -96,10 +96,6 @@ router.delete("/categories/:id", requireAuth, async (req: AuthenticatedRequest, 
     res.status(404).json({ error: "Category not found" });
     return;
   }
-  if (existing.isDefault) {
-    res.status(403).json({ error: "Default categories cannot be deleted" });
-    return;
-  }
   await db.delete(categoriesTable).where(eq(categoriesTable.id, req.params.id));
   res.status(204).send();
 });
