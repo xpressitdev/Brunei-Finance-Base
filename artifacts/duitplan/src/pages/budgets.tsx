@@ -1170,8 +1170,8 @@ function AllocateView({
       <div
         style={{ position: "sticky", top: 0, zIndex: 40 }}
         className={cn(
-          "rounded-xl p-5 border-2",
-          available < 0 ? "bg-red-50 border-red-300" : "bg-primary/5 border-primary/30"
+          "rounded-xl p-5 border-2 shadow-sm",
+          available < 0 ? "bg-red-50 border-red-300" : "bg-emerald-50 border-primary/40"
         )}
       >
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
