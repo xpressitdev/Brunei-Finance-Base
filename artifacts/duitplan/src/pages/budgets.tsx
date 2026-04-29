@@ -537,7 +537,7 @@ function BucketRow({
                   type="button"
                   onClick={(e) => { e.stopPropagation(); onDelete(bucket); }}
                   aria-label={`Delete ${bucket.name}`}
-                  title="Delete envelope"
+                  title={bucket.fixed ? "Delete commitment" : "Delete envelope"}
                   className="text-muted-foreground/50 hover:text-rose-600 transition-colors p-0.5 -m-0.5 rounded"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
@@ -788,6 +788,7 @@ function AllocateView({
   refetch,
   refetchGoals,
   refetchCommitments,
+  refetchCategories,
   onTrialExpired,
   resetSignal,
 }: {
@@ -806,6 +807,7 @@ function AllocateView({
   refetch: () => void;
   refetchGoals: () => void;
   refetchCommitments: () => void;
+  refetchCategories: () => void;
   onTrialExpired: () => void;
   resetSignal: number;
 }) {
@@ -824,6 +826,7 @@ function AllocateView({
       if (!ok) return;
       try {
         await deleteCategory.mutateAsync({ id: rawId });
+        refetchCategories();
         refetch();
       } catch (err) {
         if (isTrialExpiredError(err)) { onTrialExpired(); return; }
@@ -842,7 +845,7 @@ function AllocateView({
         window.alert(err instanceof Error ? err.message : "Failed to delete commitment");
       }
     }
-  }, [deleteCategory, deleteCommitment, refetch, refetchCommitments, onTrialExpired]);
+  }, [deleteCategory, deleteCommitment, refetch, refetchCategories, refetchCommitments, onTrialExpired]);
 
   const initialBuckets: Bucket[] = useMemo(() => {
     const loans: Bucket[] = debts.map(d => ({
@@ -1567,7 +1570,7 @@ export default function Budgets() {
   const { data: commitments, refetch: refetchCommitments } = useListCommitments();
   const { data: debts = [] } = useListDebts();
   const { data: budgets, refetch } = useListBudgets({ month });
-  const { data: categories } = useListCategories();
+  const { data: categories, refetch: refetchCategories } = useListCategories();
   const { data: accounts = [] } = useListAccounts();
   const { data: goals = [], refetch: refetchGoals } = useListGoals();
   const upsert = useUpsertBudget();
@@ -1674,6 +1677,7 @@ export default function Budgets() {
           refetch={refetch}
           refetchGoals={refetchGoals}
           refetchCommitments={refetchCommitments}
+          refetchCategories={refetchCategories}
           onTrialExpired={() => setTrialExpiredError(true)}
           resetSignal={resetSignal}
         />
