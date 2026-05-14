@@ -1022,6 +1022,9 @@
       "paydayLabel": "Hari gaji — hari yang mana dalam bulan?",
       "otherDay": "Hari lain:"
     },
+    "pool": {
+      "emptyHint": "Masukkan baki untuk sekurang-kurangnya satu akaun untuk teruskan."
+    },
     "commitments": {
       "title": "Komitmen tetap bulanan",
       "subtitle": "Pilih yang berkenaan dengan anda, kemudian masukkan jumlah bulanan.",

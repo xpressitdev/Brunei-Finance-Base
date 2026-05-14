@@ -638,10 +638,9 @@ export default function Onboarding() {
                       </span>
                       <Input
                         id="income"
-                        type="number"
-                        step={decimalStep}
-                        min={MIN_MONTHLY_INCOME}
-                        max={MAX_MONTHLY_INCOME}
+                        type="text"
+                        inputMode="decimal"
+                        autoComplete="off"
                         aria-invalid={validateMonthlyIncome(monthlyIncome) ? true : undefined}
                         className={cn(
                           "pl-14 h-12 text-lg font-semibold",

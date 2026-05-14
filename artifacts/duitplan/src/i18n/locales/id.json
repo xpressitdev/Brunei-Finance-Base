@@ -1022,6 +1022,9 @@
       "paydayLabel": "Tanggal gajian — tanggal berapa dalam sebulan?",
       "otherDay": "Tanggal lain:"
     },
+    "pool": {
+      "emptyHint": "Masukkan saldo untuk setidaknya satu rekening untuk melanjutkan."
+    },
     "commitments": {
       "title": "Komitmen tetap bulanan",
       "subtitle": "Pilih yang berlaku untuk Anda, lalu masukkan jumlah bulanannya.",
