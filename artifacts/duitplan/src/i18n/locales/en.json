@@ -830,7 +830,8 @@
       "signingIn": "Signing in...",
       "submit": "Sign In",
       "noAccount": "Don't have an account?",
-      "signUp": "Sign up"
+      "signUp": "Sign up",
+      "forgotPassword": "Forgot password?"
     },
     "register": {
       "title": "Create an account",
@@ -842,7 +843,9 @@
       "creating": "Creating account...",
       "submit": "Create Account",
       "hasAccount": "Already have an account?",
-      "signIn": "Sign in"
+      "signIn": "Sign in",
+      "privacyNote": "Your data is encrypted and never sold.",
+      "privacyLink": "Privacy & Trust"
     },
     "errors": {
       "invalidCredentials": "Invalid email or password",

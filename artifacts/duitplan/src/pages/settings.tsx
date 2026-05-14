@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
-import { useGetProfile, useUpdateProfile, useListCategories, useCreateCategory, useResetUserData } from "@workspace/api-client-react";
+import { useGetProfile, useUpdateProfile, useListCategories, useCreateCategory, useResetUserData, useChangePassword } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,7 +18,9 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Plus, User, Tag, Globe, Shield, ArrowRight, Trash2, AlertTriangle } from "lucide-react";
+import { Plus, User, Tag, Globe, Shield, ArrowRight, Trash2, AlertTriangle, Lock } from "lucide-react";
+import { PasswordStrengthMeter } from "@/components/PasswordStrengthMeter";
+import { checkPasswordPolicy, PASSWORD_MIN_LENGTH } from "@/lib/password";
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useRegion } from "@/hooks/useRegion";
@@ -46,6 +48,11 @@ export default function Settings() {
   const updateProfileMutation = useUpdateProfile();
   const createCategoryMutation = useCreateCategory();
   const resetDataMutation = useResetUserData();
+  const changePasswordMutation = useChangePassword();
+  const [pwForm, setPwForm] = useState({ currentPassword: "", newPassword: "", confirm: "" });
+  const [pwTouched, setPwTouched] = useState({ newPassword: false, confirm: false });
+  const pwPolicy = checkPasswordPolicy(pwForm.newPassword);
+  const pwConfirmError = pwForm.confirm && pwForm.confirm !== pwForm.newPassword ? "Passwords don't match." : "";
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [resetConfirmText, setResetConfirmText] = useState("");
@@ -125,6 +132,26 @@ export default function Settings() {
     }
   };
 
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPwTouched({ newPassword: true, confirm: true });
+    if (!pwPolicy.ok || pwConfirmError || !pwForm.currentPassword) return;
+    try {
+      await changePasswordMutation.mutateAsync({
+        data: { currentPassword: pwForm.currentPassword, newPassword: pwForm.newPassword },
+      });
+      toast({ title: "Password updated", description: "Use your new password the next time you sign in." });
+      setPwForm({ currentPassword: "", newPassword: "", confirm: "" });
+      setPwTouched({ newPassword: false, confirm: false });
+    } catch (err: any) {
+      toast({
+        title: "Couldn't update password",
+        description: err?.error || "Check your current password and try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleAddCategory = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newCatName) return;
@@ -163,10 +190,78 @@ export default function Settings() {
           <TabsTrigger value="preferences" className="flex gap-2">
             <Globe className="w-4 h-4"/> {t("settings.tabs.preferences")}
           </TabsTrigger>
+          <TabsTrigger value="security" className="flex gap-2">
+            <Lock className="w-4 h-4"/> {t("settings.tabs.security", "Security")}
+          </TabsTrigger>
           <TabsTrigger value="privacy" className="flex gap-2">
             <Shield className="w-4 h-4"/> {t("settings.tabs.privacy", "Privacy")}
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="security">
+          <Card>
+            <CardHeader>
+              <CardTitle>Change password</CardTitle>
+              <CardDescription>
+                Use at least {PASSWORD_MIN_LENGTH} characters with at least one digit. After updating, you'll stay signed in on this device.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleChangePassword} className="space-y-4 max-w-md" noValidate>
+                <div className="space-y-1.5">
+                  <Label htmlFor="currentPassword">Current password</Label>
+                  <Input
+                    id="currentPassword"
+                    type="password"
+                    autoComplete="current-password"
+                    value={pwForm.currentPassword}
+                    onChange={(e) => setPwForm((p) => ({ ...p, currentPassword: e.target.value }))}
+                    data-testid="input-current-password"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="newPassword">New password</Label>
+                  <Input
+                    id="newPassword"
+                    type="password"
+                    autoComplete="new-password"
+                    minLength={PASSWORD_MIN_LENGTH}
+                    value={pwForm.newPassword}
+                    onChange={(e) => setPwForm((p) => ({ ...p, newPassword: e.target.value }))}
+                    onBlur={() => setPwTouched((s) => ({ ...s, newPassword: true }))}
+                    aria-invalid={pwTouched.newPassword && !pwPolicy.ok ? true : undefined}
+                    className={pwTouched.newPassword && !pwPolicy.ok ? "border-rose-400 focus-visible:ring-rose-300" : undefined}
+                    data-testid="input-new-password"
+                  />
+                  <PasswordStrengthMeter password={pwForm.newPassword} />
+                  {pwTouched.newPassword && !pwPolicy.ok && (
+                    <p className="text-xs text-rose-600">{pwPolicy.reason}</p>
+                  )}
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="confirmPassword">Confirm new password</Label>
+                  <Input
+                    id="confirmPassword"
+                    type="password"
+                    autoComplete="new-password"
+                    value={pwForm.confirm}
+                    onChange={(e) => setPwForm((p) => ({ ...p, confirm: e.target.value }))}
+                    onBlur={() => setPwTouched((s) => ({ ...s, confirm: true }))}
+                    aria-invalid={pwTouched.confirm && !!pwConfirmError ? true : undefined}
+                    className={pwTouched.confirm && pwConfirmError ? "border-rose-400 focus-visible:ring-rose-300" : undefined}
+                    data-testid="input-confirm-password"
+                  />
+                  {pwTouched.confirm && pwConfirmError && (
+                    <p className="text-xs text-rose-600">{pwConfirmError}</p>
+                  )}
+                </div>
+                <Button type="submit" disabled={changePasswordMutation.isPending} data-testid="button-change-password">
+                  {changePasswordMutation.isPending ? "Updating…" : "Update password"}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         <TabsContent value="profile">
           <Card>

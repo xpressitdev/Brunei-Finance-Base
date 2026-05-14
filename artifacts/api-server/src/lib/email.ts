@@ -40,14 +40,22 @@ function appBaseUrl(): string {
 
 function deliver(args: { to: string; subject: string; bodyText: string }): void {
   // Replace this stub with a real transport when SMTP/Resend creds land.
-  logger.info(
-    {
-      to: args.to,
-      subject: args.subject,
-      body: args.bodyText,
-    },
-    "[email] (no transport configured) would-send",
-  );
+  // SECURITY: bodyText contains single-use auth tokens (verification +
+  // password-reset URLs). Never log it in production — anyone with log
+  // access could hijack accounts. In non-production we surface the body
+  // so QA can complete flows without a real inbox.
+  const isProd = process.env.NODE_ENV === "production";
+  if (isProd) {
+    logger.info(
+      { to: args.to, subject: args.subject },
+      "[email] (no transport configured) would-send (body redacted)",
+    );
+  } else {
+    logger.info(
+      { to: args.to, subject: args.subject, body: args.bodyText },
+      "[email] (no transport configured) would-send",
+    );
+  }
 }
 
 export function buildVerificationUrl(token: string): string {

@@ -823,7 +823,8 @@
       "signingIn": "Masuk...",
       "submit": "Masuk",
       "noAccount": "Belum punya akun?",
-      "signUp": "Daftar"
+      "signUp": "Daftar",
+      "forgotPassword": "Lupa kata sandi?"
     },
     "register": {
       "title": "Buat akun",
@@ -835,7 +836,9 @@
       "creating": "Membuat akun...",
       "submit": "Buat Akun",
       "hasAccount": "Sudah punya akun?",
-      "signIn": "Masuk"
+      "signIn": "Masuk",
+      "privacyNote": "Data Anda terenkripsi dan tidak pernah dijual.",
+      "privacyLink": "Privasi & Kepercayaan"
     },
     "errors": {
       "invalidCredentials": "Email atau kata sandi tidak valid",

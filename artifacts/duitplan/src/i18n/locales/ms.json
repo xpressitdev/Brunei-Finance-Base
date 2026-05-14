@@ -823,7 +823,8 @@
       "signingIn": "Log masuk...",
       "submit": "Log Masuk",
       "noAccount": "Tiada akaun?",
-      "signUp": "Daftar"
+      "signUp": "Daftar",
+      "forgotPassword": "Lupa kata laluan?"
     },
     "register": {
       "title": "Cipta akaun",
@@ -835,7 +836,9 @@
       "creating": "Mencipta akaun...",
       "submit": "Cipta Akaun",
       "hasAccount": "Sudah ada akaun?",
-      "signIn": "Log masuk"
+      "signIn": "Log masuk",
+      "privacyNote": "Data anda disulitkan dan tidak pernah dijual.",
+      "privacyLink": "Privasi & Kepercayaan"
     },
     "errors": {
       "invalidCredentials": "E-mel atau kata laluan tidak sah",
