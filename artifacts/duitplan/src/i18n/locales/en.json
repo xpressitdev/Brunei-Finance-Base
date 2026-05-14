@@ -1042,7 +1042,7 @@
       "balanceLabel": "Balance ({{currency}})",
       "addAccount": "Add another account",
       "totalLabel": "Your pool total",
-      "emptyHint": "Add at least one account to keep going.",
+      "emptyHint": "Enter a balance for at least one account to continue.",
       "namePlaceholder": "e.g. BIBD Savings",
       "bankPlaceholder": "e.g. BIBD"
     },

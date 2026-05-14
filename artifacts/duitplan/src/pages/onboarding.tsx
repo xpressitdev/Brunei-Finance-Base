@@ -12,7 +12,6 @@ import {
   useCreateGoal,
   useListCategories,
   useUpdateCategory,
-  useDeleteCategory,
   useGetMe,
   type CreateGoalBodyCategory,
 } from "@workspace/api-client-react";
@@ -236,7 +235,6 @@ export default function Onboarding() {
   const createDebtMutation = useCreateDebt();
   const createGoalMutation = useCreateGoal();
   const updateCategoryMutation = useUpdateCategory();
-  const deleteCategoryMutation = useDeleteCategory();
   const completeOnboardingMutation = useCompleteOnboarding();
   const queryClient = useQueryClient();
 
@@ -382,7 +380,10 @@ export default function Onboarding() {
   const totalEnvelopes = Object.values(envelopes).reduce((sum, v) => sum + toNum(v), 0);
   const totalGoals = selectedGoals.reduce((sum, g) => sum + toNum(g.monthlyContribution), 0);
   const incomeNum = toNum(monthlyIncome);
-  const leftover = incomeNum - totalDebts - totalBills - totalEnvelopes - totalGoals;
+  // Goals are aspirational targets, not auto-deducted each month, so they
+  // don't reduce the planned leftover. We still surface the monthly goal
+  // contribution in the recap so the user sees the full picture.
+  const leftover = incomeNum - totalDebts - totalBills - totalEnvelopes;
 
   const [isFinishing, setIsFinishing] = useState(false);
   const [finishError, setFinishError] = useState<string | null>(null);
@@ -432,25 +433,11 @@ export default function Onboarding() {
           });
         }
       }
-      // Onboarding cleanup: if the user actively chose envelopes (set at least
-      // one budget > 0), delete the default expense categories they didn't pick
-      // so /categories only shows what they chose. If they skipped step 6
-      // entirely (no values at all), keep all defaults so they're not left with
-      // an empty list.
-      const userPickedEnvelopes = Object.values(envelopes).some((v) => toNum(v) > 0);
-      if (userPickedEnvelopes) {
-        for (const cat of allDefaultExpenseCategories) {
-          const picked = toNum(envelopes[cat.id] ?? "") > 0;
-          if (!picked) {
-            try {
-              await deleteCategoryMutation.mutateAsync({ id: cat.id });
-            } catch {
-              // Non-fatal: if a default can't be deleted (e.g. already used by
-              // a transaction) just leave it; user can clean up later.
-            }
-          }
-        }
-      }
+      // Keep all 15 seeded default categories regardless of which envelopes the
+      // user funded. Skipping step 6 (or only funding a few) should NOT prune
+      // the rest — the user still needs Groceries, Transport, Fuel, etc. as
+      // valid options when categorising transactions later. Targets default to
+      // 0 (no envelope bar) until edited from /categories.
       for (const g of selectedGoals) {
         if (g.label && toNum(g.targetAmount) > 0) {
           await createGoalMutation.mutateAsync({
@@ -1234,7 +1221,7 @@ export default function Onboarding() {
                   </div>
                   <div className="flex justify-between items-center px-4 py-2.5 rounded-lg bg-teal-50 border border-teal-200">
                     <span className="text-sm font-medium text-teal-900">🎯 {t("onboarding.recap.goals")}</span>
-                    <span className="font-semibold text-teal-900">−{formatMoney(totalGoals, region.currency)}</span>
+                    <span className="font-semibold text-teal-900">{formatMoney(totalGoals, region.currency)}/mo</span>
                   </div>
 
                   <div className="flex justify-between items-center px-4 py-3 rounded-lg bg-foreground text-background mt-1">
