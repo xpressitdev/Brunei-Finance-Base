@@ -50,6 +50,31 @@ function validateMonthlyIncome(raw: string): string | null {
   return null;
 }
 
+function validateAccountName(raw: string, hasBalance: boolean): string | null {
+  if (!raw && hasBalance) return "Give this account a name.";
+  if (raw && raw.trim().length < 2) return "Name must be at least 2 characters.";
+  if (raw.length > 60) return "Keep the name under 60 characters.";
+  return null;
+}
+
+function validateAccountBalance(raw: string, hasName: boolean): string | null {
+  if (!raw && hasName) return "Enter the current balance (0 is fine).";
+  if (!raw) return null;
+  const n = Number(raw);
+  if (!Number.isFinite(n)) return "Please enter a number.";
+  if (n < 0) return "Balance can't be negative.";
+  if (n > 100_000_000) return "That's a very large balance — please double-check.";
+  return null;
+}
+
+function validatePayday(raw: string): string | null {
+  if (!raw) return "Pick a payday.";
+  const n = Number(raw);
+  if (!Number.isInteger(n)) return "Payday must be a whole number.";
+  if (n < 1 || n > 31) return "Payday must be between 1 and 31.";
+  return null;
+}
+
 const ACCOUNT_PRESETS = [
   { id: "cash", type: "cash", icon: Wallet, i18nKey: "presetCash", bankDefault: "" },
   { id: "savings", type: "savings", icon: PiggyBank, i18nKey: "presetSavings", bankDefault: "BIBD" },
@@ -460,7 +485,13 @@ export default function Onboarding() {
   const rawFirstName = user?.profile?.fullName?.split(" ")[0]?.trim() ?? "";
   const firstName = rawFirstName || null;
 
-  const validPool = accounts.some((a) => a.name && toNum(a.balance) >= 0 && a.balance !== "");
+  const validPool =
+    accounts.some((a) => a.name && toNum(a.balance) >= 0 && a.balance !== "") &&
+    accounts.every(
+      (a) =>
+        validateAccountName(a.name, !!a.balance) === null &&
+        validateAccountBalance(a.balance, !!a.name) === null,
+    );
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-primary/5 to-background flex flex-col items-center justify-center p-4">
@@ -530,9 +561,11 @@ export default function Onboarding() {
                   {accounts.map((a) => {
                     const preset = ACCOUNT_PRESETS.find((p) => p.type === a.type);
                     const Icon = preset?.icon ?? Wallet;
+                    const nameErr = validateAccountName(a.name, !!a.balance);
+                    const balErr = validateAccountBalance(a.balance, !!a.name);
                     return (
                       <div key={a.id} className="border rounded-xl p-4 bg-muted/10">
-                        <div className="flex items-center gap-3 mb-3">
+                        <div className="flex items-center gap-3 mb-1">
                           <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
                             <Icon className="w-4 h-4" />
                           </div>
@@ -540,7 +573,12 @@ export default function Onboarding() {
                             placeholder={t("onboarding.pool.namePlaceholder")}
                             value={a.name}
                             onChange={(e) => updateAccount(a.id, "name", e.target.value)}
-                            className="flex-1 h-9 text-sm font-medium"
+                            aria-invalid={nameErr ? true : undefined}
+                            className={cn(
+                              "flex-1 h-9 text-sm font-medium",
+                              nameErr && "border-rose-400 focus-visible:ring-rose-300",
+                            )}
+                            data-testid={`input-account-name-${a.id}`}
                           />
                           <button
                             type="button"
@@ -551,7 +589,12 @@ export default function Onboarding() {
                             <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
-                        <div className="grid grid-cols-2 gap-3">
+                        {nameErr && (
+                          <p className="text-xs text-rose-600 mb-2 ml-12" data-testid={`error-account-name-${a.id}`}>
+                            {nameErr}
+                          </p>
+                        )}
+                        <div className="grid grid-cols-2 gap-3 mt-2">
                           <div className="space-y-1">
                             <Label className="text-xs text-muted-foreground">{t("onboarding.pool.bankLabel")}</Label>
                             <Input
@@ -572,8 +615,18 @@ export default function Onboarding() {
                               placeholder={decimalStep === "1" ? "0" : "0.00"}
                               value={a.balance}
                               onChange={(e) => updateAccount(a.id, "balance", e.target.value)}
-                              className="h-9 text-sm"
+                              aria-invalid={balErr ? true : undefined}
+                              className={cn(
+                                "h-9 text-sm",
+                                balErr && "border-rose-400 focus-visible:ring-rose-300",
+                              )}
+                              data-testid={`input-account-balance-${a.id}`}
                             />
+                            {balErr && (
+                              <p className="text-xs text-rose-600" data-testid={`error-account-balance-${a.id}`}>
+                                {balErr}
+                              </p>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -685,12 +738,22 @@ export default function Onboarding() {
                         type="number"
                         min="1"
                         max="31"
-                        className="w-20 h-8 text-sm"
+                        aria-invalid={validatePayday(payday) ? true : undefined}
+                        className={cn(
+                          "w-20 h-8 text-sm",
+                          validatePayday(payday) && "border-rose-400 focus-visible:ring-rose-300",
+                        )}
                         placeholder="e.g. 20"
                         value={![1, 15, 25, 28].includes(Number(payday)) ? payday : ""}
                         onChange={(e) => setPayday(e.target.value)}
+                        data-testid="input-payday-other"
                       />
                     </div>
+                    {validatePayday(payday) && (
+                      <p className="text-xs text-rose-600" data-testid="error-payday">
+                        {validatePayday(payday)}
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -705,7 +768,11 @@ export default function Onboarding() {
                   </Button>
                   <Button
                     onClick={handleNext}
-                    disabled={!monthlyIncome || validateMonthlyIncome(monthlyIncome) !== null}
+                    disabled={
+                      !monthlyIncome ||
+                      validateMonthlyIncome(monthlyIncome) !== null ||
+                      validatePayday(payday) !== null
+                    }
                   >
                     {t("onboarding.continue")} <ArrowRight className="ml-2 w-4 h-4" />
                   </Button>
