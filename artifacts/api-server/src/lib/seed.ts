@@ -288,10 +288,21 @@ export async function seedIfEmpty() {
   try {
     await ensureSessionsTable();
 
-    const [{ value: catCount }] = await db.select({ value: count() }).from(categoriesTable);
-    if (catCount === 0) {
-      await db.insert(categoriesTable).values(CATEGORIES).onConflictDoNothing();
-      logger.info({ count: CATEGORIES.length }, "Seeded categories");
+    // Backfill: ensure every default category exists by id, even if the table
+    // was previously partially-pruned (e.g. by older onboarding flows that
+    // deleted unselected defaults). Per-row onConflictDoNothing keeps existing
+    // rows (and any user edits to defaultBudget) untouched.
+    const [{ value: catCountBefore }] = await db.select({ value: count() }).from(categoriesTable);
+    const inserted = await db
+      .insert(categoriesTable)
+      .values(CATEGORIES)
+      .onConflictDoNothing()
+      .returning({ id: categoriesTable.id });
+    if (inserted.length > 0) {
+      logger.info(
+        { inserted: inserted.length, before: catCountBefore, total: CATEGORIES.length },
+        catCountBefore === 0 ? "Seeded categories" : "Backfilled missing default categories",
+      );
     }
 
     const [{ value: planCount }] = await db.select({ value: count() }).from(subscriptionPlansTable);
