@@ -9,4 +9,9 @@ import type { AuthUser } from "./authUser";
 
 export interface AuthResponse {
   user: AuthUser;
+  /**
+   * Only populated outside production so QA can complete email verification without an inbox.
+   * @nullable
+   */
+  devVerificationUrl?: string | null;
 }

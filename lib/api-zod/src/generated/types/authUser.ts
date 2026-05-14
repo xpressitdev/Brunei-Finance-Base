@@ -11,5 +11,7 @@ export interface AuthUser {
   id: string;
   email: string;
   onboardingCompleted: boolean;
+  emailVerified: boolean;
+  passwordWeak: boolean;
   profile?: Profile;
 }

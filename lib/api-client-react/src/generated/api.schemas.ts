@@ -50,14 +50,53 @@ export interface ErrorResponse {
 }
 
 export interface RegisterBody {
+  /** @minLength 1 */
   fullName: string;
   email: string;
+  /** @minLength 10 */
   password: string;
 }
 
 export interface LoginBody {
   email: string;
+  /** @minLength 1 */
   password: string;
+}
+
+export interface ForgotPasswordBody {
+  email: string;
+}
+
+export interface ForgotPasswordResponse {
+  ok: boolean;
+  /**
+   * Only populated outside production so QA can complete the flow without an inbox.
+   * @nullable
+   */
+  devResetUrl?: string | null;
+}
+
+export interface ResetPasswordBody {
+  /** @minLength 1 */
+  token: string;
+  /** @minLength 10 */
+  password: string;
+}
+
+export interface VerifyEmailBody {
+  /** @minLength 1 */
+  token: string;
+}
+
+export interface ChangePasswordBody {
+  /** @minLength 1 */
+  currentPassword: string;
+  /** @minLength 10 */
+  newPassword: string;
+}
+
+export interface SimpleOkResponse {
+  ok: boolean;
 }
 
 export interface Profile {
@@ -78,11 +117,18 @@ export interface AuthUser {
   id: string;
   email: string;
   onboardingCompleted: boolean;
+  emailVerified: boolean;
+  passwordWeak: boolean;
   profile?: Profile;
 }
 
 export interface AuthResponse {
   user: AuthUser;
+  /**
+   * Only populated outside production so QA can complete email verification without an inbox.
+   * @nullable
+   */
+  devVerificationUrl?: string | null;
 }
 
 export interface UpdateProfileBody {

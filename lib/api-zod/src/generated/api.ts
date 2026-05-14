@@ -17,18 +17,22 @@ export const HealthCheckResponse = zod.object({
 /**
  * @summary Register a new user
  */
+
+export const registerBodyPasswordMin = 10;
+
 export const RegisterBody = zod.object({
-  fullName: zod.string(),
-  email: zod.string(),
-  password: zod.string(),
+  fullName: zod.string().min(1),
+  email: zod.string().email(),
+  password: zod.string().min(registerBodyPasswordMin),
 });
 
 /**
  * @summary Login with email and password
  */
+
 export const LoginBody = zod.object({
-  email: zod.string(),
-  password: zod.string(),
+  email: zod.string().email(),
+  password: zod.string().min(1),
 });
 
 export const LoginResponse = zod.object({
@@ -36,6 +40,8 @@ export const LoginResponse = zod.object({
     id: zod.string(),
     email: zod.string(),
     onboardingCompleted: zod.boolean(),
+    emailVerified: zod.boolean(),
+    passwordWeak: zod.boolean(),
     profile: zod
       .object({
         id: zod.string(),
@@ -52,6 +58,78 @@ export const LoginResponse = zod.object({
       })
       .optional(),
   }),
+  devVerificationUrl: zod
+    .string()
+    .nullish()
+    .describe(
+      "Only populated outside production so QA can complete email verification without an inbox.",
+    ),
+});
+
+/**
+ * @summary Request a password-reset email
+ */
+export const ForgotPasswordBody = zod.object({
+  email: zod.string().email(),
+});
+
+export const ForgotPasswordResponse = zod.object({
+  ok: zod.boolean(),
+  devResetUrl: zod
+    .string()
+    .nullish()
+    .describe(
+      "Only populated outside production so QA can complete the flow without an inbox.",
+    ),
+});
+
+/**
+ * @summary Complete a password reset using a token
+ */
+
+export const resetPasswordBodyPasswordMin = 10;
+
+export const ResetPasswordBody = zod.object({
+  token: zod.string().min(1),
+  password: zod.string().min(resetPasswordBodyPasswordMin),
+});
+
+export const ResetPasswordResponse = zod.object({
+  ok: zod.boolean(),
+});
+
+/**
+ * @summary Verify a user's email using a token from the verification email
+ */
+
+export const VerifyEmailBody = zod.object({
+  token: zod.string().min(1),
+});
+
+export const VerifyEmailResponse = zod.object({
+  ok: zod.boolean(),
+});
+
+/**
+ * @summary Resend the email-verification link to the currently signed-in user
+ */
+export const ResendVerificationResponse = zod.object({
+  ok: zod.boolean(),
+});
+
+/**
+ * @summary Update the current user's password
+ */
+
+export const changePasswordBodyNewPasswordMin = 10;
+
+export const ChangePasswordBody = zod.object({
+  currentPassword: zod.string().min(1),
+  newPassword: zod.string().min(changePasswordBodyNewPasswordMin),
+});
+
+export const ChangePasswordResponse = zod.object({
+  ok: zod.boolean(),
 });
 
 /**
@@ -61,6 +139,8 @@ export const GetMeResponse = zod.object({
   id: zod.string(),
   email: zod.string(),
   onboardingCompleted: zod.boolean(),
+  emailVerified: zod.boolean(),
+  passwordWeak: zod.boolean(),
   profile: zod
     .object({
       id: zod.string(),

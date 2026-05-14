@@ -6,10 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface RegisterBody {
+export interface VerifyEmailBody {
   /** @minLength 1 */
-  fullName: string;
-  email: string;
-  /** @minLength 10 */
-  password: string;
+  token: string;
 }

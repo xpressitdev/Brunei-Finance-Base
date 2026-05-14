@@ -6,10 +6,9 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface RegisterBody {
+export interface ResetPasswordBody {
   /** @minLength 1 */
-  fullName: string;
-  email: string;
+  token: string;
   /** @minLength 10 */
   password: string;
 }

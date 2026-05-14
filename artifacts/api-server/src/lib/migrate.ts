@@ -81,6 +81,33 @@ export async function runStartupMigrations(): Promise<void> {
         );
     `);
 
+    // Task #56: auth strengthening — password policy + email verification + reset tokens
+    await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS password_weak boolean NOT NULL DEFAULT false;`);
+    await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified boolean NOT NULL DEFAULT false;`);
+    await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified_at timestamptz;`);
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS "email_verification_tokens" (
+        "id"          text         PRIMARY KEY,
+        "user_id"     text         NOT NULL,
+        "token_hash"  text         NOT NULL UNIQUE,
+        "expires_at"  timestamptz  NOT NULL,
+        "used_at"     timestamptz,
+        "created_at"  timestamptz  NOT NULL DEFAULT now()
+      );
+    `);
+    await client.query(`CREATE INDEX IF NOT EXISTS email_verification_tokens_user_idx ON email_verification_tokens (user_id);`);
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS "password_reset_tokens" (
+        "id"          text         PRIMARY KEY,
+        "user_id"     text         NOT NULL,
+        "token_hash"  text         NOT NULL UNIQUE,
+        "expires_at"  timestamptz  NOT NULL,
+        "used_at"     timestamptz,
+        "created_at"  timestamptz  NOT NULL DEFAULT now()
+      );
+    `);
+    await client.query(`CREATE INDEX IF NOT EXISTS password_reset_tokens_user_idx ON password_reset_tokens (user_id);`);
+
     logger.info("Startup migrations applied");
   } catch (err) {
     logger.error({ err }, "Startup migration failed — aborting server start");

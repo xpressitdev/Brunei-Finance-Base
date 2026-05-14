@@ -8,5 +8,6 @@
 
 export interface LoginBody {
   email: string;
+  /** @minLength 1 */
   password: string;
 }
