@@ -83,6 +83,27 @@ export async function runStartupMigrations(): Promise<void> {
 
     // Task #56: auth strengthening — password policy + email verification + reset tokens
     await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS password_weak boolean NOT NULL DEFAULT false;`);
+    // Grandfather legacy users: if email_verified did not exist before this
+    // migration, every existing row predates the verification requirement.
+    // Backfill them to verified=true (with verified_at = now) so they retain
+    // self-service password reset. Without this, /auth/forgot-password (which
+    // is gated on emailVerified to prevent silent token loss to typo'd
+    // addresses) would lock every pre-existing account out of recovery, and
+    // /auth/resend-verification is auth-gated so they couldn't escape.
+    await client.query(`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name = 'users' AND column_name = 'email_verified'
+        ) THEN
+          ALTER TABLE users ADD COLUMN email_verified boolean NOT NULL DEFAULT false;
+          ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified_at timestamptz;
+          UPDATE users SET email_verified = true, email_verified_at = now();
+        END IF;
+      END $$;
+    `);
+    // Idempotent fallbacks for fresh DBs / partial prior runs.
     await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified boolean NOT NULL DEFAULT false;`);
     await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified_at timestamptz;`);
     await client.query(`
