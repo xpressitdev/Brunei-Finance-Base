@@ -12,6 +12,7 @@ import {
   useDeleteTransaction,
   getListAccountsQueryKey,
   getListBudgetsQueryKey,
+  getListTransactionsQueryKey,
   getGetDashboardSummaryQueryKey,
   getGetSpendingByCategoryQueryKey,
   getGetRecentTransactionsQueryKey,
@@ -144,9 +145,13 @@ export default function Transactions() {
 
   // Invalidate budget/dashboard caches so envelope `spent`, dashboard KPIs and
   // spending-by-category update live whenever a transaction is created/edited/deleted.
+  // The list-transactions key is invalidated WITHOUT params so every variant
+  // (filtered list, current-month KPI feed, top-merchants feed) refetches —
+  // calling refetch() on the filtered hook alone leaves the other variants stale.
   const invalidateRelated = () => {
     queryClient.invalidateQueries({ queryKey: getListAccountsQueryKey() });
     queryClient.invalidateQueries({ queryKey: getListBudgetsQueryKey() });
+    queryClient.invalidateQueries({ queryKey: getListTransactionsQueryKey() });
     queryClient.invalidateQueries({ queryKey: getGetDashboardSummaryQueryKey() });
     queryClient.invalidateQueries({ queryKey: getGetSpendingByCategoryQueryKey() });
     queryClient.invalidateQueries({ queryKey: getGetRecentTransactionsQueryKey() });

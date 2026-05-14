@@ -45,11 +45,28 @@ router.get("/profile", requireAuth, async (req: AuthenticatedRequest, res): Prom
   });
 });
 
+// Salary bounds shared with the client. Anything <= 0 is invalid (negative or
+// missing income breaks every downstream calc), and we cap at BND 1,000,000 to
+// stop fat-finger inputs producing display-breaking numbers.
+const MIN_MONTHLY_INCOME = 0.01;
+const MAX_MONTHLY_INCOME = 1_000_000;
+
 router.put("/profile", requireAuth, async (req: AuthenticatedRequest, res): Promise<void> => {
   const parsed = UpdateProfileBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
     return;
+  }
+
+  if (parsed.data.monthlyIncome != null) {
+    const n = Number(parsed.data.monthlyIncome);
+    if (!Number.isFinite(n) || n < MIN_MONTHLY_INCOME || n > MAX_MONTHLY_INCOME) {
+      res.status(400).json({
+        error: `Monthly income must be between ${MIN_MONTHLY_INCOME} and ${MAX_MONTHLY_INCOME.toLocaleString()}.`,
+        code: "INVALID_MONTHLY_INCOME",
+      });
+      return;
+    }
   }
 
   const updateData: Record<string, unknown> = {};

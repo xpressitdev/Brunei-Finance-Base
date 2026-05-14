@@ -38,6 +38,19 @@ import { useRegion } from "@/hooks/useRegion";
 
 const TOTAL_STEPS = 8;
 
+// Keep in sync with MIN/MAX_MONTHLY_INCOME in artifacts/api-server/src/routes/profile.ts
+const MIN_MONTHLY_INCOME = 0.01;
+const MAX_MONTHLY_INCOME = 1_000_000;
+
+function validateMonthlyIncome(raw: string): string | null {
+  if (!raw) return null;
+  const n = Number(raw);
+  if (!Number.isFinite(n)) return "Please enter a number.";
+  if (n < MIN_MONTHLY_INCOME) return "Salary must be a positive amount.";
+  if (n > MAX_MONTHLY_INCOME) return `That looks too high. Please enter a value up to ${MAX_MONTHLY_INCOME.toLocaleString()}.`;
+  return null;
+}
+
 const ACCOUNT_PRESETS = [
   { id: "cash", type: "cash", icon: Wallet, i18nKey: "presetCash", bankDefault: "" },
   { id: "savings", type: "savings", icon: PiggyBank, i18nKey: "presetSavings", bankDefault: "BIBD" },
@@ -640,14 +653,25 @@ export default function Onboarding() {
                         id="income"
                         type="number"
                         step={decimalStep}
-                        min="0"
-                        className="pl-14 h-12 text-lg font-semibold"
+                        min={MIN_MONTHLY_INCOME}
+                        max={MAX_MONTHLY_INCOME}
+                        aria-invalid={validateMonthlyIncome(monthlyIncome) ? true : undefined}
+                        className={cn(
+                          "pl-14 h-12 text-lg font-semibold",
+                          validateMonthlyIncome(monthlyIncome) && "border-rose-400 focus-visible:ring-rose-300",
+                        )}
                         placeholder={decimalStep === "1" ? "0" : "0.00"}
                         value={monthlyIncome}
                         onChange={(e) => setMonthlyIncome(e.target.value)}
                       />
                     </div>
-                    <p className="text-xs text-muted-foreground">{t("onboarding.income.salaryHint")}</p>
+                    {validateMonthlyIncome(monthlyIncome) ? (
+                      <p className="text-xs text-rose-600" data-testid="error-monthly-income">
+                        {validateMonthlyIncome(monthlyIncome)}
+                      </p>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">{t("onboarding.income.salaryHint")}</p>
+                    )}
                   </div>
 
                   <div className="space-y-2">
@@ -693,7 +717,10 @@ export default function Onboarding() {
                   <Button variant="outline" onClick={handleBack}>
                     <ArrowLeft className="mr-2 w-4 h-4" /> {t("onboarding.back")}
                   </Button>
-                  <Button onClick={handleNext} disabled={!monthlyIncome}>
+                  <Button
+                    onClick={handleNext}
+                    disabled={!monthlyIncome || validateMonthlyIncome(monthlyIncome) !== null}
+                  >
                     {t("onboarding.continue")} <ArrowRight className="ml-2 w-4 h-4" />
                   </Button>
                 </div>

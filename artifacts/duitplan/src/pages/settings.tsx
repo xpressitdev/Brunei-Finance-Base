@@ -24,6 +24,19 @@ import { useToast } from "@/hooks/use-toast";
 import { useRegion } from "@/hooks/useRegion";
 import i18n from "@/i18n";
 
+// Keep in sync with MIN/MAX_MONTHLY_INCOME in artifacts/api-server/src/routes/profile.ts
+const MIN_MONTHLY_INCOME = 0.01;
+const MAX_MONTHLY_INCOME = 1_000_000;
+
+function validateMonthlyIncome(raw: string): string | null {
+  if (!raw) return "Please enter your monthly salary.";
+  const n = Number(raw);
+  if (!Number.isFinite(n)) return "Please enter a number.";
+  if (n < MIN_MONTHLY_INCOME) return "Salary must be a positive amount.";
+  if (n > MAX_MONTHLY_INCOME) return `That looks too high. Please enter a value up to ${MAX_MONTHLY_INCOME.toLocaleString()}.`;
+  return null;
+}
+
 export default function Settings() {
   const { t } = useTranslation();
   const { region, decimalStep } = useRegion();
@@ -61,6 +74,11 @@ export default function Settings() {
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
+    const incomeError = validateMonthlyIncome(formData.monthlyIncome);
+    if (incomeError) {
+      toast({ title: incomeError, variant: "destructive" });
+      return;
+    }
     try {
       await updateProfileMutation.mutateAsync({
         data: {
@@ -168,12 +186,21 @@ export default function Settings() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>{t("settings.profile.monthlyIncome", { currency: region.currency })}</Label>
-                    <Input 
-                      type="number" 
-                      step={decimalStep} 
-                      value={formData.monthlyIncome} 
-                      onChange={(e) => setFormData({...formData, monthlyIncome: e.target.value})} 
+                    <Input
+                      type="number"
+                      step={decimalStep}
+                      min={MIN_MONTHLY_INCOME}
+                      max={MAX_MONTHLY_INCOME}
+                      aria-invalid={validateMonthlyIncome(formData.monthlyIncome) ? true : undefined}
+                      className={validateMonthlyIncome(formData.monthlyIncome) ? "border-rose-400 focus-visible:ring-rose-300" : undefined}
+                      value={formData.monthlyIncome}
+                      onChange={(e) => setFormData({...formData, monthlyIncome: e.target.value})}
                     />
+                    {validateMonthlyIncome(formData.monthlyIncome) && (
+                      <p className="text-xs text-rose-600" data-testid="error-monthly-income">
+                        {validateMonthlyIncome(formData.monthlyIncome)}
+                      </p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label>{t("settings.profile.payday")}</Label>
@@ -186,7 +213,10 @@ export default function Settings() {
                     />
                   </div>
                 </div>
-                <Button type="submit" disabled={updateProfileMutation.isPending}>
+                <Button
+                  type="submit"
+                  disabled={updateProfileMutation.isPending || validateMonthlyIncome(formData.monthlyIncome) !== null}
+                >
                   {updateProfileMutation.isPending ? t("common.saving") : t("common.saveChanges")}
                 </Button>
               </form>
