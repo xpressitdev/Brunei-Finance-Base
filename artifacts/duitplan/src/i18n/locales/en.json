@@ -1101,7 +1101,7 @@
       "targetLabel": "Target amount ({{currency}})",
       "targetShort": "Target",
       "monthlyShort": "Monthly",
-      "monthlyHint": "How much do you want to set aside each month for your goals? Only this monthly amount comes out of your money flow — the target is just the finish line.",
+      "monthlyHint": "How much do you want to set aside each month toward your goals? This is your target contribution — track it on the Goals page; it isn't auto-deducted from your money flow.",
       "emptyHint": "No goals yet — tap Skip to keep going. You can add goals anytime from the Goals tab.",
       "almostDone": "🎉 You're almost done!",
       "almostDoneHint": "One more step to see your full money flow.",
