@@ -27,6 +27,18 @@ runStartupMigrations()
 
       logger.info({ port }, "Server listening");
 
+      // Auth-recovery transport guard: the email helper currently log-only
+      // delivers verification + password-reset URLs. In production this means
+      // users cannot self-recover unless an SMTP/Resend/SES transport is
+      // wired into artifacts/api-server/src/lib/email.ts deliver(). Surface
+      // the gap loudly at boot so it's visible in deployment logs.
+      if (process.env.NODE_ENV === "production") {
+        logger.warn(
+          {},
+          "[email] no transactional email transport configured — verification and password-reset emails will NOT be delivered. Wire a real transport in lib/email.ts before relying on self-serve recovery.",
+        );
+      }
+
       seedIfEmpty().catch((e) => logger.error({ err: e }, "Seed error"));
     });
   })
