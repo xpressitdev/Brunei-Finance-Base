@@ -6,7 +6,8 @@ import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { Link } from "wouter";
-import { ArrowDownRight, CreditCard, Activity, ArrowRight, Upload, Flame, Trophy, Landmark, ArrowUpRight, Calendar } from "lucide-react";
+import { ArrowDownRight, CreditCard, Activity, ArrowRight, Upload, Flame, Trophy, Landmark, ArrowUpRight, Calendar, Plus } from "lucide-react";
+import { AddTransactionDialog } from "@/components/AddTransactionDialog";
 import { KpiCard } from "@/components/redesign/KpiCard";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -105,11 +106,13 @@ export default function Dashboard() {
               <Upload className="w-4 h-4" /> {t("common.importStatement")}
             </Button>
           </Link>
-          <Link href="/transactions">
-            <Button className="gap-2">
-              <ArrowUpRight className="w-4 h-4" /> {t("common.addTransaction")}
-            </Button>
-          </Link>
+          <AddTransactionDialog
+            trigger={
+              <Button className="gap-2">
+                <Plus className="w-4 h-4" /> {t("common.addTransaction")}
+              </Button>
+            }
+          />
         </div>
       </div>
 

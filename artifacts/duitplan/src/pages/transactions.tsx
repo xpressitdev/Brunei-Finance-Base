@@ -10,6 +10,7 @@ import {
   useCreateTransaction,
   useUpdateTransaction,
   useDeleteTransaction,
+  useGetProfile,
   getListAccountsQueryKey,
   getListBudgetsQueryKey,
   getListTransactionsQueryKey,
@@ -77,6 +78,7 @@ export default function Transactions() {
   const { data: currentMonthTxs } = useListTransactions({ month: currentMonthStr });
   const { data: categories } = useListCategories();
   const { data: accounts } = useListAccounts();
+  const { data: profile } = useGetProfile();
 
   // Heatmap & stats derived from current month's transactions
   const heatmapData = useMemo(() => {
@@ -570,11 +572,41 @@ export default function Transactions() {
           <div className="text-lg sm:text-2xl font-bold tabular-nums text-rose-600 mt-1 break-words">−{formatCurrency(hmSpent)}</div>
           <div className="text-[11px] text-muted-foreground mt-0.5">{currentMonthTxs?.filter(t => t.type === "debit").length ?? 0} purchases</div>
         </div>
-        <div className={`rounded-xl border p-3 sm:p-4 relative overflow-hidden min-w-0 ${hmNet >= 0 ? "bg-emerald-50/60 border-emerald-200" : "bg-rose-50/60 border-rose-200"}`}>
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground truncate">Net flow</p>
-          <div className={`text-lg sm:text-2xl font-bold tabular-nums mt-1 break-words ${hmNet >= 0 ? "text-primary" : "text-rose-600"}`}>{hmNet >= 0 ? "+" : "−"}{formatCurrency(Math.abs(hmNet))}</div>
-          <div className="text-[11px] text-muted-foreground mt-0.5">{hmNet >= 0 ? "Saving this month" : "Overspending"}</div>
-        </div>
+        {(() => {
+          // Pre-payday detection: if the user has a configured payday, today is
+          // before it, and the salary clearly hasn't landed yet (income this
+          // month is well below their monthly income), the Net flow card shows
+          // a neutral "Pre-payday spending" label instead of a red
+          // "Overspending" — it's expected to be net-negative before Hari Gaji.
+          const payday = profile?.payday ?? null;
+          const monthlyIncome = profile?.monthlyIncome ? Number(profile.monthlyIncome) : 0;
+          const today = new Date().getDate();
+          const salaryLanded = monthlyIncome > 0 ? hmIncome >= monthlyIncome * 0.5 : hmIncome > 0;
+          const prePayday = !!payday && today < payday && !salaryLanded;
+          const tone = prePayday
+            ? "bg-card border-border"
+            : hmNet >= 0
+              ? "bg-emerald-50/60 border-emerald-200"
+              : "bg-rose-50/60 border-rose-200";
+          const valueTone = prePayday
+            ? "text-foreground"
+            : hmNet >= 0
+              ? "text-primary"
+              : "text-rose-600";
+          const label = prePayday ? "Pre-payday spending" : "Net flow";
+          const sub = prePayday
+            ? `Hari Gaji on day ${payday}`
+            : hmNet >= 0
+              ? "Saving this month"
+              : "Overspending";
+          return (
+            <div className={`rounded-xl border p-3 sm:p-4 relative overflow-hidden min-w-0 ${tone}`}>
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground truncate">{label}</p>
+              <div className={`text-lg sm:text-2xl font-bold tabular-nums mt-1 break-words ${valueTone}`}>{hmNet >= 0 ? "+" : "−"}{formatCurrency(Math.abs(hmNet))}</div>
+              <div className="text-[11px] text-muted-foreground mt-0.5">{sub}</div>
+            </div>
+          );
+        })()}
         <div className="rounded-xl border bg-card p-3 sm:p-4 relative overflow-hidden min-w-0">
           <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground truncate">Avg per day</p>
           <div className="text-lg sm:text-2xl font-bold tabular-nums mt-1 break-words">{formatCurrency(avgPerDay)}</div>
