@@ -39,6 +39,7 @@ import { Trash2, Plus, Search, Receipt, TrendingUp, TrendingDown, Pencil, Info }
 import { TrialExpiredPrompt } from "@/components/subscription/TrialExpiredPrompt";
 import { isTrialExpiredError } from "@/lib/trialExpired";
 import { useRegion } from "@/hooks/useRegion";
+import { computeSpendingPace, formatPaceTooltip } from "@/lib/spendingPace";
 
 type TransactionItem = {
   id: string;
@@ -603,47 +604,11 @@ export default function Transactions() {
           // the user is on track for the whole month, regardless of whether
           // their salary has actually landed yet. The cycle is the calendar
           // month (matching the rest of the page's "this month" stats), so it
-          // naturally resets on the 1st.
-          const spentPctRaw = monthlyIncome > 0 ? (hmSpent / monthlyIncome) * 100 : 0;
-          const spentPct = Math.min(spentPctRaw, 100);
-          const overBudget = spentPctRaw > 100;
-          const barColor = overBudget
-            ? "bg-rose-500"
-            : spentPctRaw > 80
-              ? "bg-amber-500"
-              : "bg-primary";
-          // Pacing indicator: compares spend ratio to where we are in the
-          // month. Cycle is the calendar month so it resets cleanly on the
-          // 1st. Only meaningful when we have an income target to compare
-          // against.
-          const now = new Date();
-          const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-          const dayOfMonth = now.getDate();
-          const monthProgressPct = (dayOfMonth / daysInMonth) * 100;
-          const paceDelta = spentPctRaw - monthProgressPct;
-          let paceLabel = "";
-          let paceTone = "";
-          if (monthlyIncome > 0) {
-            if (overBudget) {
-              paceLabel = "Over budget";
-              paceTone = "text-rose-600";
-            } else if (paceDelta <= -10) {
-              paceLabel = "Ahead of pace";
-              paceTone = "text-emerald-700";
-            } else if (paceDelta <= 5) {
-              paceLabel = "On track";
-              paceTone = "text-emerald-700";
-            } else if (paceDelta <= 15) {
-              paceLabel = "Slightly ahead";
-              paceTone = "text-amber-600";
-            } else {
-              paceLabel = "Burning fast";
-              paceTone = "text-rose-600";
-            }
-          }
-          const paceTooltip = monthlyIncome > 0
-            ? `Used ${Math.round(spentPctRaw)}% of expected income · day ${dayOfMonth} of ${daysInMonth} (${Math.round(monthProgressPct)}% through the month)`
-            : "";
+          // naturally resets on the 1st. Shared with the Dashboard via
+          // `lib/spendingPace.ts` so both surfaces stay in sync.
+          const pace = computeSpendingPace(hmSpent, monthlyIncome);
+          const { spentPctRaw, spentPct, overBudget, barColor, paceLabel, paceTone, dayOfMonth, daysInMonth, monthProgressPct } = pace;
+          const paceTooltip = formatPaceTooltip(pace);
           return (
             <div className={`rounded-xl border p-3 sm:p-4 relative overflow-hidden min-w-0 ${tone}`}>
               <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground truncate">{label}</p>

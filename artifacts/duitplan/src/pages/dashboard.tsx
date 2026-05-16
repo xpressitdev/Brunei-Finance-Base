@@ -15,6 +15,7 @@ import { useRegion } from "@/hooks/useRegion";
 import { cn } from "@/lib/utils";
 import { usePaydayPrompt } from "@/hooks/usePaydayPrompt";
 import { PaydayReviewModal } from "@/components/PaydayReviewModal";
+import { computeSpendingPace, formatPaceTooltip } from "@/lib/spendingPace";
 
 const COLORS = ["#15a06e", "#0ea5e9", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4", "#84cc16", "#f97316"];
 
@@ -150,6 +151,10 @@ export default function Dashboard() {
         const remainingPositive = remaining >= 0;
         const debtMonthly = parseFloat(String(summary?.totalDebtMonthlyPayment ?? 0));
         const txCount = recentTransactions?.length ?? 0;
+        const monthlyIncomeNum = summary?.monthlyIncome ? Number(summary.monthlyIncome) : 0;
+        const spentNum = summary?.totalSpent ? Number(summary.totalSpent) : 0;
+        const pace = computeSpendingPace(spentNum, monthlyIncomeNum);
+        const paceTooltip = formatPaceTooltip(pace);
         return (
           <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
             <KpiCard
@@ -185,8 +190,34 @@ export default function Dashboard() {
               value={formatCurrency(summary?.totalSpent)}
               icon={<CreditCard className="w-3.5 h-3.5" />}
               footer={
-                <div className="text-[11px] text-muted-foreground">
-                  {txCount} {txCount === 1 ? "transaction" : "transactions"}
+                <div className="space-y-1.5">
+                  <div className="text-[11px] text-muted-foreground flex items-center gap-1.5 flex-wrap">
+                    <span>{txCount} {txCount === 1 ? "transaction" : "transactions"}</span>
+                    {pace.paceLabel && (
+                      <>
+                        <span className="text-muted-foreground/60">·</span>
+                        <span className={`font-semibold ${pace.paceTone}`} title={paceTooltip}>{pace.paceLabel}</span>
+                      </>
+                    )}
+                  </div>
+                  {monthlyIncomeNum > 0 && (
+                    <div
+                      className="h-1 w-full rounded-full bg-muted overflow-hidden relative"
+                      role="progressbar"
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                      aria-valuenow={Math.min(Math.round(pace.spentPctRaw), 100)}
+                      aria-label={`Spent ${formatCurrency(spentNum)} of expected ${formatCurrency(monthlyIncomeNum)} this month, ${pace.paceLabel.toLowerCase()} on day ${pace.dayOfMonth} of ${pace.daysInMonth}`}
+                    >
+                      <div className={`h-full ${pace.barColor} transition-all`} style={{ width: `${pace.spentPct}%` }} />
+                      <div
+                        className="absolute top-[-2px] bottom-[-2px] w-px bg-foreground/40"
+                        style={{ left: `${Math.min(pace.monthProgressPct, 100)}%` }}
+                        title={`Day ${pace.dayOfMonth} of ${pace.daysInMonth}`}
+                        aria-hidden="true"
+                      />
+                    </div>
+                  )}
                 </div>
               }
             />
