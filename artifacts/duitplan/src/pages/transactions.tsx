@@ -612,22 +612,68 @@ export default function Transactions() {
             : spentPctRaw > 80
               ? "bg-amber-500"
               : "bg-primary";
+          // Pacing indicator: compares spend ratio to where we are in the
+          // month. Cycle is the calendar month so it resets cleanly on the
+          // 1st. Only meaningful when we have an income target to compare
+          // against.
+          const now = new Date();
+          const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+          const dayOfMonth = now.getDate();
+          const monthProgressPct = (dayOfMonth / daysInMonth) * 100;
+          const paceDelta = spentPctRaw - monthProgressPct;
+          let paceLabel = "";
+          let paceTone = "";
+          if (monthlyIncome > 0) {
+            if (overBudget) {
+              paceLabel = "Over budget";
+              paceTone = "text-rose-600";
+            } else if (paceDelta <= -10) {
+              paceLabel = "Ahead of pace";
+              paceTone = "text-emerald-700";
+            } else if (paceDelta <= 5) {
+              paceLabel = "On track";
+              paceTone = "text-emerald-700";
+            } else if (paceDelta <= 15) {
+              paceLabel = "Slightly ahead";
+              paceTone = "text-amber-600";
+            } else {
+              paceLabel = "Burning fast";
+              paceTone = "text-rose-600";
+            }
+          }
+          const paceTooltip = monthlyIncome > 0
+            ? `Used ${Math.round(spentPctRaw)}% of expected income · day ${dayOfMonth} of ${daysInMonth} (${Math.round(monthProgressPct)}% through the month)`
+            : "";
           return (
             <div className={`rounded-xl border p-3 sm:p-4 relative overflow-hidden min-w-0 ${tone}`}>
               <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground truncate">{label}</p>
               <div className={`text-lg sm:text-2xl font-bold tabular-nums mt-1 break-words ${valueTone}`}>{hmNet >= 0 ? "+" : "−"}{formatCurrency(Math.abs(hmNet))}</div>
-              <div className="text-[11px] text-muted-foreground mt-0.5">{sub}</div>
+              <div className="text-[11px] text-muted-foreground mt-0.5 flex items-center gap-1.5 flex-wrap">
+                <span>{sub}</span>
+                {paceLabel && (
+                  <>
+                    <span className="text-muted-foreground/60">·</span>
+                    <span className={`font-semibold ${paceTone}`} title={paceTooltip}>{paceLabel}</span>
+                  </>
+                )}
+              </div>
               {monthlyIncome > 0 && (
                 <div className="mt-2">
                   <div
-                    className="h-1 w-full rounded-full bg-muted overflow-hidden"
+                    className="h-1 w-full rounded-full bg-muted overflow-hidden relative"
                     role="progressbar"
                     aria-valuemin={0}
                     aria-valuemax={100}
                     aria-valuenow={Math.min(Math.round(spentPctRaw), 100)}
-                    aria-label={`Spent ${formatCurrency(hmSpent)} of expected ${formatCurrency(monthlyIncome)} this month`}
+                    aria-label={`Spent ${formatCurrency(hmSpent)} of expected ${formatCurrency(monthlyIncome)} this month, ${paceLabel.toLowerCase()} on day ${dayOfMonth} of ${daysInMonth}`}
                   >
                     <div className={`h-full ${barColor} transition-all`} style={{ width: `${spentPct}%` }} />
+                    <div
+                      className="absolute top-[-2px] bottom-[-2px] w-px bg-foreground/40"
+                      style={{ left: `${Math.min(monthProgressPct, 100)}%` }}
+                      title={`Day ${dayOfMonth} of ${daysInMonth}`}
+                      aria-hidden="true"
+                    />
                   </div>
                   <div className="text-[10px] text-muted-foreground mt-1 tabular-nums truncate">
                     {formatCurrency(hmSpent)} of expected {formatCurrency(monthlyIncome)}
