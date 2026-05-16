@@ -1007,26 +1007,52 @@
     "stepOf": "Langkah {{step}} daripada {{total}}",
     "back": "Kembali",
     "continue": "Teruskan",
+    "skip": "Langkau buat masa ini",
+    "branch": {
+      "debts": "Cabang Hutang",
+      "bills": "Perbelanjaan · Tetap",
+      "envelopes": "Perbelanjaan · Sampul",
+      "goals": "Cabang Matlamat"
+    },
     "welcome": {
       "title": "Selamat datang, {{name}}!",
       "titleNoName": "Selamat datang!",
       "subtitle": "Selamat datang ke DuitPlan — pembantu kewangan peribadi anda.",
-      "hint": "Kami akan membimbing anda melalui persediaan ringkas supaya papan pemuka anda terasa tepat dari hari pertama. Mengambil masa kira-kira 2 minit.",
+      "hint": "Kami akan menetapkan aliran wang anda dalam beberapa langkah. Kira-kira 3 minit.",
+      "flowTitle": "Begini cara DuitPlan melihat wang anda",
+      "flowIncome": "Pendapatan",
+      "flowPool": "Kolam anda (semua akaun)",
+      "flowDebts": "Hutang",
+      "flowBills": "Bil & sampul",
+      "flowGoals": "Matlamat",
       "pillar1": "Gaji & hari gaji anda",
       "pillar2": "Bil & pinjaman bulanan",
       "pillar3": "Matlamat wang anda",
       "begin": "Jom Mula"
     },
     "income": {
-      "title": "Gaji & hari gaji anda",
-      "subtitle": "Ini membantu kami mengira bajet bulanan anda dengan tepat.",
+      "title": "Gaji & Hari Gaji anda",
+      "subtitle": "Beritahu kami bila hari gaji supaya DuitPlan boleh rancang bulan anda.",
       "salaryLabel": "Gaji Bulanan",
       "salaryHint": "Masukkan gaji bersih (take-home) anda.",
-      "paydayLabel": "Hari gaji — hari yang mana dalam bulan?",
-      "otherDay": "Hari lain:"
+      "paydayLabel": "Hari Gaji — hari yang mana dalam bulan?",
+      "otherDay": "Hari lain:",
+      "hariGajiHint": "Pada Hari Gaji, DuitPlan akan ingatkan anda untuk log gaji sebagai transaksi supaya kolam anda mencerminkan keadaan sebenar."
     },
     "pool": {
-      "emptyHint": "Masukkan baki untuk sekurang-kurangnya satu akaun untuk teruskan."
+      "title": "Bina kolam wang anda",
+      "subtitle": "Tambah akaun di mana wang anda berada — tunai, simpanan, semasa. Bersama-sama ia membentuk satu kolam untuk anda belanjawan.",
+      "presetCash": "Wang tunai",
+      "presetSavings": "Akaun simpanan",
+      "presetCurrent": "Akaun semasa",
+      "nameLabel": "Nama akaun",
+      "bankLabel": "Bank (pilihan)",
+      "balanceLabel": "Baki ({{currency}})",
+      "addAccount": "Tambah akaun lain",
+      "totalLabel": "Jumlah kolam anda",
+      "emptyHint": "Masukkan baki untuk sekurang-kurangnya satu akaun untuk teruskan.",
+      "namePlaceholder": "cth. Simpanan BIBD",
+      "bankPlaceholder": "cth. BIBD"
     },
     "commitments": {
       "title": "Komitmen tetap bulanan",
@@ -1048,10 +1074,39 @@
     },
     "loans": {
       "title": "Pinjaman & pembiayaan",
-      "subtitle": "Pilih mana-mana pinjaman atau pembiayaan aktif. Kami akan jejak kemajuan bayaran balik anda.",
+      "subtitle": "Ketik jenis untuk tambah pinjaman. Anda boleh tambah jenis yang sama lebih daripada sekali.",
       "monthlyPaymentLabel": "Bayaran Bulanan ({{currency}})",
       "outstandingLabel": "Baki Tertunggak (pilihan)",
-      "noLoans": "Tiada pinjaman aktif? Bagus! Anda boleh langkau langkah ini."
+      "lenderLabel": "Pemiutang / Nama panggilan",
+      "lenderPlaceholder": "cth. Pinjaman kereta BIBD",
+      "noLoans": "Tiada pinjaman aktif? Bagus — ketik Langkau dan teruskan.",
+      "hariGajiHint": "Bayaran pinjaman yang auto-tolak pada Hari Gaji akan diaktualkan dalam paparan Rancangan vs Sebenar anda secara automatik.",
+      "tapToAdd": "Ketik untuk tambah",
+      "paidThisMonthLabel": "Sudah auto-tolak bulan ini",
+      "paidThisMonthHint": "Tandakan jika hari gaji sudah berlalu bulan ini dan bank sudah ambil bayaran ini. Kami akan log sebagai dibayar untuk {{month}}."
+    },
+    "envelopes": {
+      "title": "Tetapkan sasaran sampul anda",
+      "subtitle": "Untuk setiap kategori perbelanjaan berubah, tetapkan sasaran bulanan. Apabila anda buat transaksi, sampul yang sepadan akan dikuras.",
+      "monthlyTargetLabel": "Sasaran bulanan ({{currency}})",
+      "helperNote": "💡 Biarkan mana-mana sampul pada 0 jika tidak mahu sasaran. Anda boleh sesuaikan kemudian dalam tab Kategori.",
+      "skipNote": "Ini memacu bar dibelanja / didanai / ruang lapang pada halaman Bajet anda.",
+      "coveredByCommitments": "Disembunyikan kerana sudah dilindungi oleh bil bulanan anda: {{names}}"
+    },
+    "recap": {
+      "title": "Aliran wang anda",
+      "subtitle": "Inilah gambarannya, dengan nombor anda. Anda boleh ubah mana-mana kemudian dari tab berkaitan.",
+      "income": "Pendapatan bulanan",
+      "pool": "Kolam anda",
+      "debts": "Bayaran hutang",
+      "bills": "Bil tetap",
+      "envelopes": "Sasaran sampul",
+      "goals": "Sumbangan matlamat",
+      "leftover": "Baki selepas perancangan",
+      "leftoverPositiveHint": "Nampak baik — anda ada ruang. Pertimbangkan tambahkan ke matlamat.",
+      "leftoverNegativeHint": "Anda merancang untuk belanja lebih daripada pendapatan. Sesuaikan sampul, bil, atau sasaran matlamat sebelum selesai.",
+      "leftoverZeroHint": "Ketat tetapi seimbang. Setiap Ringgit dikira.",
+      "finish": "Nampak betul — ke Papan Pemuka"
     },
     "goals": {
       "title": "Apa yang paling penting bagi anda?",

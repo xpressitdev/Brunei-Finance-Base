@@ -1007,26 +1007,52 @@
     "stepOf": "Langkah {{step}} dari {{total}}",
     "back": "Kembali",
     "continue": "Lanjutkan",
+    "skip": "Lewati dulu",
+    "branch": {
+      "debts": "Cabang Utang",
+      "bills": "Pengeluaran · Tetap",
+      "envelopes": "Pengeluaran · Amplop",
+      "goals": "Cabang Tujuan"
+    },
     "welcome": {
       "title": "Selamat datang, {{name}}!",
       "titleNoName": "Selamat datang!",
       "subtitle": "Selamat datang di DuitPlan — asisten keuangan pribadi Anda.",
-      "hint": "Kami akan memandu Anda melalui pengaturan singkat agar dashboard Anda terasa tepat sejak hari pertama. Sekitar 2 menit.",
+      "hint": "Kami akan menyiapkan aliran uang Anda dalam beberapa langkah. Sekitar 3 menit.",
+      "flowTitle": "Begini cara DuitPlan memandang uang Anda",
+      "flowIncome": "Pendapatan",
+      "flowPool": "Kolam Anda (semua rekening)",
+      "flowDebts": "Utang",
+      "flowBills": "Tagihan & amplop",
+      "flowGoals": "Tujuan",
       "pillar1": "Gaji & tanggal gajian Anda",
       "pillar2": "Tagihan & pinjaman bulanan",
       "pillar3": "Tujuan keuangan Anda",
       "begin": "Ayo Mulai"
     },
     "income": {
-      "title": "Gaji & tanggal gajian Anda",
-      "subtitle": "Ini membantu kami menghitung anggaran bulanan Anda dengan akurat.",
+      "title": "Gaji & Hari Gajian Anda",
+      "subtitle": "Beritahu kami kapan hari gajian agar DuitPlan bisa merencanakan bulan Anda.",
       "salaryLabel": "Gaji Bulanan",
       "salaryHint": "Masukkan gaji bersih (take-home) Anda.",
-      "paydayLabel": "Tanggal gajian — tanggal berapa dalam sebulan?",
-      "otherDay": "Tanggal lain:"
+      "paydayLabel": "Hari Gajian — tanggal berapa dalam sebulan?",
+      "otherDay": "Tanggal lain:",
+      "hariGajiHint": "Pada Hari Gajian, DuitPlan akan mengingatkan Anda untuk mencatat gaji sebagai transaksi agar kolam Anda mencerminkan kenyataan."
     },
     "pool": {
-      "emptyHint": "Masukkan saldo untuk setidaknya satu rekening untuk melanjutkan."
+      "title": "Bangun kolam uang Anda",
+      "subtitle": "Tambahkan rekening tempat uang Anda berada — tunai, tabungan, giro. Bersama-sama mereka membentuk satu kolam untuk Anda anggarkan.",
+      "presetCash": "Uang tunai",
+      "presetSavings": "Rekening tabungan",
+      "presetCurrent": "Rekening giro",
+      "nameLabel": "Nama rekening",
+      "bankLabel": "Bank (opsional)",
+      "balanceLabel": "Saldo ({{currency}})",
+      "addAccount": "Tambah rekening lain",
+      "totalLabel": "Total kolam Anda",
+      "emptyHint": "Masukkan saldo untuk setidaknya satu rekening untuk melanjutkan.",
+      "namePlaceholder": "mis. Tabungan BCA",
+      "bankPlaceholder": "mis. BCA"
     },
     "commitments": {
       "title": "Komitmen tetap bulanan",
@@ -1048,10 +1074,39 @@
     },
     "loans": {
       "title": "Pinjaman & pembiayaan",
-      "subtitle": "Pilih pinjaman atau pembiayaan aktif Anda. Kami akan melacak kemajuan pelunasannya.",
+      "subtitle": "Ketuk jenis untuk menambah pinjaman. Anda bisa menambahkan jenis yang sama lebih dari sekali.",
       "monthlyPaymentLabel": "Pembayaran Bulanan ({{currency}})",
       "outstandingLabel": "Saldo Tunggakan (opsional)",
-      "noLoans": "Tidak ada pinjaman aktif? Bagus! Anda bisa melewati langkah ini."
+      "lenderLabel": "Pemberi pinjaman / Nama panggilan",
+      "lenderPlaceholder": "mis. KKB BCA",
+      "noLoans": "Tidak ada pinjaman aktif? Bagus — ketuk Lewati dan lanjutkan.",
+      "hariGajiHint": "Pembayaran pinjaman yang auto-debet pada Hari Gajian akan diaktualkan di tampilan Rencana vs Aktual Anda secara otomatis.",
+      "tapToAdd": "Ketuk untuk menambah",
+      "paidThisMonthLabel": "Sudah auto-debet bulan ini",
+      "paidThisMonthHint": "Centang jika hari gajian sudah lewat bulan ini dan bank sudah mengambil pembayaran ini. Kami akan mencatatnya sebagai dibayar untuk {{month}}."
+    },
+    "envelopes": {
+      "title": "Tetapkan target amplop Anda",
+      "subtitle": "Untuk setiap kategori pengeluaran variabel, tetapkan target bulanan. Saat Anda bertransaksi, amplop yang sesuai akan terkuras.",
+      "monthlyTargetLabel": "Target bulanan ({{currency}})",
+      "helperNote": "💡 Biarkan amplop di 0 jika tidak ingin target. Anda bisa sesuaikan nanti di tab Kategori.",
+      "skipNote": "Ini menggerakkan bar terpakai / terdanai / sisa di halaman Anggaran Anda.",
+      "coveredByCommitments": "Disembunyikan karena sudah tercakup tagihan bulanan Anda: {{names}}"
+    },
+    "recap": {
+      "title": "Aliran uang Anda",
+      "subtitle": "Inilah gambarannya, dengan angka Anda. Anda bisa ubah semua ini nanti dari tab terkait.",
+      "income": "Pendapatan bulanan",
+      "pool": "Kolam Anda",
+      "debts": "Pembayaran utang",
+      "bills": "Tagihan tetap",
+      "envelopes": "Target amplop",
+      "goals": "Kontribusi tujuan",
+      "leftover": "Sisa setelah perencanaan",
+      "leftoverPositiveHint": "Bagus — Anda punya ruang. Pertimbangkan tambahkan ke tujuan.",
+      "leftoverNegativeHint": "Anda merencanakan pengeluaran lebih dari pendapatan. Sesuaikan amplop, tagihan, atau target tujuan sebelum selesai.",
+      "leftoverZeroHint": "Ketat tapi seimbang. Setiap Rupiah terhitung.",
+      "finish": "Terlihat tepat — ke Dashboard"
     },
     "goals": {
       "title": "Apa yang paling penting bagi Anda?",

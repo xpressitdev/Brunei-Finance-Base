@@ -1,10 +1,68 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { Link } from "wouter";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Upload, Check, Globe } from "lucide-react";
 import { cn } from "@/lib/utils";
 import i18n, { STORAGE_KEY } from "@/i18n";
+import { REGIONS, type RegionCode, DEFAULT_REGION } from "@/config/regions";
+
+function detectRegionFromHostname(): RegionCode {
+  if (typeof window === "undefined") return DEFAULT_REGION;
+  const host = window.location.hostname.toLowerCase();
+  if (host.startsWith("my.")) return "MY";
+  if (host.startsWith("id.")) return "ID";
+  return "BN";
+}
+
+type LandingDemo = {
+  region: RegionCode;
+  currency: string;
+  bank: string;
+  hero: { remaining: number; income: number; loan: number; goal: number };
+  zakat: { cash: number; investments: number; nisab: number; owed: number };
+  fmt: (n: number) => string;
+  fmtSigned: (n: number, sign: "+" | "−") => string;
+};
+
+const DEMO_BY_REGION: Record<RegionCode, Omit<LandingDemo, "fmt" | "fmtSigned">> = {
+  BN: {
+    region: "BN",
+    currency: "BND",
+    bank: "BIBD",
+    hero: { remaining: 1289.5, income: 4250, loan: 520, goal: 200 },
+    zakat: { cash: 8420.55, investments: 1200, nisab: 7820, owed: 240.51 },
+  },
+  MY: {
+    region: "MY",
+    currency: "MYR",
+    bank: "Maybank",
+    hero: { remaining: 1650, income: 5500, loan: 850, goal: 300 },
+    zakat: { cash: 14800, investments: 2200, nisab: 23500, owed: 425 },
+  },
+  ID: {
+    region: "ID",
+    currency: "IDR",
+    bank: "BCA",
+    hero: { remaining: 3850000, income: 12000000, loan: 1500000, goal: 600000 },
+    zakat: { cash: 28500000, investments: 5500000, nisab: 78000000, owed: 850000 },
+  },
+};
+
+function useLandingDemo(): LandingDemo {
+  return useMemo(() => {
+    const region = detectRegionFromHostname();
+    const base = DEMO_BY_REGION[region];
+    const cfg = REGIONS[region];
+    const formatter = new Intl.NumberFormat(cfg.locale, {
+      minimumFractionDigits: cfg.decimals,
+      maximumFractionDigits: cfg.decimals,
+    });
+    const fmt = (n: number) => `${base.currency} ${formatter.format(n)}`;
+    const fmtSigned = (n: number, sign: "+" | "−") => `${sign}${base.currency} ${formatter.format(n)}`;
+    return { ...base, fmt, fmtSigned };
+  }, []);
+}
 
 const LANGUAGES = [
   { code: "en", nativeLabel: "English" },
@@ -78,6 +136,7 @@ function LanguageSwitcher() {
 
 export default function Landing() {
   const { t } = useTranslation();
+  const demo = useLandingDemo();
 
   return (
     <div className="min-h-screen bg-white flex flex-col font-sans">
@@ -172,11 +231,11 @@ export default function Landing() {
                     <div className="text-sm font-semibold">
                       {new Date().toLocaleString('en', { month: 'long', year: 'numeric' })}
                     </div>
-                    <span className="text-xs px-2 py-1 rounded-full bg-accent text-accent-foreground font-semibold">BND</span>
+                    <span className="text-xs px-2 py-1 rounded-full bg-accent text-accent-foreground font-semibold">{demo.currency}</span>
                   </div>
                   <div className="rounded-xl bg-primary/[0.05] border border-primary/20 p-4 mb-4">
                     <div className="text-[11px] uppercase tracking-wider font-semibold text-primary">Remaining</div>
-                    <div className="text-3xl font-bold text-primary tabular-nums mt-1">BND 1,289.50</div>
+                    <div className="text-3xl font-bold text-primary tabular-nums mt-1">{demo.fmt(demo.hero.remaining)}</div>
                     <div className="text-xs text-muted-foreground mt-1">After commitments and spending</div>
                   </div>
                   <div className="space-y-3">
@@ -184,9 +243,9 @@ export default function Landing() {
                       <img src="/illustration-payslip.png" className="w-10 h-10 object-contain" alt="" />
                       <div className="flex-1 min-w-0">
                         <div className="text-sm font-medium">Hari Gaji — {new Date().toLocaleString('en', { month: 'long' })}</div>
-                        <div className="text-xs text-muted-foreground">25 {new Date().toLocaleString('en', { month: 'short' })} · BIBD</div>
+                        <div className="text-xs text-muted-foreground">25 {new Date().toLocaleString('en', { month: 'short' })} · {demo.bank}</div>
                       </div>
-                      <div className="text-sm font-semibold text-emerald-600 tabular-nums">+BND 4,250</div>
+                      <div className="text-sm font-semibold text-emerald-600 tabular-nums">{demo.fmtSigned(demo.hero.income, "+")}</div>
                     </div>
                     <div className="flex items-center gap-3">
                       <img src="/illustration-bank.png" className="w-10 h-10 object-contain" alt="" />
@@ -194,7 +253,7 @@ export default function Landing() {
                         <div className="text-sm font-medium">Toyota Hilux — auto</div>
                         <div className="text-xs text-muted-foreground">Loan · 4.2% APR</div>
                       </div>
-                      <div className="text-sm font-semibold tabular-nums text-foreground">−BND 520</div>
+                      <div className="text-sm font-semibold tabular-nums text-foreground">{demo.fmtSigned(demo.hero.loan, "−")}</div>
                     </div>
                     <div className="flex items-center gap-3">
                       <img src="/illustration-vault.png" className="w-10 h-10 object-contain" alt="" />
@@ -202,7 +261,7 @@ export default function Landing() {
                         <div className="text-sm font-medium">Umrah fund</div>
                         <div className="text-xs text-muted-foreground">Goal · 68% complete</div>
                       </div>
-                      <div className="text-sm font-semibold tabular-nums text-foreground">−BND 200</div>
+                      <div className="text-sm font-semibold tabular-nums text-foreground">{demo.fmtSigned(demo.hero.goal, "−")}</div>
                     </div>
                   </div>
                 </div>
@@ -321,20 +380,20 @@ export default function Landing() {
                   <div className="space-y-2 text-sm mb-4">
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Cash & savings</span>
-                      <span className="font-medium tabular-nums">BND 8,420.55</span>
+                      <span className="font-medium tabular-nums">{demo.fmt(demo.zakat.cash)}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Investments</span>
-                      <span className="font-medium tabular-nums">BND 1,200.00</span>
+                      <span className="font-medium tabular-nums">{demo.fmt(demo.zakat.investments)}</span>
                     </div>
                     <div className="flex justify-between border-t pt-2 mt-2">
                       <span className="text-muted-foreground">Nisab (85g gold)</span>
-                      <span className="font-medium tabular-nums">BND 7,820.00</span>
+                      <span className="font-medium tabular-nums">{demo.fmt(demo.zakat.nisab)}</span>
                     </div>
                   </div>
                   <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-4 mb-5">
                     <div className="text-[11px] uppercase tracking-wider font-semibold text-emerald-700">Zakat owed (2.5%)</div>
-                    <div className="text-3xl font-bold text-emerald-700 tabular-nums mt-1">BND 240.51</div>
+                    <div className="text-3xl font-bold text-emerald-700 tabular-nums mt-1">{demo.fmt(demo.zakat.owed)}</div>
                   </div>
                   <div>
                     <div className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground mb-2">
