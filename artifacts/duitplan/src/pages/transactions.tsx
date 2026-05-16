@@ -599,11 +599,42 @@ export default function Transactions() {
             : hmNet >= 0
               ? "Saving this month"
               : "Overspending";
+          // Cycle-relative spending vs expected monthly income — shows whether
+          // the user is on track for the whole month, regardless of whether
+          // their salary has actually landed yet. The cycle is the calendar
+          // month (matching the rest of the page's "this month" stats), so it
+          // naturally resets on the 1st.
+          const spentPctRaw = monthlyIncome > 0 ? (hmSpent / monthlyIncome) * 100 : 0;
+          const spentPct = Math.min(spentPctRaw, 100);
+          const overBudget = spentPctRaw > 100;
+          const barColor = overBudget
+            ? "bg-rose-500"
+            : spentPctRaw > 80
+              ? "bg-amber-500"
+              : "bg-primary";
           return (
             <div className={`rounded-xl border p-3 sm:p-4 relative overflow-hidden min-w-0 ${tone}`}>
               <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground truncate">{label}</p>
               <div className={`text-lg sm:text-2xl font-bold tabular-nums mt-1 break-words ${valueTone}`}>{hmNet >= 0 ? "+" : "−"}{formatCurrency(Math.abs(hmNet))}</div>
               <div className="text-[11px] text-muted-foreground mt-0.5">{sub}</div>
+              {monthlyIncome > 0 && (
+                <div className="mt-2">
+                  <div
+                    className="h-1 w-full rounded-full bg-muted overflow-hidden"
+                    role="progressbar"
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-valuenow={Math.min(Math.round(spentPctRaw), 100)}
+                    aria-label={`Spent ${formatCurrency(hmSpent)} of expected ${formatCurrency(monthlyIncome)} this month`}
+                  >
+                    <div className={`h-full ${barColor} transition-all`} style={{ width: `${spentPct}%` }} />
+                  </div>
+                  <div className="text-[10px] text-muted-foreground mt-1 tabular-nums truncate">
+                    {formatCurrency(hmSpent)} of expected {formatCurrency(monthlyIncome)}
+                    {overBudget && <span className="text-rose-600 font-semibold"> · over</span>}
+                  </div>
+                </div>
+              )}
             </div>
           );
         })()}
