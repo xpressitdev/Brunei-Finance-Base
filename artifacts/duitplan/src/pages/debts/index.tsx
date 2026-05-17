@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
 import {
@@ -131,11 +131,27 @@ function debtTypeMeta(t: string | null | undefined) {
 
 function LoanSimulator({ debt }: { debt: Debt }) {
   const { formatCurrency } = useRegion();
+  const updateMutation = useUpdateDebt();
   const baseBalance = safeNum(debt.outstandingBalance);
   const basePayment = safeNum(debt.monthlyPayment);
   const ratePerMonth = debt.interestRate ? safeNum(debt.interestRate) / 100 / 12 : 0;
   const sliderMax = 500;
-  const [extra, setExtra] = useState(0);
+  // Seed from persisted targetExtraPayment so the slider reflects what /budgets
+  // is using. Re-seed whenever the debt row updates from the server.
+  const persistedExtra = safeNum(debt.targetExtraPayment);
+  const [extra, setExtra] = useState(persistedExtra);
+  useEffect(() => { setExtra(persistedExtra); }, [persistedExtra]);
+
+  // Debounced persist — after the user stops dragging for 400ms, write the new
+  // extra to the DB so /budgets and Hari Gaji auto-deductions pick it up.
+  useEffect(() => {
+    if (extra === persistedExtra) return;
+    const t = setTimeout(() => {
+      updateMutation.mutate({ id: debt.id, data: { targetExtraPayment: extra.toFixed(2) } });
+    }, 400);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [extra, persistedExtra, debt.id]);
 
   const standardCurve = useMemo(
     () => computePayoffCurve(baseBalance, basePayment, ratePerMonth),

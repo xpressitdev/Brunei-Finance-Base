@@ -1,7 +1,7 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams, Link, useLocation } from "wouter";
-import { useListDebts, useDeleteDebt } from "@workspace/api-client-react";
+import { useListDebts, useDeleteDebt, useUpdateDebt } from "@workspace/api-client-react";
 import { isTrialExpiredError } from "@/lib/trialExpired";
 import { useRegion } from "@/hooks/useRegion";
 import { Button } from "@/components/ui/button";
@@ -79,6 +79,7 @@ export default function DebtDetail() {
   const [, setLocation] = useLocation();
   const { data: debts, isLoading } = useListDebts();
   const deleteMutation = useDeleteDebt();
+  const updateMutation = useUpdateDebt();
   const { formatCurrency, region, decimalStep } = useRegion();
 
   const debt = debts?.find((d) => d.id === id);
@@ -88,7 +89,20 @@ export default function DebtDetail() {
   const basePayment = safeNum(debt?.monthlyPayment);
   const ratePerMonth = debt?.interestRate ? safeNum(debt.interestRate) / 100 / 12 : 0;
   const sliderMax = Math.max(500, Math.round(basePayment * 0.5 / 10) * 10);
-  const [extra, setExtra] = useState(0);
+  const persistedExtra = safeNum(debt?.targetExtraPayment);
+  const [extra, setExtra] = useState(persistedExtra);
+  useEffect(() => { setExtra(persistedExtra); }, [persistedExtra]);
+
+  // Debounced persist of slider value to debt.targetExtraPayment so /budgets
+  // and Hari Gaji auto-deductions reflect the chosen extra repayment.
+  useEffect(() => {
+    if (!debt || extra === persistedExtra) return;
+    const t = setTimeout(() => {
+      updateMutation.mutate({ id: debt.id, data: { targetExtraPayment: extra.toFixed(2) } });
+    }, 400);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [extra, persistedExtra, debt?.id]);
 
   const standardCurve = useMemo(
     () => computePayoffCurve(baseBalance, basePayment, ratePerMonth),
