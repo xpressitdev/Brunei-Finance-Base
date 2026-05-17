@@ -38,6 +38,19 @@ export async function runStartupMigrations(): Promise<void> {
     await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS onboarded_at timestamptz;`);
     await client.query(`UPDATE users SET onboarded_at = created_at WHERE onboarded_at IS NULL;`);
 
+    // Rename default expense categories to remove confusing overlap:
+    //   "Education" overlapped with the School Fees commitment preset.
+    //   "Transport" overlapped with the Fuel category.
+    // Only touch is_default rows so user-renamed categories are left alone.
+    await client.query(`
+      UPDATE categories SET name = 'School supplies'
+      WHERE is_default = true AND name = 'Education';
+    `);
+    await client.query(`
+      UPDATE categories SET name = 'Public transport'
+      WHERE is_default = true AND name = 'Transport';
+    `);
+
     // Bug A1: Remove duplicate commitments — keep the earliest created per (user_id, label)
     await client.query(`
       DELETE FROM commitments
