@@ -976,7 +976,12 @@ function AllocateView({
   onTrialExpired: () => void;
   resetSignal: number;
 }) {
-  const expenseCats = useMemo(() => categories.filter(c => c.kind === "expense"), [categories]);
+  // Only show envelopes for expense categories that have a budget set on /categories
+  // (defaultBudget > 0). Unbudgeted categories are hidden from /budgets entirely.
+  const expenseCats = useMemo(
+    () => categories.filter(c => c.kind === "expense" && safeNum(c.defaultBudget) > 0),
+    [categories]
+  );
 
   const initialBuckets: Bucket[] = useMemo(() => {
     const loans: Bucket[] = debts.map(d => ({
@@ -1719,7 +1724,7 @@ function AnnualView({
   debts: Array<{ id: string; lender: string; debtType: string; monthlyPayment: string }>;
 }) {
   const months = MONTH_LABELS.map((_, i) => `${year}-${String(i + 1).padStart(2, "0")}`);
-  const expenseCats = categories.filter(c => c.kind === "expense");
+  const expenseCats = categories.filter(c => c.kind === "expense" && safeNum((c as { defaultBudget?: string }).defaultBudget) > 0);
 
   const b = [
     useListBudgets({ month: months[0] }),  useListBudgets({ month: months[1] }),
@@ -1909,7 +1914,7 @@ export default function Budgets() {
   const salary = safeNum(profile?.monthlyIncome);
   const totalCommitments = (commitments ?? []).reduce((s, c) => s + safeNum(c.amount), 0);
   const totalDebtPayments = (debts ?? []).reduce((s, d) => s + safeNum(d.monthlyPayment), 0);
-  const expenseCategories = (categories ?? []).filter(c => c.kind === "expense");
+  const expenseCategories = (categories ?? []).filter(c => c.kind === "expense" && safeNum(c.defaultBudget) > 0);
   const budgetMap = Object.fromEntries((budgets ?? []).map(b => [b.categoryId, b]));
 
   const totalPlanned = expenseCategories.reduce((s, c) => s + safeNum(budgetMap[c.id]?.plannedAmount), 0);
