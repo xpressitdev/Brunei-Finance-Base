@@ -3,7 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { build as esbuild } from "esbuild";
 import esbuildPluginPino from "esbuild-plugin-pino";
-import { rm } from "node:fs/promises";
+import { rm, copyFile } from "node:fs/promises";
 
 // Plugins (e.g. 'esbuild-plugin-pino') may use `require` to resolve dependencies
 globalThis.require = createRequire(import.meta.url);
@@ -118,6 +118,27 @@ globalThis.__dirname = __bannerPath.dirname(globalThis.__filename);
     `,
     },
   });
+
+  // pdf-parse v2 / pdfjs-dist dynamically imports pdf.worker.mjs from next
+  // to the bundle at runtime ("fake worker" mode in Node.js). esbuild can't
+  // see that dynamic import, so we copy the file into dist/ manually.
+  const require = createRequire(import.meta.url);
+  try {
+    // Resolve pdf-parse first, then walk to its bundled pdfjs worker.
+    // pdfjs-dist is a nested dep of pdf-parse and not directly resolvable
+    // from this build script.
+    const pdfParseEntry = require.resolve("pdf-parse");
+    const pdfParseDir = path.dirname(pdfParseEntry);
+    // pdf-parse@2.x layout: dist/pdf-parse/cjs/index.cjs -> walk up to pdf-parse root, then into pdfjs-dist sibling
+    const pdfjsWorker = require.resolve("pdfjs-dist/build/pdf.worker.mjs", {
+      paths: [pdfParseDir, path.resolve(pdfParseDir, "../.."), path.resolve(pdfParseDir, "../../..")],
+    });
+    await copyFile(pdfjsWorker, path.resolve(distDir, "pdf.worker.mjs"));
+    console.log("[build] copied pdf.worker.mjs into dist/");
+  } catch (err) {
+    console.warn("[build] could not copy pdf.worker.mjs:", err.message);
+    throw err;
+  }
 }
 
 buildAll().catch((err) => {
