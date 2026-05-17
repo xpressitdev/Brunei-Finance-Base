@@ -71,7 +71,10 @@ export function computeSpendingPace(
   };
 }
 
-export function formatPaceTooltip(pace: SpendingPace): string {
+export function formatPaceTooltip(
+  pace: SpendingPace,
+  denominatorLabel: string = "expected income",
+): string {
   if (!pace.paceLabel) return "";
-  return `Used ${Math.round(pace.spentPctRaw)}% of expected income · day ${pace.dayOfMonth} of ${pace.daysInMonth} (${Math.round(pace.monthProgressPct)}% through the month)`;
+  return `Used ${Math.round(pace.spentPctRaw)}% of ${denominatorLabel} · day ${pace.dayOfMonth} of ${pace.daysInMonth} (${Math.round(pace.monthProgressPct)}% through the month)`;
 }

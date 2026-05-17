@@ -44,6 +44,7 @@ import { isTrialExpiredError } from "@/lib/trialExpired";
 import { MoneyBag } from "@/components/redesign/MoneyBag";
 import { MinPaymentBar } from "@/components/redesign/MinPaymentBar";
 import { fmtBND } from "@/lib/format";
+import { computeSpendingPace, formatPaceTooltip } from "@/lib/spendingPace";
 
 function fmt(n: number) {
   return "BND " + n.toLocaleString("en-BN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -722,18 +723,30 @@ function BucketRow({
             </>
           ) : isEnv ? (
             <>
-              {hasTargetBudget ? (
+              {hasTargetBudget ? (() => {
+                const envPace = computeSpendingPace(spent, targetBudget);
+                const envPaceTooltip = formatPaceTooltip(envPace, "budget");
+                return (
                 <>
                   {/* Tri-segment target-anchored bar (variable envelopes with a
                       defaultBudget set on /categories). Bar width = target.
                         ▰ solid green / rose  — already spent
                         ▱ lighter green       — funded but unspent (still in envelope)
                         ░ muted               — unfunded headroom toward the target
+                      A vertical day-of-month marker (same as Dashboard /
+                      Transactions) shows how far through the month we are
+                      so the user can read pacing at a glance.
                   */}
                   <div className={cn(
-                    "h-1.5 rounded-full mt-2 overflow-hidden flex",
+                    "h-1.5 rounded-full mt-2 overflow-hidden flex relative",
                     overspent ? "bg-rose-100" : "bg-muted"
-                  )}>
+                  )}
+                    role="progressbar"
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-valuenow={Math.min(Math.round(envPace.spentPctRaw), 100)}
+                    aria-label={`Spent ${fmt(spent)} of ${fmt(targetBudget)} budget for ${bucket.name}${envPace.paceLabel ? `, ${envPace.paceLabel.toLowerCase()}` : ""} on day ${envPace.dayOfMonth} of ${envPace.daysInMonth}`}
+                  >
                     {targetSpentPct > 0 && (
                       <div
                         className={cn(
@@ -749,19 +762,36 @@ function BucketRow({
                         style={{ width: `${targetFundedPct}%` }}
                       />
                     )}
+                    <div
+                      className="absolute top-[-2px] bottom-[-2px] w-px bg-foreground/40"
+                      style={{ left: `${Math.min(envPace.monthProgressPct, 100)}%` }}
+                      title={`Day ${envPace.dayOfMonth} of ${envPace.daysInMonth}`}
+                      aria-hidden="true"
+                    />
                   </div>
                   <p className={cn(
-                    "text-[10px] mt-1 tabular-nums",
+                    "text-[10px] mt-1 tabular-nums flex items-center gap-1 flex-wrap",
                     overspent ? "text-rose-600 font-semibold" : "text-muted-foreground"
                   )}>
-                    {overspentBudget
-                      ? `${fmt(spent - targetBudget)} over budget · ${fmt(spent)} spent of ${fmt(targetBudget)}`
-                      : overspentEnvelope
-                      ? `${fmt(spent)} spent · envelope empty (${fmt(spent - bucket.allocated)} past funded) · ${fmt(Math.max(0, targetBudget - spent))} left to target`
-                      : `${fmt(spent)} spent · ${fmt(Math.max(0, bucket.allocated - spent))} left in envelope · ${fmt(Math.max(0, targetBudget - bucket.allocated))} unfunded`}
+                    {envPace.paceLabel && (
+                      <>
+                        <span className={cn("font-semibold", envPace.paceTone)} title={envPaceTooltip}>
+                          {envPace.paceLabel}
+                        </span>
+                        <span className="text-muted-foreground/60">·</span>
+                      </>
+                    )}
+                    <span>
+                      {overspentBudget
+                        ? `${fmt(spent - targetBudget)} over budget · ${fmt(spent)} spent of ${fmt(targetBudget)}`
+                        : overspentEnvelope
+                        ? `${fmt(spent)} spent · envelope empty (${fmt(spent - bucket.allocated)} past funded) · ${fmt(Math.max(0, targetBudget - spent))} left to target`
+                        : `${fmt(spent)} spent · ${fmt(Math.max(0, bucket.allocated - spent))} left in envelope · ${fmt(Math.max(0, targetBudget - bucket.allocated))} unfunded`}
+                    </span>
                   </p>
                 </>
-              ) : (
+                );
+              })() : (
                 <>
                   {/* Legacy depletion bar — fixed envelopes (no spend tracking
                       against commitments) AND variable envelopes with no
