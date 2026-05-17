@@ -956,6 +956,7 @@ function AllocateView({
   refetchCategories,
   onTrialExpired,
   resetSignal,
+  incomeType,
 }: {
   month: string;
   monthLabel: string;
@@ -975,6 +976,7 @@ function AllocateView({
   refetchCategories: () => void;
   onTrialExpired: () => void;
   resetSignal: number;
+  incomeType: "fixed" | "variable";
 }) {
   // Only show envelopes for expense categories that have a budget set on /categories
   // (defaultBudget > 0). Unbudgeted categories are hidden from /budgets entirely.
@@ -983,15 +985,37 @@ function AllocateView({
     [categories]
   );
 
+  // Loan minimums are auto-deducted on Hari Gaji for fixed-salary users, so they
+  // don't belong in the discretionary budget pool. Only the EXTRA repayment
+  // (from the /debts slider) is a real allocation decision.
+  //
+  // For variable-income users the opposite is true: the minimum is the thing
+  // they most need to plan for, because income isn't guaranteed.
+  const autoDeductedTotal = useMemo(
+    () => incomeType === "fixed"
+      ? debts.reduce((s, d) => s + safeNum(d.monthlyPayment), 0)
+      : 0,
+    [debts, incomeType]
+  );
+
   const initialBuckets: Bucket[] = useMemo(() => {
-    const loans: Bucket[] = debts.map(d => ({
-      id: `L:${d.id}`,
-      name: d.lender,
-      kind: "loan",
-      allocated: safeNum(d.monthlyPayment),
-      target: safeNum(d.monthlyPayment),
-      auto: true,
-    }));
+    const loans: Bucket[] = debts
+      .map(d => {
+        const min = safeNum(d.monthlyPayment);
+        const extra = safeNum((d as { targetExtraPayment?: string | null }).targetExtraPayment);
+        const allocated = incomeType === "fixed" ? extra : min + extra;
+        return {
+          id: `L:${d.id}`,
+          name: d.lender,
+          kind: "loan" as const,
+          allocated,
+          target: allocated,
+          auto: true,
+        };
+      })
+      // Fixed-income: hide loans with no extra repayment — the minimum is
+      // already auto-deducted, so there's nothing to budget for.
+      .filter(b => incomeType === "variable" || b.allocated > 0);
     const fixedEnvelopes: Bucket[] = commitments.map(c => ({
       id: `F:${c.id}`,
       name: c.label,
@@ -1022,7 +1046,7 @@ function AllocateView({
     }));
 
     return [...loans, ...fixedEnvelopes, ...variableEnvelopes, ...vaults];
-  }, [debts, commitments, expenseCats, goals, budgetMap]);
+  }, [debts, commitments, expenseCats, goals, budgetMap, incomeType]);
 
   const [buckets, setBuckets] = useState<Bucket[]>(initialBuckets);
   const [overTarget, setOverTarget] = useState<string | null>(null);
@@ -1514,9 +1538,19 @@ function AllocateView({
       </div>
 
       {/* Bank empty-state banner — shown above the grid when no debts */}
-      {loanBuckets.length === 0 && (
+      {loanBuckets.length === 0 && autoDeductedTotal === 0 && (
         <div className="rounded-lg border border-dashed bg-accent/30 px-5 py-3 flex items-center justify-between gap-3 text-sm">
           <span className="text-muted-foreground">No loans tracked yet — add your financing on the Debts page to see repayments here.</span>
+          <a href="/debts" className="text-primary text-xs font-semibold underline underline-offset-2 shrink-0">Go to Debts →</a>
+        </div>
+      )}
+
+      {/* Fixed-salary user with loans but no extras — explain why Bank column is hidden */}
+      {loanBuckets.length === 0 && autoDeductedTotal > 0 && (
+        <div className="rounded-lg border border-dashed bg-rose-50/50 px-5 py-3 flex items-center justify-between gap-3 text-sm">
+          <span className="text-muted-foreground">
+            <strong className="text-foreground font-semibold tabular-nums">{fmt(autoDeductedTotal)}/mo</strong> in loan minimums auto-deducted on Hari Gaji. Add an extra repayment on Debts to budget for faster payoff.
+          </span>
           <a href="/debts" className="text-primary text-xs font-semibold underline underline-offset-2 shrink-0">Go to Debts →</a>
         </div>
       )}
@@ -1527,7 +1561,11 @@ function AllocateView({
         {loanBuckets.length > 0 && (
         <CollapsibleColumn
           title="Bank"
-          subtitle="Loan repayments — auto on Hari Gaji"
+          subtitle={
+            incomeType === "fixed"
+              ? `Extra repayments only — ${fmt(autoDeductedTotal)}/mo minimums auto on Hari Gaji`
+              : "Loan repayments — plan in your pool"
+          }
           illoSrc="/illustration-bank.png"
           iconBg="bg-rose-50"
           count={loanBuckets.length}
@@ -2015,6 +2053,7 @@ export default function Budgets() {
           refetchCategories={refetchCategories}
           onTrialExpired={() => setTrialExpiredError(true)}
           resetSignal={resetSignal}
+          incomeType={(profile?.incomeType as "fixed" | "variable") ?? "fixed"}
         />
       )}
 
