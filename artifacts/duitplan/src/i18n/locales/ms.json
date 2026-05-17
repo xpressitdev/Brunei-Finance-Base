@@ -682,7 +682,14 @@
   },
   "upload": {
     "title": "Import Transaksi",
-    "subtitle": "Muat naik penyata bank PDF atau kongsikan tangkapan skrin dari aplikasi perbankan mudah alih anda.",
+    "subtitle": "Tak perlu taip satu-satu — biar DuitPlan baca penyata bank anda dan log setiap transaksi secara automatik.",
+    "whyTitle": "Kenapa import penyata?",
+    "whyIntro": "Tambah 30+ transaksi setiap bulan secara manual itu memenatkan. Import penyata BIBD atau Baiduri anda buat semua itu dalam beberapa saat, supaya bahagian lain aplikasi kekal tepat.",
+    "whyBullet1": "Isi transaksi secara automatik — tarikh, peniaga, jumlah, semua diekstrak untuk anda",
+    "whyBullet2": "Padankan perbelanjaan dengan kategori supaya Bajet dan Papan Pemuka mencerminkan realiti",
+    "whyBullet3": "Kesan transaksi pendua, caj berulang, dan langganan yang terlupa",
+    "whyBullet4": "Bina sejarah perbelanjaan yang teratur tanpa taip satu entri pun",
+    "whyFooter": "Anda akan semak setiap transaksi pada skrin seterusnya sebelum apa-apa disimpan — tiada yang diimport tanpa pengesahan anda.",
     "card": {
       "title": "Pilih kaedah import anda",
       "description": "BIBD dan Baiduri disokong. Kami akan mengekstrak transaksi anda dan menunjukkan skrin semakan sebelum mengesahkan."

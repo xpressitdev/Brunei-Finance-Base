@@ -682,7 +682,14 @@
   },
   "upload": {
     "title": "Impor Transaksi",
-    "subtitle": "Unggah PDF rekening bank atau bagikan tangkapan layar dari aplikasi perbankan mobile Anda.",
+    "subtitle": "Tidak perlu mengetik satu per satu — biar DuitPlan baca rekening koran Anda dan catat setiap transaksi secara otomatis.",
+    "whyTitle": "Kenapa impor rekening koran?",
+    "whyIntro": "Menambah 30+ transaksi setiap bulan secara manual itu melelahkan. Mengimpor rekening BIBD atau Baiduri Anda menyelesaikannya dalam hitungan detik, sehingga bagian lain aplikasi tetap akurat.",
+    "whyBullet1": "Isi transaksi otomatis — tanggal, merchant, jumlah, semua diekstrak untuk Anda",
+    "whyBullet2": "Cocokkan pengeluaran dengan kategori agar Anggaran dan Dashboard sesuai kenyataan",
+    "whyBullet3": "Deteksi transaksi ganda, biaya berulang, dan langganan yang terlupakan",
+    "whyBullet4": "Bangun riwayat pengeluaran yang rapi tanpa mengetik satu entri pun",
+    "whyFooter": "Anda akan meninjau setiap transaksi di layar berikutnya sebelum disimpan — tidak ada yang diimpor tanpa konfirmasi Anda.",
     "card": {
       "title": "Pilih metode impor Anda",
       "description": "BIBD dan Baiduri didukung. Kami akan mengekstrak transaksi Anda dan menampilkan layar tinjauan sebelum konfirmasi."

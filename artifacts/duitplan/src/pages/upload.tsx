@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Upload as UploadIcon, FileText, Image, AlertCircle, CheckCircle2, X, Plus } from "lucide-react";
+import { Upload as UploadIcon, FileText, Image, AlertCircle, CheckCircle2, X, Plus, Sparkles, Tags, Search, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { TrialExpiredPrompt } from "@/components/subscription/TrialExpiredPrompt";
 import { isTrialExpiredError } from "@/lib/trialExpired";
@@ -81,6 +81,28 @@ export default function Upload() {
         <h1 className="text-3xl font-bold tracking-tight">{t("upload.title")}</h1>
         <p className="text-muted-foreground mt-1">{t("upload.subtitle")}</p>
       </div>
+
+      {/* Why-import explainer */}
+      <Card className="bg-primary/5 border-primary/20">
+        <CardContent className="pt-6 space-y-4">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
+              <Sparkles className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="font-semibold text-base text-foreground">{t("upload.whyTitle")}</h2>
+              <p className="text-sm text-muted-foreground mt-1">{t("upload.whyIntro")}</p>
+            </div>
+          </div>
+          <ul className="space-y-2.5 text-sm text-foreground/90 pl-1">
+            <li className="flex items-start gap-2.5"><Zap className="w-4 h-4 text-primary mt-0.5 shrink-0" /><span>{t("upload.whyBullet1")}</span></li>
+            <li className="flex items-start gap-2.5"><Tags className="w-4 h-4 text-primary mt-0.5 shrink-0" /><span>{t("upload.whyBullet2")}</span></li>
+            <li className="flex items-start gap-2.5"><Search className="w-4 h-4 text-primary mt-0.5 shrink-0" /><span>{t("upload.whyBullet3")}</span></li>
+            <li className="flex items-start gap-2.5"><CheckCircle2 className="w-4 h-4 text-primary mt-0.5 shrink-0" /><span>{t("upload.whyBullet4")}</span></li>
+          </ul>
+          <p className="text-xs text-muted-foreground border-t border-primary/10 pt-3 italic">{t("upload.whyFooter")}</p>
+        </CardContent>
+      </Card>
 
       {trialExpiredError && (
         <TrialExpiredPrompt action="import transactions" />

@@ -689,7 +689,14 @@
   },
   "upload": {
     "title": "Import Transactions",
-    "subtitle": "Upload your bank statement PDF or share screenshots from your mobile banking app.",
+    "subtitle": "Skip the manual typing — let DuitPlan read your bank statement and log every transaction for you.",
+    "whyTitle": "Why import your statement?",
+    "whyIntro": "Manually adding 30+ transactions a month is tedious. Importing your BIBD or Baiduri statement does all of it in seconds, so the rest of the app stays accurate.",
+    "whyBullet1": "Auto-fill your transactions — date, merchant, amount, all parsed for you",
+    "whyBullet2": "Match spending to categories so your Budgets and Dashboard reflect reality",
+    "whyBullet3": "Spot duplicates, recurring charges, and forgotten subscriptions",
+    "whyBullet4": "Build a clean spending history without typing a single entry",
+    "whyFooter": "You'll review every transaction on the next screen before anything is saved — nothing is imported without your confirmation.",
     "card": {
       "title": "Choose your import method",
       "description": "Both BIBD and Baiduri are supported. We'll extract your transactions and show you a review screen before confirming."
