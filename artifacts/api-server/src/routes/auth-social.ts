@@ -1,4 +1,4 @@
-import { Router, type IRouter } from "express";
+import { Router, type IRouter, type Request } from "express";
 import { v4 as uuidv4 } from "uuid";
 import { randomBytes } from "node:crypto";
 import { and, eq, gt, isNull } from "drizzle-orm";
@@ -18,6 +18,34 @@ import {
   sendMagicLinkEmail,
 } from "../lib/email";
 
+// Build the public base URL from the incoming request's protocol + host. We
+// rely on Express `trust proxy` being set so req.protocol reflects the
+// X-Forwarded-Proto header from the Replit shared proxy (always https in
+// production). This lets each regional subdomain (duitplan.com,
+// my.duitplan.com, id.duitplan.com) drive its own OAuth round-trip and
+// magic-link host without a separate APP_BASE_URL per region.
+//
+// Falls back to the static APP_BASE_URL helper only when there is no Host
+// header (e.g. internal test harnesses), so production behavior is always
+// driven by the user's actual subdomain.
+function requestBaseUrl(req: Request): string {
+  const host = req.get("host");
+  if (!host) return appBaseUrl();
+  // Strip trailing dot/whitespace; reject if it doesn't look like a host —
+  // a bogus Host header would otherwise let an attacker steer the OAuth
+  // callback at a domain we don't own. We restrict to the duitplan family
+  // and the Replit dev domain; anything else falls back to APP_BASE_URL.
+  const normalized = host.toLowerCase().trim();
+  const allowed =
+    normalized === "duitplan.com" ||
+    normalized.endsWith(".duitplan.com") ||
+    normalized.endsWith(".replit.app") ||
+    normalized.endsWith(".replit.dev") ||
+    normalized.startsWith("localhost");
+  if (!allowed) return appBaseUrl();
+  return `${req.protocol}://${normalized}`;
+}
+
 // Social and passwordless sign-in routes (Google OAuth + email magic link).
 // Kept separate from the email/password routes in auth.ts so the file stays
 // focused, but both routers mount under /api at the same level.
@@ -26,7 +54,7 @@ const router: IRouter = Router();
 
 const MAGIC_LINK_TTL_MIN = 15;
 
-function googleClient(): OAuth2Client {
+function googleClient(redirectUri: string): OAuth2Client {
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
   if (!clientId || !clientSecret) {
@@ -34,7 +62,14 @@ function googleClient(): OAuth2Client {
       "GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET must be set to use Google sign-in.",
     );
   }
-  return new OAuth2Client(clientId, clientSecret, `${appBaseUrl()}/api/auth/google/callback`);
+  return new OAuth2Client(clientId, clientSecret, redirectUri);
+}
+
+// Google requires the redirect_uri sent in /start (the auth-url request) and
+// /callback (the token-exchange request) to match byte-for-byte. Centralize
+// the construction so the two routes can never drift.
+function googleRedirectUri(req: Request): string {
+  return `${requestBaseUrl(req)}/api/auth/google/callback`;
 }
 
 // Pick the post-login landing page based on onboarding state. New users always
@@ -202,7 +237,7 @@ async function findOrCreateUserByEmail(email: string): Promise<{ userId: string;
 router.get("/auth/google/start", (req, res): void => {
   let client: OAuth2Client;
   try {
-    client = googleClient();
+    client = googleClient(googleRedirectUri(req));
   } catch (err) {
     req.log.error({ err }, "Google OAuth not configured");
     res.redirect("/login?error=google_unavailable");
@@ -237,7 +272,7 @@ router.get("/auth/google/callback", async (req, res): Promise<void> => {
 
   let client: OAuth2Client;
   try {
-    client = googleClient();
+    client = googleClient(googleRedirectUri(req));
   } catch (err) {
     req.log.error({ err }, "Google OAuth not configured");
     res.redirect("/login?error=google_unavailable");
@@ -306,7 +341,7 @@ router.post("/auth/magic-link/request", async (req, res): Promise<void> => {
     tokenHash: issued.tokenHash,
     expiresAt: issued.expiresAt,
   });
-  const url = buildMagicLinkUrl(issued.token);
+  const url = buildMagicLinkUrl(issued.token, requestBaseUrl(req));
   sendMagicLinkEmail({ to: email, url });
   req.log.info({ email }, "Issued magic link");
 

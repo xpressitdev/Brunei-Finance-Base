@@ -117,8 +117,13 @@ export function buildPasswordResetUrl(token: string): string {
 // token, sets the session cookie, and 302-redirects to /dashboard (or
 // /onboarding for new users). Keeps the click-through one hop and means
 // the cookie is set on the very first navigation.
-export function buildMagicLinkUrl(token: string): string {
-  return `${appBaseUrl()}/api/auth/magic-link/verify?token=${encodeURIComponent(token)}`;
+export function buildMagicLinkUrl(token: string, baseUrl?: string): string {
+  // Accept an explicit baseUrl so the magic-link route can pin the link to
+  // the subdomain the user requested from (e.g. my.duitplan.com vs
+  // id.duitplan.com). Falls back to the static APP_BASE_URL when callers
+  // don't pass one (legacy paths, tests).
+  const base = (baseUrl ?? appBaseUrl()).replace(/\/$/, "");
+  return `${base}/api/auth/magic-link/verify?token=${encodeURIComponent(token)}`;
 }
 
 export function sendVerificationEmail(args: { to: string; url: string }): void {
