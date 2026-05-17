@@ -15,5 +15,6 @@ export * from "./net_worth";
 export * from "./conversations";
 export * from "./messages";
 export * from "./payday_prompts";
+export * from "./income_sources";
 export * from "./feedback";
 export * from "./auth_tokens";

@@ -39,6 +39,7 @@ import SubscriptionSuccess from "@/pages/subscription/success";
 import SubscriptionFailed from "@/pages/subscription/failed";
 import AgentPage from "@/pages/agent";
 import ZakatPage from "@/pages/zakat";
+import IncomeSourcesPage from "@/pages/income-sources";
 import PrivacyPage from "@/pages/privacy";
 import NotFound from "@/pages/not-found";
 
@@ -110,6 +111,7 @@ function Router() {
       <ProtectedRoute path="/accounts" component={AccountsPage} />
       <ProtectedRoute path="/agent" component={AgentPage} />
       <ProtectedRoute path="/zakat" component={ZakatPage} />
+      <ProtectedRoute path="/income-sources" component={IncomeSourcesPage} />
       
       <Route component={NotFound} />
     </Switch>

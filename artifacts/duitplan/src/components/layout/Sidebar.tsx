@@ -3,7 +3,8 @@ import { Link, useLocation } from "wouter";
 import { useAuth } from "@/lib/auth";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
-import { Menu, X, LayoutDashboard, Receipt, PieChart, Wallet, Upload, Lightbulb, Settings, Trophy, Target, TrendingUp, ScanLine, Building2, Bot, Tag, Landmark } from "lucide-react";
+import { Menu, X, LayoutDashboard, Receipt, PieChart, Wallet, Upload, Lightbulb, Settings, Trophy, Target, TrendingUp, ScanLine, Building2, Bot, Tag, Landmark, Briefcase } from "lucide-react";
+import { useGetProfile } from "@workspace/api-client-react";
 import { cn } from "@/lib/utils";
 
 // Per Claude Design redesign: AI / Dashboard / Accounts / Transactions / Budgets /
@@ -18,6 +19,7 @@ const navigation = [
   { key: "budgets", href: "/budgets", icon: PieChart },
   { key: "categories", href: "/categories", icon: Tag },
   { key: "debts", href: "/debts", icon: Wallet },
+  { key: "incomeSources", href: "/income-sources", icon: Briefcase, variableOnly: true } as const,
   { key: "goals", href: "/goals", icon: Target },
   { key: "netWorth", href: "/net-worth", icon: TrendingUp },
   { key: "zakat", href: "/zakat", icon: Landmark },
@@ -32,6 +34,9 @@ export function Sidebar() {
   const { user, logout } = useAuth();
   const { t } = useTranslation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { data: profile } = useGetProfile();
+  const isVariable = profile?.incomeType === "variable";
+  const visibleNav = navigation.filter((n) => !("variableOnly" in n) || !n.variableOnly || isVariable);
 
   return (
     <>
@@ -57,7 +62,7 @@ export function Sidebar() {
         </div>
 
         <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
-          {navigation.map((item) => {
+          {visibleNav.map((item) => {
             const isActive = location === item.href || location.startsWith(item.href + "/");
             return (
               <Link

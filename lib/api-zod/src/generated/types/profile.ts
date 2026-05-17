@@ -5,6 +5,7 @@
  * DuitPlan API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { ProfileIncomeType } from "./profileIncomeType";
 
 export interface Profile {
   id: string;
@@ -16,6 +17,7 @@ export interface Profile {
   language: string;
   payday: number;
   monthlyIncome: string;
+  incomeType: ProfileIncomeType;
   createdAt: string;
   updatedAt: string;
 }

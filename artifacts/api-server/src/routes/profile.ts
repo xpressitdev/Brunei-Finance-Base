@@ -39,6 +39,7 @@ router.get("/profile", requireAuth, async (req: AuthenticatedRequest, res): Prom
     language: profile.language,
     payday: profile.payday,
     monthlyIncome: profile.monthlyIncome,
+    incomeType: profile.incomeType ?? "fixed",
     migrationNoticeDismissed: profile.migrationNoticeDismissed ?? false,
     createdAt: profile.createdAt.toISOString(),
     updatedAt: profile.updatedAt.toISOString(),
@@ -77,6 +78,9 @@ router.put("/profile", requireAuth, async (req: AuthenticatedRequest, res): Prom
   if (parsed.data.region != null) updateData.region = parsed.data.region;
   if (parsed.data.locale != null) updateData.locale = parsed.data.locale;
   if (parsed.data.language != null) updateData.language = parsed.data.language;
+  if (parsed.data.incomeType != null && (parsed.data.incomeType === "fixed" || parsed.data.incomeType === "variable")) {
+    updateData.incomeType = parsed.data.incomeType;
+  }
 
   const [updated] = await db.update(profilesTable).set(updateData).where(eq(profilesTable.userId, req.userId!)).returning();
   if (!updated) {
@@ -94,6 +98,7 @@ router.put("/profile", requireAuth, async (req: AuthenticatedRequest, res): Prom
     language: updated.language,
     payday: updated.payday,
     monthlyIncome: updated.monthlyIncome,
+    incomeType: updated.incomeType ?? "fixed",
     createdAt: updated.createdAt.toISOString(),
     updatedAt: updated.updatedAt.toISOString(),
   });

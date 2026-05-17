@@ -5,14 +5,18 @@ import { Button } from "@/components/ui/button";
 import { usePaydayPrompt } from "@/hooks/usePaydayPrompt";
 import { PaydayReviewModal } from "./PaydayReviewModal";
 import { useToast } from "@/hooks/use-toast";
+import { useGetProfile } from "@workspace/api-client-react";
 
 export function PaydayBanner() {
   const { t } = useTranslation();
   const { toast } = useToast();
   const { prompt, isLoading, skip, remindTomorrow } = usePaydayPrompt();
+  const { data: profile } = useGetProfile();
   const [modalOpen, setModalOpen] = useState(false);
   const [acting, setActing] = useState(false);
 
+  // Variable-income users don't get a fixed monthly payday — they log income ad-hoc.
+  if (profile?.incomeType === "variable") return null;
   if (isLoading || !prompt) return null;
 
   const handleNotYet = async () => {

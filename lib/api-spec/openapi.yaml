@@ -1220,6 +1220,77 @@ paths:
         "204":
           description: Deleted
 
+  # Income Sources (variable-income users)
+  /income-sources:
+    get:
+      operationId: listIncomeSources
+      tags: [incomeSources]
+      summary: List user income sources
+      responses:
+        "200":
+          description: List of income sources
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/IncomeSource"
+    post:
+      operationId: createIncomeSource
+      tags: [incomeSources]
+      summary: Create an income source
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateIncomeSourceBody"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IncomeSource"
+
+  /income-sources/{id}:
+    patch:
+      operationId: updateIncomeSource
+      tags: [incomeSources]
+      summary: Update an income source
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateIncomeSourceBody"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IncomeSource"
+    delete:
+      operationId: deleteIncomeSource
+      tags: [incomeSources]
+      summary: Delete an income source
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
+
   # Subscription
   /subscription/plans:
     get:
@@ -1517,6 +1588,9 @@ components:
           type: integer
         monthlyIncome:
           type: string
+        incomeType:
+          type: string
+          enum: [fixed, variable]
         createdAt:
           type: string
         updatedAt:
@@ -1531,6 +1605,7 @@ components:
         - language
         - payday
         - monthlyIncome
+        - incomeType
         - createdAt
         - updatedAt
 
@@ -1551,6 +1626,9 @@ components:
           type: ["string", "null"]
         language:
           type: ["string", "null"]
+        incomeType:
+          type: ["string", "null"]
+          enum: [fixed, variable, null]
 
     ResetDataResponse:
       type: object
@@ -2508,3 +2586,58 @@ components:
         - startDate
         - createdAt
         - updatedAt
+
+    # Income Source
+    IncomeSource:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        name:
+          type: string
+        expectedMonthlyAmount:
+          type: string
+        notes:
+          type: ["string", "null"]
+        active:
+          type: boolean
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - userId
+        - name
+        - expectedMonthlyAmount
+        - active
+        - createdAt
+        - updatedAt
+
+    CreateIncomeSourceBody:
+      type: object
+      properties:
+        name:
+          type: string
+        expectedMonthlyAmount:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+        active:
+          type: ["boolean", "null"]
+      required:
+        - name
+
+    UpdateIncomeSourceBody:
+      type: object
+      properties:
+        name:
+          type: ["string", "null"]
+        expectedMonthlyAmount:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+        active:
+          type: ["boolean", "null"]

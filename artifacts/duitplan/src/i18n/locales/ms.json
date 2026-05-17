@@ -20,7 +20,37 @@
     "saveChanges": "Simpan Perubahan",
     "revert": "Kembalikan"
   },
+  "incomeSources": {
+    "title": "Sumber pendapatan",
+    "subtitle": "Senaraikan setiap aliran pendapatan dengan jumlah jangkaan bulanan. Guna ini jika gaji anda tidak tetap — freelance, komisen, kerja gig, atau pelbagai sampingan.",
+    "addSource": "Tambah sumber",
+    "addFirst": "Tambah sumber pertama anda",
+    "empty": "Belum ada sumber pendapatan. Tambah satu untuk mula jejak jangkaan vs sebenar.",
+    "fixedHintTitle": "Perhatian — anda guna pendapatan Tetap",
+    "fixedHintBody": "Sumber pendapatan paling berguna untuk pendapatan tidak tetap. Tukar ke Tidak Tetap di Tetapan → Keutamaan → Jenis pendapatan untuk manfaat penuh.",
+    "thisMonth": "Bulan ini",
+    "thisMonthDesc": "Jumlah pendapatan yang anda rekod setakat ini berbanding jangkaan.",
+    "actual": "Sebenar",
+    "expected": "Jangkaan",
+    "variance": "{{pct}}% daripada jangkaan ({{currency}})",
+    "perMonth": "/ bulan",
+    "editTitle": "Sunting sumber pendapatan",
+    "newTitle": "Sumber pendapatan baharu",
+    "nameLabel": "Nama sumber",
+    "namePlaceholder": "cth. Katering, Reka bentuk freelance, Memandu",
+    "expectedLabel": "Jangkaan bulanan ({{currency}})",
+    "expectedHelp": "Pendapatan biasa anda dari sumber ini setiap bulan. Kami akan banding dengan yang anda rekod.",
+    "notesLabel": "Nota (pilihan)",
+    "notesPlaceholder": "cth. dibayar mingguan, tinggi hujung minggu"
+  },
   "dashboard": {
+    "variableIncome": {
+      "title": "Anda telah memperoleh {{actual}} bulan ini",
+      "vsExpected": "{{pct}}% daripada jangkaan {{expected}}",
+      "noExpected": "Tambah jumlah jangkaan pada sumber pendapatan untuk jejak kemajuan.",
+      "manageSources": "Sumber",
+      "logIncome": "Rekod pendapatan"
+    },
     "overview": {
       "title": "Gambaran Keseluruhan"
     },
@@ -220,6 +250,15 @@
       "yourCategories": "Kategori Anda",
       "expense": "Perbelanjaan",
       "income": "Pendapatan"
+    },
+    "incomeType": {
+      "title": "Jenis pendapatan",
+      "description": "Beritahu DuitPlan sama ada pendapatan bulanan anda tetap (bergaji) atau tidak tetap (freelance, komisen, kerja gig).",
+      "fixed": "Gaji bulanan tetap",
+      "variable": "Pendapatan tidak tetap",
+      "fixedHint": "Anda akan lihat ingatan Hari Gaji setiap bulan untuk rekod gaji.",
+      "variableHint": "Ingatan Hari Gaji disembunyikan. Rekod pendapatan apabila masuk dari halaman Sumber Pendapatan atau butang Tambah Transaksi.",
+      "toastUpdated": "Jenis pendapatan dikemas kini"
     },
     "language": {
       "title": "Bahasa",
@@ -746,6 +785,7 @@
     "commitments": "Komitmen",
     "debts": "Hutang",
     "goals": "Matlamat",
+    "incomeSources": "Sumber pendapatan",
     "zakat": "Zakat",
     "netWorth": "Kekayaan Bersih",
     "upload": "Muat Naik",

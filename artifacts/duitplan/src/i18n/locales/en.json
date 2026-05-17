@@ -20,7 +20,37 @@
     "saveChanges": "Save Changes",
     "revert": "Revert"
   },
+  "incomeSources": {
+    "title": "Income sources",
+    "subtitle": "List each stream of income with an expected monthly amount. Use this if your pay varies — freelance, commission, gig work, multiple side hustles.",
+    "addSource": "Add source",
+    "addFirst": "Add your first source",
+    "empty": "No income sources yet. Add one to start tracking expected vs actual income.",
+    "fixedHintTitle": "Heads up — you're on Fixed income",
+    "fixedHintBody": "Income sources are most useful for variable earners. Switch to Variable in Settings → Preferences → Income type to make the most of this page.",
+    "thisMonth": "This month",
+    "thisMonthDesc": "Total income you've logged so far vs your expected total.",
+    "actual": "Actual",
+    "expected": "Expected",
+    "variance": "{{pct}}% of expected ({{currency}})",
+    "perMonth": "/ month",
+    "editTitle": "Edit income source",
+    "newTitle": "New income source",
+    "nameLabel": "Source name",
+    "namePlaceholder": "e.g. Catering, Freelance design, Driving",
+    "expectedLabel": "Expected monthly ({{currency}})",
+    "expectedHelp": "Your typical monthly take from this source. We'll compare it to what you actually log.",
+    "notesLabel": "Notes (optional)",
+    "notesPlaceholder": "e.g. paid weekly, peaks during weekends"
+  },
   "dashboard": {
+    "variableIncome": {
+      "title": "You've earned {{actual}} this month",
+      "vsExpected": "{{pct}}% of your expected {{expected}}",
+      "noExpected": "Add expected amounts to your income sources to track progress.",
+      "manageSources": "Sources",
+      "logIncome": "Log income"
+    },
     "overview": {
       "title": "Overview"
     },
@@ -234,6 +264,15 @@
       "en": "English",
       "ms": "Bahasa Melayu",
       "id": "Bahasa Indonesia"
+    },
+    "incomeType": {
+      "title": "Income type",
+      "description": "Tell DuitPlan whether your monthly income is fixed (salaried) or variable (freelance, commission, gig work).",
+      "fixed": "Fixed monthly salary",
+      "variable": "Variable / non-fixed income",
+      "fixedHint": "You'll see a Hari Gaji prompt each month to log your salary.",
+      "variableHint": "The Hari Gaji prompt is hidden. You'll log income as it comes in from the Income Sources page or the Add Transaction button.",
+      "toastUpdated": "Income type updated"
     },
     "toasts": {
       "profileUpdated": "Profile updated successfully",
@@ -753,6 +792,7 @@
     "commitments": "Commitments",
     "debts": "Debts",
     "goals": "Goals",
+    "incomeSources": "Income sources",
     "zakat": "Zakat",
     "netWorth": "Net Worth",
     "upload": "Upload",

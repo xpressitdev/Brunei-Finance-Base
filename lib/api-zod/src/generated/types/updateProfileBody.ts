@@ -5,6 +5,7 @@
  * DuitPlan API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { UpdateProfileBodyIncomeType } from "./updateProfileBodyIncomeType";
 
 export interface UpdateProfileBody {
   /** @nullable */
@@ -21,4 +22,6 @@ export interface UpdateProfileBody {
   locale?: string | null;
   /** @nullable */
   language?: string | null;
+  /** @nullable */
+  incomeType?: UpdateProfileBodyIncomeType;
 }

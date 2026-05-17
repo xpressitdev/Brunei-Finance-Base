@@ -154,6 +154,22 @@ export async function runStartupMigrations(): Promise<void> {
     `);
     await client.query(`CREATE INDEX IF NOT EXISTS magic_link_tokens_email_idx ON magic_link_tokens (email);`);
 
+    // Variable-income support: profiles.income_type + income_sources table
+    await client.query(`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS income_type text NOT NULL DEFAULT 'fixed';`);
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS "income_sources" (
+        "id"                       text           PRIMARY KEY,
+        "user_id"                  text           NOT NULL,
+        "name"                     text           NOT NULL,
+        "expected_monthly_amount"  numeric(14, 2) NOT NULL DEFAULT 0,
+        "notes"                    text,
+        "active"                   boolean        NOT NULL DEFAULT true,
+        "created_at"               timestamptz    NOT NULL DEFAULT now(),
+        "updated_at"               timestamptz    NOT NULL DEFAULT now()
+      );
+    `);
+    await client.query(`CREATE INDEX IF NOT EXISTS income_sources_user_idx ON income_sources (user_id);`);
+
     logger.info("Startup migrations applied");
   } catch (err) {
     logger.error({ err }, "Startup migration failed — aborting server start");

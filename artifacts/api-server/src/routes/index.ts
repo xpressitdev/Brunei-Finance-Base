@@ -24,6 +24,7 @@ import storageRouter from "./storage";
 import agentRouter from "./agent";
 import paydayPromptRouter from "./payday-prompt";
 import feedbackRouter from "./feedback";
+import incomeSourcesRouter from "./income-sources";
 
 const router: IRouter = Router();
 
@@ -52,5 +53,6 @@ router.use(storageRouter);
 router.use(agentRouter);
 router.use(paydayPromptRouter);
 router.use(feedbackRouter);
+router.use(incomeSourcesRouter);
 
 export default router;

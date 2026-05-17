@@ -99,6 +99,14 @@ export interface SimpleOkResponse {
   ok: boolean;
 }
 
+export type ProfileIncomeType =
+  (typeof ProfileIncomeType)[keyof typeof ProfileIncomeType];
+
+export const ProfileIncomeType = {
+  fixed: "fixed",
+  variable: "variable",
+} as const;
+
 export interface Profile {
   id: string;
   userId: string;
@@ -109,6 +117,7 @@ export interface Profile {
   language: string;
   payday: number;
   monthlyIncome: string;
+  incomeType: ProfileIncomeType;
   createdAt: string;
   updatedAt: string;
 }
@@ -131,6 +140,18 @@ export interface AuthResponse {
   devVerificationUrl?: string | null;
 }
 
+/**
+ * @nullable
+ */
+export type UpdateProfileBodyIncomeType =
+  | (typeof UpdateProfileBodyIncomeType)[keyof typeof UpdateProfileBodyIncomeType]
+  | null;
+
+export const UpdateProfileBodyIncomeType = {
+  fixed: "fixed",
+  variable: "variable",
+} as const;
+
 export interface UpdateProfileBody {
   /** @nullable */
   fullName?: string | null;
@@ -146,6 +167,8 @@ export interface UpdateProfileBody {
   locale?: string | null;
   /** @nullable */
   language?: string | null;
+  /** @nullable */
+  incomeType?: UpdateProfileBodyIncomeType;
 }
 
 export type ResetDataResponseDeleted = { [key: string]: number };
@@ -746,6 +769,39 @@ export interface UserSubscription {
   endDate?: string | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface IncomeSource {
+  id: string;
+  userId: string;
+  name: string;
+  expectedMonthlyAmount: string;
+  /** @nullable */
+  notes?: string | null;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateIncomeSourceBody {
+  name: string;
+  /** @nullable */
+  expectedMonthlyAmount?: string | null;
+  /** @nullable */
+  notes?: string | null;
+  /** @nullable */
+  active?: boolean | null;
+}
+
+export interface UpdateIncomeSourceBody {
+  /** @nullable */
+  name?: string | null;
+  /** @nullable */
+  expectedMonthlyAmount?: string | null;
+  /** @nullable */
+  notes?: string | null;
+  /** @nullable */
+  active?: boolean | null;
 }
 
 export type GetAccountBalanceHistoryParams = {

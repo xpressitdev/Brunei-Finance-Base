@@ -33,6 +33,7 @@ import type {
   CreateCommitmentBody,
   CreateDebtBody,
   CreateGoalBody,
+  CreateIncomeSourceBody,
   CreateTransactionBody,
   DashboardSummary,
   Debt,
@@ -51,6 +52,7 @@ import type {
   HealthStatus,
   ImportConfirmResult,
   ImportedTransactionRow,
+  IncomeSource,
   Insight,
   ListAssetsParams,
   ListBudgetsParams,
@@ -78,6 +80,7 @@ import type {
   UpdateCommitmentBody,
   UpdateDebtBody,
   UpdateGoalBody,
+  UpdateIncomeSourceBody,
   UpdateProfileBody,
   UpdateTransactionBody,
   UploadStatementBody,
@@ -5059,6 +5062,338 @@ export const useDeleteGoal = <
   TContext
 > => {
   return useMutation(getDeleteGoalMutationOptions(options));
+};
+
+/**
+ * @summary List user income sources
+ */
+export const getListIncomeSourcesUrl = () => {
+  return `/api/income-sources`;
+};
+
+export const listIncomeSources = async (
+  options?: RequestInit,
+): Promise<IncomeSource[]> => {
+  return customFetch<IncomeSource[]>(getListIncomeSourcesUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListIncomeSourcesQueryKey = () => {
+  return [`/api/income-sources`] as const;
+};
+
+export const getListIncomeSourcesQueryOptions = <
+  TData = Awaited<ReturnType<typeof listIncomeSources>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listIncomeSources>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListIncomeSourcesQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listIncomeSources>>
+  > = ({ signal }) => listIncomeSources({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listIncomeSources>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListIncomeSourcesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listIncomeSources>>
+>;
+export type ListIncomeSourcesQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List user income sources
+ */
+
+export function useListIncomeSources<
+  TData = Awaited<ReturnType<typeof listIncomeSources>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listIncomeSources>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListIncomeSourcesQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Create an income source
+ */
+export const getCreateIncomeSourceUrl = () => {
+  return `/api/income-sources`;
+};
+
+export const createIncomeSource = async (
+  createIncomeSourceBody: CreateIncomeSourceBody,
+  options?: RequestInit,
+): Promise<IncomeSource> => {
+  return customFetch<IncomeSource>(getCreateIncomeSourceUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createIncomeSourceBody),
+  });
+};
+
+export const getCreateIncomeSourceMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createIncomeSource>>,
+    TError,
+    { data: BodyType<CreateIncomeSourceBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createIncomeSource>>,
+  TError,
+  { data: BodyType<CreateIncomeSourceBody> },
+  TContext
+> => {
+  const mutationKey = ["createIncomeSource"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createIncomeSource>>,
+    { data: BodyType<CreateIncomeSourceBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createIncomeSource(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateIncomeSourceMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createIncomeSource>>
+>;
+export type CreateIncomeSourceMutationBody = BodyType<CreateIncomeSourceBody>;
+export type CreateIncomeSourceMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Create an income source
+ */
+export const useCreateIncomeSource = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createIncomeSource>>,
+    TError,
+    { data: BodyType<CreateIncomeSourceBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createIncomeSource>>,
+  TError,
+  { data: BodyType<CreateIncomeSourceBody> },
+  TContext
+> => {
+  return useMutation(getCreateIncomeSourceMutationOptions(options));
+};
+
+/**
+ * @summary Update an income source
+ */
+export const getUpdateIncomeSourceUrl = (id: string) => {
+  return `/api/income-sources/${id}`;
+};
+
+export const updateIncomeSource = async (
+  id: string,
+  updateIncomeSourceBody: UpdateIncomeSourceBody,
+  options?: RequestInit,
+): Promise<IncomeSource> => {
+  return customFetch<IncomeSource>(getUpdateIncomeSourceUrl(id), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(updateIncomeSourceBody),
+  });
+};
+
+export const getUpdateIncomeSourceMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateIncomeSource>>,
+    TError,
+    { id: string; data: BodyType<UpdateIncomeSourceBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateIncomeSource>>,
+  TError,
+  { id: string; data: BodyType<UpdateIncomeSourceBody> },
+  TContext
+> => {
+  const mutationKey = ["updateIncomeSource"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateIncomeSource>>,
+    { id: string; data: BodyType<UpdateIncomeSourceBody> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return updateIncomeSource(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateIncomeSourceMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateIncomeSource>>
+>;
+export type UpdateIncomeSourceMutationBody = BodyType<UpdateIncomeSourceBody>;
+export type UpdateIncomeSourceMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Update an income source
+ */
+export const useUpdateIncomeSource = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateIncomeSource>>,
+    TError,
+    { id: string; data: BodyType<UpdateIncomeSourceBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateIncomeSource>>,
+  TError,
+  { id: string; data: BodyType<UpdateIncomeSourceBody> },
+  TContext
+> => {
+  return useMutation(getUpdateIncomeSourceMutationOptions(options));
+};
+
+/**
+ * @summary Delete an income source
+ */
+export const getDeleteIncomeSourceUrl = (id: string) => {
+  return `/api/income-sources/${id}`;
+};
+
+export const deleteIncomeSource = async (
+  id: string,
+  options?: RequestInit,
+): Promise<void> => {
+  return customFetch<void>(getDeleteIncomeSourceUrl(id), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteIncomeSourceMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteIncomeSource>>,
+    TError,
+    { id: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteIncomeSource>>,
+  TError,
+  { id: string },
+  TContext
+> => {
+  const mutationKey = ["deleteIncomeSource"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteIncomeSource>>,
+    { id: string }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return deleteIncomeSource(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteIncomeSourceMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteIncomeSource>>
+>;
+
+export type DeleteIncomeSourceMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Delete an income source
+ */
+export const useDeleteIncomeSource = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteIncomeSource>>,
+    TError,
+    { id: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof deleteIncomeSource>>,
+  TError,
+  { id: string },
+  TContext
+> => {
+  return useMutation(getDeleteIncomeSourceMutationOptions(options));
 };
 
 /**

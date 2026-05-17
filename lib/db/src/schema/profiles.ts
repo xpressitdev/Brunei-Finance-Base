@@ -13,6 +13,7 @@ export const profilesTable = pgTable("profiles", {
   language: text("language").notNull().default("en"),
   payday: integer("payday").notNull(),
   monthlyIncome: numeric("monthly_income", { precision: 12, scale: 2 }).notNull(),
+  incomeType: text("income_type").notNull().default("fixed"),
   migrationNoticeDismissed: boolean("migration_notice_dismissed").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),

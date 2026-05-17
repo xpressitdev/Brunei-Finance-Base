@@ -20,7 +20,37 @@
     "saveChanges": "Simpan Perubahan",
     "revert": "Kembalikan"
   },
+  "incomeSources": {
+    "title": "Sumber pendapatan",
+    "subtitle": "Daftarkan setiap aliran pendapatan dengan jumlah perkiraan bulanan. Gunakan ini jika penghasilan Anda berfluktuasi — freelance, komisi, gig, atau usaha sampingan.",
+    "addSource": "Tambah sumber",
+    "addFirst": "Tambah sumber pertama Anda",
+    "empty": "Belum ada sumber pendapatan. Tambahkan satu untuk mulai melacak perkiraan vs aktual.",
+    "fixedHintTitle": "Perhatian — Anda di mode pendapatan Tetap",
+    "fixedHintBody": "Sumber pendapatan paling bermanfaat untuk penghasilan variabel. Ganti ke Variabel di Pengaturan → Preferensi → Jenis pendapatan untuk manfaat maksimal.",
+    "thisMonth": "Bulan ini",
+    "thisMonthDesc": "Total pendapatan yang sudah Anda catat dibandingkan perkiraan.",
+    "actual": "Aktual",
+    "expected": "Perkiraan",
+    "variance": "{{pct}}% dari perkiraan ({{currency}})",
+    "perMonth": "/ bulan",
+    "editTitle": "Edit sumber pendapatan",
+    "newTitle": "Sumber pendapatan baru",
+    "nameLabel": "Nama sumber",
+    "namePlaceholder": "mis. Katering, Desain freelance, Mengemudi",
+    "expectedLabel": "Perkiraan bulanan ({{currency}})",
+    "expectedHelp": "Penghasilan rutin Anda dari sumber ini per bulan. Kami akan bandingkan dengan yang Anda catat.",
+    "notesLabel": "Catatan (opsional)",
+    "notesPlaceholder": "mis. dibayar mingguan, tinggi di akhir pekan"
+  },
   "dashboard": {
+    "variableIncome": {
+      "title": "Anda telah mendapatkan {{actual}} bulan ini",
+      "vsExpected": "{{pct}}% dari perkiraan {{expected}}",
+      "noExpected": "Tambahkan jumlah perkiraan ke sumber pendapatan untuk melacak kemajuan.",
+      "manageSources": "Sumber",
+      "logIncome": "Catat pendapatan"
+    },
     "overview": {
       "title": "Ikhtisar"
     },
@@ -220,6 +250,15 @@
       "yourCategories": "Kategori Anda",
       "expense": "Pengeluaran",
       "income": "Pemasukan"
+    },
+    "incomeType": {
+      "title": "Jenis pendapatan",
+      "description": "Beritahu DuitPlan apakah pendapatan bulanan Anda tetap (gajian) atau variabel (freelance, komisi, gig).",
+      "fixed": "Gaji bulanan tetap",
+      "variable": "Pendapatan variabel / tidak tetap",
+      "fixedHint": "Anda akan melihat pengingat Hari Gaji tiap bulan untuk mencatat gaji.",
+      "variableHint": "Pengingat Hari Gaji disembunyikan. Catat pendapatan saat masuk lewat halaman Sumber Pendapatan atau tombol Tambah Transaksi.",
+      "toastUpdated": "Jenis pendapatan diperbarui"
     },
     "language": {
       "title": "Bahasa",
@@ -746,6 +785,7 @@
     "commitments": "Komitmen",
     "debts": "Utang",
     "goals": "Tujuan",
+    "incomeSources": "Sumber pendapatan",
     "zakat": "Zakat",
     "netWorth": "Kekayaan Bersih",
     "upload": "Unggah",

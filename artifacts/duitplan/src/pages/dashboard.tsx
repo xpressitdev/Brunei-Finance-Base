@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useGetDashboardSummary, useGetRecentTransactions, useGetSpendingByCategory, useGetProfile } from "@workspace/api-client-react";
+import { useGetDashboardSummary, useGetRecentTransactions, useGetSpendingByCategory, useGetProfile, useListIncomeSources, useListTransactions } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { Link } from "wouter";
-import { ArrowDownRight, CreditCard, Activity, ArrowRight, Upload, Flame, Trophy, Landmark, ArrowUpRight, Calendar, Plus } from "lucide-react";
+import { ArrowDownRight, CreditCard, Activity, ArrowRight, Upload, Flame, Trophy, Landmark, ArrowUpRight, Calendar, Plus, Briefcase } from "lucide-react";
 import { AddTransactionDialog } from "@/components/AddTransactionDialog";
 import { KpiCard } from "@/components/redesign/KpiCard";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
@@ -44,6 +44,49 @@ function useCheckAchievements() {
       await fetch(`/api/gamification/achievements/check`, { method: "POST", credentials: "include" });
     },
   });
+}
+
+function VariableIncomeBanner({ month }: { month: string }) {
+  const { t } = useTranslation();
+  const { formatCurrency } = useRegion();
+  const { data: sources = [] } = useListIncomeSources();
+  const { data: incomeTxns = [] } = useListTransactions({ month, type: "credit" });
+  const expected = sources.filter((s) => s.active).reduce((sum, s) => sum + Number(s.expectedMonthlyAmount || 0), 0);
+  const actual = incomeTxns.reduce((sum, tx) => sum + Number(tx.amount || 0), 0);
+  const pct = expected > 0 ? Math.round((actual / expected) * 100) : 0;
+  return (
+    <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+      <div className="flex items-center gap-3 flex-1 min-w-0">
+        <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center flex-shrink-0">
+          <Briefcase className="w-5 h-5" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="text-sm font-semibold">
+            {t("dashboard.variableIncome.title", { actual: formatCurrency(actual) })}
+          </div>
+          <div className="text-[13px] text-muted-foreground">
+            {expected > 0
+              ? t("dashboard.variableIncome.vsExpected", { expected: formatCurrency(expected), pct })
+              : t("dashboard.variableIncome.noExpected")}
+          </div>
+        </div>
+      </div>
+      <div className="flex gap-2 shrink-0">
+        <Link href="/income-sources">
+          <Button variant="outline" size="sm" className="bg-white">
+            {t("dashboard.variableIncome.manageSources")}
+          </Button>
+        </Link>
+        <AddTransactionDialog
+          trigger={
+            <Button size="sm" className="gap-1.5">
+              <Plus className="w-4 h-4" /> {t("dashboard.variableIncome.logIncome")}
+            </Button>
+          }
+        />
+      </div>
+    </div>
+  );
 }
 
 export default function Dashboard() {
@@ -117,8 +160,11 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* Variable-income summary (replaces Hari Gaji for variable earners) */}
+      {profile?.incomeType === "variable" && <VariableIncomeBanner month={currentMonth} />}
+
       {/* Hari Gaji Banner */}
-      {paydayPrompt && (
+      {profile?.incomeType !== "variable" && paydayPrompt && (
         <div className="rounded-xl border border-emerald-200/60 bg-emerald-50/60 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center text-lg flex-shrink-0">

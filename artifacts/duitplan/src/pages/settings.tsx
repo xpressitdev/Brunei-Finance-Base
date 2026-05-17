@@ -366,7 +366,7 @@ export default function Settings() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="preferences">
+        <TabsContent value="preferences" className="space-y-4">
           <Card>
             <CardHeader>
               <CardTitle>{t("settings.language.title")}</CardTitle>
@@ -384,6 +384,42 @@ export default function Settings() {
                     <SelectItem value="id">{t("settings.language.id")}</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>{t("settings.incomeType.title")}</CardTitle>
+              <CardDescription>{t("settings.incomeType.description")}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="max-w-md">
+                <Select
+                  value={profile?.incomeType ?? "fixed"}
+                  onValueChange={async (v) => {
+                    try {
+                      await updateProfileMutation.mutateAsync({ data: { incomeType: v as "fixed" | "variable" } });
+                      toast({ title: t("settings.incomeType.toastUpdated") });
+                      refetchProfile();
+                    } catch {
+                      toast({ title: t("settings.toasts.profileFailed"), variant: "destructive" });
+                    }
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="fixed">{t("settings.incomeType.fixed")}</SelectItem>
+                    <SelectItem value="variable">{t("settings.incomeType.variable")}</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground mt-2">
+                  {profile?.incomeType === "variable"
+                    ? t("settings.incomeType.variableHint")
+                    : t("settings.incomeType.fixedHint")}
+                </p>
               </div>
             </CardContent>
           </Card>

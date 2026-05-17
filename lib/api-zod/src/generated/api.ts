@@ -53,6 +53,7 @@ export const LoginResponse = zod.object({
         language: zod.string(),
         payday: zod.number(),
         monthlyIncome: zod.string(),
+        incomeType: zod.enum(["fixed", "variable"]),
         createdAt: zod.string(),
         updatedAt: zod.string(),
       })
@@ -152,6 +153,7 @@ export const GetMeResponse = zod.object({
       language: zod.string(),
       payday: zod.number(),
       monthlyIncome: zod.string(),
+      incomeType: zod.enum(["fixed", "variable"]),
       createdAt: zod.string(),
       updatedAt: zod.string(),
     })
@@ -171,6 +173,7 @@ export const GetProfileResponse = zod.object({
   language: zod.string(),
   payday: zod.number(),
   monthlyIncome: zod.string(),
+  incomeType: zod.enum(["fixed", "variable"]),
   createdAt: zod.string(),
   updatedAt: zod.string(),
 });
@@ -186,6 +189,9 @@ export const UpdateProfileBody = zod.object({
   region: zod.string().nullish(),
   locale: zod.string().nullish(),
   language: zod.string().nullish(),
+  incomeType: zod
+    .union([zod.literal("fixed"), zod.literal("variable"), zod.literal(null)])
+    .nullish(),
 });
 
 export const UpdateProfileResponse = zod.object({
@@ -198,6 +204,7 @@ export const UpdateProfileResponse = zod.object({
   language: zod.string(),
   payday: zod.number(),
   monthlyIncome: zod.string(),
+  incomeType: zod.enum(["fixed", "variable"]),
   createdAt: zod.string(),
   updatedAt: zod.string(),
 });
@@ -1102,6 +1109,65 @@ export const UpdateGoalResponse = zod.object({
  * @summary Delete a financial goal
  */
 export const DeleteGoalParams = zod.object({
+  id: zod.coerce.string(),
+});
+
+/**
+ * @summary List user income sources
+ */
+export const ListIncomeSourcesResponseItem = zod.object({
+  id: zod.string(),
+  userId: zod.string(),
+  name: zod.string(),
+  expectedMonthlyAmount: zod.string(),
+  notes: zod.string().nullish(),
+  active: zod.boolean(),
+  createdAt: zod.string(),
+  updatedAt: zod.string(),
+});
+export const ListIncomeSourcesResponse = zod.array(
+  ListIncomeSourcesResponseItem,
+);
+
+/**
+ * @summary Create an income source
+ */
+export const CreateIncomeSourceBody = zod.object({
+  name: zod.string(),
+  expectedMonthlyAmount: zod.string().nullish(),
+  notes: zod.string().nullish(),
+  active: zod.boolean().nullish(),
+});
+
+/**
+ * @summary Update an income source
+ */
+export const UpdateIncomeSourceParams = zod.object({
+  id: zod.coerce.string(),
+});
+
+export const UpdateIncomeSourceBody = zod.object({
+  name: zod.string().nullish(),
+  expectedMonthlyAmount: zod.string().nullish(),
+  notes: zod.string().nullish(),
+  active: zod.boolean().nullish(),
+});
+
+export const UpdateIncomeSourceResponse = zod.object({
+  id: zod.string(),
+  userId: zod.string(),
+  name: zod.string(),
+  expectedMonthlyAmount: zod.string(),
+  notes: zod.string().nullish(),
+  active: zod.boolean(),
+  createdAt: zod.string(),
+  updatedAt: zod.string(),
+});
+
+/**
+ * @summary Delete an income source
+ */
+export const DeleteIncomeSourceParams = zod.object({
   id: zod.coerce.string(),
 });
 
