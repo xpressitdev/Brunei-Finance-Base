@@ -9,6 +9,9 @@ import { REGIONS, type RegionCode, DEFAULT_REGION } from "@/config/regions";
 
 function detectRegionFromHostname(): RegionCode {
   if (typeof window === "undefined") return DEFAULT_REGION;
+  const params = new URLSearchParams(window.location.search);
+  const override = params.get("region")?.toUpperCase();
+  if (override === "BN" || override === "MY" || override === "ID") return override;
   const host = window.location.hostname.toLowerCase();
   if (host.startsWith("my.")) return "MY";
   if (host.startsWith("id.")) return "ID";
