@@ -1710,12 +1710,13 @@ function ConfirmAllocationButton({ available }: { available: number }) {
 }
 
 function AnnualView({
-  year, salary, commitments, categories,
+  year, salary, commitments, categories, debts,
 }: {
   year: number;
   salary: number;
   commitments: Array<{ id: string; label: string; amount: string }>;
   categories: Array<{ id: string; name: string; kind: string }>;
+  debts: Array<{ id: string; lender: string; debtType: string; monthlyPayment: string }>;
 }) {
   const months = MONTH_LABELS.map((_, i) => `${year}-${String(i + 1).padStart(2, "0")}`);
   const expenseCats = categories.filter(c => c.kind === "expense");
@@ -1734,13 +1735,15 @@ function AnnualView({
   );
 
   const totalFixedYear = commitments.reduce((s, c) => s + parseFloat(c.amount), 0) * 12;
+  const totalDebtsMonthly = debts.reduce((s, d) => s + parseFloat(d.monthlyPayment), 0);
+  const totalDebtsYear = totalDebtsMonthly * 12;
   const catTotals = expenseCats.map(cat => ({
     id: cat.id,
     total: budgetMaps.reduce((s, bm) => s + parseFloat(bm[cat.id]?.plannedAmount ?? "0"), 0),
   }));
   const totalVariableYear = catTotals.reduce((s, c) => s + c.total, 0);
   const totalIncomeYear = salary * 12;
-  const totalPoolYear = totalIncomeYear - totalFixedYear - totalVariableYear;
+  const totalPoolYear = totalIncomeYear - totalFixedYear - totalDebtsYear - totalVariableYear;
 
   const cellCls = "text-right px-3 py-2 text-xs font-mono text-foreground whitespace-nowrap min-w-[90px]";
   const zeroCls = "text-muted-foreground/50";
@@ -1794,6 +1797,30 @@ function AnnualView({
             <td className={cn(cellCls, "font-bold text-orange-800 bg-orange-100")}>{fmtShort(totalFixedYear)}</td>
           </tr>
 
+          <tr className="bg-red-700 text-white">
+            <td className="sticky left-0 z-10 bg-red-700 px-4 py-2.5 text-xs font-bold uppercase tracking-wider border-r border-red-600">Debt Repayments</td>
+            {MONTH_LABELS.map((_, i) => <td key={i} className="px-3 py-2" />)}
+            <td className="px-3 py-2" />
+          </tr>
+          {debts.length === 0 && (
+            <tr className="border-b border-gray-100"><td colSpan={14} className="px-4 py-3 text-xs text-muted-foreground">No debts tracked yet. <a href="/debts" className="text-primary underline">Add your loans</a> to see repayments deducted here.</td></tr>
+          )}
+          {debts.map((d, idx) => (
+            <tr key={d.id} className={cn("border-b border-gray-100 hover:bg-gray-50", idx % 2 === 1 && "bg-gray-50/50")}>
+              <td className="sticky left-0 z-10 bg-white hover:bg-gray-50 px-4 py-2 text-xs font-medium border-r border-gray-100 pl-6"
+                  style={{ background: idx % 2 === 1 ? "rgb(249 250 251 / 0.5)" : "white" }}>{d.lender} · {d.debtType}</td>
+              {MONTH_LABELS.map((_, i) => <td key={i} className={cellCls}><span className="text-red-700">{fmtShort(parseFloat(d.monthlyPayment))}</span></td>)}
+              <td className={cn(cellCls, "bg-red-50 font-semibold text-red-800")}>{fmtShort(parseFloat(d.monthlyPayment) * 12)}</td>
+            </tr>
+          ))}
+          {debts.length > 0 && (
+            <tr className="bg-red-50 border-b-2 border-red-200">
+              <td className="sticky left-0 z-10 bg-red-50 px-4 py-2 text-xs font-bold text-red-800 border-r border-red-200">Total Debt</td>
+              {MONTH_LABELS.map((_, i) => <td key={i} className={cn(cellCls, "font-bold text-red-800")}>{fmtShort(totalDebtsMonthly)}</td>)}
+              <td className={cn(cellCls, "font-bold text-red-800 bg-red-100")}>{fmtShort(totalDebtsYear)}</td>
+            </tr>
+          )}
+
           <tr className="bg-blue-700 text-white">
             <td className="sticky left-0 z-10 bg-blue-700 px-4 py-2.5 text-xs font-bold uppercase tracking-wider border-r border-blue-600">Variable Budgets</td>
             {MONTH_LABELS.map((_, i) => <td key={i} className="px-3 py-2" />)}
@@ -1828,7 +1855,7 @@ function AnnualView({
             const monthPools = budgetMaps.map(bm => {
               const varTotal = expenseCats.reduce((s, cat) => s + parseFloat(bm[cat.id]?.plannedAmount ?? "0"), 0);
               const fixedTotal = commitments.reduce((s, c) => s + parseFloat(c.amount), 0);
-              return salary - fixedTotal - varTotal;
+              return salary - fixedTotal - totalDebtsMonthly - varTotal;
             });
             const allPositive = monthPools.every(p => p >= 0);
             return (
@@ -1881,14 +1908,15 @@ export default function Budgets() {
 
   const salary = safeNum(profile?.monthlyIncome);
   const totalCommitments = (commitments ?? []).reduce((s, c) => s + safeNum(c.amount), 0);
+  const totalDebtPayments = (debts ?? []).reduce((s, d) => s + safeNum(d.monthlyPayment), 0);
   const expenseCategories = (categories ?? []).filter(c => c.kind === "expense");
   const budgetMap = Object.fromEntries((budgets ?? []).map(b => [b.categoryId, b]));
 
   const totalPlanned = expenseCategories.reduce((s, c) => s + safeNum(budgetMap[c.id]?.plannedAmount), 0);
   const totalActual = expenseCategories.reduce((s, c) => s + safeNum(budgetMap[c.id]?.actualAmount), 0);
-  const pool = salary - totalCommitments - totalPlanned;
+  const pool = salary - totalCommitments - totalDebtPayments - totalPlanned;
   const totalAccountBalance = accounts.reduce((s, a) => s + safeNum(a.balance), 0);
-  const readyToAssign = totalAccountBalance - totalCommitments - totalPlanned;
+  const readyToAssign = totalAccountBalance - totalCommitments - totalDebtPayments - totalPlanned;
 
   const handleSave = async (categoryId: string) => {
     const val = editing[categoryId];
@@ -1991,10 +2019,10 @@ export default function Budgets() {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <SummaryCard label="Total Income" value={fmt(salary * 12)} sub={`${year} · BND ${salary.toLocaleString("en-BN", { maximumFractionDigits: 0 })}/mo`} color="bg-emerald-50 border border-emerald-200" />
             <SummaryCard label="Total Fixed" value={fmt(totalCommitments * 12)} sub={`${(commitments ?? []).length} commitments × 12`} color="bg-orange-50 border border-orange-200" />
-            <SummaryCard label="Income / mo" value={fmt(salary)} sub="Monthly salary" color="bg-white border" />
-            <SummaryCard label="Fixed / mo" value={fmt(totalCommitments)} sub="Monthly commitments" color="bg-white border" />
+            <SummaryCard label="Total Debt" value={fmt(totalDebtPayments * 12)} sub={`${(debts ?? []).length} loan${(debts ?? []).length !== 1 ? "s" : ""} × 12`} color="bg-red-50 border border-red-200" />
+            <SummaryCard label="Fixed + Debt / mo" value={fmt(totalCommitments + totalDebtPayments)} sub="Monthly out-flow" color="bg-white border" />
           </div>
-          <AnnualView year={year} salary={salary} commitments={commitments ?? []} categories={categories ?? []} />
+          <AnnualView year={year} salary={salary} commitments={commitments ?? []} categories={categories ?? []} debts={debts ?? []} />
         </>
       )}
 
@@ -2091,6 +2119,32 @@ export default function Budgets() {
 
           <section className="space-y-2">
             <div className="flex items-center gap-2">
+              <TrendingDown className="w-4 h-4 text-red-600" />
+              <h2 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">Debt Repayments</h2>
+              <Badge variant="secondary" className="text-xs">auto</Badge>
+            </div>
+            <div className="bg-white border rounded-xl overflow-hidden divide-y">
+              {(debts ?? []).length === 0 ? (
+                <p className="px-5 py-4 text-sm text-muted-foreground">No debts tracked yet. <a href="/debts" className="text-primary underline">Add your loans</a> to see repayments deducted here.</p>
+              ) : (
+                (debts ?? []).map(d => (
+                  <div key={d.id} className="flex items-center justify-between px-5 py-3.5">
+                    <span className="text-sm font-medium text-foreground">{d.lender} · {d.debtType}</span>
+                    <span className="text-sm font-semibold text-red-700">{fmt(parseFloat(d.monthlyPayment))}</span>
+                  </div>
+                ))
+              )}
+              {(debts ?? []).length > 0 && (
+                <div className="bg-red-50 px-5 py-2 flex justify-between items-center">
+                  <span className="text-xs font-medium text-red-800">Total Debt</span>
+                  <span className="text-sm font-bold text-red-800">{fmt(totalDebtPayments)}</span>
+                </div>
+              )}
+            </div>
+          </section>
+
+          <section className="space-y-2">
+            <div className="flex items-center gap-2">
               <TrendingDown className="w-4 h-4 text-blue-600" />
               <h2 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">
                 {view === "plan" ? "Variable Budget" : "Category Budget — Actual"}
@@ -2170,7 +2224,7 @@ export default function Budgets() {
                   <Wallet className={cn("w-6 h-6", pool < 0 ? "text-red-600" : "text-emerald-600")} />
                   <div>
                     <p className={cn("font-bold text-base", pool < 0 ? "text-red-800" : "text-emerald-800")}>Available Pool</p>
-                    <p className="text-xs text-muted-foreground">{fmt(salary)} income − {fmt(totalCommitments)} commitments − {fmt(totalPlanned)} budgeted</p>
+                    <p className="text-xs text-muted-foreground">{fmt(salary)} income − {fmt(totalCommitments)} commitments − {fmt(totalDebtPayments)} debts − {fmt(totalPlanned)} budgeted</p>
                   </div>
                 </div>
                 <span className={cn("text-2xl font-extrabold", pool < 0 ? "text-red-700" : "text-emerald-700")}>{fmt(pool)}</span>
@@ -2187,6 +2241,7 @@ export default function Budgets() {
                 <div className="space-y-1 text-xs text-muted-foreground border-t pt-3">
                   <div className="flex justify-between"><span>Total Account Balances</span><span className="font-medium text-emerald-700">{fmt(totalAccountBalance)}</span></div>
                   <div className="flex justify-between"><span>− Fixed Commitments</span><span className="font-medium text-orange-700">−{fmt(totalCommitments)}</span></div>
+                  <div className="flex justify-between"><span>− Debt Repayments</span><span className="font-medium text-red-700">−{fmt(totalDebtPayments)}</span></div>
                   <div className="flex justify-between"><span>− Assigned to Categories</span><span className="font-medium text-blue-700">−{fmt(totalPlanned)}</span></div>
                 </div>
               </div>
