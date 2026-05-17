@@ -75,8 +75,12 @@ export default function Transactions() {
     ...(typeFilter ? { type: typeFilter } : {}),
   };
   const currentMonthStr = format(new Date(), "yyyy-MM");
+  // Heatmap/donut/stats follow the selected month filter. When no filter is
+  // set, they fall back to the current month so the default view still shows
+  // something useful.
+  const focusMonth = month || currentMonthStr;
   const { data: transactions, isLoading, refetch } = useListTransactions(listParams);
-  const { data: currentMonthTxs } = useListTransactions({ month: currentMonthStr });
+  const { data: currentMonthTxs } = useListTransactions({ month: focusMonth });
   const { data: categories } = useListCategories();
   const { data: accounts } = useListAccounts();
   const { data: profile } = useGetProfile();
@@ -110,13 +114,19 @@ export default function Transactions() {
 
   const { monthSpend, income: hmIncome, spent: hmSpent, topMerchants } = heatmapData;
   const hmNet = hmIncome - hmSpent;
-  const daysInMonth = getDaysInMonth(new Date());
+  // Calendar/stats are sized to the focused month, not today, so an April
+  // filter shows a 30-day April grid (not a May grid).
+  const focusMonthDate = useMemo(() => {
+    const [y, m] = focusMonth.split("-").map(Number);
+    return new Date(y, (m ?? 1) - 1, 1);
+  }, [focusMonth]);
+  const daysInMonth = getDaysInMonth(focusMonthDate);
   const maxDaySpend = Math.max(...Object.values(monthSpend), 1);
   const avgPerDay = daysInMonth > 0 ? hmSpent / daysInMonth : 0;
   const noSpendDays = daysInMonth - Object.keys(monthSpend).length;
   const activeDays = Object.keys(monthSpend).length;
   const highestDay = Math.max(...Object.values(monthSpend), 0);
-  const firstDow = getDay(startOfMonth(new Date())); // 0=Sun
+  const firstDow = getDay(startOfMonth(focusMonthDate)); // 0=Sun
 
   const [catFilter, setCatFilter] = useState<string | null>(null);
   const categoryStats = useMemo(() => {
