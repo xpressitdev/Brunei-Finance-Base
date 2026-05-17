@@ -1,4 +1,5 @@
 import { Router, type IRouter } from "express";
+import multer from "multer";
 import { eq, and } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
 import { db, uploadedDocumentsTable, importedTransactionRowsTable, transactionsTable, categoriesTable } from "@workspace/db";
@@ -7,6 +8,15 @@ import { requireAuth, type AuthenticatedRequest } from "../lib/auth";
 import { requireAccess } from "../lib/access";
 
 const router: IRouter = Router();
+
+// Multipart parser for /uploads. 20MB cap is plenty for a monthly statement
+// PDF or a handful of phone screenshots. We keep the file in memory because
+// the mock parser doesn't need disk persistence (real parser will read the
+// buffer directly when wired up).
+const uploadMw = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 20 * 1024 * 1024 },
+});
 
 // Mock parser for BIBD and Baiduri — generates placeholder transaction rows
 function mockParseStatement(bankType: string, fileName: string): Array<{
@@ -41,16 +51,25 @@ function mockParseStatement(bankType: string, fileName: string): Array<{
   return rows;
 }
 
-router.post("/uploads", requireAuth, requireAccess, async (req: AuthenticatedRequest, res): Promise<void> => {
+router.post("/uploads", requireAuth, requireAccess, uploadMw.single("file"), async (req: AuthenticatedRequest, res): Promise<void> => {
   const { bankType, inputMethod } = req.body as { bankType?: string; inputMethod?: string };
   if (!bankType || !["bibd", "baiduri"].includes(bankType)) {
     res.status(400).json({ error: "bankType must be 'bibd' or 'baiduri'" });
     return;
   }
+  if (!req.file) {
+    res.status(400).json({ error: "file is required" });
+    return;
+  }
 
-  const isScreenshot = inputMethod === "screenshot";
-  const ext = isScreenshot ? "jpg" : "pdf";
-  const fileName = `statement_${bankType}_${Date.now()}.${ext}`;
+  // Infer extension from the uploaded mime type; fall back to the bank
+  // statement default (pdf) or screenshot (jpg) if mime is missing.
+  const mime = req.file.mimetype ?? "";
+  const isScreenshot = inputMethod === "screenshot" || mime.startsWith("image/");
+  const ext = mime === "application/pdf"
+    ? "pdf"
+    : isScreenshot ? "jpg" : "pdf";
+  const fileName = req.file.originalname || `statement_${bankType}_${Date.now()}.${ext}`;
   const docId = uuidv4();
 
   const [doc] = await db.insert(uploadedDocumentsTable).values({
