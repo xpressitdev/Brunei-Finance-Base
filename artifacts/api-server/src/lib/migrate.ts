@@ -129,6 +129,31 @@ export async function runStartupMigrations(): Promise<void> {
     `);
     await client.query(`CREATE INDEX IF NOT EXISTS password_reset_tokens_user_idx ON password_reset_tokens (user_id);`);
 
+    // Social/passwordless sign-in: nullable password_hash (for Google/magic-link
+    // only accounts), Google subject claim, and magic-link tokens table.
+    await client.query(`ALTER TABLE users ALTER COLUMN password_hash DROP NOT NULL;`);
+    await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS google_sub text;`);
+    await client.query(`
+      DO $$ BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_constraint WHERE conname = 'users_google_sub_unique'
+        ) THEN
+          ALTER TABLE users ADD CONSTRAINT users_google_sub_unique UNIQUE (google_sub);
+        END IF;
+      END $$;
+    `);
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS "magic_link_tokens" (
+        "id"          text         PRIMARY KEY,
+        "email"       text         NOT NULL,
+        "token_hash"  text         NOT NULL UNIQUE,
+        "expires_at"  timestamptz  NOT NULL,
+        "used_at"     timestamptz,
+        "created_at"  timestamptz  NOT NULL DEFAULT now()
+      );
+    `);
+    await client.query(`CREATE INDEX IF NOT EXISTS magic_link_tokens_email_idx ON magic_link_tokens (email);`);
+
     logger.info("Startup migrations applied");
   } catch (err) {
     logger.error({ err }, "Startup migration failed — aborting server start");

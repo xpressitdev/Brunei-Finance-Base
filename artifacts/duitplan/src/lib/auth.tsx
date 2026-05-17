@@ -38,7 +38,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!isLoading && !user && isError) {
       // Not authenticated
-      const publicPaths = ["/", "/login", "/register", "/privacy", "/forgot-password", "/reset-password", "/verify-email"];
+      const publicPaths = ["/", "/login", "/register", "/privacy", "/forgot-password", "/reset-password", "/verify-email", "/magic-link-sent"];
       if (!publicPaths.includes(location)) {
         setLocation("/login");
       }

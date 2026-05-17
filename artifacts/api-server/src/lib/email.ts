@@ -39,10 +39,14 @@ export function hashToken(token: string): string {
   return createHash("sha256").update(token).digest("hex");
 }
 
-function appBaseUrl(): string {
+export function appBaseUrl(): string {
   const fromEnv = process.env.APP_BASE_URL?.replace(/\/$/, "");
   if (fromEnv) return fromEnv;
-  // dev fallback — frontend dev server proxies through the same origin
+  // Replit dev fallback — the dev domain serves both frontend and /api
+  // through the same shared proxy, so it works as the public base URL for
+  // OAuth redirects and email links during development.
+  const replitDomain = process.env.REPLIT_DEV_DOMAIN;
+  if (replitDomain) return `https://${replitDomain}`;
   return "http://localhost";
 }
 
@@ -109,6 +113,14 @@ export function buildPasswordResetUrl(token: string): string {
   return `${appBaseUrl()}/reset-password?token=${encodeURIComponent(token)}`;
 }
 
+// Magic-link verify URL points at the backend route, which validates the
+// token, sets the session cookie, and 302-redirects to /dashboard (or
+// /onboarding for new users). Keeps the click-through one hop and means
+// the cookie is set on the very first navigation.
+export function buildMagicLinkUrl(token: string): string {
+  return `${appBaseUrl()}/api/auth/magic-link/verify?token=${encodeURIComponent(token)}`;
+}
+
 export function sendVerificationEmail(args: { to: string; url: string }): void {
   deliver({
     to: args.to,
@@ -118,6 +130,19 @@ export function sendVerificationEmail(args: { to: string; url: string }): void {
       `Confirm your email so we can keep your account secure and let you reset your password later if needed:\n\n` +
       `${args.url}\n\n` +
       `This link expires in 24 hours. If you didn't create an account, you can ignore this email.`,
+  });
+}
+
+export function sendMagicLinkEmail(args: { to: string; url: string }): void {
+  deliver({
+    to: args.to,
+    subject: "Your DuitPlan sign-in link",
+    bodyText:
+      `Tap the link below to sign in to DuitPlan. No password needed.\n\n` +
+      `${args.url}\n\n` +
+      `This link expires in 15 minutes and can only be used once. If you didn't ` +
+      `request this, you can safely ignore this email — nobody can access your ` +
+      `account without the link.`,
   });
 }
 

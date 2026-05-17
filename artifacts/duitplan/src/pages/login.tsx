@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "wouter";
 import { useLogin } from "@workspace/api-client-react";
 import { useTranslation } from "react-i18next";
@@ -6,7 +6,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { SocialAuth } from "@/components/SocialAuth";
 import { isEmail } from "@/lib/password";
+
+// Friendly messages for errors surfaced via ?error=... after a redirect
+// from the Google/magic-link backend routes. Keep generic — never reveal
+// whether the email exists in our system.
+const OAUTH_ERROR_MESSAGES: Record<string, string> = {
+  oauth_state: "That sign-in attempt expired. Please try again.",
+  oauth_failed: "We couldn't complete Google sign-in. Please try again.",
+  google_unavailable: "Google sign-in is not available right now. Please use your email and password.",
+  google_unverified: "Your Google account email isn't verified. Verify it with Google, then try again.",
+  magic_link_invalid: "That sign-in link is invalid or has expired. Please request a new one.",
+  magic_link_failed: "We couldn't sign you in with that link. Please try again.",
+};
 
 interface FieldErrors {
   email?: string;
@@ -20,6 +33,26 @@ export default function Login() {
   const [touched, setTouched] = useState<Record<keyof FieldErrors, boolean>>({ email: false, password: false });
   const [serverError, setServerError] = useState("");
   const loginMutation = useLogin();
+  const emailRef = useRef<HTMLInputElement>(null);
+
+  // Surface server-side redirect errors from /api/auth/google/* and
+  // /api/auth/magic-link/* once on mount. Strip the query string so the
+  // banner doesn't reappear on refresh.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get("error");
+    if (code && OAUTH_ERROR_MESSAGES[code]) {
+      setServerError(OAUTH_ERROR_MESSAGES[code]);
+      const url = new URL(window.location.href);
+      url.searchParams.delete("error");
+      window.history.replaceState({}, "", url.toString());
+    }
+  }, []);
+
+  const focusEmail = () => {
+    setTouched((s) => ({ ...s, email: true }));
+    emailRef.current?.focus();
+  };
 
   const errors: FieldErrors = {};
   if (!email) errors.email = "Please enter your email.";
@@ -63,6 +96,7 @@ export default function Login() {
             <Label htmlFor="email">{t("auth.login.emailLabel")}</Label>
             <Input
               id="email"
+              ref={emailRef}
               type="email"
               placeholder="name@example.com"
               value={email}
@@ -109,6 +143,8 @@ export default function Login() {
             {loginMutation.isPending ? t("auth.login.signingIn") : t("auth.login.submit")}
           </Button>
         </form>
+
+        <SocialAuth email={email} onEmailRequired={focusEmail} />
 
         <div className="mt-8 text-center text-sm text-muted-foreground">
           {t("auth.login.noAccount")}{" "}

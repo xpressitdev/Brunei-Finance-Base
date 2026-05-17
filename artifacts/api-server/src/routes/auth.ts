@@ -167,7 +167,11 @@ router.post("/auth/login", async (req, res): Promise<void> => {
     .where(eq(usersTable.email, email.toLowerCase()))
     .limit(1);
 
-  if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
+  // Accounts created via Google or magic-link have no password hash. Reject
+  // those at the same generic error to avoid leaking which sign-in method
+  // an email is registered with — the user can fall back to "Continue with
+  // Google" or "Email me a sign-in link" on the same page.
+  if (!user || !user.passwordHash || !(await bcrypt.compare(password, user.passwordHash))) {
     res.status(401).json({ error: "Invalid email or password" });
     return;
   }
@@ -345,7 +349,18 @@ router.post("/auth/change-password", requireAuth, async (req: AuthenticatedReque
     return;
   }
   const [user] = await db.select().from(usersTable).where(eq(usersTable.id, req.userId!)).limit(1);
-  if (!user || !(await bcrypt.compare(parsed.data.currentPassword, user.passwordHash))) {
+  // Accounts created via Google or magic-link have no current password to
+  // verify — they can't change a password they never set. Surface a 400
+  // explaining the situation rather than letting bcrypt.compare(null) throw.
+  if (!user) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
+  if (!user.passwordHash) {
+    res.status(400).json({ error: "Your account has no password set. Use the 'set password' option in settings instead." });
+    return;
+  }
+  if (!(await bcrypt.compare(parsed.data.currentPassword, user.passwordHash))) {
     res.status(401).json({ error: "Current password is incorrect." });
     return;
   }

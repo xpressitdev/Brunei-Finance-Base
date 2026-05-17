@@ -17,5 +17,8 @@ export function requireAuth(req: AuthenticatedRequest, res: Response, next: Next
 declare module "express-session" {
   interface SessionData {
     userId: string;
+    // CSRF state for the Google OAuth round-trip. Set on /auth/google/start,
+    // verified and cleared on /auth/google/callback.
+    oauthState?: string;
   }
 }

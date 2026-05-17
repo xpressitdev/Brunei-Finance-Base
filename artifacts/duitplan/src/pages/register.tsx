@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Link } from "wouter";
 import { useRegister } from "@workspace/api-client-react";
 import { useTranslation } from "react-i18next";
@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { PasswordStrengthMeter } from "@/components/PasswordStrengthMeter";
+import { SocialAuth } from "@/components/SocialAuth";
 import { checkPasswordPolicy, isEmail, PASSWORD_MIN_LENGTH } from "@/lib/password";
 
 interface FieldErrors {
@@ -23,6 +24,12 @@ export default function Register() {
   const [touched, setTouched] = useState<Record<keyof FieldErrors, boolean>>({ fullName: false, email: false, password: false });
   const [serverError, setServerError] = useState("");
   const registerMutation = useRegister();
+  const emailRef = useRef<HTMLInputElement>(null);
+
+  const focusEmail = () => {
+    setTouched((s) => ({ ...s, email: true }));
+    emailRef.current?.focus();
+  };
 
   const errors: FieldErrors = {};
   if (!fullName.trim()) errors.fullName = "Please enter your name.";
@@ -85,6 +92,7 @@ export default function Register() {
             <Label htmlFor="email">{t("auth.register.emailLabel")}</Label>
             <Input
               id="email"
+              ref={emailRef}
               type="email"
               placeholder="name@example.com"
               value={email}
@@ -125,6 +133,8 @@ export default function Register() {
             {registerMutation.isPending ? t("auth.register.creating") : t("auth.register.submit")}
           </Button>
         </form>
+
+        <SocialAuth email={email} onEmailRequired={focusEmail} />
 
         <div className="mt-8 text-center text-sm text-muted-foreground">
           {t("auth.register.hasAccount")}{" "}

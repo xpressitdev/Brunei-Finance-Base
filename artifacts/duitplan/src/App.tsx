@@ -17,6 +17,7 @@ import Login from "@/pages/login";
 import Register from "@/pages/register";
 import ForgotPassword from "@/pages/forgot-password";
 import ResetPassword from "@/pages/reset-password";
+import MagicLinkSent from "@/pages/magic-link-sent";
 import VerifyEmail from "@/pages/verify-email";
 import Onboarding from "@/pages/onboarding";
 import Dashboard from "@/pages/dashboard";
@@ -79,6 +80,7 @@ function Router() {
       <Route path="/register" component={Register} />
       <Route path="/forgot-password" component={ForgotPassword} />
       <Route path="/reset-password" component={ResetPassword} />
+      <Route path="/magic-link-sent" component={MagicLinkSent} />
       <Route path="/verify-email" component={VerifyEmail} />
       <Route path="/onboarding" component={Onboarding} />
       <Route path="/privacy" component={PrivacyPage} />
