@@ -1,11 +1,23 @@
 import { useState } from "react";
 import { format } from "date-fns";
 import { useParams, Link, useLocation } from "wouter";
-import { useGetImportedRows, useConfirmImport, useListCategories } from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
+import {
+  useGetImportedRows,
+  useConfirmImport,
+  useListCategories,
+  useCreateCategory,
+  getListCategoriesQueryKey,
+} from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Check, X, AlertCircle, AlertTriangle } from "lucide-react";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { ArrowLeft, Check, X, AlertCircle, AlertTriangle, Plus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { TrialExpiredPrompt } from "@/components/subscription/TrialExpiredPrompt";
@@ -19,8 +31,60 @@ export default function ReviewImport() {
   const { data: rows, isLoading } = useGetImportedRows(id!);
   const { data: categories } = useListCategories();
   const confirmMutation = useConfirmImport();
+  const createCategoryMutation = useCreateCategory();
+  const queryClient = useQueryClient();
 
   const [selections, setSelections] = useState<Record<string, { categoryId: string | null, skip: boolean }>>({});
+  // When the user picks the "+ New category…" option in a row's dropdown we
+  // remember which row asked so we can auto-assign the newly created category
+  // back to that row after the dialog closes.
+  const [newCategoryRowId, setNewCategoryRowId] = useState<string | null>(null);
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const [newCategoryBudget, setNewCategoryBudget] = useState("");
+  const [newCategoryError, setNewCategoryError] = useState<string | null>(null);
+
+  const openNewCategoryDialog = (rowId: string) => {
+    setNewCategoryRowId(rowId);
+    setNewCategoryName("");
+    setNewCategoryBudget("");
+    setNewCategoryError(null);
+  };
+
+  const handleCreateCategory = async () => {
+    const name = newCategoryName.trim();
+    if (!name) {
+      setNewCategoryError("Please enter a name");
+      return;
+    }
+    const budgetRaw = newCategoryBudget.trim();
+    const budgetNum = budgetRaw === "" ? 0 : Number(budgetRaw);
+    if (!Number.isFinite(budgetNum) || budgetNum < 0) {
+      setNewCategoryError("Budget must be a non-negative number");
+      return;
+    }
+    if (categories?.some(c => c.name.toLowerCase() === name.toLowerCase())) {
+      setNewCategoryError("A category with that name already exists");
+      return;
+    }
+    try {
+      const created = await createCategoryMutation.mutateAsync({
+        data: { name, kind: "expense", defaultBudget: budgetNum.toFixed(2) },
+      });
+      // Refresh the categories list everywhere (review screen, /categories
+      // page, budgets, etc.) and auto-select the new category on the row
+      // that opened the dialog.
+      await queryClient.invalidateQueries({ queryKey: getListCategoriesQueryKey() });
+      if (newCategoryRowId && created?.id) {
+        setSelections(prev => ({
+          ...prev,
+          [newCategoryRowId]: { ...prev[newCategoryRowId], categoryId: created.id },
+        }));
+      }
+      setNewCategoryRowId(null);
+    } catch (err) {
+      setNewCategoryError(err instanceof Error ? err.message : "Failed to create category");
+    }
+  };
   
   // Initialize selections once rows are loaded. Rows the server marked as
   // possible duplicates are unchecked (skip=true) by default so the user has
@@ -46,6 +110,10 @@ export default function ReviewImport() {
   };
 
   const handleCategoryChange = (rowId: string, categoryId: string) => {
+    if (categoryId === "__new__") {
+      openNewCategoryDialog(rowId);
+      return;
+    }
     setSelections(prev => ({
       ...prev,
       [rowId]: { ...prev[rowId], categoryId: categoryId === "none" ? null : categoryId }
@@ -194,6 +262,11 @@ export default function ReviewImport() {
                               {categories?.map(c => (
                                 <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
                               ))}
+                              <SelectItem value="__new__" className="text-primary font-medium">
+                                <span className="flex items-center gap-2">
+                                  <Plus className="w-3.5 h-3.5" /> New category…
+                                </span>
+                              </SelectItem>
                             </SelectContent>
                           </Select>
                         </td>
@@ -206,6 +279,54 @@ export default function ReviewImport() {
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={newCategoryRowId !== null} onOpenChange={(open) => { if (!open) setNewCategoryRowId(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>New category</DialogTitle>
+            <DialogDescription>
+              Add a custom expense category. It will appear here and on the Categories page right away.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="new-cat-name">Name</Label>
+              <Input
+                id="new-cat-name"
+                value={newCategoryName}
+                onChange={(e) => setNewCategoryName(e.target.value)}
+                placeholder="e.g. Vehicle expense"
+                autoFocus
+                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleCreateCategory(); } }}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="new-cat-budget">Monthly budget (optional)</Label>
+              <Input
+                id="new-cat-budget"
+                type="number"
+                inputMode="decimal"
+                min="0"
+                step="0.01"
+                value={newCategoryBudget}
+                onChange={(e) => setNewCategoryBudget(e.target.value)}
+                placeholder="0.00"
+              />
+            </div>
+            {newCategoryError && (
+              <div className="text-sm text-destructive">{newCategoryError}</div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setNewCategoryRowId(null)} disabled={createCategoryMutation.isPending}>
+              Cancel
+            </Button>
+            <Button onClick={handleCreateCategory} disabled={createCategoryMutation.isPending}>
+              {createCategoryMutation.isPending ? "Adding…" : "Add category"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
