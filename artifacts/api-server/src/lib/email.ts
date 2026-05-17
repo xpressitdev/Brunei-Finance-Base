@@ -1,18 +1,26 @@
 import { createHash, randomBytes } from "node:crypto";
+import { Resend } from "resend";
 import { logger } from "./logger";
 
-// Lightweight email helper. No SMTP transport is currently configured for
-// DuitPlan — the handoff doc explicitly defers transactional email until
-// business mail infra is sorted. To keep the auth flows usable without
-// blocking on infra, this module:
-//   • generates secure tokens and their SHA-256 hashes (only the hash is
-//     stored in the DB)
-//   • builds the user-facing URL using APP_BASE_URL
-//   • "sends" by logging the URL at INFO level so it's visible in dev/QA
+// Transactional email helper for DuitPlan.
 //
-// Swap the `deliver()` body with a real transport (nodemailer / Resend /
-// SES) once credentials are available — the rest of the auth code is
-// already token-shape compatible.
+// When RESEND_API_KEY is set, mail is sent via Resend
+// (https://resend.com). When the key is missing, deliver() falls back to
+// logging the message — so dev/QA can complete auth flows without real
+// infra, and a missing prod key never silently breaks signup.
+//
+// Sender address is controlled by EMAIL_FROM (default: noreply@duitplan.com).
+// Tokens are generated here as random bytes; only their SHA-256 hash is
+// stored in the DB. The plaintext token is delivered to the user and
+// presented back to /auth/verify-email or /auth/reset-password.
+
+const resendClient = process.env.RESEND_API_KEY
+  ? new Resend(process.env.RESEND_API_KEY)
+  : null;
+
+function emailFrom(): string {
+  return process.env.EMAIL_FROM ?? "DuitPlan <noreply@duitplan.com>";
+}
 
 export interface IssuedToken {
   token: string;       // plaintext, send to the user
@@ -39,16 +47,51 @@ function appBaseUrl(): string {
 }
 
 function deliver(args: { to: string; subject: string; bodyText: string }): void {
-  // Replace this stub with a real transport when SMTP/Resend creds land.
   // SECURITY: bodyText contains single-use auth tokens (verification +
   // password-reset URLs). Never log it in production — anyone with log
   // access could hijack accounts. In non-production we surface the body
   // so QA can complete flows without a real inbox.
   const isProd = process.env.NODE_ENV === "production";
+
+  if (resendClient) {
+    // Fire-and-forget — auth routes don't await delivery so a slow SMTP
+    // hop never blocks the HTTP response. Failures are logged for ops
+    // follow-up but never thrown back to the user (would leak whether
+    // an email exists).
+    resendClient.emails
+      .send({
+        from: emailFrom(),
+        to: args.to,
+        subject: args.subject,
+        text: args.bodyText,
+      })
+      .then((result) => {
+        if (result.error) {
+          logger.error(
+            { to: args.to, subject: args.subject, err: result.error },
+            "[email] Resend delivery failed",
+          );
+        } else {
+          logger.info(
+            { to: args.to, subject: args.subject, messageId: result.data?.id },
+            "[email] Resend delivery accepted",
+          );
+        }
+      })
+      .catch((err: unknown) => {
+        logger.error(
+          { to: args.to, subject: args.subject, err },
+          "[email] Resend delivery threw",
+        );
+      });
+    return;
+  }
+
+  // No transport configured — fall back to logging so dev/QA still works.
   if (isProd) {
-    logger.info(
+    logger.warn(
       { to: args.to, subject: args.subject },
-      "[email] (no transport configured) would-send (body redacted)",
+      "[email] RESEND_API_KEY missing in production — email NOT sent",
     );
   } else {
     logger.info(
