@@ -574,12 +574,12 @@ export default function Transactions() {
       {/* Hero stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <div className="rounded-xl border bg-card p-3 sm:p-4 relative overflow-hidden min-w-0">
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground truncate">Income · {format(new Date(), "MMMM")}</p>
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground truncate">Income · {format(focusMonthDate, "MMMM")}</p>
           <div className="text-lg sm:text-2xl font-bold tabular-nums text-emerald-700 mt-1 break-words">+{formatCurrency(hmIncome)}</div>
           <div className="text-[11px] text-muted-foreground mt-0.5">{currentMonthTxs?.filter(t => t.type === "credit").length ?? 0} deposits</div>
         </div>
         <div className="rounded-xl border bg-card p-3 sm:p-4 relative overflow-hidden min-w-0">
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground truncate">Spent · {format(new Date(), "MMMM")}</p>
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground truncate">Spent · {format(focusMonthDate, "MMMM")}</p>
           <div className="text-lg sm:text-2xl font-bold tabular-nums text-rose-600 mt-1 break-words">−{formatCurrency(hmSpent)}</div>
           <div className="text-[11px] text-muted-foreground mt-0.5">{currentMonthTxs?.filter(t => t.type === "debit").length ?? 0} purchases</div>
         </div>
@@ -593,7 +593,9 @@ export default function Transactions() {
           const monthlyIncome = profile?.monthlyIncome ? Number(profile.monthlyIncome) : 0;
           const today = new Date().getDate();
           const salaryLanded = monthlyIncome > 0 ? hmIncome >= monthlyIncome * 0.5 : hmIncome > 0;
-          const prePayday = !!payday && today < payday && !salaryLanded;
+          // Pre-payday only makes sense for the current month. When browsing a
+          // past month the salary either landed or never did — never "pending".
+          const prePayday = focusMonth === currentMonthStr && !!payday && today < payday && !salaryLanded;
           const tone = prePayday
             ? "bg-card border-border"
             : hmNet >= 0
@@ -673,7 +675,7 @@ export default function Transactions() {
           <div className="flex items-center justify-between mb-4">
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Spending heatmap</p>
-              <h3 className="text-base font-semibold mt-0.5">{format(new Date(), "MMMM yyyy")}</h3>
+              <h3 className="text-base font-semibold mt-0.5">{format(focusMonthDate, "MMMM yyyy")}</h3>
             </div>
             <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
               <span>Less</span>
@@ -693,11 +695,13 @@ export default function Transactions() {
             {Array.from({ length: daysInMonth }).map((_, i) => {
               const day = i + 1;
               const amt = monthSpend[day] || 0;
-              const isToday = day === new Date().getDate();
+              // Only ring "today" when viewing the current month — otherwise
+              // (e.g. browsing April from May) the today highlight is misleading.
+              const isToday = focusMonth === currentMonthStr && day === new Date().getDate();
               return (
                 <div key={day}
                   className={`aspect-square rounded-md flex flex-col items-center justify-center cursor-pointer transition-all hover:scale-110 hover:z-10 ${heatColor(amt)} ${isToday ? "ring-2 ring-primary ring-offset-1" : ""}`}
-                  title={amt ? `${formatCurrency(amt)} on ${day} ${format(new Date(), "MMMM")}` : `No spend on ${day} ${format(new Date(), "MMMM")}`}>
+                  title={amt ? `${formatCurrency(amt)} on ${day} ${format(focusMonthDate, "MMMM")}` : `No spend on ${day} ${format(focusMonthDate, "MMMM")}`}>
                   <div className="text-[11px] font-bold leading-none">{day}</div>
                   {amt > 0 && <div className="text-[8px] tabular-nums opacity-80 leading-none mt-0.5">{amt < 100 ? amt.toFixed(0) : Math.round(amt)}</div>}
                 </div>
