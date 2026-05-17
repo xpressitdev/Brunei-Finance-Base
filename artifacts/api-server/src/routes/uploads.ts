@@ -6,6 +6,7 @@ import { db, uploadedDocumentsTable, importedTransactionRowsTable, transactionsT
 import { GetImportedRowsParams, ConfirmImportParams, ConfirmImportBody } from "@workspace/api-zod";
 import { requireAuth, type AuthenticatedRequest } from "../lib/auth";
 import { requireAccess } from "../lib/access";
+import { parseBibdStatement, type ParsedRow as BibdParsedRow } from "../lib/parsers/bibd.js";
 
 const router: IRouter = Router();
 
@@ -72,16 +73,40 @@ router.post("/uploads", requireAuth, requireAccess, uploadMw.single("file"), asy
   const fileName = req.file.originalname || `statement_${bankType}_${Date.now()}.${ext}`;
   const docId = uuidv4();
 
+  // Real parser for BIBD PDFs; Baiduri and screenshot uploads still use the
+  // mock parser for now until those parsers are implemented.
+  let parsedRows: BibdParsedRow[] | ReturnType<typeof mockParseStatement> = [];
+  let parseStatus: "parsed" | "failed" = "parsed";
+  let parseError: string | null = null;
+  if (bankType === "bibd" && mime === "application/pdf") {
+    try {
+      parsedRows = await parseBibdStatement(req.file.buffer);
+      if (parsedRows.length === 0) {
+        parseStatus = "failed";
+        parseError = "No transactions detected in the PDF";
+      }
+    } catch (e) {
+      req.log.error({ err: e }, "BIBD PDF parse failed");
+      parseStatus = "failed";
+      parseError = e instanceof Error ? e.message : "Failed to read PDF";
+    }
+  } else {
+    parsedRows = mockParseStatement(bankType, fileName);
+  }
+
+  if (parseStatus === "failed") {
+    res.status(422).json({ error: parseError ?? "Could not parse statement" });
+    return;
+  }
+
   const [doc] = await db.insert(uploadedDocumentsTable).values({
     id: docId,
     userId: req.userId!,
     fileName,
     storagePath: `/uploads/${docId}/${fileName}`,
     bankType,
-    parseStatus: "parsed",
+    parseStatus,
   }).returning();
-
-  const parsedRows = mockParseStatement(bankType, fileName);
 
   const rowValues = parsedRows.map(row => ({
     id: uuidv4(),

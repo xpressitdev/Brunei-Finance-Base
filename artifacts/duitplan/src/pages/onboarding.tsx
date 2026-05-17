@@ -1259,55 +1259,94 @@ export default function Onboarding() {
                   <p className="text-muted-foreground">{t("onboarding.recap.subtitle")}</p>
                 </div>
 
-                <div className="space-y-3 mb-4">
-                  <div className="flex justify-between items-center px-4 py-2.5 rounded-lg bg-emerald-50 border border-emerald-200">
-                    <span className="text-sm font-medium text-emerald-900">💵 {t("onboarding.recap.income")}</span>
-                    <span className="font-semibold text-emerald-900">{formatMoney(incomeNum, region.currency)}</span>
-                  </div>
-                  <div className="flex justify-between items-center px-4 py-2.5 rounded-lg bg-white border-2 border-primary/30">
-                    <span className="text-sm font-semibold">🏦 {t("onboarding.recap.pool")}</span>
-                    <span className="font-bold">{formatMoney(poolTotal, region.currency)}</span>
-                  </div>
+                <div className="rounded-2xl bg-gradient-to-b from-primary/5 to-background border border-primary/10 p-4 sm:p-5 mb-4">
+                  <div className="flex flex-col items-center gap-2">
+                    {/* Income */}
+                    <div className="w-full max-w-xs px-4 py-2 rounded-lg bg-emerald-100 text-emerald-900 flex items-center justify-between gap-3 shadow-sm">
+                      <span className="text-xs font-semibold flex items-center gap-1.5">
+                        💵 {t("onboarding.recap.income")}
+                      </span>
+                      <span className="text-sm font-bold tabular-nums">{formatMoney(incomeNum, region.currency)}</span>
+                    </div>
 
-                  <div className="text-center text-muted-foreground text-xs">↓ split into ↓</div>
+                    <div className="text-muted-foreground text-xs leading-none">↓</div>
 
-                  <div className="flex justify-between items-center px-4 py-2.5 rounded-lg bg-rose-50 border border-rose-200">
-                    <span className="text-sm font-medium text-rose-900 flex items-center gap-2">
-                      <CreditCard className="w-3.5 h-3.5" /> {t("onboarding.recap.debts")}
-                    </span>
-                    <span className="font-semibold text-rose-900">−{formatMoney(totalDebts, region.currency)}</span>
-                  </div>
-                  <div className="flex justify-between items-center px-4 py-2.5 rounded-lg bg-sky-50 border border-sky-200">
-                    <span className="text-sm font-medium text-sky-900">📋 {t("onboarding.recap.bills")}</span>
-                    <span className="font-semibold text-sky-900">−{formatMoney(totalBills, region.currency)}</span>
-                  </div>
-                  <div className="flex justify-between items-center px-4 py-2.5 rounded-lg bg-sky-50 border border-sky-200">
-                    <span className="text-sm font-medium text-sky-900">✉️ {t("onboarding.recap.envelopes")}</span>
-                    <span className="font-semibold text-sky-900">−{formatMoney(totalEnvelopes, region.currency)}</span>
-                  </div>
-                  <div className="flex justify-between items-center px-4 py-2.5 rounded-lg bg-teal-50 border border-teal-200">
-                    <span className="text-sm font-medium text-teal-900">🎯 {t("onboarding.recap.goals")}</span>
-                    <span className="font-semibold text-teal-900">{formatMoney(totalGoals, region.currency)}/mo</span>
-                  </div>
+                    {/* Pool */}
+                    <div className="w-full max-w-xs px-4 py-2.5 rounded-lg bg-white border-2 border-primary/30 flex items-center justify-between gap-3 shadow-sm">
+                      <span className="text-sm font-semibold flex items-center gap-1.5">
+                        🏦 {t("onboarding.recap.pool")}
+                      </span>
+                      <span className="text-sm font-bold tabular-nums">{formatMoney(poolTotal, region.currency)}</span>
+                    </div>
 
-                  <div className="flex justify-between items-center px-4 py-3 rounded-lg bg-foreground text-background mt-1">
-                    <span className="text-sm font-bold">{t("onboarding.recap.leftover")}</span>
-                    <span className="text-lg font-bold">{formatMoney(leftover, region.currency)}</span>
-                  </div>
+                    <div className="text-muted-foreground text-xs leading-none">↓</div>
 
-                  <p
-                    className={cn(
-                      "text-xs px-1",
-                      leftover > 0 ? "text-emerald-700" : leftover < 0 ? "text-rose-700" : "text-muted-foreground",
-                    )}
-                  >
-                    {leftover > 0
-                      ? t("onboarding.recap.leftoverPositiveHint")
-                      : leftover < 0
-                        ? t("onboarding.recap.leftoverNegativeHint")
-                        : t("onboarding.recap.leftoverZeroHint")}
-                  </p>
+                    {/* 3 branches */}
+                    <div className="grid grid-cols-3 gap-2 w-full">
+                      {/* Debts — red */}
+                      <div className="rounded-lg bg-rose-100 text-rose-900 px-2 py-2 flex flex-col items-center text-center">
+                        <span className="text-[10px] font-semibold uppercase tracking-wider opacity-80">
+                          🏛 {t("onboarding.welcome.flowDebts")}
+                        </span>
+                        <span className="text-sm font-bold tabular-nums mt-1">
+                          {formatMoney(totalDebts, region.currency)}
+                        </span>
+                      </div>
+                      {/* Bills + Envelopes — blue */}
+                      <div className="rounded-lg bg-sky-100 text-sky-900 px-2 py-2 flex flex-col items-center text-center">
+                        <span className="text-[10px] font-semibold uppercase tracking-wider opacity-80">
+                          ✉️ {t("onboarding.welcome.flowBills")}
+                        </span>
+                        <span className="text-sm font-bold tabular-nums mt-1">
+                          {formatMoney(totalBills + totalEnvelopes, region.currency)}
+                        </span>
+                        <span className="text-[10px] opacity-70 tabular-nums mt-0.5">
+                          {formatMoney(totalBills, region.currency)} + {formatMoney(totalEnvelopes, region.currency)}
+                        </span>
+                      </div>
+                      {/* Goals — teal */}
+                      <div className="rounded-lg bg-teal-100 text-teal-900 px-2 py-2 flex flex-col items-center text-center">
+                        <span className="text-[10px] font-semibold uppercase tracking-wider opacity-80">
+                          🎯 {t("onboarding.welcome.flowGoals")}
+                        </span>
+                        <span className="text-sm font-bold tabular-nums mt-1">
+                          {formatMoney(totalGoals, region.currency)}
+                        </span>
+                        <span className="text-[10px] opacity-70 mt-0.5">/mo</span>
+                      </div>
+                    </div>
+
+                    <div className="text-muted-foreground text-xs leading-none mt-1">↓</div>
+
+                    {/* Leftover */}
+                    <div
+                      className={cn(
+                        "w-full max-w-xs px-4 py-2.5 rounded-lg flex items-center justify-between gap-3",
+                        leftover > 0
+                          ? "bg-emerald-600 text-white"
+                          : leftover < 0
+                            ? "bg-rose-600 text-white"
+                            : "bg-foreground text-background",
+                      )}
+                    >
+                      <span className="text-sm font-bold">{t("onboarding.recap.leftover")}</span>
+                      <span className="text-base font-bold tabular-nums">{formatMoney(leftover, region.currency)}</span>
+                    </div>
+                  </div>
                 </div>
+
+                <p
+                  className={cn(
+                    "text-xs px-1 mb-3",
+                    leftover > 0 ? "text-emerald-700" : leftover < 0 ? "text-rose-700" : "text-muted-foreground",
+                  )}
+                >
+                  {leftover > 0
+                    ? t("onboarding.recap.leftoverPositiveHint")
+                    : leftover < 0
+                      ? t("onboarding.recap.leftoverNegativeHint")
+                      : t("onboarding.recap.leftoverZeroHint")}
+                </p>
 
                 <div className="rounded-xl bg-primary/5 border border-primary/20 p-4 mb-4">
                   <p className="text-sm font-medium text-primary mb-1">{t("onboarding.goals.almostDone")}</p>
