@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import multer from "multer";
-import { eq, and } from "drizzle-orm";
+import { eq, and, gte, lte } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
 import { db, uploadedDocumentsTable, importedTransactionRowsTable, transactionsTable, categoriesTable } from "@workspace/db";
 import { GetImportedRowsParams, ConfirmImportParams, ConfirmImportBody } from "@workspace/api-zod";
@@ -144,22 +144,61 @@ router.get("/uploads/:id/rows", requireAuth, async (req: AuthenticatedRequest, r
   const rows = await db.select().from(importedTransactionRowsTable)
     .where(eq(importedTransactionRowsTable.uploadedDocumentId, params.data.id));
 
-  res.json(rows.map(r => ({
-    id: r.id,
-    uploadedDocumentId: r.uploadedDocumentId,
-    rawDate: r.rawDate,
-    rawDescription: r.rawDescription,
-    rawAmount: r.rawAmount,
-    normalizedDate: r.normalizedDate?.toISOString() ?? null,
-    normalizedDescription: r.normalizedDescription,
-    normalizedAmount: r.normalizedAmount,
-    type: r.type,
-    categorySuggestion: r.categorySuggestion,
-    confidence: r.confidence,
-    status: r.status,
-    createdAt: r.createdAt.toISOString(),
-  })));
+  // Duplicate detection: pull all existing transactions for this user across
+  // the date range covered by this import, then flag any imported row that
+  // matches an existing row on (date, amount, type). We compare by Y-M-D so
+  // a manual entry on 2026-04-12 collides with an import that says 2026-04-12
+  // regardless of timezone artefacts.
+  const dates = rows.map(r => r.normalizedDate).filter((d): d is Date => !!d);
+  let existingKeys = new Set<string>();
+  if (dates.length > 0) {
+    const minDate = new Date(Math.min(...dates.map(d => d.getTime())));
+    const maxDate = new Date(Math.max(...dates.map(d => d.getTime())));
+    // Widen the window by a day on each side to dodge timezone edge cases.
+    minDate.setUTCDate(minDate.getUTCDate() - 1);
+    maxDate.setUTCDate(maxDate.getUTCDate() + 1);
+    const existing = await db.select({
+      date: transactionsTable.date,
+      amount: transactionsTable.amount,
+      type: transactionsTable.type,
+    }).from(transactionsTable).where(and(
+      eq(transactionsTable.userId, req.userId!),
+      gte(transactionsTable.date, minDate),
+      lte(transactionsTable.date, maxDate),
+    ));
+    existingKeys = new Set(existing.map(t => makeDupKey(t.date, t.amount, t.type)));
+  }
+
+  res.json(rows.map(r => {
+    const isPossibleDuplicate = !!(r.normalizedDate && r.normalizedAmount && r.type
+      && existingKeys.has(makeDupKey(r.normalizedDate, r.normalizedAmount, r.type)));
+    return {
+      id: r.id,
+      uploadedDocumentId: r.uploadedDocumentId,
+      rawDate: r.rawDate,
+      rawDescription: r.rawDescription,
+      rawAmount: r.rawAmount,
+      normalizedDate: r.normalizedDate?.toISOString() ?? null,
+      normalizedDescription: r.normalizedDescription,
+      normalizedAmount: r.normalizedAmount,
+      type: r.type,
+      categorySuggestion: r.categorySuggestion,
+      confidence: r.confidence,
+      status: r.status,
+      createdAt: r.createdAt.toISOString(),
+      isPossibleDuplicate,
+    };
+  }));
 });
+
+// Build a stable comparison key from (date, amount, type). We normalise the
+// date to YYYY-MM-DD (UTC) and the amount to a fixed-2dp string so a numeric
+// "20" matches "20.00".
+function makeDupKey(date: Date, amount: string, type: string): string {
+  const d = date.toISOString().slice(0, 10);
+  const a = Number(amount).toFixed(2);
+  return `${d}|${a}|${type}`;
+}
 
 router.post("/uploads/:id/confirm", requireAuth, requireAccess, async (req: AuthenticatedRequest, res): Promise<void> => {
   const params = ConfirmImportParams.safeParse(req.params);
@@ -189,6 +228,30 @@ router.post("/uploads/:id/confirm", requireAuth, requireAccess, async (req: Auth
     if (row.status === "imported" || row.status === "skipped") {
       skipped++;
       continue;
+    }
+
+    // Defense in depth: even if the client ticked a row, refuse to insert it
+    // if an identical transaction (same date+amount+type) already exists.
+    // This protects against a user who edits the same statement twice or
+    // clicks confirm after manually adding the row on another tab.
+    if (row.normalizedDate && row.normalizedAmount && row.type) {
+      const dayStart = new Date(row.normalizedDate);
+      dayStart.setUTCHours(0, 0, 0, 0);
+      const dayEnd = new Date(row.normalizedDate);
+      dayEnd.setUTCHours(23, 59, 59, 999);
+      const dup = await db.select({ id: transactionsTable.id }).from(transactionsTable).where(and(
+        eq(transactionsTable.userId, req.userId!),
+        eq(transactionsTable.amount, row.normalizedAmount),
+        eq(transactionsTable.type, row.type),
+        gte(transactionsTable.date, dayStart),
+        lte(transactionsTable.date, dayEnd),
+      )).limit(1);
+      if (dup.length > 0) {
+        await db.update(importedTransactionRowsTable).set({ status: "skipped" })
+          .where(eq(importedTransactionRowsTable.id, row.id));
+        skipped++;
+        continue;
+      }
     }
 
     let categoryId = rowConf.categoryId ?? null;

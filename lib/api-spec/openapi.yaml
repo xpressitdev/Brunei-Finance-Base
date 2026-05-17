@@ -2293,6 +2293,9 @@ components:
           type: string
         createdAt:
           type: string
+        isPossibleDuplicate:
+          type: boolean
+          description: True if an existing transaction has the same date, amount and type for this user.
       required:
         - id
         - uploadedDocumentId

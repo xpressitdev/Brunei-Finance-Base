@@ -891,6 +891,12 @@ export const GetImportedRowsResponseItem = zod.object({
   confidence: zod.string().nullish(),
   status: zod.string(),
   createdAt: zod.string(),
+  isPossibleDuplicate: zod
+    .boolean()
+    .optional()
+    .describe(
+      "True if an existing transaction has the same date, amount and type for this user.",
+    ),
 });
 export const GetImportedRowsResponse = zod.array(GetImportedRowsResponseItem);
 

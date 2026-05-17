@@ -5,7 +5,8 @@ import { useGetImportedRows, useConfirmImport, useListCategories } from "@worksp
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Check, X, AlertCircle } from "lucide-react";
+import { ArrowLeft, Check, X, AlertCircle, AlertTriangle } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { TrialExpiredPrompt } from "@/components/subscription/TrialExpiredPrompt";
 import { isTrialExpiredError } from "@/lib/trialExpired";
@@ -21,17 +22,18 @@ export default function ReviewImport() {
 
   const [selections, setSelections] = useState<Record<string, { categoryId: string | null, skip: boolean }>>({});
   
-  // Initialize selections once rows are loaded
+  // Initialize selections once rows are loaded. Rows the server marked as
+  // possible duplicates are unchecked (skip=true) by default so the user has
+  // to opt in to re-importing them.
   if (rows && Object.keys(selections).length === 0 && rows.length > 0) {
     const initial: Record<string, { categoryId: string | null, skip: boolean }> = {};
     rows.forEach(r => {
-      // Find a category that matches the suggestion if possible
       let matchedCatId = null;
       if (r.categorySuggestion && categories) {
         const cat = categories.find(c => c.name.toLowerCase() === r.categorySuggestion?.toLowerCase());
         if (cat) matchedCatId = cat.id;
       }
-      initial[r.id] = { categoryId: matchedCatId, skip: false };
+      initial[r.id] = { categoryId: matchedCatId, skip: !!r.isPossibleDuplicate };
     });
     setSelections(initial);
   }
@@ -80,6 +82,7 @@ export default function ReviewImport() {
 
   const validRows = rows?.filter(r => r.status === 'parsed') || [];
   const errorRows = rows?.filter(r => r.status === 'error') || [];
+  const duplicateCount = validRows.filter(r => r.isPossibleDuplicate).length;
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto animate-in fade-in duration-500">
@@ -117,6 +120,21 @@ export default function ReviewImport() {
         </Card>
       )}
 
+      {duplicateCount > 0 && (
+        <Card className="border-amber-300 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-800/60">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-amber-900 dark:text-amber-200 flex items-center gap-2 text-lg">
+              <AlertTriangle className="w-5 h-5" /> {duplicateCount} possible duplicate{duplicateCount === 1 ? "" : "s"}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-sm text-amber-900/80 dark:text-amber-200/80">
+              These rows match transactions you already have on the same day with the same amount. They are unchecked by default — tick the box only if you want to import them anyway.
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <Card>
         <CardHeader>
           <CardTitle>Transactions to Import ({validRows.length})</CardTitle>
@@ -149,7 +167,16 @@ export default function ReviewImport() {
                           />
                         </td>
                         <td className="px-4 py-3 font-medium">{row.normalizedDate}</td>
-                        <td className="px-4 py-3">{row.normalizedDescription}</td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span>{row.normalizedDescription}</span>
+                            {row.isPossibleDuplicate && (
+                              <Badge variant="outline" className="border-amber-400 text-amber-700 bg-amber-50 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-700 gap-1">
+                                <AlertTriangle className="w-3 h-3" /> Possible duplicate
+                              </Badge>
+                            )}
+                          </div>
+                        </td>
                         <td className={`px-4 py-3 font-medium ${row.type === 'credit' ? 'text-primary' : 'text-foreground'}`}>
                           {row.type === 'credit' ? '+' : '-'}${row.normalizedAmount}
                         </td>

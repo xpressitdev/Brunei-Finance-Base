@@ -552,6 +552,8 @@ export interface ImportedTransactionRow {
   confidence?: string | null;
   status: string;
   createdAt: string;
+  /** True if an existing transaction has the same date, amount and type for this user. */
+  isPossibleDuplicate?: boolean;
 }
 
 export interface ConfirmImportRow {
