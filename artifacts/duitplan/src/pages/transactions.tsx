@@ -35,7 +35,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Trash2, Plus, Search, Receipt, TrendingUp, TrendingDown, Pencil, Info } from "lucide-react";
+import { Trash2, Plus, Search, Receipt, TrendingUp, TrendingDown, Pencil, Info, ChevronLeft, ChevronRight } from "lucide-react";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RTooltip } from "recharts";
 import { TrialExpiredPrompt } from "@/components/subscription/TrialExpiredPrompt";
 import { isTrialExpiredError } from "@/lib/trialExpired";
 import { useRegion } from "@/hooks/useRegion";
@@ -142,6 +143,18 @@ export default function Transactions() {
     return Object.entries(totals).map(([name, total]) => ({ name, total, color: CAT_COLORS[name] ?? "#64748b" })).sort((a, b) => b.total - a.total);
   }, [currentMonthTxs]);
   const maxCatTotal = categoryStats[0]?.total || 1;
+  const totalCatSpend = useMemo(() => categoryStats.reduce((s, c) => s + c.total, 0), [categoryStats]);
+
+  // Step the heatmap (and the rest of the focus-month-driven UI) one month at
+  // a time via the chevrons next to the heatmap title. We always emit a
+  // concrete "YYYY-MM" string into `month` so the filter input below stays in
+  // sync — there's no "no filter" branch here on purpose, the chevrons are a
+  // navigator, not a clearer.
+  const shiftMonth = (delta: number) => {
+    const [y, m] = focusMonth.split("-").map(Number);
+    const d = new Date(y, (m - 1) + delta, 1);
+    setMonth(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
+  };
 
   const heatColor = (amount: number) => {
     if (!amount) return "bg-accent";
@@ -571,6 +584,61 @@ export default function Transactions() {
         </DialogContent>
       </Dialog>
 
+      {/* Filter bar — placed above the hero stats so chosen month/account/type
+          immediately scope the cards, heatmap and donut below. */}
+      <div className="flex gap-3 items-center bg-white p-4 rounded-xl border flex-wrap">
+        <div className="flex items-center gap-2">
+          <Input
+            type="month"
+            value={month}
+            onChange={(e) => setMonth(e.target.value)}
+            className="w-44"
+            placeholder={t("transactions.filters.allMonths")}
+          />
+          {month ? (
+            <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={() => setMonth("")}>
+              {t("transactions.filters.clear")}
+            </Button>
+          ) : (
+            <span className="text-sm text-muted-foreground">{t("transactions.filters.allMonths")}</span>
+          )}
+        </div>
+        <div className="w-48">
+          <Select value={accountFilter || "all"} onValueChange={(val) => setAccountFilter(val === "all" ? "" : val)}>
+            <SelectTrigger>
+              <SelectValue placeholder={t("transactions.filters.allAccounts")} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t("transactions.filters.allAccounts")}</SelectItem>
+              {accounts?.map(a => (
+                <SelectItem key={a.id} value={a.id}>{a.name}{a.bankName ? ` — ${a.bankName}` : ""}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="w-36">
+          <Select value={typeFilter || "all"} onValueChange={(val) => setTypeFilter(val === "all" ? "" : val)}>
+            <SelectTrigger>
+              <SelectValue placeholder={t("transactions.filters.allTypes")} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t("transactions.filters.allTypes")}</SelectItem>
+              <SelectItem value="debit">{t("transactions.typeLabel.expense")}</SelectItem>
+              <SelectItem value="credit">{t("transactions.typeLabel.income")}</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="relative flex-1 min-w-48 max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder={t("transactions.filters.searchPlaceholder")}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+      </div>
+
       {/* Hero stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <div className="rounded-xl border bg-card p-3 sm:p-4 relative overflow-hidden min-w-0">
@@ -672,10 +740,18 @@ export default function Transactions() {
       <div className="grid lg:grid-cols-3 gap-4">
         {/* Calendar heatmap */}
         <div className="rounded-xl border bg-card p-5 lg:col-span-2">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Spending heatmap</p>
-              <h3 className="text-base font-semibold mt-0.5">{format(focusMonthDate, "MMMM yyyy")}</h3>
+          <div className="flex items-center justify-between mb-4 gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <Button variant="outline" size="icon" className="h-8 w-8 shrink-0" onClick={() => shiftMonth(-1)} aria-label="Previous month">
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
+              <div className="min-w-0">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Spending heatmap</p>
+                <h3 className="text-base font-semibold mt-0.5 truncate">{format(focusMonthDate, "MMMM yyyy")}</h3>
+              </div>
+              <Button variant="outline" size="icon" className="h-8 w-8 shrink-0" onClick={() => shiftMonth(1)} aria-label="Next month">
+                <ChevronRight className="w-4 h-4" />
+              </Button>
             </div>
             <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
               <span>Less</span>
@@ -724,28 +800,84 @@ export default function Transactions() {
           </div>
         </div>
 
-        {/* Top merchants */}
-        <div className="rounded-xl border bg-card p-5">
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Top merchants</p>
-          <h3 className="text-base font-semibold mt-0.5 mb-4">Where money goes</h3>
-          {topMerchants.length === 0 ? (
-            <div className="py-8 text-center text-sm text-muted-foreground">No transactions this month</div>
-          ) : (
-            <div className="space-y-3">
-              {topMerchants.map((m, i) => (
-                <div key={m.merchant} className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-accent flex items-center justify-center text-sm font-bold text-muted-foreground flex-shrink-0">
-                    #{i + 1}
+        {/* Right column: donut by category + top merchants */}
+        <div className="space-y-4">
+          {/* Category donut — % share of spending for the focused month. We
+              cap the slice list at 6 and group the rest into "Other" so the
+              donut stays legible even when the user has many tiny categories. */}
+          <div className="rounded-xl border bg-card p-5">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">By category</p>
+            <h3 className="text-base font-semibold mt-0.5 mb-2">% of spending</h3>
+            {totalCatSpend === 0 ? (
+              <div className="py-8 text-center text-sm text-muted-foreground">No spending this month</div>
+            ) : (() => {
+              const top = categoryStats.slice(0, 6);
+              const restTotal = categoryStats.slice(6).reduce((s, c) => s + c.total, 0);
+              const donutData = restTotal > 0
+                ? [...top, { name: "Other", total: restTotal, color: "#94a3b8" }]
+                : top;
+              return (
+                <>
+                  <div className="h-40 relative">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie data={donutData} dataKey="total" nameKey="name" cx="50%" cy="50%" innerRadius={42} outerRadius={68} paddingAngle={2} stroke="none">
+                          {donutData.map((d) => <Cell key={d.name} fill={d.color} />)}
+                        </Pie>
+                        <RTooltip
+                          formatter={(value: number, name: string) => [
+                            `${formatCurrency(value)} (${((value / totalCatSpend) * 100).toFixed(1)}%)`,
+                            name,
+                          ]}
+                          contentStyle={{ fontSize: 12, borderRadius: 8 }}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                      <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Total</div>
+                      <div className="text-sm font-bold tabular-nums">{formatCurrency(totalCatSpend)}</div>
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-semibold truncate">{m.merchant}</div>
-                    <div className="text-[11px] text-muted-foreground">{m.count}× this month</div>
+                  <div className="mt-3 space-y-1.5">
+                    {donutData.map(d => {
+                      const pct = (d.total / totalCatSpend) * 100;
+                      return (
+                        <div key={d.name} className="flex items-center gap-2 text-xs">
+                          <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: d.color }} />
+                          <span className="flex-1 truncate font-medium">{d.name}</span>
+                          <span className="tabular-nums font-bold">{pct.toFixed(1)}%</span>
+                        </div>
+                      );
+                    })}
                   </div>
-                  <div className="text-sm font-bold tabular-nums text-rose-600">{formatCurrency(m.total)}</div>
-                </div>
-              ))}
-            </div>
-          )}
+                </>
+              );
+            })()}
+          </div>
+
+          {/* Top merchants */}
+          <div className="rounded-xl border bg-card p-5">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Top merchants</p>
+            <h3 className="text-base font-semibold mt-0.5 mb-4">Where money goes</h3>
+            {topMerchants.length === 0 ? (
+              <div className="py-8 text-center text-sm text-muted-foreground">No transactions this month</div>
+            ) : (
+              <div className="space-y-3">
+                {topMerchants.map((m, i) => (
+                  <div key={m.merchant} className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-lg bg-accent flex items-center justify-center text-sm font-bold text-muted-foreground flex-shrink-0">
+                      #{i + 1}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-semibold truncate">{m.merchant}</div>
+                      <div className="text-[11px] text-muted-foreground">{m.count}× this month</div>
+                    </div>
+                    <div className="text-sm font-bold tabular-nums text-rose-600">{formatCurrency(m.total)}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -777,59 +909,6 @@ export default function Transactions() {
           </div>
         </div>
       )}
-
-      <div className="flex gap-3 items-center bg-white p-4 rounded-xl border flex-wrap">
-        <div className="flex items-center gap-2">
-          <Input 
-            type="month" 
-            value={month} 
-            onChange={(e) => setMonth(e.target.value)} 
-            className="w-44"
-            placeholder={t("transactions.filters.allMonths")}
-          />
-          {month ? (
-            <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={() => setMonth("")}>
-              {t("transactions.filters.clear")}
-            </Button>
-          ) : (
-            <span className="text-sm text-muted-foreground">{t("transactions.filters.allMonths")}</span>
-          )}
-        </div>
-        <div className="w-48">
-          <Select value={accountFilter || "all"} onValueChange={(val) => setAccountFilter(val === "all" ? "" : val)}>
-            <SelectTrigger>
-              <SelectValue placeholder={t("transactions.filters.allAccounts")} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t("transactions.filters.allAccounts")}</SelectItem>
-              {accounts?.map(a => (
-                <SelectItem key={a.id} value={a.id}>{a.name}{a.bankName ? ` — ${a.bankName}` : ""}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="w-36">
-          <Select value={typeFilter || "all"} onValueChange={(val) => setTypeFilter(val === "all" ? "" : val)}>
-            <SelectTrigger>
-              <SelectValue placeholder={t("transactions.filters.allTypes")} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t("transactions.filters.allTypes")}</SelectItem>
-              <SelectItem value="debit">{t("transactions.typeLabel.expense")}</SelectItem>
-              <SelectItem value="credit">{t("transactions.typeLabel.income")}</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="relative flex-1 min-w-48 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input 
-            placeholder={t("transactions.filters.searchPlaceholder")}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
-          />
-        </div>
-      </div>
 
       <div className="bg-white rounded-xl border overflow-hidden">
         {isLoading ? (
