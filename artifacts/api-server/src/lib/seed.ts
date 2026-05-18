@@ -30,6 +30,10 @@ const CATEGORIES = [
   { id: "b2baac4d-e5a4-4ee8-af57-1d30be1c6e13", name: "Fuel", kind: "expense", isDefault: true },
   { id: "dd2dea2f-dc71-4311-9803-5ed336385840", name: "Debt Repayment", kind: "expense", isDefault: true },
   { id: "ed3d2b26-81fa-4aaf-b7ac-c96f8734d17a", name: "Savings", kind: "savings", isDefault: true },
+  // Income categories — needed so users can tag credit rows (e.g. payroll
+  // deposits) on the statement import review screen.
+  { id: "f1000000-0000-4000-8000-000000000001", name: "Salary", kind: "income", isDefault: true },
+  { id: "f1000000-0000-4000-8000-000000000002", name: "Other income", kind: "income", isDefault: true },
 ];
 
 const PLANS = [

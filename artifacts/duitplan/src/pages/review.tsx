@@ -7,11 +7,13 @@ import {
   useConfirmImport,
   useListCategories,
   useCreateCategory,
+  useListDebts,
+  useListCommitments,
   getListCategoriesQueryKey,
 } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from "@/components/ui/dialog";
@@ -22,6 +24,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { TrialExpiredPrompt } from "@/components/subscription/TrialExpiredPrompt";
 import { isTrialExpiredError } from "@/lib/trialExpired";
+import { useToast } from "@/hooks/use-toast";
 
 export default function ReviewImport() {
   const { id } = useParams<{ id: string }>();
@@ -30,9 +33,12 @@ export default function ReviewImport() {
   
   const { data: rows, isLoading } = useGetImportedRows(id!);
   const { data: categories } = useListCategories();
+  const { data: debts } = useListDebts();
+  const { data: commitments } = useListCommitments();
   const confirmMutation = useConfirmImport();
   const createCategoryMutation = useCreateCategory();
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   const [selections, setSelections] = useState<Record<string, { categoryId: string | null, skip: boolean }>>({});
   // When the user picks the "+ New category…" option in a row's dropdown we
@@ -109,14 +115,57 @@ export default function ReviewImport() {
     }));
   };
 
-  const handleCategoryChange = (rowId: string, categoryId: string) => {
-    if (categoryId === "__new__") {
+  // Debts (e.g. "Honda car loan") and commitments ("Rent") aren't categories
+  // by themselves — when the user picks one in the dropdown we lazily
+  // find-or-create a matching expense category so it shows up in budgets and
+  // future imports too.
+  const ensureCategoryByName = async (name: string, kind: string): Promise<string | null> => {
+    // Match by both name AND kind so we never bind a debt/commitment to a
+    // pre-existing income/savings category that happens to share a label.
+    const existing = categories?.find(
+      c => c.name.toLowerCase() === name.toLowerCase() && c.kind === kind,
+    );
+    if (existing) return existing.id;
+    try {
+      const created = await createCategoryMutation.mutateAsync({
+        data: { name, kind, defaultBudget: "0.00" },
+      });
+      await queryClient.invalidateQueries({ queryKey: getListCategoriesQueryKey() });
+      return created?.id ?? null;
+    } catch (err) {
+      toast({
+        title: "Couldn't link that option",
+        description: err instanceof Error ? err.message : "Please try again or pick a different category.",
+        variant: "destructive",
+      });
+      return null;
+    }
+  };
+
+  const handleCategoryChange = async (rowId: string, value: string) => {
+    if (value === "__new__") {
       openNewCategoryDialog(rowId);
+      return;
+    }
+    // Debt or commitment selections come through as `debt:<id>` / `commit:<id>`
+    // — resolve them to a real (find-or-create) category before storing.
+    if (value.startsWith("debt:")) {
+      const debt = debts?.find(d => d.id === value.slice(5));
+      if (!debt) return;
+      const catId = await ensureCategoryByName(`${debt.lender} (loan)`, "expense");
+      if (catId) setSelections(prev => ({ ...prev, [rowId]: { ...prev[rowId], categoryId: catId } }));
+      return;
+    }
+    if (value.startsWith("commit:")) {
+      const c = commitments?.find(x => x.id === value.slice(7));
+      if (!c) return;
+      const catId = await ensureCategoryByName(c.label, "expense");
+      if (catId) setSelections(prev => ({ ...prev, [rowId]: { ...prev[rowId], categoryId: catId } }));
       return;
     }
     setSelections(prev => ({
       ...prev,
-      [rowId]: { ...prev[rowId], categoryId: categoryId === "none" ? null : categoryId }
+      [rowId]: { ...prev[rowId], categoryId: value === "none" ? null : value }
     }));
   };
 
@@ -257,11 +306,67 @@ export default function ReviewImport() {
                             <SelectTrigger className="h-8">
                               <SelectValue />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent className="max-h-80">
                               <SelectItem value="none">Uncategorized</SelectItem>
-                              {categories?.map(c => (
-                                <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                              ))}
+                              {(() => {
+                                const income = categories?.filter(c => c.kind === "income") ?? [];
+                                const expense = categories?.filter(c => c.kind === "expense") ?? [];
+                                const savings = categories?.filter(c => c.kind === "savings") ?? [];
+                                return (
+                                  <>
+                                    {income.length > 0 && (
+                                      <>
+                                        <SelectSeparator />
+                                        <SelectGroup>
+                                          <SelectLabel>Income</SelectLabel>
+                                          {income.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                                        </SelectGroup>
+                                      </>
+                                    )}
+                                    {expense.length > 0 && (
+                                      <>
+                                        <SelectSeparator />
+                                        <SelectGroup>
+                                          <SelectLabel>Expenses</SelectLabel>
+                                          {expense.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                                        </SelectGroup>
+                                      </>
+                                    )}
+                                    {savings.length > 0 && (
+                                      <>
+                                        <SelectSeparator />
+                                        <SelectGroup>
+                                          <SelectLabel>Savings</SelectLabel>
+                                          {savings.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                                        </SelectGroup>
+                                      </>
+                                    )}
+                                    {debts && debts.length > 0 && (
+                                      <>
+                                        <SelectSeparator />
+                                        <SelectGroup>
+                                          <SelectLabel>Your debts</SelectLabel>
+                                          {debts.map(d => (
+                                            <SelectItem key={d.id} value={`debt:${d.id}`}>{d.lender} (loan)</SelectItem>
+                                          ))}
+                                        </SelectGroup>
+                                      </>
+                                    )}
+                                    {commitments && commitments.length > 0 && (
+                                      <>
+                                        <SelectSeparator />
+                                        <SelectGroup>
+                                          <SelectLabel>Your fixed expenses</SelectLabel>
+                                          {commitments.map(c => (
+                                            <SelectItem key={c.id} value={`commit:${c.id}`}>{c.label}</SelectItem>
+                                          ))}
+                                        </SelectGroup>
+                                      </>
+                                    )}
+                                  </>
+                                );
+                              })()}
+                              <SelectSeparator />
                               <SelectItem value="__new__" className="text-primary font-medium">
                                 <span className="flex items-center gap-2">
                                   <Plus className="w-3.5 h-3.5" /> New category…
