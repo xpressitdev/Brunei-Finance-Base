@@ -130,6 +130,9 @@ export default function Transactions() {
   const firstDow = getDay(startOfMonth(focusMonthDate)); // 0=Sun
 
   const [catFilter, setCatFilter] = useState<string | null>(null);
+  // Day-of-month filter set by clicking a heatmap tile. Stored as a number
+  // (1..31) so we can match against tx.date.split("-")[2].
+  const [dayFilter, setDayFilter] = useState<number | null>(null);
   const categoryStats = useMemo(() => {
     if (!currentMonthTxs?.length) return [] as { name: string; total: number; color: string }[];
     const totals: Record<string, number> = {};
@@ -154,7 +157,31 @@ export default function Transactions() {
     const [y, m] = focusMonth.split("-").map(Number);
     const d = new Date(y, (m - 1) + delta, 1);
     setMonth(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
+    // Day/category filters are scoped to a month — moving months should reset
+    // them so we don't show "no results" for a day that doesn't exist in the
+    // new month.
+    setDayFilter(null);
+    setCatFilter(null);
   };
+
+  // Apply heatmap day + category pill filters on top of the server-side list.
+  // These are client-side only (cheaper than re-querying) since the page
+  // already loads the whole focus month.
+  const visibleTransactions = useMemo(() => {
+    if (!transactions) return transactions;
+    return transactions.filter(tx => {
+      if (dayFilter !== null) {
+        const d = parseInt((tx.date ?? "").split("-")[2] ?? "0");
+        if (d !== dayFilter) return false;
+      }
+      if (catFilter !== null) {
+        const name = tx.categoryName || "Uncategorized";
+        if (name !== catFilter) return false;
+      }
+      return true;
+    });
+  }, [transactions, dayFilter, catFilter]);
+  const hasActiveAnalyticsFilter = dayFilter !== null || catFilter !== null;
 
   const heatColor = (amount: number) => {
     if (!amount) return "bg-accent";
@@ -774,13 +801,17 @@ export default function Transactions() {
               // Only ring "today" when viewing the current month — otherwise
               // (e.g. browsing April from May) the today highlight is misleading.
               const isToday = focusMonth === currentMonthStr && day === new Date().getDate();
+              const isSelected = dayFilter === day;
               return (
-                <div key={day}
-                  className={`aspect-square rounded-md flex flex-col items-center justify-center cursor-pointer transition-all hover:scale-110 hover:z-10 ${heatColor(amt)} ${isToday ? "ring-2 ring-primary ring-offset-1" : ""}`}
-                  title={amt ? `${formatCurrency(amt)} on ${day} ${format(focusMonthDate, "MMMM")}` : `No spend on ${day} ${format(focusMonthDate, "MMMM")}`}>
+                <button
+                  key={day}
+                  type="button"
+                  onClick={() => setDayFilter(isSelected ? null : day)}
+                  className={`aspect-square rounded-md flex flex-col items-center justify-center cursor-pointer transition-all hover:scale-110 hover:z-10 ${heatColor(amt)} ${isSelected ? "ring-2 ring-rose-500 ring-offset-1" : isToday ? "ring-2 ring-primary ring-offset-1" : ""}`}
+                  title={amt ? `${formatCurrency(amt)} on ${day} ${format(focusMonthDate, "MMMM")} — click to filter` : `No spend on ${day} ${format(focusMonthDate, "MMMM")}`}>
                   <div className="text-[11px] font-bold leading-none">{day}</div>
                   {amt > 0 && <div className="text-[8px] tabular-nums opacity-80 leading-none mt-0.5">{amt < 100 ? amt.toFixed(0) : Math.round(amt)}</div>}
-                </div>
+                </button>
               );
             })}
           </div>
@@ -800,7 +831,9 @@ export default function Transactions() {
           </div>
         </div>
 
-        {/* Right column: donut by category + top merchants */}
+        {/* Right column: donut by category (Top Merchants moved below the
+            transactions list so the actual filtered transactions sit next to
+            the analytics that filter them). */}
         <div className="space-y-4">
           {/* Category donut — % share of spending for the focused month. We
               cap the slice list at 6 and group the rest into "Other" so the
@@ -855,29 +888,6 @@ export default function Transactions() {
             })()}
           </div>
 
-          {/* Top merchants */}
-          <div className="rounded-xl border bg-card p-5">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Top merchants</p>
-            <h3 className="text-base font-semibold mt-0.5 mb-4">Where money goes</h3>
-            {topMerchants.length === 0 ? (
-              <div className="py-8 text-center text-sm text-muted-foreground">No transactions this month</div>
-            ) : (
-              <div className="space-y-3">
-                {topMerchants.map((m, i) => (
-                  <div key={m.merchant} className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-lg bg-accent flex items-center justify-center text-sm font-bold text-muted-foreground flex-shrink-0">
-                      #{i + 1}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm font-semibold truncate">{m.merchant}</div>
-                      <div className="text-[11px] text-muted-foreground">{m.count}× this month</div>
-                    </div>
-                    <div className="text-sm font-bold tabular-nums text-rose-600">{formatCurrency(m.total)}</div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
         </div>
       </div>
 
@@ -910,10 +920,39 @@ export default function Transactions() {
         </div>
       )}
 
+      {/* Active analytics filter banner — surfaces day/category filters set by
+          clicking heatmap tiles or category pills, with one-tap clears. */}
+      {hasActiveAnalyticsFilter && (
+        <div className="rounded-xl border border-primary/30 bg-primary/5 p-3 flex items-center gap-2 flex-wrap">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Filtered by</span>
+          {dayFilter !== null && (
+            <button onClick={() => setDayFilter(null)} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white border border-primary/40 text-xs font-semibold hover:bg-primary/10">
+              Day {dayFilter} {format(focusMonthDate, "MMM")}
+              <span aria-hidden="true">✕</span>
+            </button>
+          )}
+          {catFilter !== null && (
+            <button onClick={() => setCatFilter(null)} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white border border-primary/40 text-xs font-semibold hover:bg-primary/10">
+              {catFilter}
+              <span aria-hidden="true">✕</span>
+            </button>
+          )}
+          <span className="text-xs text-muted-foreground ml-auto tabular-nums">
+            {visibleTransactions?.length ?? 0} {(visibleTransactions?.length ?? 0) === 1 ? "transaction" : "transactions"}
+          </span>
+          <button
+            onClick={() => { setDayFilter(null); setCatFilter(null); }}
+            className="text-[11px] font-semibold text-primary hover:underline"
+          >
+            Clear all
+          </button>
+        </div>
+      )}
+
       <div className="bg-white rounded-xl border overflow-hidden">
         {isLoading ? (
           <div className="p-8 text-center text-muted-foreground">{t("transactions.loading")}</div>
-        ) : !transactions?.length ? (
+        ) : !visibleTransactions?.length ? (
           <div className="p-12 text-center flex flex-col items-center">
             <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-4">
               <Receipt className="w-6 h-6 text-muted-foreground" />
@@ -933,8 +972,8 @@ export default function Transactions() {
         ) : (() => {
           // Group transactions by ISO day; render with sticky header per day
           // ("Today" / "Yesterday" / "Tuesday 14 April").
-          const groups = new Map<string, typeof transactions>();
-          for (const tx of transactions) {
+          const groups = new Map<string, typeof visibleTransactions>();
+          for (const tx of visibleTransactions!) {
             const day = (tx.date ?? "").slice(0, 10);
             if (!groups.has(day)) groups.set(day, []);
             groups.get(day)!.push(tx);
@@ -1040,6 +1079,29 @@ export default function Transactions() {
           );
         })()}
       </div>
+
+      {/* Top merchants — moved below the transactions list so the filtered
+          actual transactions sit next to the heatmap/donut that filter them. */}
+      {topMerchants.length > 0 && (
+        <div className="rounded-xl border bg-card p-5">
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Top merchants</p>
+          <h3 className="text-base font-semibold mt-0.5 mb-4">Where money goes · {format(focusMonthDate, "MMMM yyyy")}</h3>
+          <div className="grid sm:grid-cols-2 gap-3">
+            {topMerchants.map((m, i) => (
+              <div key={m.merchant} className="flex items-center gap-3 p-2 rounded-lg border bg-card">
+                <div className="w-9 h-9 rounded-lg bg-accent flex items-center justify-center text-sm font-bold text-muted-foreground flex-shrink-0">
+                  #{i + 1}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-semibold truncate">{m.merchant}</div>
+                  <div className="text-[11px] text-muted-foreground">{m.count}× this month</div>
+                </div>
+                <div className="text-sm font-bold tabular-nums text-rose-600">{formatCurrency(m.total)}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
