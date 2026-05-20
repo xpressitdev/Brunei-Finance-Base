@@ -703,6 +703,48 @@ export interface UpsertNetWorthSnapshotBody {
   notes?: string | null;
 }
 
+export interface NetWorthTimelinePoint {
+  /** YYYY-MM format */
+  month: string;
+  /** Total assets at this month (decimal string) */
+  assets: string;
+  /** Total liabilities at this month (decimal string) */
+  liabilities: string;
+  /** assets − liabilities (decimal string) */
+  netWorth: string;
+}
+
+export type NetWorthTimelineRange =
+  (typeof NetWorthTimelineRange)[keyof typeof NetWorthTimelineRange];
+
+export const NetWorthTimelineRange = {
+  "6m": "6m",
+  "1y": "1y",
+  "5y": "5y",
+  all: "all",
+} as const;
+
+/**
+ * Indicates that past-month liabilities are approximated using current debt balances.
+ */
+export type NetWorthTimelineLiabilitiesApproximation =
+  (typeof NetWorthTimelineLiabilitiesApproximation)[keyof typeof NetWorthTimelineLiabilitiesApproximation];
+
+export const NetWorthTimelineLiabilitiesApproximation = {
+  current_only: "current_only",
+} as const;
+
+export interface NetWorthTimeline {
+  range: NetWorthTimelineRange;
+  startMonth: string;
+  endMonth: string;
+  /** Account-balance cash is only counted from this month onward (current month). */
+  cashIncludedFromMonth: string;
+  /** Indicates that past-month liabilities are approximated using current debt balances. */
+  liabilitiesApproximation: NetWorthTimelineLiabilitiesApproximation;
+  series: NetWorthTimelinePoint[];
+}
+
 export interface DeleteNetWorthSnapshotParams {
   id: string;
 }
@@ -902,6 +944,23 @@ export type ListNetWorthSnapshotsParams = {
    */
   year?: string | null;
 };
+
+export type GetNetWorthTimelineParams = {
+  /**
+   * Time window: 6m, 1y, 5y, or all (capped at 10 years).
+   */
+  range?: GetNetWorthTimelineRange;
+};
+
+export type GetNetWorthTimelineRange =
+  (typeof GetNetWorthTimelineRange)[keyof typeof GetNetWorthTimelineRange];
+
+export const GetNetWorthTimelineRange = {
+  "6m": "6m",
+  "1y": "1y",
+  "5y": "5y",
+  all: "all",
+} as const;
 
 export type ListAssetsParams = {
   /**

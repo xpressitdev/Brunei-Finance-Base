@@ -51,7 +51,7 @@ router.get("/assets", requireAuth, async (req: AuthenticatedRequest, res): Promi
       SELECT DISTINCT ON (name, category) *
       FROM asset_entries
       WHERE user_id = ${req.userId} AND month <= ${qp.data.month}
-      ORDER BY name, category, month DESC
+      ORDER BY name, category, month DESC, updated_at DESC, id DESC
     `);
     res.json((rows.rows as Record<string, unknown>[]).map(formatRawAsset));
     return;

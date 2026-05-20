@@ -609,7 +609,44 @@
     "subtitle": "Assets − Liabilities = Your net financial position.",
     "lastUpdated": "Last updated: {{time}}",
     "noActivity": "No activity yet",
-    "addAsset": "Add Asset",
+    "addAsset": "Add asset",
+    "todaysNetWorth": "Today's net worth",
+    "vsLastMonth": "Vs last month",
+    "vsRange": {
+      "6m": "Last 6 months",
+      "1y": "Last 12 months",
+      "5y": "Last 5 years",
+      "all": "All time"
+    },
+    "liabilitiesExceedAssetsBy": "Liabilities exceed assets by",
+    "assetsExceedLiabilitiesBy": "Assets exceed liabilities by",
+    "cashLabel": "cash",
+    "otherLabel": "other",
+    "obligation": "obligation",
+    "obligations": "obligations",
+    "shareOfTotal": "Share of total",
+    "breakEvenAt50": "Break-even at 50%",
+    "debtToAsset": "Debt-to-asset",
+    "liquidRunway": "Liquid runway",
+    "equityShare": "Equity share",
+    "monthsShort": "mo",
+    "health": {
+      "solvent": "Solvent",
+      "leveraged": "Leveraged",
+      "critical": "Critical"
+    },
+    "timeline": {
+      "eyebrow": "Net worth over time",
+      "title": "How your net worth has trended",
+      "note": "Past months use today's debt balances and exclude cash (history not tracked yet).",
+      "empty": "Record asset values to start building your net-worth history.",
+      "range": {
+        "6m": "6M",
+        "1y": "1Y",
+        "5y": "5Y",
+        "all": "All"
+      }
+    },
     "summary": {
       "totalAssets": "Total Assets",
       "totalLiabilities": "Total Liabilities",
@@ -634,10 +671,17 @@
     },
     "assetEntries": {
       "sectionTitle": "Asset Entries — {{month}}",
+      "currentSectionTitle": "Your assets",
+      "asOf": "As of {{month}}",
       "noEntries": "No asset entries for {{month}}.",
+      "noEntriesEver": "No assets recorded yet. Add property, vehicles, investments, and other holdings to track your net worth.",
       "addFirst": "Add your first asset entry",
       "totalEntries": "Total Asset Entries",
-      "valueFrom": "Value from {{month}}"
+      "valueFrom": "Value from {{month}}",
+      "updateValue": "Update value",
+      "updateValueTooltip": "Record a new value for this month",
+      "edit": "Edit",
+      "delete": "Delete"
     },
     "liabilities": {
       "sectionTitle": "Liabilities",
@@ -654,8 +698,9 @@
       "namePlaceholder": "e.g. \"My Honda Civic\", \"Rimba property\"",
       "valueLabel": "Value ({{currency}})",
       "monthLabel": "Month",
-      "saveAdd": "Add Asset",
-      "saveEdit": "Save Changes"
+      "monthHelp": "Defaults to this month. Back-date to record a historical value (used for trend chart).",
+      "saveAdd": "Add asset",
+      "saveEdit": "Save changes"
     },
     "assetCategories": {
       "Savings": "Savings",

@@ -1068,6 +1068,27 @@ paths:
                 items:
                   $ref: "#/components/schemas/NetWorthSnapshot"
 
+  /net-worth/timeline:
+    get:
+      operationId: getNetWorthTimeline
+      tags: [net-worth]
+      summary: Net worth time series for charting
+      parameters:
+        - name: range
+          in: query
+          schema:
+            type: string
+            enum: ["6m", "1y", "5y", "all"]
+            default: "1y"
+          description: "Time window: 6m, 1y, 5y, or all (capped at 10 years)."
+      responses:
+        "200":
+          description: Net worth timeline
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NetWorthTimeline"
+
   # Asset Entries
   /assets:
     get:
@@ -2486,6 +2507,56 @@ components:
       required:
         - month
         - netWorth
+
+    NetWorthTimelinePoint:
+      type: object
+      properties:
+        month:
+          type: string
+          description: "YYYY-MM format"
+        assets:
+          type: string
+          description: "Total assets at this month (decimal string)"
+        liabilities:
+          type: string
+          description: "Total liabilities at this month (decimal string)"
+        netWorth:
+          type: string
+          description: "assets − liabilities (decimal string)"
+      required:
+        - month
+        - assets
+        - liabilities
+        - netWorth
+
+    NetWorthTimeline:
+      type: object
+      properties:
+        range:
+          type: string
+          enum: ["6m", "1y", "5y", "all"]
+        startMonth:
+          type: string
+        endMonth:
+          type: string
+        cashIncludedFromMonth:
+          type: string
+          description: "Account-balance cash is only counted from this month onward (current month)."
+        liabilitiesApproximation:
+          type: string
+          enum: ["current_only"]
+          description: "Indicates that past-month liabilities are approximated using current debt balances."
+        series:
+          type: array
+          items:
+            $ref: "#/components/schemas/NetWorthTimelinePoint"
+      required:
+        - range
+        - startMonth
+        - endMonth
+        - cashIncludedFromMonth
+        - liabilitiesApproximation
+        - series
 
     DeleteNetWorthSnapshotParams:
       type: object

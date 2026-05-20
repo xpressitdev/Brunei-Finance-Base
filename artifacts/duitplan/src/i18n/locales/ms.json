@@ -602,7 +602,44 @@
     "subtitle": "Aset − Tanggungan = Kedudukan kewangan bersih anda.",
     "lastUpdated": "Dikemas kini: {{time}}",
     "noActivity": "Tiada aktiviti lagi",
-    "addAsset": "Tambah Aset",
+    "addAsset": "Tambah aset",
+    "todaysNetWorth": "Kekayaan bersih hari ini",
+    "vsLastMonth": "Berbanding bulan lepas",
+    "vsRange": {
+      "6m": "6 bulan lepas",
+      "1y": "12 bulan lepas",
+      "5y": "5 tahun lepas",
+      "all": "Sepanjang masa"
+    },
+    "liabilitiesExceedAssetsBy": "Tanggungan melebihi aset sebanyak",
+    "assetsExceedLiabilitiesBy": "Aset melebihi tanggungan sebanyak",
+    "cashLabel": "tunai",
+    "otherLabel": "lain",
+    "obligation": "tanggungan",
+    "obligations": "tanggungan",
+    "shareOfTotal": "Bahagian daripada jumlah",
+    "breakEvenAt50": "Pulang modal pada 50%",
+    "debtToAsset": "Hutang-kepada-aset",
+    "liquidRunway": "Tempoh tunai",
+    "equityShare": "Bahagian ekuiti",
+    "monthsShort": "bln",
+    "health": {
+      "solvent": "Kukuh",
+      "leveraged": "Berhutang tinggi",
+      "critical": "Kritikal"
+    },
+    "timeline": {
+      "eyebrow": "Kekayaan bersih dari masa ke masa",
+      "title": "Trend kekayaan bersih anda",
+      "note": "Bulan lepas menggunakan baki hutang semasa dan tidak termasuk tunai (sejarah belum dijejaki).",
+      "empty": "Rekod nilai aset untuk mula membina sejarah kekayaan bersih anda.",
+      "range": {
+        "6m": "6B",
+        "1y": "1T",
+        "5y": "5T",
+        "all": "Semua"
+      }
+    },
     "summary": {
       "totalAssets": "Jumlah Aset",
       "totalLiabilities": "Jumlah Tanggungan",
@@ -627,10 +664,17 @@
     },
     "assetEntries": {
       "sectionTitle": "Entri Aset — {{month}}",
+      "currentSectionTitle": "Aset anda",
+      "asOf": "Sehingga {{month}}",
       "noEntries": "Tiada entri aset untuk {{month}}.",
+      "noEntriesEver": "Belum ada aset direkod. Tambah hartanah, kenderaan, pelaburan dan harta lain untuk menjejak kekayaan bersih anda.",
       "addFirst": "Tambah entri aset pertama anda",
       "totalEntries": "Jumlah Entri Aset",
-      "valueFrom": "Nilai dari {{month}}"
+      "valueFrom": "Nilai dari {{month}}",
+      "updateValue": "Kemas kini",
+      "updateValueTooltip": "Rekod nilai baharu untuk bulan ini",
+      "edit": "Edit",
+      "delete": "Padam"
     },
     "liabilities": {
       "sectionTitle": "Tanggungan",
@@ -647,8 +691,9 @@
       "namePlaceholder": "cth. \"Honda Civic saya\", \"Hartanah Rimba\"",
       "valueLabel": "Nilai ({{currency}})",
       "monthLabel": "Bulan",
-      "saveAdd": "Tambah Aset",
-      "saveEdit": "Simpan Perubahan"
+      "monthHelp": "Lalai pada bulan ini. Tetapkan tarikh lalu untuk merekod nilai sejarah (digunakan untuk carta trend).",
+      "saveAdd": "Tambah aset",
+      "saveEdit": "Simpan perubahan"
     },
     "assetCategories": {
       "Savings": "Simpanan",

@@ -46,6 +46,7 @@ import type {
   GenerateInsightsBody,
   GetAccountBalanceHistoryParams,
   GetDashboardSummaryParams,
+  GetNetWorthTimelineParams,
   GetRecentTransactionsParams,
   GetSpendingByCategoryParams,
   Goal,
@@ -62,6 +63,7 @@ import type {
   LoginBody,
   MonthlyBudget,
   NetWorthSnapshot,
+  NetWorthTimeline,
   OnboardingStatus,
   Profile,
   RegisterBody,
@@ -4383,6 +4385,106 @@ export function useListNetWorthSnapshots<
   },
 ): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getListNetWorthSnapshotsQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Net worth time series for charting
+ */
+export const getGetNetWorthTimelineUrl = (
+  params?: GetNetWorthTimelineParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/net-worth/timeline?${stringifiedParams}`
+    : `/api/net-worth/timeline`;
+};
+
+export const getNetWorthTimeline = async (
+  params?: GetNetWorthTimelineParams,
+  options?: RequestInit,
+): Promise<NetWorthTimeline> => {
+  return customFetch<NetWorthTimeline>(getGetNetWorthTimelineUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetNetWorthTimelineQueryKey = (
+  params?: GetNetWorthTimelineParams,
+) => {
+  return [`/api/net-worth/timeline`, ...(params ? [params] : [])] as const;
+};
+
+export const getGetNetWorthTimelineQueryOptions = <
+  TData = Awaited<ReturnType<typeof getNetWorthTimeline>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: GetNetWorthTimelineParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getNetWorthTimeline>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetNetWorthTimelineQueryKey(params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getNetWorthTimeline>>
+  > = ({ signal }) =>
+    getNetWorthTimeline(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getNetWorthTimeline>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetNetWorthTimelineQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getNetWorthTimeline>>
+>;
+export type GetNetWorthTimelineQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Net worth time series for charting
+ */
+
+export function useGetNetWorthTimeline<
+  TData = Awaited<ReturnType<typeof getNetWorthTimeline>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: GetNetWorthTimelineParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getNetWorthTimeline>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetNetWorthTimelineQueryOptions(params, options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;

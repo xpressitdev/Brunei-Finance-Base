@@ -954,6 +954,46 @@ export const ListNetWorthSnapshotsResponse = zod.array(
 );
 
 /**
+ * @summary Net worth time series for charting
+ */
+export const getNetWorthTimelineQueryRangeDefault = `1y`;
+
+export const GetNetWorthTimelineQueryParams = zod.object({
+  range: zod
+    .enum(["6m", "1y", "5y", "all"])
+    .default(getNetWorthTimelineQueryRangeDefault)
+    .describe("Time window: 6m, 1y, 5y, or all (capped at 10 years)."),
+});
+
+export const GetNetWorthTimelineResponse = zod.object({
+  range: zod.enum(["6m", "1y", "5y", "all"]),
+  startMonth: zod.string(),
+  endMonth: zod.string(),
+  cashIncludedFromMonth: zod
+    .string()
+    .describe(
+      "Account-balance cash is only counted from this month onward (current month).",
+    ),
+  liabilitiesApproximation: zod
+    .enum(["current_only"])
+    .describe(
+      "Indicates that past-month liabilities are approximated using current debt balances.",
+    ),
+  series: zod.array(
+    zod.object({
+      month: zod.string().describe("YYYY-MM format"),
+      assets: zod
+        .string()
+        .describe("Total assets at this month (decimal string)"),
+      liabilities: zod
+        .string()
+        .describe("Total liabilities at this month (decimal string)"),
+      netWorth: zod.string().describe("assets − liabilities (decimal string)"),
+    }),
+  ),
+});
+
+/**
  * @summary List user asset entries for a month
  */
 export const ListAssetsQueryParams = zod.object({
