@@ -25,6 +25,7 @@ import agentRouter from "./agent";
 import paydayPromptRouter from "./payday-prompt";
 import feedbackRouter from "./feedback";
 import incomeSourcesRouter from "./income-sources";
+import adminSeedRouter from "./admin-seed";
 
 const router: IRouter = Router();
 
@@ -54,5 +55,6 @@ router.use(agentRouter);
 router.use(paydayPromptRouter);
 router.use(feedbackRouter);
 router.use(incomeSourcesRouter);
+router.use(adminSeedRouter);
 
 export default router;
