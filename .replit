@@ -53,3 +53,6 @@ channel = "stable-25_05"
 
 [userenv.development]
 ADMIN_SEED_TOKEN = "dev-seed-hh2xzl116gona2lh0m4ygh"
+
+[userenv.production]
+ADMIN_SEED_TOKEN = "testexample.comPassword123!"
