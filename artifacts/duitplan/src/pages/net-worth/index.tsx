@@ -18,6 +18,7 @@ import type {
 import {
   XAxis,
   YAxis,
+  ReferenceLine,
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
@@ -521,21 +522,58 @@ export default function NetWorth() {
             </Button>
           </div>
         ) : (
-          <ResponsiveContainer width="100%" height={220}>
-            <AreaChart data={timelineSeries} margin={{ top: 4, right: 8, left: 0, bottom: 4 }}>
-              <defs>
-                <linearGradient id="nwGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.02} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-              <XAxis dataKey="label" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} interval="preserveStartEnd" minTickGap={20} />
-              <YAxis tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} tickFormatter={(v: number) => fmtCompact(v)} width={70} />
-              <Tooltip content={<TimelineTooltip />} />
-              <Area type="monotone" dataKey="netWorth" stroke="hsl(var(--primary))" strokeWidth={2.5} fill="url(#nwGrad)" dot={timelineSeries.length <= 24 ? { r: 3, fill: "hsl(var(--primary))", strokeWidth: 0 } : false} activeDot={{ r: 5 }} />
-            </AreaChart>
-          </ResponsiveContainer>
+          (() => {
+            const nwVals = timelineSeries.map((p) => p.netWorth);
+            const minNw = Math.min(...nwVals);
+            const maxNw = Math.max(...nwVals);
+            const spread = Math.max(Math.abs(maxNw - minNw), Math.abs(maxNw), Math.abs(minNw), 1);
+            const pad = spread * 0.1;
+            const domainMin = Math.floor((minNw - pad) / 1000) * 1000;
+            const domainMax = Math.ceil((maxNw + pad) / 1000) * 1000;
+            const isNegative = maxNw < 0;
+            const lineColor = isNegative ? "hsl(0 72% 51%)" : "hsl(var(--primary))";
+            const gradId = isNegative ? "nwGradNeg" : "nwGrad";
+            return (
+              <ResponsiveContainer width="100%" height={220}>
+                <AreaChart data={timelineSeries} margin={{ top: 4, right: 8, left: 0, bottom: 4 }}>
+                  <defs>
+                    <linearGradient id="nwGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.02} />
+                    </linearGradient>
+                    <linearGradient id="nwGradNeg" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="hsl(0 72% 51%)" stopOpacity={0.02} />
+                      <stop offset="95%" stopColor="hsl(0 72% 51%)" stopOpacity={0.3} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                  <XAxis dataKey="label" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} interval="preserveStartEnd" minTickGap={20} />
+                  <YAxis
+                    tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                    axisLine={false}
+                    tickLine={false}
+                    tickFormatter={(v: number) => fmtCompact(v)}
+                    width={80}
+                    domain={[domainMin, domainMax]}
+                  />
+                  {domainMin < 0 && domainMax > 0 ? (
+                    <ReferenceLine y={0} stroke="hsl(var(--muted-foreground))" strokeDasharray="2 2" />
+                  ) : null}
+                  <Tooltip content={<TimelineTooltip />} />
+                  <Area
+                    type="monotone"
+                    dataKey="netWorth"
+                    stroke={lineColor}
+                    strokeWidth={2.5}
+                    fill={`url(#${gradId})`}
+                    baseValue={isNegative ? "dataMax" : "dataMin"}
+                    dot={timelineSeries.length <= 24 ? { r: 3, fill: lineColor, strokeWidth: 0 } : false}
+                    activeDot={{ r: 5 }}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            );
+          })()
         )}
       </div>
 
