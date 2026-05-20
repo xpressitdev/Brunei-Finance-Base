@@ -85,6 +85,19 @@
       "noSpendingData": "Belum ada data perbelanjaan",
       "noSpendingHint": "Muat naik penyata BIBD atau Baiduri anda, atau tambah transaksi secara manual."
     },
+    "envelopes": {
+      "title": "Pada landasan bulan ini",
+      "viewAll": "Urus bajet",
+      "ofBudget": "daripada {{budget}}",
+      "noBudget": "Tiada bajet ditetapkan",
+      "over": "Lebih sebanyak {{amount}}",
+      "left": "Baki {{amount}}",
+      "emptyTitle": "Belum ada yang dijejaki",
+      "emptyHint": "Tambah transaksi atau muat naik penyata untuk melihat prestasi anda berbanding bajet.",
+      "noBudgetsTitle": "Tetapkan bajet bulanan",
+      "noBudgetsHint": "Perbelanjaan anda direkodkan tetapi belum ada bajet kategori. Tetapkan sasaran bulanan untuk setiap kategori bagi melihat sampul di sini.",
+      "noBudgetsCta": "Tetapkan bajet"
+    },
     "financing": {
       "title": "Ringkasan Pembiayaan",
       "monthlyPayment": "Bayaran Bulanan",

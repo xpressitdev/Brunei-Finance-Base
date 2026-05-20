@@ -505,12 +505,37 @@ export interface DashboardSummary {
   transactionCount: number;
 }
 
+/**
+ * Bar colour bucket. no_budget when budget is null.
+ */
+export type CategorySpendStatus =
+  (typeof CategorySpendStatus)[keyof typeof CategorySpendStatus];
+
+export const CategorySpendStatus = {
+  on_track: "on_track",
+  warning: "warning",
+  over: "over",
+  no_budget: "no_budget",
+} as const;
+
 export interface CategorySpend {
   /** @nullable */
   categoryId?: string | null;
   categoryName: string;
   totalSpent: number;
   percentage: number;
+  /**
+   * Monthly default_budget for this category. null when unset (0).
+   * @nullable
+   */
+  budget?: number | null;
+  /**
+   * 0..100+ percentage of budget spent. null when budget is null.
+   * @nullable
+   */
+  percentOfBudget?: number | null;
+  /** Bar colour bucket. no_budget when budget is null. */
+  status: CategorySpendStatus;
 }
 
 export interface UploadStatementBody {

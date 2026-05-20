@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, and, gte, lte, sql } from "drizzle-orm";
+import { eq, and, gte, lte, inArray, sql } from "drizzle-orm";
 import { db, transactionsTable, commitmentsTable, debtsTable, profilesTable, categoriesTable, accountsTable } from "@workspace/db";
 import { GetDashboardSummaryQueryParams, GetSpendingByCategoryQueryParams, GetRecentTransactionsQueryParams } from "@workspace/api-zod";
 import { requireAuth, type AuthenticatedRequest } from "../lib/auth";
@@ -21,9 +21,12 @@ router.get("/dashboard/summary", requireAuth, async (req: AuthenticatedRequest, 
   const commitments = await db.select().from(commitmentsTable).where(eq(commitmentsTable.userId, req.userId!));
   const totalCommitments = commitments.reduce((s, c) => s + parseFloat(c.amount), 0);
 
+  // Manually-added expenses are stored as type='expense'; PDF-imported rows
+  // as type='debit'. Income vs credit similarly. Treat both as the same
+  // direction so the dashboard reflects all real spending.
   const debitTxns = await db.select().from(transactionsTable).where(and(
     eq(transactionsTable.userId, req.userId!),
-    eq(transactionsTable.type, "debit"),
+    inArray(transactionsTable.type, ["debit", "expense"]),
     gte(transactionsTable.date, start),
     lte(transactionsTable.date, end),
   ));
@@ -32,7 +35,7 @@ router.get("/dashboard/summary", requireAuth, async (req: AuthenticatedRequest, 
 
   const creditTxns = await db.select().from(transactionsTable).where(and(
     eq(transactionsTable.userId, req.userId!),
-    eq(transactionsTable.type, "credit"),
+    inArray(transactionsTable.type, ["credit", "income"]),
     gte(transactionsTable.date, start),
     lte(transactionsTable.date, end),
   ));
@@ -91,29 +94,45 @@ router.get("/dashboard/spending-by-category", requireAuth, async (req: Authentic
     .select({
       categoryId: transactionsTable.categoryId,
       categoryName: categoriesTable.name,
+      defaultBudget: categoriesTable.defaultBudget,
       total: sql<string>`SUM(${transactionsTable.amount}::numeric)`,
     })
     .from(transactionsTable)
     .leftJoin(categoriesTable, eq(transactionsTable.categoryId, categoriesTable.id))
     .where(and(
       eq(transactionsTable.userId, req.userId!),
-      eq(transactionsTable.type, "debit"),
+      // Count both PDF-imported ("debit") and manually-added ("expense") rows.
+      inArray(transactionsTable.type, ["debit", "expense"]),
       gte(transactionsTable.date, start),
       lte(transactionsTable.date, end),
     ))
-    .groupBy(transactionsTable.categoryId, categoriesTable.name);
+    .groupBy(transactionsTable.categoryId, categoriesTable.name, categoriesTable.defaultBudget);
 
   const totalSpent = rows.reduce((s, r) => s + parseFloat(r.total ?? "0"), 0);
 
   const result = rows.map((r) => {
     const amount = parseFloat(r.total ?? "0");
+    const totalSpentRounded = Math.round(amount * 100) / 100;
+    const budgetRaw = parseFloat(r.defaultBudget ?? "0");
+    const budget = budgetRaw > 0 ? budgetRaw : null;
+    const percentOfBudget = budget !== null
+      ? Math.round((amount / budget) * 10000) / 100
+      : null;
+    let status: "on_track" | "warning" | "over" | "no_budget";
+    if (budget === null) status = "no_budget";
+    else if (amount > budget) status = "over";
+    else if (percentOfBudget !== null && percentOfBudget >= 80) status = "warning";
+    else status = "on_track";
     return {
       categoryId: r.categoryId,
       categoryName: r.categoryName ?? "Uncategorized",
-      totalSpent: Math.round(amount * 100) / 100,
+      totalSpent: totalSpentRounded,
       percentage: totalSpent > 0
         ? Math.round((amount / totalSpent) * 10000) / 100
         : 0,
+      budget,
+      percentOfBudget,
+      status,
     };
   });
 

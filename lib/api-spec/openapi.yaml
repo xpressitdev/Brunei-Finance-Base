@@ -2217,10 +2217,21 @@ components:
           type: number
         percentage:
           type: number
+        budget:
+          type: ["number", "null"]
+          description: "Monthly default_budget for this category. null when unset (0)."
+        percentOfBudget:
+          type: ["number", "null"]
+          description: "0..100+ percentage of budget spent. null when budget is null."
+        status:
+          type: string
+          enum: [on_track, warning, over, no_budget]
+          description: "Bar colour bucket. no_budget when budget is null."
       required:
         - categoryName
         - totalSpent
         - percentage
+        - status
 
     # Upload
     UploadStatementBody:

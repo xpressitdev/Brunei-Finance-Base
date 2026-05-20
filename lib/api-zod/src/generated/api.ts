@@ -828,6 +828,17 @@ export const GetSpendingByCategoryResponseItem = zod.object({
   categoryName: zod.string(),
   totalSpent: zod.number(),
   percentage: zod.number(),
+  budget: zod
+    .number()
+    .nullish()
+    .describe("Monthly default_budget for this category. null when unset (0)."),
+  percentOfBudget: zod
+    .number()
+    .nullish()
+    .describe("0..100+ percentage of budget spent. null when budget is null."),
+  status: zod
+    .enum(["on_track", "warning", "over", "no_budget"])
+    .describe("Bar colour bucket. no_budget when budget is null."),
 });
 export const GetSpendingByCategoryResponse = zod.array(
   GetSpendingByCategoryResponseItem,

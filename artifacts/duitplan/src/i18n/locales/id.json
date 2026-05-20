@@ -85,6 +85,19 @@
       "noSpendingData": "Belum ada data pengeluaran",
       "noSpendingHint": "Unggah rekening BIBD atau Baiduri Anda, atau tambahkan transaksi secara manual."
     },
+    "envelopes": {
+      "title": "Sesuai rencana bulan ini",
+      "viewAll": "Kelola anggaran",
+      "ofBudget": "dari {{budget}}",
+      "noBudget": "Belum ada anggaran",
+      "over": "Lebih {{amount}}",
+      "left": "Sisa {{amount}}",
+      "emptyTitle": "Belum ada yang dilacak",
+      "emptyHint": "Tambahkan transaksi atau unggah rekening untuk melihat perbandingan dengan anggaran Anda.",
+      "noBudgetsTitle": "Atur anggaran bulanan",
+      "noBudgetsHint": "Ada pengeluaran tercatat tetapi belum ada anggaran kategori. Atur target bulanan per kategori untuk melihat amplop di sini.",
+      "noBudgetsCta": "Atur anggaran"
+    },
     "financing": {
       "title": "Ringkasan Pembiayaan",
       "monthlyPayment": "Pembayaran Bulanan",

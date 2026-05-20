@@ -14,6 +14,7 @@ export * from "./authUser";
 export * from "./balanceHistoryPoint";
 export * from "./category";
 export * from "./categorySpend";
+export * from "./categorySpendStatus";
 export * from "./changePasswordBody";
 export * from "./commitment";
 export * from "./confirmImportBody";

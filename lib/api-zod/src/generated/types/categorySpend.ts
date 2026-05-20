@@ -5,6 +5,7 @@
  * DuitPlan API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { CategorySpendStatus } from "./categorySpendStatus";
 
 export interface CategorySpend {
   /** @nullable */
@@ -12,4 +13,16 @@ export interface CategorySpend {
   categoryName: string;
   totalSpent: number;
   percentage: number;
+  /**
+   * Monthly default_budget for this category. null when unset (0).
+   * @nullable
+   */
+  budget?: number | null;
+  /**
+   * 0..100+ percentage of budget spent. null when budget is null.
+   * @nullable
+   */
+  percentOfBudget?: number | null;
+  /** Bar colour bucket. no_budget when budget is null. */
+  status: CategorySpendStatus;
 }

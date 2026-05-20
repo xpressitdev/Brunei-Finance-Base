@@ -85,6 +85,19 @@
       "noSpendingData": "No spending data yet",
       "noSpendingHint": "Upload your BIBD or Baiduri statement, or add a transaction manually."
     },
+    "envelopes": {
+      "title": "On track this month",
+      "viewAll": "Manage budgets",
+      "ofBudget": "of {{budget}}",
+      "noBudget": "No budget set",
+      "over": "Over by {{amount}}",
+      "left": "{{amount}} left",
+      "emptyTitle": "Nothing tracked yet",
+      "emptyHint": "Add a transaction or upload a statement to see how you're tracking against your budgets.",
+      "noBudgetsTitle": "Set monthly budgets",
+      "noBudgetsHint": "You have spending logged but no category budgets yet. Set a monthly target for each category to see envelopes here.",
+      "noBudgetsCta": "Set budgets"
+    },
     "financing": {
       "title": "Financing Summary",
       "monthlyPayment": "Monthly Payment",

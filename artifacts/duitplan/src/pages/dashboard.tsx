@@ -9,7 +9,6 @@ import { Link } from "wouter";
 import { ArrowDownRight, CreditCard, Activity, ArrowRight, Upload, Flame, Trophy, Landmark, ArrowUpRight, Calendar, Plus, Briefcase } from "lucide-react";
 import { AddTransactionDialog } from "@/components/AddTransactionDialog";
 import { KpiCard } from "@/components/redesign/KpiCard";
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useRegion } from "@/hooks/useRegion";
 import { cn } from "@/lib/utils";
@@ -17,7 +16,21 @@ import { usePaydayPrompt } from "@/hooks/usePaydayPrompt";
 import { PaydayReviewModal } from "@/components/PaydayReviewModal";
 import { computeSpendingPace, formatPaceTooltip } from "@/lib/spendingPace";
 
-const COLORS = ["#15a06e", "#0ea5e9", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4", "#84cc16", "#f97316"];
+const ENVELOPE_BAR_COLORS = {
+  on_track: "bg-primary",
+  warning: "bg-amber-500",
+  over: "bg-rose-500",
+  no_budget: "bg-muted-foreground/30",
+} as const;
+
+const ENVELOPE_TRACK_COLORS = {
+  on_track: "bg-primary/10",
+  warning: "bg-amber-500/10",
+  over: "bg-rose-500/10",
+  no_budget: "bg-muted",
+} as const;
+
+type EnvelopeStatus = keyof typeof ENVELOPE_BAR_COLORS;
 
 type GamificationSummary = {
   streak: { current: number; longest: number };
@@ -128,7 +141,10 @@ export default function Dashboard() {
   const firstName = profile?.fullName?.trim().split(/\s+/)[0] ?? "";
   const hasTransactions = recentTransactions && recentTransactions.length > 0;
   const hasSpending = spending && spending.length > 0;
-  const hasRealSpending = hasSpending && spending!.some(s => !/^uncategorized$/i.test(s.categoryName ?? "uncategorized"));
+  const realSpending = (spending ?? []).filter(s => !/^uncategorized$/i.test(s.categoryName ?? "uncategorized"));
+  const hasRealSpending = realSpending.length > 0;
+  const envelopeRows = realSpending.slice(0, 5);
+  const allUnbudgeted = hasRealSpending && envelopeRows.every(s => (s as { budget?: number | null }).budget == null);
   const challenge = gamification?.monthlyChallenge;
   const challengePct = challenge ? Math.min(100, (challenge.progress / challenge.target) * 100) : 0;
   const latestBadge = gamification?.achievements
@@ -298,57 +314,78 @@ export default function Dashboard() {
 
       {/* Charts + Recent Transactions */}
       <div className="grid lg:grid-cols-3 gap-4">
-        {/* Spending by Category */}
+        {/* Budget envelopes */}
         <Card className="lg:col-span-2 shadow-sm border-muted">
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-base">{t("dashboard.chart.spendingByCategory")}</CardTitle>
+                <CardTitle className="text-base">{t("dashboard.envelopes.title")}</CardTitle>
                 <p className="text-xs text-muted-foreground mt-0.5">{format(new Date(), "MMMM yyyy")}</p>
               </div>
-              <Link href="/transactions">
+              <Link href="/budgets">
                 <Button variant="ghost" size="sm" className="gap-1 text-xs">
-                  View all <ArrowRight className="w-3 h-3" />
+                  {t("dashboard.envelopes.viewAll")} <ArrowRight className="w-3 h-3" />
                 </Button>
               </Link>
             </div>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center gap-6">
-              {hasRealSpending ? (
-                <>
-                  <div className="w-44 h-44 shrink-0">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie data={spending} dataKey="totalSpent" nameKey="categoryName"
-                          cx="50%" cy="50%" outerRadius={80} innerRadius={44}>
-                          {spending.map((_entry, index) => (
-                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                          ))}
-                        </Pie>
-                        <Tooltip formatter={(value: any) => formatCurrency(Number(value))} />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
-                  <div className="flex-1 space-y-2">
-                    {spending.slice(0, 5).map((s, i) => (
-                      <div key={s.categoryName} className="flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: COLORS[i % COLORS.length] }} />
-                          <span className="text-sm truncate">{s.categoryName}</span>
-                        </div>
-                        <span className="text-sm font-semibold tabular-nums">{formatCurrency(s.totalSpent)}</span>
+            {!hasRealSpending ? (
+              <div className="w-full min-h-44 flex flex-col items-center justify-center gap-2 text-center py-6">
+                <div className="text-4xl">📊</div>
+                <p className="text-sm font-medium">{t("dashboard.envelopes.emptyTitle")}</p>
+                <p className="text-xs text-muted-foreground max-w-xs">{t("dashboard.envelopes.emptyHint")}</p>
+              </div>
+            ) : allUnbudgeted ? (
+              <div className="w-full min-h-44 flex flex-col items-center justify-center gap-2 text-center py-6">
+                <div className="text-4xl">🎯</div>
+                <p className="text-sm font-medium">{t("dashboard.envelopes.noBudgetsTitle")}</p>
+                <p className="text-xs text-muted-foreground max-w-xs">{t("dashboard.envelopes.noBudgetsHint")}</p>
+                <Link href="/categories">
+                  <Button variant="outline" size="sm" className="mt-2">{t("dashboard.envelopes.noBudgetsCta")}</Button>
+                </Link>
+              </div>
+            ) : (
+              <div className="space-y-3.5">
+                {envelopeRows.map((s) => {
+                  const row = s as { categoryName: string; totalSpent: number; budget?: number | null; percentOfBudget?: number | null; status?: EnvelopeStatus };
+                  const status: EnvelopeStatus = row.status ?? (row.budget == null ? "no_budget" : "on_track");
+                  const barClass = ENVELOPE_BAR_COLORS[status];
+                  const trackClass = ENVELOPE_TRACK_COLORS[status];
+                  const pct = row.percentOfBudget ?? 0;
+                  const barWidth = Math.min(100, pct);
+                  const delta = row.budget != null ? row.budget - row.totalSpent : 0;
+                  return (
+                    <div key={row.categoryName} className="space-y-1.5">
+                      <div className="flex items-baseline justify-between gap-3">
+                        <span className="text-sm font-medium truncate">{row.categoryName}</span>
+                        <span className="text-xs text-muted-foreground tabular-nums whitespace-nowrap">
+                          <span className="font-semibold text-foreground">{formatCurrency(row.totalSpent)}</span>
+                          {row.budget != null
+                            ? <> {t("dashboard.envelopes.ofBudget", { budget: formatCurrency(row.budget) })}</>
+                            : <> · {t("dashboard.envelopes.noBudget")}</>
+                          }
+                        </span>
                       </div>
-                    ))}
-                  </div>
-                </>
-              ) : (
-                <div className="w-full h-44 flex flex-col items-center justify-center gap-3 text-center">
-                  <div className="text-4xl">📊</div>
-                  <p className="text-sm text-muted-foreground">{t("dashboard.chart.noSpendingHint")}</p>
-                </div>
-              )}
-            </div>
+                      <div className={cn("h-2 w-full rounded-full overflow-hidden", trackClass)}>
+                        <div
+                          className={cn("h-full rounded-full transition-all", barClass)}
+                          style={{ width: `${barWidth}%` }}
+                        />
+                      </div>
+                      {row.budget != null && (
+                        <div className="text-[11px] text-muted-foreground tabular-nums">
+                          {delta < 0
+                            ? <span className="text-rose-600 font-medium">{t("dashboard.envelopes.over", { amount: formatCurrency(Math.abs(delta)) })}</span>
+                            : t("dashboard.envelopes.left", { amount: formatCurrency(delta) })
+                          }
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </CardContent>
         </Card>
 
