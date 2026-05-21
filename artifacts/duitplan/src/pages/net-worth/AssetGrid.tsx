@@ -143,6 +143,48 @@ export function AssetGrid({ onMutate }: { onMutate?: () => void }) {
 
   const isPending = upsert.isPending || remove.isPending;
 
+  const tableRef = useRef<HTMLTableElement>(null);
+
+  const focusCell = useCallback((rowIdx: number, colIdx: number) => {
+    const table = tableRef.current;
+    if (!table) return false;
+    const el = table.querySelector<HTMLInputElement>(
+      `input[data-grid-row="${rowIdx}"][data-grid-col="${colIdx}"]`,
+    );
+    if (!el) return false;
+    el.focus();
+    el.select();
+    return true;
+  }, []);
+
+  const navigate = useCallback(
+    (rowIdx: number, colIdx: number, dir: "up" | "down" | "left" | "right"): boolean => {
+      const numRows = rows.length;
+      const numCols = months.length;
+      if (numRows === 0 || numCols === 0) return false;
+      let r = rowIdx;
+      let c = colIdx;
+      if (dir === "up") r = Math.max(0, r - 1);
+      else if (dir === "down") r = Math.min(numRows - 1, r + 1);
+      else if (dir === "left") {
+        if (c > 0) c -= 1;
+        else if (r > 0) {
+          r -= 1;
+          c = numCols - 1;
+        }
+      } else if (dir === "right") {
+        if (c < numCols - 1) c += 1;
+        else if (r < numRows - 1) {
+          r += 1;
+          c = 0;
+        }
+      }
+      if (r === rowIdx && c === colIdx) return false;
+      return focusCell(r, c);
+    },
+    [rows.length, months.length, focusCell],
+  );
+
   if (isLoading) {
     return (
       <div className="bg-card border rounded-xl p-10 text-center text-sm text-muted-foreground">
@@ -174,7 +216,7 @@ export function AssetGrid({ onMutate }: { onMutate?: () => void }) {
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full border-collapse text-sm">
+        <table ref={tableRef} className="w-full border-collapse text-sm">
           <thead>
             <tr className="bg-muted/20">
               <th className="sticky left-0 z-10 bg-muted/20 text-left px-3 py-2 font-medium text-xs text-muted-foreground border-b border-r min-w-[200px]">
@@ -194,7 +236,7 @@ export function AssetGrid({ onMutate }: { onMutate?: () => void }) {
             </tr>
           </thead>
           <tbody>
-            {rows.map((row) => {
+            {rows.map((row, rowIdx) => {
               const effective = computeEffective(row, months);
               return (
                 <tr key={`${row.category}|${row.name}`} className="border-b last:border-0 hover:bg-muted/10">
@@ -220,6 +262,9 @@ export function AssetGrid({ onMutate }: { onMutate?: () => void }) {
                           row={row}
                           month={m}
                           eff={eff}
+                          rowIdx={rowIdx}
+                          colIdx={i}
+                          onNavigate={(dir) => navigate(rowIdx, i, dir)}
                           decimalStep={decimalStep}
                           disabled={isPending}
                           autoFocus={shouldFocus}
@@ -308,9 +353,12 @@ export function AssetGrid({ onMutate }: { onMutate?: () => void }) {
 }
 
 function Cell({
-  row,
-  month,
+  row: _row,
+  month: _month,
   eff,
+  rowIdx,
+  colIdx,
+  onNavigate,
   decimalStep,
   disabled,
   autoFocus,
@@ -320,6 +368,9 @@ function Cell({
   row: AssetMatrixRow;
   month: string;
   eff: EffectiveCell | null;
+  rowIdx: number;
+  colIdx: number;
+  onNavigate: (dir: "up" | "down" | "left" | "right") => boolean;
   decimalStep: string;
   disabled: boolean;
   autoFocus?: boolean;
@@ -361,6 +412,8 @@ function Cell({
       inputMode="decimal"
       step={decimalStep}
       min="0"
+      data-grid-row={rowIdx}
+      data-grid-col={colIdx}
       value={draft}
       placeholder={placeholder}
       disabled={disabled}
@@ -372,11 +425,34 @@ function Cell({
         await onSave(trimmed);
       }}
       onKeyDown={(e) => {
+        const input = e.currentTarget as HTMLInputElement;
+        // Navigation keys move focus; the resulting blur on this input is the
+        // single commit point (via onBlur -> onSave). We don't also call onSave
+        // here, otherwise the same edit would be saved twice.
         if (e.key === "Enter") {
-          (e.currentTarget as HTMLInputElement).blur();
+          e.preventDefault();
+          if (!onNavigate("down")) input.blur();
         } else if (e.key === "Escape") {
+          e.preventDefault();
           setDraft(initial);
-          (e.currentTarget as HTMLInputElement).blur();
+          // Stay focused in the same cell per spec; no blur, no save.
+        } else if (e.key === "Tab") {
+          // Override default tabbing so we stay within the grid and skip the
+          // sticky header / add-row / total-row controls. If there's nowhere
+          // to go (last cell on Tab, first cell on Shift+Tab), fall back to
+          // the browser default so focus can leave the grid.
+          const moved = onNavigate(e.shiftKey ? "left" : "right");
+          if (moved) e.preventDefault();
+        } else if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+          e.preventDefault();
+          onNavigate(e.key === "ArrowUp" ? "up" : "down");
+        } else if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+          // Always navigate horizontally between cells with the arrow keys.
+          // The input is type="number" (caret APIs return null and arrows
+          // would otherwise step the numeric value), and on focus we
+          // select-all, so in-cell caret movement isn't a meaningful loss.
+          e.preventDefault();
+          onNavigate(e.key === "ArrowLeft" ? "left" : "right");
         }
       }}
       className={cn(
