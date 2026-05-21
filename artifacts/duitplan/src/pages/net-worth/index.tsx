@@ -63,6 +63,7 @@ import { Link } from "wouter";
 import { cn } from "@/lib/utils";
 import { useRegion } from "@/hooks/useRegion";
 import { formatMonthYear as _formatMonthYear, formatMonthShort as _formatMonthShort } from "@/utils/formatting";
+import { AssetGrid } from "./AssetGrid";
 
 
 const ASSET_CATEGORIES = ["Savings", "Property", "Vehicle", "Investment", "Business", "Other"] as const;
@@ -189,6 +190,7 @@ export default function NetWorth() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(() => emptyForm(today));
+  const [assetView, setAssetView] = useState<"list" | "grid">("list");
 
   const assets = currentAssets as AssetEntry[];
 
@@ -624,19 +626,45 @@ export default function NetWorth() {
 
       {/* Asset Entries section — today's carry-forward values */}
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-2">
           <div className="flex items-center gap-2">
             <TrendingUp className="w-4 h-4 text-blue-600" />
             <h2 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">
               {t("netWorth.assetEntries.currentSectionTitle")}
             </h2>
           </div>
-          <span className="text-[10px] text-muted-foreground">
-            {t("netWorth.assetEntries.asOf", { month: monthLabel(today, region.locale) })}
-          </span>
+          <div className="flex items-center gap-3">
+            <div className="inline-flex border rounded-md overflow-hidden bg-card">
+              <button
+                type="button"
+                onClick={() => setAssetView("list")}
+                className={cn(
+                  "px-2.5 py-1 text-[11px] font-medium",
+                  assetView === "list" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted/50",
+                )}
+              >
+                {t("netWorth.assetEntries.viewList")}
+              </button>
+              <button
+                type="button"
+                onClick={() => setAssetView("grid")}
+                className={cn(
+                  "px-2.5 py-1 text-[11px] font-medium border-l",
+                  assetView === "grid" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted/50",
+                )}
+              >
+                {t("netWorth.assetEntries.viewGrid")}
+              </button>
+            </div>
+            <span className="text-[10px] text-muted-foreground">
+              {t("netWorth.assetEntries.asOf", { month: monthLabel(today, region.locale) })}
+            </span>
+          </div>
         </div>
 
-        {assets.length === 0 ? (
+        {assetView === "grid" ? (
+          <AssetGrid onMutate={() => refetchCurrent()} />
+        ) : assets.length === 0 ? (
           <div className="bg-card border rounded-xl p-10 text-center">
             <p className="text-muted-foreground text-sm">
               {t("netWorth.assetEntries.noEntriesEver")}

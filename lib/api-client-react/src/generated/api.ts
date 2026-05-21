@@ -19,6 +19,7 @@ import type {
 import type {
   Account,
   AssetEntry,
+  AssetMatrix,
   AuthResponse,
   AuthUser,
   BalanceHistoryPoint,
@@ -40,11 +41,13 @@ import type {
   DebtScenario,
   DebtSchedule,
   DebtSimulateBody,
+  DeleteAssetCellParams,
   ErrorResponse,
   ForgotPasswordBody,
   ForgotPasswordResponse,
   GenerateInsightsBody,
   GetAccountBalanceHistoryParams,
+  GetAssetMatrixParams,
   GetDashboardSummaryParams,
   GetNetWorthTimelineParams,
   GetRecentTransactionsParams,
@@ -87,6 +90,7 @@ import type {
   UpdateTransactionBody,
   UploadStatementBody,
   UploadedDocument,
+  UpsertAssetCellBody,
   UpsertBudgetBody,
   UserSubscription,
   VerifyEmailBody,
@@ -4671,6 +4675,282 @@ export const useCreateAsset = <
   TContext
 > => {
   return useMutation(getCreateAssetMutationOptions(options));
+};
+
+/**
+ * @summary Get the grid editor matrix of asset entries (rows × months)
+ */
+export const getGetAssetMatrixUrl = (params?: GetAssetMatrixParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/assets/matrix?${stringifiedParams}`
+    : `/api/assets/matrix`;
+};
+
+export const getAssetMatrix = async (
+  params?: GetAssetMatrixParams,
+  options?: RequestInit,
+): Promise<AssetMatrix> => {
+  return customFetch<AssetMatrix>(getGetAssetMatrixUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetAssetMatrixQueryKey = (params?: GetAssetMatrixParams) => {
+  return [`/api/assets/matrix`, ...(params ? [params] : [])] as const;
+};
+
+export const getGetAssetMatrixQueryOptions = <
+  TData = Awaited<ReturnType<typeof getAssetMatrix>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: GetAssetMatrixParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getAssetMatrix>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetAssetMatrixQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getAssetMatrix>>> = ({
+    signal,
+  }) => getAssetMatrix(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getAssetMatrix>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetAssetMatrixQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getAssetMatrix>>
+>;
+export type GetAssetMatrixQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get the grid editor matrix of asset entries (rows × months)
+ */
+
+export function useGetAssetMatrix<
+  TData = Awaited<ReturnType<typeof getAssetMatrix>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: GetAssetMatrixParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getAssetMatrix>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetAssetMatrixQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Upsert a single asset entry by (name, category, month)
+ */
+export const getUpsertAssetCellUrl = () => {
+  return `/api/assets/cell`;
+};
+
+export const upsertAssetCell = async (
+  upsertAssetCellBody: UpsertAssetCellBody,
+  options?: RequestInit,
+): Promise<AssetEntry> => {
+  return customFetch<AssetEntry>(getUpsertAssetCellUrl(), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(upsertAssetCellBody),
+  });
+};
+
+export const getUpsertAssetCellMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof upsertAssetCell>>,
+    TError,
+    { data: BodyType<UpsertAssetCellBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof upsertAssetCell>>,
+  TError,
+  { data: BodyType<UpsertAssetCellBody> },
+  TContext
+> => {
+  const mutationKey = ["upsertAssetCell"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof upsertAssetCell>>,
+    { data: BodyType<UpsertAssetCellBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return upsertAssetCell(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpsertAssetCellMutationResult = NonNullable<
+  Awaited<ReturnType<typeof upsertAssetCell>>
+>;
+export type UpsertAssetCellMutationBody = BodyType<UpsertAssetCellBody>;
+export type UpsertAssetCellMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Upsert a single asset entry by (name, category, month)
+ */
+export const useUpsertAssetCell = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof upsertAssetCell>>,
+    TError,
+    { data: BodyType<UpsertAssetCellBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof upsertAssetCell>>,
+  TError,
+  { data: BodyType<UpsertAssetCellBody> },
+  TContext
+> => {
+  return useMutation(getUpsertAssetCellMutationOptions(options));
+};
+
+/**
+ * @summary Delete the explicit asset entry for a single (name, category, month) cell
+ */
+export const getDeleteAssetCellUrl = (params: DeleteAssetCellParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/assets/cell?${stringifiedParams}`
+    : `/api/assets/cell`;
+};
+
+export const deleteAssetCell = async (
+  params: DeleteAssetCellParams,
+  options?: RequestInit,
+): Promise<void> => {
+  return customFetch<void>(getDeleteAssetCellUrl(params), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteAssetCellMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteAssetCell>>,
+    TError,
+    { params: DeleteAssetCellParams },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteAssetCell>>,
+  TError,
+  { params: DeleteAssetCellParams },
+  TContext
+> => {
+  const mutationKey = ["deleteAssetCell"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteAssetCell>>,
+    { params: DeleteAssetCellParams }
+  > = (props) => {
+    const { params } = props ?? {};
+
+    return deleteAssetCell(params, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteAssetCellMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteAssetCell>>
+>;
+
+export type DeleteAssetCellMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Delete the explicit asset entry for a single (name, category, month) cell
+ */
+export const useDeleteAssetCell = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteAssetCell>>,
+    TError,
+    { params: DeleteAssetCellParams },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof deleteAssetCell>>,
+  TError,
+  { params: DeleteAssetCellParams },
+  TContext
+> => {
+  return useMutation(getDeleteAssetCellMutationOptions(options));
 };
 
 /**

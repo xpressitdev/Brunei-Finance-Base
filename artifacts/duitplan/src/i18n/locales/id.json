@@ -674,7 +674,20 @@
       "updateValue": "Perbarui nilai",
       "updateValueTooltip": "Catat nilai baru untuk bulan ini",
       "edit": "Edit",
-      "delete": "Hapus"
+      "delete": "Hapus",
+      "viewList": "Daftar",
+      "viewGrid": "Grid"
+    },
+    "grid": {
+      "title": "Grid nilai bulanan",
+      "help": "Klik sel mana pun untuk mengedit. Sel kosong mewarisi nilai terakhir.",
+      "assetCol": "Aset",
+      "totalRow": "Total aset",
+      "months_one": "{{count}} bulan",
+      "months_other": "{{count}} bulan",
+      "empty": "Tambahkan aset untuk mulai melacak nilai bulanan.",
+      "invalidValue": "Masukkan angka non-negatif",
+      "saveFailed": "Tidak dapat menyimpan nilai"
     },
     "liabilities": {
       "sectionTitle": "Kewajiban",

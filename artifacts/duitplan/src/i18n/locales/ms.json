@@ -674,7 +674,20 @@
       "updateValue": "Kemas kini",
       "updateValueTooltip": "Rekod nilai baharu untuk bulan ini",
       "edit": "Edit",
-      "delete": "Padam"
+      "delete": "Padam",
+      "viewList": "Senarai",
+      "viewGrid": "Grid"
+    },
+    "grid": {
+      "title": "Grid nilai bulanan",
+      "help": "Klik mana-mana sel untuk mengedit. Sel kosong mewarisi nilai terkini.",
+      "assetCol": "Aset",
+      "totalRow": "Jumlah aset",
+      "months_one": "{{count}} bulan",
+      "months_other": "{{count}} bulan",
+      "empty": "Tambah aset untuk mula menjejak nilai bulanan.",
+      "invalidValue": "Masukkan nombor bukan negatif",
+      "saveFailed": "Tidak dapat simpan nilai"
     },
     "liabilities": {
       "sectionTitle": "Tanggungan",

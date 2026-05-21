@@ -31,7 +31,9 @@ export const assetEntriesTable = pgTable("asset_entries", {
   month: text("month").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
-});
+}, (t) => ({
+  cellUnique: unique("asset_entries_user_name_category_month_unique").on(t.userId, t.name, t.category, t.month),
+}));
 
 export const insertAssetEntrySchema = createInsertSchema(assetEntriesTable).omit({ createdAt: true, updatedAt: true });
 export type InsertAssetEntry = z.infer<typeof insertAssetEntrySchema>;

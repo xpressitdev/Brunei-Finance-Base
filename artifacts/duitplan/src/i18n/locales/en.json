@@ -681,7 +681,20 @@
       "updateValue": "Update value",
       "updateValueTooltip": "Record a new value for this month",
       "edit": "Edit",
-      "delete": "Delete"
+      "delete": "Delete",
+      "viewList": "List",
+      "viewGrid": "Grid"
+    },
+    "grid": {
+      "title": "Monthly value grid",
+      "help": "Click any cell to edit. Empty cells inherit the most recent value.",
+      "assetCol": "Asset",
+      "totalRow": "Total assets",
+      "months_one": "{{count}} month",
+      "months_other": "{{count}} months",
+      "empty": "Add an asset to start tracking monthly values.",
+      "invalidValue": "Enter a non-negative number",
+      "saveFailed": "Couldn't save value"
     },
     "liabilities": {
       "sectionTitle": "Liabilities",

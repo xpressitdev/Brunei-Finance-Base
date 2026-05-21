@@ -1040,6 +1040,97 @@ export const CreateAssetBody = zod.object({
 });
 
 /**
+ * @summary Get the grid editor matrix of asset entries (rows × months)
+ */
+export const GetAssetMatrixQueryParams = zod.object({
+  months: zod.coerce
+    .number()
+    .nullish()
+    .describe("Number of months to include (default 12, max 60)"),
+});
+
+export const GetAssetMatrixResponse = zod.object({
+  months: zod
+    .array(zod.string())
+    .describe("Window months in YYYY-MM, oldest → newest."),
+  rows: zod.array(
+    zod.object({
+      name: zod.string(),
+      category: zod.enum([
+        "Savings",
+        "Property",
+        "Vehicle",
+        "Investment",
+        "Business",
+        "Other",
+      ]),
+      entries: zod
+        .record(
+          zod.string(),
+          zod.object({
+            id: zod.string(),
+            value: zod.string(),
+          }),
+        )
+        .describe(
+          "Map of YYYY-MM → cell. Cells with no explicit entry are omitted.",
+        ),
+      seedValue: zod
+        .string()
+        .nullish()
+        .describe(
+          "Latest known value strictly before the window, used by the client to render carry-forward placeholders.",
+        ),
+      seedMonth: zod.string().nullish(),
+    }),
+  ),
+});
+
+/**
+ * @summary Upsert a single asset entry by (name, category, month)
+ */
+export const UpsertAssetCellBody = zod.object({
+  name: zod.string(),
+  category: zod.enum([
+    "Savings",
+    "Property",
+    "Vehicle",
+    "Investment",
+    "Business",
+    "Other",
+  ]),
+  month: zod.string().describe("YYYY-MM format"),
+  value: zod.string(),
+});
+
+export const UpsertAssetCellResponse = zod.object({
+  id: zod.string(),
+  userId: zod.string(),
+  category: zod.enum([
+    "Savings",
+    "Property",
+    "Vehicle",
+    "Investment",
+    "Business",
+    "Other",
+  ]),
+  name: zod.string(),
+  value: zod.string(),
+  month: zod.string().describe("YYYY-MM format"),
+  createdAt: zod.string(),
+  updatedAt: zod.string(),
+});
+
+/**
+ * @summary Delete the explicit asset entry for a single (name, category, month) cell
+ */
+export const DeleteAssetCellQueryParams = zod.object({
+  name: zod.coerce.string(),
+  category: zod.coerce.string(),
+  month: zod.coerce.string(),
+});
+
+/**
  * @summary Update an asset entry
  */
 export const UpdateAssetParams = zod.object({

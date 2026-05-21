@@ -631,6 +631,68 @@ export interface AssetEntry {
   updatedAt: string;
 }
 
+export interface AssetMatrixCell {
+  id: string;
+  value: string;
+}
+
+export type AssetMatrixRowCategory =
+  (typeof AssetMatrixRowCategory)[keyof typeof AssetMatrixRowCategory];
+
+export const AssetMatrixRowCategory = {
+  Savings: "Savings",
+  Property: "Property",
+  Vehicle: "Vehicle",
+  Investment: "Investment",
+  Business: "Business",
+  Other: "Other",
+} as const;
+
+/**
+ * Map of YYYY-MM → cell. Cells with no explicit entry are omitted.
+ */
+export type AssetMatrixRowEntries = { [key: string]: AssetMatrixCell };
+
+export interface AssetMatrixRow {
+  name: string;
+  category: AssetMatrixRowCategory;
+  /** Map of YYYY-MM → cell. Cells with no explicit entry are omitted. */
+  entries: AssetMatrixRowEntries;
+  /**
+   * Latest known value strictly before the window, used by the client to render carry-forward placeholders.
+   * @nullable
+   */
+  seedValue?: string | null;
+  /** @nullable */
+  seedMonth?: string | null;
+}
+
+export interface AssetMatrix {
+  /** Window months in YYYY-MM, oldest → newest. */
+  months: string[];
+  rows: AssetMatrixRow[];
+}
+
+export type UpsertAssetCellBodyCategory =
+  (typeof UpsertAssetCellBodyCategory)[keyof typeof UpsertAssetCellBodyCategory];
+
+export const UpsertAssetCellBodyCategory = {
+  Savings: "Savings",
+  Property: "Property",
+  Vehicle: "Vehicle",
+  Investment: "Investment",
+  Business: "Business",
+  Other: "Other",
+} as const;
+
+export interface UpsertAssetCellBody {
+  name: string;
+  category: UpsertAssetCellBodyCategory;
+  /** YYYY-MM format */
+  month: string;
+  value: string;
+}
+
 export type CreateAssetBodyCategory =
   (typeof CreateAssetBodyCategory)[keyof typeof CreateAssetBodyCategory];
 
@@ -968,4 +1030,18 @@ export type ListAssetsParams = {
    * @nullable
    */
   month?: string | null;
+};
+
+export type GetAssetMatrixParams = {
+  /**
+   * Number of months to include (default 12, max 60)
+   * @nullable
+   */
+  months?: number | null;
+};
+
+export type DeleteAssetCellParams = {
+  name: string;
+  category: string;
+  month: string;
 };

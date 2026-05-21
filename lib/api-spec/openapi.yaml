@@ -1129,6 +1129,73 @@ paths:
               schema:
                 $ref: "#/components/schemas/AssetEntry"
 
+  /assets/matrix:
+    get:
+      operationId: getAssetMatrix
+      tags: [assets]
+      summary: Get the grid editor matrix of asset entries (rows × months)
+      parameters:
+        - name: months
+          in: query
+          schema:
+            type: ["integer", "null"]
+          description: "Number of months to include (default 12, max 60)"
+      responses:
+        "200":
+          description: Asset matrix
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AssetMatrix"
+
+  /assets/cell:
+    put:
+      operationId: upsertAssetCell
+      tags: [assets]
+      summary: Upsert a single asset entry by (name, category, month)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpsertAssetCellBody"
+      responses:
+        "200":
+          description: Updated asset entry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AssetEntry"
+        "201":
+          description: Created asset entry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AssetEntry"
+    delete:
+      operationId: deleteAssetCell
+      tags: [assets]
+      summary: Delete the explicit asset entry for a single (name, category, month) cell
+      parameters:
+        - name: name
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: category
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: month
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
+
   /assets/{id}:
     patch:
       operationId: updateAsset
@@ -2428,6 +2495,64 @@ components:
         - month
         - createdAt
         - updatedAt
+
+    AssetMatrixCell:
+      type: object
+      properties:
+        id:
+          type: string
+        value:
+          type: string
+      required: [id, value]
+
+    AssetMatrixRow:
+      type: object
+      properties:
+        name:
+          type: string
+        category:
+          type: string
+          enum: [Savings, Property, Vehicle, Investment, Business, Other]
+        entries:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/AssetMatrixCell"
+          description: "Map of YYYY-MM → cell. Cells with no explicit entry are omitted."
+        seedValue:
+          type: ["string", "null"]
+          description: "Latest known value strictly before the window, used by the client to render carry-forward placeholders."
+        seedMonth:
+          type: ["string", "null"]
+      required: [name, category, entries]
+
+    AssetMatrix:
+      type: object
+      properties:
+        months:
+          type: array
+          items:
+            type: string
+          description: "Window months in YYYY-MM, oldest → newest."
+        rows:
+          type: array
+          items:
+            $ref: "#/components/schemas/AssetMatrixRow"
+      required: [months, rows]
+
+    UpsertAssetCellBody:
+      type: object
+      properties:
+        name:
+          type: string
+        category:
+          type: string
+          enum: [Savings, Property, Vehicle, Investment, Business, Other]
+        month:
+          type: string
+          description: "YYYY-MM format"
+        value:
+          type: string
+      required: [name, category, month, value]
 
     CreateAssetBody:
       type: object
