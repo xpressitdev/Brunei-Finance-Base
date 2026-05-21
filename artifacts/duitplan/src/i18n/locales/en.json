@@ -694,7 +694,12 @@
       "months_other": "{{count}} months",
       "empty": "Add an asset to start tracking monthly values.",
       "invalidValue": "Enter a non-negative number",
-      "saveFailed": "Couldn't save value"
+      "saveFailed": "Couldn't save value",
+      "addRow": {
+        "cta": "Add asset",
+        "confirm": "Add",
+        "duplicate": "An asset with that name and category already exists"
+      }
     },
     "liabilities": {
       "sectionTitle": "Liabilities",

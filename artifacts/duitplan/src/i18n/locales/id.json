@@ -687,7 +687,12 @@
       "months_other": "{{count}} bulan",
       "empty": "Tambahkan aset untuk mulai melacak nilai bulanan.",
       "invalidValue": "Masukkan angka non-negatif",
-      "saveFailed": "Tidak dapat menyimpan nilai"
+      "saveFailed": "Tidak dapat menyimpan nilai",
+      "addRow": {
+        "cta": "Tambah aset",
+        "confirm": "Tambah",
+        "duplicate": "Aset dengan nama dan kategori itu sudah ada"
+      }
     },
     "liabilities": {
       "sectionTitle": "Kewajiban",

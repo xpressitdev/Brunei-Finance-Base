@@ -17,10 +17,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Landmark, Home, Car, TrendingUp, Briefcase, Package, Info } from "lucide-react";
+import { Landmark, Home, Car, TrendingUp, Briefcase, Package, Info, Plus, X } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useRegion } from "@/hooks/useRegion";
 import { formatMonthShort as _formatMonthShort } from "@/utils/formatting";
+
+const ASSET_CATEGORIES = ["Savings", "Property", "Vehicle", "Investment", "Business", "Other"] as const;
+type AssetCategoryLocal = typeof ASSET_CATEGORIES[number];
 
 const CATEGORY_ICONS: Record<string, React.ReactNode> = {
   Savings: <Landmark className="w-3.5 h-3.5" />,
@@ -83,7 +87,35 @@ export function AssetGrid({ onMutate }: { onMutate?: () => void }) {
 
   const matrix: AssetMatrix | undefined = data;
   const months = useMemo(() => matrix?.months ?? [], [matrix]);
-  const rows = useMemo(() => matrix?.rows ?? [], [matrix]);
+  const serverRows = useMemo(() => matrix?.rows ?? [], [matrix]);
+
+  // Locally-added rows that haven't received their first value yet. Once the server matrix
+  // includes a matching (name, category), it falls out of this list automatically.
+  const [pendingRows, setPendingRows] = useState<Array<{ name: string; category: AssetCategoryLocal }>>([]);
+  // When set, the next render should focus the first month input for this (name, category).
+  const [focusKey, setFocusKey] = useState<string | null>(null);
+
+  const rows = useMemo(() => {
+    if (pendingRows.length === 0) return serverRows;
+    const existing = new Set(serverRows.map((r) => `${r.name}|${r.category}`));
+    const stillPending: AssetMatrixRow[] = pendingRows
+      .filter((p) => !existing.has(`${p.name}|${p.category}`))
+      .map((p) => ({
+        name: p.name,
+        category: p.category as AssetMatrixRow["category"],
+        entries: {},
+        seedValue: null,
+      } as AssetMatrixRow));
+    return [...serverRows, ...stillPending];
+  }, [serverRows, pendingRows]);
+
+  // Drop pending rows that have been confirmed by the server.
+  useEffect(() => {
+    if (pendingRows.length === 0) return;
+    const existing = new Set(serverRows.map((r) => `${r.name}|${r.category}`));
+    const next = pendingRows.filter((p) => !existing.has(`${p.name}|${p.category}`));
+    if (next.length !== pendingRows.length) setPendingRows(next);
+  }, [serverRows, pendingRows]);
 
   const upsert = useUpsertAssetCell();
   const remove = useDeleteAssetCell();
@@ -115,16 +147,6 @@ export function AssetGrid({ onMutate }: { onMutate?: () => void }) {
     return (
       <div className="bg-card border rounded-xl p-10 text-center text-sm text-muted-foreground">
         {t("common.loading")}
-      </div>
-    );
-  }
-
-  if (rows.length === 0) {
-    return (
-      <div className="bg-card border rounded-xl p-10 text-center">
-        <p className="text-muted-foreground text-sm">
-          {t("netWorth.grid.empty")}
-        </p>
       </div>
     );
   }
@@ -191,6 +213,7 @@ export function AssetGrid({ onMutate }: { onMutate?: () => void }) {
                   </td>
                   {months.map((m, i) => {
                     const eff = effective[i];
+                    const shouldFocus = focusKey === `${row.name}|${row.category}` && i === 0;
                     return (
                       <td key={m} className="p-0.5">
                         <Cell
@@ -199,6 +222,8 @@ export function AssetGrid({ onMutate }: { onMutate?: () => void }) {
                           eff={eff}
                           decimalStep={decimalStep}
                           disabled={isPending}
+                          autoFocus={shouldFocus}
+                          onFocused={shouldFocus ? () => setFocusKey(null) : undefined}
                           onSave={async (next) => {
                             try {
                               if (next === "") {
@@ -240,6 +265,31 @@ export function AssetGrid({ onMutate }: { onMutate?: () => void }) {
                 </tr>
               );
             })}
+            <tr className="border-b last:border-0 bg-muted/5">
+              <td
+                colSpan={months.length + 1}
+                className="sticky left-0 px-3 py-1.5"
+              >
+                <AddAssetRow
+                  disabled={isPending}
+                  onAdd={(name, category) => {
+                    const key = `${name}|${category}`;
+                    const existsServer = serverRows.some((r) => `${r.name}|${r.category}` === key);
+                    const existsPending = pendingRows.some((p) => `${p.name}|${p.category}` === key);
+                    if (existsServer || existsPending) {
+                      toast({
+                        title: t("netWorth.grid.addRow.duplicate"),
+                        variant: "destructive",
+                      });
+                      return false;
+                    }
+                    setPendingRows((prev) => [...prev, { name, category }]);
+                    setFocusKey(key);
+                    return true;
+                  }}
+                />
+              </td>
+            </tr>
             <tr className="bg-primary/5 font-semibold">
               <td className="sticky left-0 z-10 bg-primary/5 px-3 py-2 text-xs text-foreground border-r">
                 {t("netWorth.grid.totalRow")}
@@ -263,6 +313,8 @@ function Cell({
   eff,
   decimalStep,
   disabled,
+  autoFocus,
+  onFocused,
   onSave,
 }: {
   row: AssetMatrixRow;
@@ -270,6 +322,8 @@ function Cell({
   eff: EffectiveCell | null;
   decimalStep: string;
   disabled: boolean;
+  autoFocus?: boolean;
+  onFocused?: () => void;
   onSave: (next: string) => Promise<void> | void;
 }) {
   // Display string. Empty when no value at all; explicit values render as plain text; carry-forward
@@ -285,6 +339,16 @@ function Cell({
       setDraft(initial);
     }
   }, [initial]);
+
+  // Move focus into this cell when requested (e.g. after adding a new asset row).
+  useEffect(() => {
+    if (autoFocus && ref.current) {
+      ref.current.focus();
+      ref.current.select();
+      onFocused?.();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoFocus]);
 
   const placeholder = eff && !eff.explicit
     ? eff.value.toLocaleString(undefined, { maximumFractionDigits: 2 })
@@ -324,5 +388,106 @@ function Cell({
         !eff && "placeholder:text-muted-foreground/30"
       )}
     />
+  );
+}
+
+function AddAssetRow({
+  disabled,
+  onAdd,
+}: {
+  disabled: boolean;
+  onAdd: (name: string, category: AssetCategoryLocal) => boolean;
+}) {
+  const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState("");
+  const [category, setCategory] = useState<AssetCategoryLocal>("Savings");
+  const nameRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (open && nameRef.current) nameRef.current.focus();
+  }, [open]);
+
+  const reset = () => {
+    setName("");
+    setCategory("Savings");
+    setOpen(false);
+  };
+
+  const confirm = () => {
+    const trimmed = name.trim();
+    if (!trimmed) {
+      nameRef.current?.focus();
+      return;
+    }
+    const ok = onAdd(trimmed, category);
+    if (ok) reset();
+  };
+
+  if (!open) {
+    return (
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={() => setOpen(true)}
+        className={cn(
+          "flex items-center gap-2 text-xs font-medium text-muted-foreground hover:text-foreground",
+          "px-2 py-1 rounded transition-colors",
+          disabled && "opacity-50 cursor-not-allowed"
+        )}
+      >
+        <span className="p-1 rounded bg-muted text-muted-foreground">
+          <Plus className="w-3.5 h-3.5" />
+        </span>
+        {t("netWorth.grid.addRow.cta")}
+      </button>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-2 flex-wrap">
+      <Input
+        ref={nameRef}
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            confirm();
+          } else if (e.key === "Escape") {
+            reset();
+          }
+        }}
+        placeholder={t("netWorth.dialog.namePlaceholder")}
+        disabled={disabled}
+        className="h-8 text-xs w-[200px]"
+      />
+      <Select value={category} onValueChange={(v) => setCategory(v as AssetCategoryLocal)}>
+        <SelectTrigger className="h-8 w-[140px] text-xs">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {ASSET_CATEGORIES.map((c) => (
+            <SelectItem key={c} value={c}>
+              {t(`netWorth.assetCategories.${c}`)}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <Button type="button" size="sm" onClick={confirm} disabled={disabled} className="h-8 text-xs">
+        {t("netWorth.grid.addRow.confirm")}
+      </Button>
+      <Button
+        type="button"
+        size="sm"
+        variant="ghost"
+        onClick={reset}
+        disabled={disabled}
+        className="h-8 px-2"
+        aria-label={t("common.cancel")}
+      >
+        <X className="w-3.5 h-3.5" />
+      </Button>
+    </div>
   );
 }
