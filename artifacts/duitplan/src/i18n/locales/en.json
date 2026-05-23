@@ -699,6 +699,24 @@
         "cta": "Add asset",
         "confirm": "Add",
         "duplicate": "An asset with that name and category already exists"
+      },
+      "rowActions": {
+        "menu": "Row actions",
+        "rename": "Rename",
+        "delete": "Delete",
+        "renameTitle": "Rename asset",
+        "renameDescription": "Update the name and category for every entry of this asset.",
+        "deleteTitle": "Delete this asset?",
+        "deleteDescription": "This will permanently remove all monthly entries for \"{{name}}\". This can't be undone.",
+        "renamed": "Asset renamed",
+        "renamedDetail": "{{count}} entry updated",
+        "renamedDetail_other": "{{count}} entries updated",
+        "deleted": "Asset deleted",
+        "deletedDetail": "{{count}} entry removed",
+        "deletedDetail_other": "{{count}} entries removed",
+        "renameFailed": "Couldn't rename asset",
+        "deleteFailed": "Couldn't delete asset",
+        "save": "Save"
       }
     },
     "liabilities": {

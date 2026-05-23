@@ -1196,6 +1196,47 @@ paths:
         "204":
           description: Deleted
 
+  /assets/row:
+    patch:
+      operationId: renameAssetRow
+      tags: [assets]
+      summary: Rename a (name, category) pair across all of its asset entries
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RenameAssetRowBody"
+      responses:
+        "200":
+          description: Number of entries updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AssetRowMutationResult"
+    delete:
+      operationId: deleteAssetRow
+      tags: [assets]
+      summary: Delete every asset entry for a (name, category) pair
+      parameters:
+        - name: name
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: category
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Number of entries deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AssetRowMutationResult"
+
   /assets/{id}:
     patch:
       operationId: updateAsset
@@ -2585,6 +2626,28 @@ components:
           type: ["string", "null"]
         month:
           type: ["string", "null"]
+
+    RenameAssetRowBody:
+      type: object
+      properties:
+        oldName:
+          type: string
+        oldCategory:
+          type: string
+          enum: [Savings, Property, Vehicle, Investment, Business, Other]
+        newName:
+          type: string
+        newCategory:
+          type: string
+          enum: [Savings, Property, Vehicle, Investment, Business, Other]
+      required: [oldName, oldCategory, newName, newCategory]
+
+    AssetRowMutationResult:
+      type: object
+      properties:
+        affected:
+          type: integer
+      required: [affected]
 
     ListAssetsQueryParams:
       type: object

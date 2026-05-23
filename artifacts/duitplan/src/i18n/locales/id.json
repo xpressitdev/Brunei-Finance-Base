@@ -692,6 +692,24 @@
         "cta": "Tambah aset",
         "confirm": "Tambah",
         "duplicate": "Aset dengan nama dan kategori itu sudah ada"
+      },
+      "rowActions": {
+        "menu": "Tindakan baris",
+        "rename": "Ganti nama",
+        "delete": "Hapus",
+        "renameTitle": "Ganti nama aset",
+        "renameDescription": "Perbarui nama dan kategori untuk setiap entri aset ini.",
+        "deleteTitle": "Hapus aset ini?",
+        "deleteDescription": "Ini akan menghapus semua entri bulanan untuk \"{{name}}\" secara permanen. Tindakan ini tidak dapat dibatalkan.",
+        "renamed": "Aset diganti namanya",
+        "renamedDetail": "{{count}} entri diperbarui",
+        "renamedDetail_other": "{{count}} entri diperbarui",
+        "deleted": "Aset dihapus",
+        "deletedDetail": "{{count}} entri dihapus",
+        "deletedDetail_other": "{{count}} entri dihapus",
+        "renameFailed": "Tidak dapat mengganti nama aset",
+        "deleteFailed": "Tidak dapat menghapus aset",
+        "save": "Simpan"
       }
     },
     "liabilities": {

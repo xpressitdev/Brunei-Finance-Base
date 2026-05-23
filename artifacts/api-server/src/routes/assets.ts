@@ -99,49 +99,11 @@ router.post("/assets", requireAuth, async (req: AuthenticatedRequest, res): Prom
   res.status(201).json(formatAsset(entry));
 });
 
-router.patch("/assets/:id", requireAuth, async (req: AuthenticatedRequest, res): Promise<void> => {
-  const parsed = UpdateAssetBody.safeParse(req.body);
-  if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
-
-  const { id } = req.params;
-  const updates: Partial<typeof assetEntriesTable.$inferInsert> = {};
-  if (parsed.data.category != null) updates.category = parsed.data.category;
-  if (parsed.data.name != null) updates.name = parsed.data.name;
-  if (parsed.data.value != null) {
-    const numericValue = parseFloat(parsed.data.value);
-    if (isNaN(numericValue) || numericValue < 0) {
-      res.status(400).json({ error: "value must be a non-negative number" }); return;
-    }
-    updates.value = parsed.data.value;
-  }
-  if (parsed.data.month != null) {
-    if (!MONTH_RE.test(parsed.data.month)) {
-      res.status(400).json({ error: "month must be in YYYY-MM format" }); return;
-    }
-    updates.month = parsed.data.month;
-  }
-
-  if (Object.keys(updates).length === 0) {
-    res.status(400).json({ error: "No fields to update" }); return;
-  }
-
-  const [updated] = await db.update(assetEntriesTable)
-    .set(updates)
-    .where(and(eq(assetEntriesTable.id, id), eq(assetEntriesTable.userId, req.userId!)))
-    .returning();
-
-  if (!updated) { res.status(404).json({ error: "Asset not found" }); return; }
-  res.json(formatAsset(updated));
-});
-
-router.delete("/assets/:id", requireAuth, async (req: AuthenticatedRequest, res): Promise<void> => {
-  const { id } = req.params;
-  await db.delete(assetEntriesTable)
-    .where(and(eq(assetEntriesTable.id, id), eq(assetEntriesTable.userId, req.userId!)));
-  res.sendStatus(204);
-});
-
 // --- Grid editor endpoints ---
+// IMPORTANT: these literal-path routes must be registered BEFORE the dynamic
+// `/assets/:id` routes below. Express matches routes in registration order, so
+// `/assets/:id` would otherwise swallow requests like `/assets/cell`,
+// `/assets/row`, and `/assets/matrix` (treating "cell"/"row"/"matrix" as the id).
 
 // GET /assets/matrix?months=12
 // Returns the grid view: distinct (name, category) rows × the last N months of explicit entries.
@@ -264,6 +226,107 @@ router.delete("/assets/cell", requireAuth, async (req: AuthenticatedRequest, res
     eq(assetEntriesTable.category, category as never),
     eq(assetEntriesTable.month, month),
   ));
+  res.sendStatus(204);
+});
+
+// PATCH /assets/row — rename a (name, category) pair across every entry it owns.
+// Rejects if the destination (newName, newCategory) already exists for this user (to avoid
+// silently merging two distinct asset rows, which would violate the per-month unique constraint).
+router.patch("/assets/row", requireAuth, async (req: AuthenticatedRequest, res): Promise<void> => {
+  // Inline validation to avoid the api-zod barrel re-export ambiguity that affects this lib;
+  // mirrors the validation style used by the sibling /assets/cell handlers above.
+  const body = req.body as { oldName?: unknown; oldCategory?: unknown; newName?: unknown; newCategory?: unknown };
+  const oldName = typeof body.oldName === "string" ? body.oldName : "";
+  const oldCategory = typeof body.oldCategory === "string" ? body.oldCategory : "";
+  const newName = typeof body.newName === "string" ? body.newName : "";
+  const newCategory = typeof body.newCategory === "string" ? body.newCategory : "";
+  if (!oldName) { res.status(400).json({ error: "oldName is required" }); return; }
+  if (!ASSET_CATEGORIES_SET.has(oldCategory)) { res.status(400).json({ error: "invalid oldCategory" }); return; }
+  if (!ASSET_CATEGORIES_SET.has(newCategory)) { res.status(400).json({ error: "invalid newCategory" }); return; }
+  const trimmedNewName = newName.trim();
+  if (!trimmedNewName) { res.status(400).json({ error: "newName is required" }); return; }
+
+  const sameRow = oldName === trimmedNewName && oldCategory === newCategory;
+  if (sameRow) { res.json({ affected: 0 }); return; }
+
+  // Conflict check against the destination row.
+  const existing = await db.select({ id: assetEntriesTable.id }).from(assetEntriesTable).where(and(
+    eq(assetEntriesTable.userId, req.userId!),
+    eq(assetEntriesTable.name, trimmedNewName),
+    eq(assetEntriesTable.category, newCategory as never),
+  )).limit(1);
+  if (existing.length > 0) {
+    res.status(409).json({ error: "An asset with that name and category already exists" });
+    return;
+  }
+
+  const updated = await db.update(assetEntriesTable)
+    .set({ name: trimmedNewName, category: newCategory as never, updatedAt: new Date() })
+    .where(and(
+      eq(assetEntriesTable.userId, req.userId!),
+      eq(assetEntriesTable.name, oldName),
+      eq(assetEntriesTable.category, oldCategory as never),
+    ))
+    .returning({ id: assetEntriesTable.id });
+  res.json({ affected: updated.length });
+});
+
+// DELETE /assets/row?name=&category= — delete every entry for a (name, category) pair.
+router.delete("/assets/row", requireAuth, async (req: AuthenticatedRequest, res): Promise<void> => {
+  const name = typeof req.query.name === "string" ? req.query.name : "";
+  const category = typeof req.query.category === "string" ? req.query.category : "";
+  if (!name) { res.status(400).json({ error: "name is required" }); return; }
+  if (!ASSET_CATEGORIES_SET.has(category)) { res.status(400).json({ error: "invalid category" }); return; }
+
+  const deleted = await db.delete(assetEntriesTable).where(and(
+    eq(assetEntriesTable.userId, req.userId!),
+    eq(assetEntriesTable.name, name),
+    eq(assetEntriesTable.category, category as never),
+  )).returning({ id: assetEntriesTable.id });
+  res.json({ affected: deleted.length });
+});
+
+// Dynamic-id routes come LAST so the literal `/assets/{cell,row,matrix}` paths above
+// take precedence.
+router.patch("/assets/:id", requireAuth, async (req: AuthenticatedRequest, res): Promise<void> => {
+  const parsed = UpdateAssetBody.safeParse(req.body);
+  if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
+
+  const { id } = req.params;
+  const updates: Partial<typeof assetEntriesTable.$inferInsert> = {};
+  if (parsed.data.category != null) updates.category = parsed.data.category;
+  if (parsed.data.name != null) updates.name = parsed.data.name;
+  if (parsed.data.value != null) {
+    const numericValue = parseFloat(parsed.data.value);
+    if (isNaN(numericValue) || numericValue < 0) {
+      res.status(400).json({ error: "value must be a non-negative number" }); return;
+    }
+    updates.value = parsed.data.value;
+  }
+  if (parsed.data.month != null) {
+    if (!MONTH_RE.test(parsed.data.month)) {
+      res.status(400).json({ error: "month must be in YYYY-MM format" }); return;
+    }
+    updates.month = parsed.data.month;
+  }
+
+  if (Object.keys(updates).length === 0) {
+    res.status(400).json({ error: "No fields to update" }); return;
+  }
+
+  const [updated] = await db.update(assetEntriesTable)
+    .set(updates)
+    .where(and(eq(assetEntriesTable.id, id), eq(assetEntriesTable.userId, req.userId!)))
+    .returning();
+
+  if (!updated) { res.status(404).json({ error: "Asset not found" }); return; }
+  res.json(formatAsset(updated));
+});
+
+router.delete("/assets/:id", requireAuth, async (req: AuthenticatedRequest, res): Promise<void> => {
+  const { id } = req.params;
+  await db.delete(assetEntriesTable)
+    .where(and(eq(assetEntriesTable.id, id), eq(assetEntriesTable.userId, req.userId!)));
   res.sendStatus(204);
 });
 

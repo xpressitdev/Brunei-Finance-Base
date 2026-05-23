@@ -740,6 +740,41 @@ export interface UpdateAssetBody {
   month?: string | null;
 }
 
+export type RenameAssetRowBodyOldCategory =
+  (typeof RenameAssetRowBodyOldCategory)[keyof typeof RenameAssetRowBodyOldCategory];
+
+export const RenameAssetRowBodyOldCategory = {
+  Savings: "Savings",
+  Property: "Property",
+  Vehicle: "Vehicle",
+  Investment: "Investment",
+  Business: "Business",
+  Other: "Other",
+} as const;
+
+export type RenameAssetRowBodyNewCategory =
+  (typeof RenameAssetRowBodyNewCategory)[keyof typeof RenameAssetRowBodyNewCategory];
+
+export const RenameAssetRowBodyNewCategory = {
+  Savings: "Savings",
+  Property: "Property",
+  Vehicle: "Vehicle",
+  Investment: "Investment",
+  Business: "Business",
+  Other: "Other",
+} as const;
+
+export interface RenameAssetRowBody {
+  oldName: string;
+  oldCategory: RenameAssetRowBodyOldCategory;
+  newName: string;
+  newCategory: RenameAssetRowBodyNewCategory;
+}
+
+export interface AssetRowMutationResult {
+  affected: number;
+}
+
 export interface ListAssetsQueryParams {
   /** @nullable */
   month?: string | null;
@@ -1044,4 +1079,9 @@ export type DeleteAssetCellParams = {
   name: string;
   category: string;
   month: string;
+};
+
+export type DeleteAssetRowParams = {
+  name: string;
+  category: string;
 };

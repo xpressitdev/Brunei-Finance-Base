@@ -1131,6 +1131,46 @@ export const DeleteAssetCellQueryParams = zod.object({
 });
 
 /**
+ * @summary Rename a (name, category) pair across all of its asset entries
+ */
+export const RenameAssetRowBody = zod.object({
+  oldName: zod.string(),
+  oldCategory: zod.enum([
+    "Savings",
+    "Property",
+    "Vehicle",
+    "Investment",
+    "Business",
+    "Other",
+  ]),
+  newName: zod.string(),
+  newCategory: zod.enum([
+    "Savings",
+    "Property",
+    "Vehicle",
+    "Investment",
+    "Business",
+    "Other",
+  ]),
+});
+
+export const RenameAssetRowResponse = zod.object({
+  affected: zod.number(),
+});
+
+/**
+ * @summary Delete every asset entry for a (name, category) pair
+ */
+export const DeleteAssetRowQueryParams = zod.object({
+  name: zod.coerce.string(),
+  category: zod.coerce.string(),
+});
+
+export const DeleteAssetRowResponse = zod.object({
+  affected: zod.number(),
+});
+
+/**
  * @summary Update an asset entry
  */
 export const UpdateAssetParams = zod.object({

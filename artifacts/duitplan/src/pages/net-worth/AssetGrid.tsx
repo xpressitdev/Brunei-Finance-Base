@@ -5,9 +5,36 @@ import {
   useGetAssetMatrix,
   useUpsertAssetCell,
   useDeleteAssetCell,
+  useRenameAssetRow,
+  useDeleteAssetRow,
   getGetAssetMatrixQueryKey,
 } from "@workspace/api-client-react";
 import type { AssetMatrix, AssetMatrixRow } from "@workspace/api-client-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,7 +44,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Landmark, Home, Car, TrendingUp, Briefcase, Package, Info, Plus, X } from "lucide-react";
+import { Landmark, Home, Car, TrendingUp, Briefcase, Package, Info, Plus, X, MoreVertical, Pencil, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useRegion } from "@/hooks/useRegion";
@@ -119,6 +146,15 @@ export function AssetGrid({ onMutate }: { onMutate?: () => void }) {
 
   const upsert = useUpsertAssetCell();
   const remove = useDeleteAssetCell();
+  const renameRow = useRenameAssetRow();
+  const deleteRow = useDeleteAssetRow();
+
+  // Row-action dialog state. We track the row identity (name+category) so the dialogs survive
+  // server-driven matrix reshuffles while open.
+  const [renameTarget, setRenameTarget] = useState<{ name: string; category: AssetCategoryLocal } | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ name: string; category: AssetCategoryLocal } | null>(null);
+
+  const rowKeySet = useMemo(() => new Set(rows.map((r) => `${r.name}|${r.category}`)), [rows]);
 
   const invalidate = useCallback(() => {
     qc.invalidateQueries({ queryKey: getGetAssetMatrixQueryKey({ months: monthsCount }) });
@@ -245,12 +281,41 @@ export function AssetGrid({ onMutate }: { onMutate?: () => void }) {
                       <span className={cn("p-1 rounded", CATEGORY_BG[row.category] ?? CATEGORY_BG.Other)}>
                         {CATEGORY_ICONS[row.category] ?? CATEGORY_ICONS.Other}
                       </span>
-                      <div className="min-w-0">
+                      <div className="min-w-0 flex-1">
                         <p className="text-xs font-medium text-foreground truncate" title={row.name}>{row.name}</p>
                         <p className="text-[10px] text-muted-foreground">
                           {t(`netWorth.assetCategories.${row.category}`)}
                         </p>
                       </div>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 shrink-0 text-muted-foreground hover:text-foreground"
+                            disabled={isPending || renameRow.isPending || deleteRow.isPending}
+                            aria-label={t("netWorth.grid.rowActions.menu")}
+                          >
+                            <MoreVertical className="w-3.5 h-3.5" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-[140px]">
+                          <DropdownMenuItem
+                            onSelect={() => setRenameTarget({ name: row.name, category: row.category as AssetCategoryLocal })}
+                          >
+                            <Pencil className="w-3.5 h-3.5 mr-2" />
+                            {t("netWorth.grid.rowActions.rename")}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="text-destructive focus:text-destructive"
+                            onSelect={() => setDeleteTarget({ name: row.name, category: row.category as AssetCategoryLocal })}
+                          >
+                            <Trash2 className="w-3.5 h-3.5 mr-2" />
+                            {t("netWorth.grid.rowActions.delete")}
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   </td>
                   {months.map((m, i) => {
@@ -348,7 +413,165 @@ export function AssetGrid({ onMutate }: { onMutate?: () => void }) {
           </tbody>
         </table>
       </div>
+
+      <RenameRowDialog
+        target={renameTarget}
+        onClose={() => setRenameTarget(null)}
+        existingKeys={rowKeySet}
+        isPending={renameRow.isPending}
+        onSubmit={async (newName, newCategory) => {
+          if (!renameTarget) return;
+          try {
+            const result = await renameRow.mutateAsync({
+              data: {
+                oldName: renameTarget.name,
+                oldCategory: renameTarget.category,
+                newName,
+                newCategory,
+              },
+            });
+            invalidate();
+            setRenameTarget(null);
+            toast({
+              title: t("netWorth.grid.rowActions.renamed"),
+              description: t("netWorth.grid.rowActions.renamedDetail", { count: result.affected }),
+            });
+          } catch (err) {
+            toast({
+              title: t("netWorth.grid.rowActions.renameFailed"),
+              description: err instanceof Error ? err.message : String(err),
+              variant: "destructive",
+            });
+          }
+        }}
+      />
+
+      <AlertDialog open={deleteTarget != null} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("netWorth.grid.rowActions.deleteTitle")}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("netWorth.grid.rowActions.deleteDescription", { name: deleteTarget?.name ?? "" })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteRow.isPending}>{t("common.cancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={deleteRow.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={async (e) => {
+                e.preventDefault();
+                if (!deleteTarget) return;
+                try {
+                  const result = await deleteRow.mutateAsync({
+                    params: { name: deleteTarget.name, category: deleteTarget.category },
+                  });
+                  invalidate();
+                  setDeleteTarget(null);
+                  toast({
+                    title: t("netWorth.grid.rowActions.deleted"),
+                    description: t("netWorth.grid.rowActions.deletedDetail", { count: result.affected }),
+                  });
+                } catch (err) {
+                  toast({
+                    title: t("netWorth.grid.rowActions.deleteFailed"),
+                    description: err instanceof Error ? err.message : String(err),
+                    variant: "destructive",
+                  });
+                }
+              }}
+            >
+              {t("netWorth.grid.rowActions.delete")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
+  );
+}
+
+function RenameRowDialog({
+  target,
+  existingKeys,
+  isPending,
+  onClose,
+  onSubmit,
+}: {
+  target: { name: string; category: AssetCategoryLocal } | null;
+  existingKeys: Set<string>;
+  isPending: boolean;
+  onClose: () => void;
+  onSubmit: (newName: string, newCategory: AssetCategoryLocal) => void;
+}) {
+  const { t } = useTranslation();
+  const { toast } = useToast();
+  const [name, setName] = useState("");
+  const [category, setCategory] = useState<AssetCategoryLocal>("Savings");
+
+  // Reset form whenever a new target is opened.
+  useEffect(() => {
+    if (target) {
+      setName(target.name);
+      setCategory(target.category);
+    }
+  }, [target]);
+
+  const submit = () => {
+    if (!target) return;
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    if (trimmed === target.name && category === target.category) {
+      onClose();
+      return;
+    }
+    if (existingKeys.has(`${trimmed}|${category}`)) {
+      toast({ title: t("netWorth.grid.addRow.duplicate"), variant: "destructive" });
+      return;
+    }
+    onSubmit(trimmed, category);
+  };
+
+  return (
+    <Dialog open={target != null} onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent className="sm:max-w-[420px]">
+        <DialogHeader>
+          <DialogTitle>{t("netWorth.grid.rowActions.renameTitle")}</DialogTitle>
+          <DialogDescription>{t("netWorth.grid.rowActions.renameDescription")}</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3 py-2">
+          <div className="space-y-1.5">
+            <Label htmlFor="rename-asset-name" className="text-xs">{t("netWorth.dialog.nameLabel")}</Label>
+            <Input
+              id="rename-asset-name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); submit(); } }}
+              disabled={isPending}
+              autoFocus
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs">{t("netWorth.dialog.categoryLabel")}</Label>
+            <Select value={category} onValueChange={(v) => setCategory(v as AssetCategoryLocal)} disabled={isPending}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {ASSET_CATEGORIES.map((c) => (
+                  <SelectItem key={c} value={c}>{t(`netWorth.assetCategories.${c}`)}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button type="button" variant="ghost" onClick={onClose} disabled={isPending}>
+            {t("common.cancel")}
+          </Button>
+          <Button type="button" onClick={submit} disabled={isPending || !name.trim()}>
+            {t("netWorth.grid.rowActions.save")}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 

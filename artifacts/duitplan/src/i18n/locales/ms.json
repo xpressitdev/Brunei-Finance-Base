@@ -692,6 +692,24 @@
         "cta": "Tambah aset",
         "confirm": "Tambah",
         "duplicate": "Aset dengan nama dan kategori itu sudah wujud"
+      },
+      "rowActions": {
+        "menu": "Tindakan baris",
+        "rename": "Namakan semula",
+        "delete": "Padam",
+        "renameTitle": "Namakan semula aset",
+        "renameDescription": "Kemas kini nama dan kategori untuk setiap rekod aset ini.",
+        "deleteTitle": "Padam aset ini?",
+        "deleteDescription": "Ini akan memadam semua rekod bulanan untuk \"{{name}}\" secara kekal. Tindakan ini tidak boleh dibatalkan.",
+        "renamed": "Aset dinamakan semula",
+        "renamedDetail": "{{count}} rekod dikemas kini",
+        "renamedDetail_other": "{{count}} rekod dikemas kini",
+        "deleted": "Aset dipadam",
+        "deletedDetail": "{{count}} rekod dibuang",
+        "deletedDetail_other": "{{count}} rekod dibuang",
+        "renameFailed": "Tidak dapat menamakan semula aset",
+        "deleteFailed": "Tidak dapat memadam aset",
+        "save": "Simpan"
       }
     },
     "liabilities": {

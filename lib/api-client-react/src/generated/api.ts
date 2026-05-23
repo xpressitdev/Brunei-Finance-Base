@@ -20,6 +20,7 @@ import type {
   Account,
   AssetEntry,
   AssetMatrix,
+  AssetRowMutationResult,
   AuthResponse,
   AuthUser,
   BalanceHistoryPoint,
@@ -42,6 +43,7 @@ import type {
   DebtSchedule,
   DebtSimulateBody,
   DeleteAssetCellParams,
+  DeleteAssetRowParams,
   ErrorResponse,
   ForgotPasswordBody,
   ForgotPasswordResponse,
@@ -70,6 +72,7 @@ import type {
   OnboardingStatus,
   Profile,
   RegisterBody,
+  RenameAssetRowBody,
   RequestUploadUrlBody,
   RequestUploadUrlResponse,
   ResetDataResponse,
@@ -4951,6 +4954,188 @@ export const useDeleteAssetCell = <
   TContext
 > => {
   return useMutation(getDeleteAssetCellMutationOptions(options));
+};
+
+/**
+ * @summary Rename a (name, category) pair across all of its asset entries
+ */
+export const getRenameAssetRowUrl = () => {
+  return `/api/assets/row`;
+};
+
+export const renameAssetRow = async (
+  renameAssetRowBody: RenameAssetRowBody,
+  options?: RequestInit,
+): Promise<AssetRowMutationResult> => {
+  return customFetch<AssetRowMutationResult>(getRenameAssetRowUrl(), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(renameAssetRowBody),
+  });
+};
+
+export const getRenameAssetRowMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof renameAssetRow>>,
+    TError,
+    { data: BodyType<RenameAssetRowBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof renameAssetRow>>,
+  TError,
+  { data: BodyType<RenameAssetRowBody> },
+  TContext
+> => {
+  const mutationKey = ["renameAssetRow"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof renameAssetRow>>,
+    { data: BodyType<RenameAssetRowBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return renameAssetRow(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RenameAssetRowMutationResult = NonNullable<
+  Awaited<ReturnType<typeof renameAssetRow>>
+>;
+export type RenameAssetRowMutationBody = BodyType<RenameAssetRowBody>;
+export type RenameAssetRowMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Rename a (name, category) pair across all of its asset entries
+ */
+export const useRenameAssetRow = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof renameAssetRow>>,
+    TError,
+    { data: BodyType<RenameAssetRowBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof renameAssetRow>>,
+  TError,
+  { data: BodyType<RenameAssetRowBody> },
+  TContext
+> => {
+  return useMutation(getRenameAssetRowMutationOptions(options));
+};
+
+/**
+ * @summary Delete every asset entry for a (name, category) pair
+ */
+export const getDeleteAssetRowUrl = (params: DeleteAssetRowParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/assets/row?${stringifiedParams}`
+    : `/api/assets/row`;
+};
+
+export const deleteAssetRow = async (
+  params: DeleteAssetRowParams,
+  options?: RequestInit,
+): Promise<AssetRowMutationResult> => {
+  return customFetch<AssetRowMutationResult>(getDeleteAssetRowUrl(params), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteAssetRowMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteAssetRow>>,
+    TError,
+    { params: DeleteAssetRowParams },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteAssetRow>>,
+  TError,
+  { params: DeleteAssetRowParams },
+  TContext
+> => {
+  const mutationKey = ["deleteAssetRow"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteAssetRow>>,
+    { params: DeleteAssetRowParams }
+  > = (props) => {
+    const { params } = props ?? {};
+
+    return deleteAssetRow(params, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteAssetRowMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteAssetRow>>
+>;
+
+export type DeleteAssetRowMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Delete every asset entry for a (name, category) pair
+ */
+export const useDeleteAssetRow = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteAssetRow>>,
+    TError,
+    { params: DeleteAssetRowParams },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof deleteAssetRow>>,
+  TError,
+  { params: DeleteAssetRowParams },
+  TContext
+> => {
+  return useMutation(getDeleteAssetRowMutationOptions(options));
 };
 
 /**
