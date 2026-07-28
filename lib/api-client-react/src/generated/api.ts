@@ -4050,6 +4050,9 @@ export const uploadStatement = async (
 ): Promise<UploadedDocument> => {
   const formData = new FormData();
   formData.append(`bankType`, uploadStatementBody.bankType);
+  if (uploadStatementBody.inputMethod !== undefined) {
+    formData.append(`inputMethod`, uploadStatementBody.inputMethod);
+  }
   formData.append(`file`, uploadStatementBody.file);
 
   return customFetch<UploadedDocument>(getUploadStatementUrl(), {

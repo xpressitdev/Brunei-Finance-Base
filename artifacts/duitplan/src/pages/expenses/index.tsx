@@ -99,11 +99,25 @@ async function compressImage(file: File): Promise<{ base64: string; mimeType: st
     const url = URL.createObjectURL(file);
     img.onload = () => {
       URL.revokeObjectURL(url);
-      const maxDim = 800;
       let { width, height } = img;
-      if (width > maxDim || height > maxDim) {
-        if (width > height) { height = Math.round((height / width) * maxDim); width = maxDim; }
-        else { width = Math.round((width / height) * maxDim); height = maxDim; }
+      const aspect = height / Math.max(width, 1);
+      if (aspect > 2.5 || width / Math.max(height, 1) > 2.5) {
+        // Very tall (or wide) image — almost certainly a bank SMS thread
+        // screenshot. Cap only the short side so the message text stays
+        // readable; the server slices tall images before OCR.
+        const maxShort = 700;
+        const shortSide = Math.min(width, height);
+        if (shortSide > maxShort) {
+          const scale = maxShort / shortSide;
+          width = Math.round(width * scale);
+          height = Math.round(height * scale);
+        }
+      } else {
+        const maxDim = 800;
+        if (width > maxDim || height > maxDim) {
+          if (width > height) { height = Math.round((height / width) * maxDim); width = maxDim; }
+          else { width = Math.round((width / height) * maxDim); height = maxDim; }
+        }
       }
       const canvas = document.createElement("canvas");
       canvas.width = width;
@@ -301,6 +315,18 @@ export default function Expenses() {
       const result = await scanMutation.mutateAsync({
         data: { imageBase64: base64, mimeType },
       });
+
+      // Bank SMS screenshot with multiple transactions: the server staged
+      // them for review (with duplicate detection) — take the user there.
+      if (result.uploadId) {
+        setIsAddOpen(false);
+        toast({
+          title: t("expenseTracker.smsDetected.title", "Bank SMS screenshot detected"),
+          description: t("expenseTracker.smsDetected.description", "Found {{count}} transactions — review them before importing.", { count: result.transactionCount ?? 0 }),
+        });
+        setLocation(`/upload/${result.uploadId}/review`);
+        return;
+      }
 
       const updates: Partial<FormState> = {};
       if (result.merchant) updates.merchant = result.merchant;

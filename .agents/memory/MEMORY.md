@@ -1,0 +1,1 @@
+- [Tall screenshots need slicing before vision OCR](vision-tall-screenshots.md) — tall SMS-thread images collapse to unreadable thumbnails; slice into overlapping segments; all import surfaces must dedupe via the review flow.

@@ -69,6 +69,8 @@ app.use(
 
 app.use(
   express.json({
+    // Receipt/SMS-screenshot scans post base64 images; default 100kb is far too small.
+    limit: "15mb",
     verify: (req, _res, buf) => {
       req.rawBody = buf;
     },

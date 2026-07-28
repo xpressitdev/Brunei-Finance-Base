@@ -115,6 +115,10 @@
   "expenseTracker": {
     "title": "Pengimbas Resit",
     "subtitle": "Jejak semua transaksi",
+    "smsDetected": {
+      "title": "Tangkapan skrin SMS bank dikesan",
+      "description": "{{count}} transaksi ditemui — semak sebelum diimport."
+    },
     "today": "Hari ini",
     "receipt": "Resit",
     "uncategorized": "Tanpa kategori",

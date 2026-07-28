@@ -8,5 +8,8 @@
 
 export interface UploadStatementBody {
   bankType: string;
+  /** 'screenshot' for bank SMS/notification screenshots, omitted/other for PDF statements. */
+  inputMethod?: string;
+  /** The statement PDF or first screenshot. The `file` part may be repeated (up to 10) to send multiple screenshots in one request; all are merged into a single review document. */
   file: Blob;
 }

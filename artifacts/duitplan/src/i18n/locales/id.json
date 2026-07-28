@@ -115,6 +115,10 @@
   "expenseTracker": {
     "title": "Pemindai Struk",
     "subtitle": "Lacak semua transaksi",
+    "smsDetected": {
+      "title": "Tangkapan layar SMS bank terdeteksi",
+      "description": "Ditemukan {{count}} transaksi — tinjau sebelum diimpor."
+    },
     "today": "Hari ini",
     "receipt": "Kwitansi",
     "uncategorized": "Tanpa kategori",

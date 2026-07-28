@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "wouter";
-import { useUploadStatement } from "@workspace/api-client-react";
+import { useUploadStatement, customFetch, getUploadStatementUrl, type UploadedDocument } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -45,25 +45,45 @@ export default function Upload() {
     setScreenshots(screenshots.filter((_, i) => i !== index));
   };
 
+  const [isUploadingScreenshots, setIsUploadingScreenshots] = useState(false);
+
   const handleUpload = async () => {
-    const uploadFile = tab === "pdf" ? file : screenshots[0] ?? null;
-    if (!uploadFile) {
+    if (tab === "pdf" ? !file : screenshots.length === 0) {
       setError(tab === "pdf" ? t("upload.errors.noPdf") : t("upload.errors.noScreenshots"));
       return;
     }
 
     setTrialExpiredError(false);
     try {
-      const result = await uploadMutation.mutateAsync({
-        data: { file: uploadFile, bankType },
-      });
+      let result: UploadedDocument;
+      if (tab === "screenshot") {
+        // Send ALL selected screenshots in one request — the server merges
+        // every SMS message it can read into a single review document and
+        // de-duplicates overlapping screenshots.
+        setIsUploadingScreenshots(true);
+        const formData = new FormData();
+        formData.append("bankType", bankType);
+        formData.append("inputMethod", "screenshot");
+        for (const s of screenshots) formData.append("file", s);
+        result = await customFetch<UploadedDocument>(getUploadStatementUrl(), {
+          method: "POST",
+          body: formData,
+        });
+      } else {
+        result = await uploadMutation.mutateAsync({
+          data: { file: file!, bankType },
+        });
+      }
       setLocation(`/upload/${result.id}/review`);
     } catch (err) {
       if (isTrialExpiredError(err)) {
         setTrialExpiredError(true);
       } else {
-        setError(t("upload.errors.uploadFailed"));
+        const msg = (err as { error?: string } | undefined)?.error;
+        setError(msg || t("upload.errors.uploadFailed"));
       }
+    } finally {
+      setIsUploadingScreenshots(false);
     }
   };
 
@@ -272,9 +292,9 @@ export default function Upload() {
           <Button
             className="w-full h-11"
             onClick={handleUpload}
-            disabled={uploadMutation.isPending || (tab === "pdf" ? !file : screenshots.length === 0)}
+            disabled={uploadMutation.isPending || isUploadingScreenshots || (tab === "pdf" ? !file : screenshots.length === 0)}
           >
-            {uploadMutation.isPending
+            {(uploadMutation.isPending || isUploadingScreenshots)
               ? (tab === "screenshot"
                   ? t("upload.processing.readingScreenshots")
                   : t("upload.processing.parsingStatement"))

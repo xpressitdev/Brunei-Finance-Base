@@ -1,8 +1,10 @@
 import { Router, type IRouter } from "express";
 import { eq } from "drizzle-orm";
-import { db, categoriesTable } from "@workspace/db";
+import { v4 as uuidv4 } from "uuid";
+import { db, categoriesTable, uploadedDocumentsTable, importedTransactionRowsTable } from "@workspace/db";
 import { requireAuth, type AuthenticatedRequest } from "../lib/auth";
 import { openai } from "@workspace/integrations-openai-ai-server";
+import { extractTransactionsFromImage } from "../lib/smsExtract";
 
 const router: IRouter = Router();
 
@@ -28,6 +30,59 @@ router.post("/receipt/scan", requireAuth, async (req: AuthenticatedRequest, res)
   const categoryNamesText = categoryNamesList.length > 0
     ? categoryNamesList.map((n) => `"${n}"`).join(", ")
     : "(no categories yet — return null for the category field)";
+
+  // A "receipt" photo might actually be a screenshot of a bank SMS thread
+  // containing MANY transactions (users screenshot their BIBD alerts instead
+  // of photographing every receipt). Detect that case first and stage all
+  // extracted transactions for review — the review flow flags duplicates.
+  const smsResult = await extractTransactionsFromImage({
+    imageBase64,
+    mimeType,
+    categoryNames: categoryNamesList,
+  }).catch(() => null);
+
+  if (smsResult) {
+    req.log.info({ kind: smsResult.kind, count: smsResult.transactions.length }, "receipt scan pre-classification");
+  }
+  // Route to the review flow when the image is an SMS thread OR when more
+  // than one transaction was found (regardless of classification).
+  if (smsResult && (smsResult.kind === "sms" || smsResult.transactions.length > 1) && smsResult.transactions.length > 0) {
+    const docId = uuidv4();
+    const fileName = `sms_screenshot_${Date.now()}.jpg`;
+    await db.insert(uploadedDocumentsTable).values({
+      id: docId,
+      userId: req.userId!,
+      fileName,
+      storagePath: `/receipt-scan/${docId}/${fileName}`,
+      bankType: "bibd",
+      parseStatus: "parsed",
+    });
+    await db.insert(importedTransactionRowsTable).values(smsResult.transactions.map((txn) => ({
+      id: uuidv4(),
+      uploadedDocumentId: docId,
+      rawDate: txn.date,
+      rawDescription: txn.description,
+      rawAmount: txn.amount,
+      normalizedDate: new Date(txn.date),
+      normalizedDescription: txn.description,
+      normalizedAmount: txn.amount,
+      type: txn.type,
+      categorySuggestion: txn.category ?? "",
+      confidence: "0.9000",
+      status: "parsed",
+    })));
+    res.json({
+      merchant: null,
+      amount: null,
+      date: null,
+      description: null,
+      category: null,
+      categoryId: null,
+      uploadId: docId,
+      transactionCount: smsResult.transactions.length,
+    });
+    return;
+  }
 
   const response = await openai.chat.completions.create({
     model: "gpt-5-mini",

@@ -115,6 +115,10 @@
   "expenseTracker": {
     "title": "Receipt Scanner",
     "subtitle": "Track every transaction",
+    "smsDetected": {
+      "title": "Bank SMS screenshot detected",
+      "description": "Found {{count}} transactions — review them before importing."
+    },
     "today": "Today",
     "receipt": "Receipt",
     "uncategorized": "Uncategorized",

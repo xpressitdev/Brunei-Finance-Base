@@ -878,7 +878,17 @@ export const GetRecentTransactionsResponse = zod.array(
  */
 export const UploadStatementBody = zod.object({
   bankType: zod.string(),
-  file: zod.instanceof(File),
+  inputMethod: zod
+    .string()
+    .optional()
+    .describe(
+      "'screenshot' for bank SMS\/notification screenshots, omitted\/other for PDF statements.",
+    ),
+  file: zod
+    .instanceof(File)
+    .describe(
+      "The statement PDF or first screenshot. The `file` part may be repeated (up to 10) to send multiple screenshots in one request; all are merged into a single review document.",
+    ),
 });
 
 /**
@@ -1410,6 +1420,16 @@ export const ScanReceiptResponse = zod.object({
     .describe(
       "Server-resolved category id for `category` (exact or case-insensitive name match), or null if no match.",
     ),
+  uploadId: zod
+    .string()
+    .nullish()
+    .describe(
+      "Set when the image was a bank SMS\/notification screenshot containing multiple transactions. They were staged for review; open \/upload\/{uploadId}\/review.",
+    ),
+  transactionCount: zod
+    .number()
+    .nullish()
+    .describe("Number of transactions staged when uploadId is set."),
 });
 
 /**

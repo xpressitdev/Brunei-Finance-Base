@@ -25,6 +25,7 @@ import {
 import { requireAuth, type AuthenticatedRequest } from "../lib/auth";
 import { openai } from "@workspace/integrations-openai-ai-server";
 import { ObjectStorageService, ObjectNotFoundError } from "../lib/objectStorage";
+import { prepareImageSlices } from "../lib/smsExtract";
 
 const router: IRouter = Router();
 const objectStorage = new ObjectStorageService();
@@ -140,6 +141,8 @@ You automatically select one of three modes per message:
 
 MODE 1 — DOCUMENT MODE: Triggered when the user attaches an image or provides PDF text.
   • Parse every line item you can find in the document
+  • Bank SMS screenshots: users often attach a screenshot of their BIBD/Baiduri SMS or notification thread. Each message like "Your account ...1234 has been debited BND 12.50 at GIANT SUPERSTORE on 27/07/26" is ONE transaction ("debited"=debit, "credited"=credit). Parse every such message; skip OTP codes, balance enquiries, promos, and declined transactions. If the same transaction appears twice in the thread, include it once. Convert DD/MM/YY dates to YYYY-MM-DD.
+  • Duplicates are checked again at import review, so the user won't double-record a purchase they already logged — you can reassure them of this.
   • Show the user a concise summary first (e.g., "I found 3 transactions totalling BND 47.50")
   • ALWAYS output the structured \`\`\`transactions\`\`\` block below so items can be staged for import
   • Then ask: "Shall I add these to your records?" — wait for confirmation before telling the user the import is in progress
@@ -448,13 +451,20 @@ router.post("/agent/chat", requireAuth, async (req: AuthenticatedRequest, res: R
       const buffer = await downloadStorageFileAsBuffer(att.url, req.userId!).catch(() => null);
       if (buffer) {
         const base64 = buffer.toString("base64");
-        userContentParts.push({
-          type: "image_url",
-          image_url: {
-            url: `data:${att.mimeType};base64,${base64}`,
-            detail: "high",
-          },
-        });
+        // Tall SMS-thread screenshots get downscaled to unreadable thumbnails
+        // by the vision model — slice them into readable segments first.
+        const slices = await prepareImageSlices(base64).catch(() => [
+          { base64, mimeType: att.mimeType },
+        ]);
+        for (const s of slices) {
+          userContentParts.push({
+            type: "image_url",
+            image_url: {
+              url: `data:${s.mimeType};base64,${s.base64}`,
+              detail: "high",
+            },
+          });
+        }
       }
     } else if (att.type === "pdf" && att.url) {
       const buffer = await downloadStorageFileAsBuffer(att.url, req.userId!).catch(() => null);

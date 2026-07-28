@@ -22,4 +22,14 @@ export interface ScanReceiptResponse {
    * @nullable
    */
   categoryId?: string | null;
+  /**
+   * Set when the image was a bank SMS/notification screenshot containing multiple transactions. They were staged for review; open /upload/{uploadId}/review.
+   * @nullable
+   */
+  uploadId?: string | null;
+  /**
+   * Number of transactions staged when uploadId is set.
+   * @nullable
+   */
+  transactionCount?: number | null;
 }

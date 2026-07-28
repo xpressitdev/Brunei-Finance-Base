@@ -7,6 +7,7 @@ import { GetImportedRowsParams, ConfirmImportParams, ConfirmImportBody } from "@
 import { requireAuth, type AuthenticatedRequest } from "../lib/auth";
 import { requireAccess } from "../lib/access";
 import { parseBibdStatement, type ParsedRow as BibdParsedRow } from "../lib/parsers/bibd.js";
+import { extractTransactionsFromImage } from "../lib/smsExtract";
 
 const router: IRouter = Router();
 
@@ -52,35 +53,54 @@ function mockParseStatement(bankType: string, fileName: string): Array<{
   return rows;
 }
 
-router.post("/uploads", requireAuth, requireAccess, uploadMw.single("file"), async (req: AuthenticatedRequest, res): Promise<void> => {
+router.post("/uploads", requireAuth, requireAccess, uploadMw.array("file", 10), async (req: AuthenticatedRequest, res): Promise<void> => {
   const { bankType, inputMethod } = req.body as { bankType?: string; inputMethod?: string };
   if (!bankType || !["bibd", "baiduri"].includes(bankType)) {
     res.status(400).json({ error: "bankType must be 'bibd' or 'baiduri'" });
     return;
   }
-  if (!req.file) {
+  const files = (req.files as Express.Multer.File[] | undefined) ?? [];
+  if (files.length === 0) {
     res.status(400).json({ error: "file is required" });
     return;
   }
+  // Deterministic validation of the file array: either one PDF statement, or
+  // 1-10 image screenshots — never a mix, never other types.
+  const ALLOWED_IMAGE_MIMES = new Set(["image/jpeg", "image/png", "image/webp", "image/heic", "image/heif"]);
+  const isImageFile = (f: Express.Multer.File) => ALLOWED_IMAGE_MIMES.has(f.mimetype ?? "");
+  const isPdfFile = (f: Express.Multer.File) => (f.mimetype ?? "") === "application/pdf";
+  const allImages = files.every(isImageFile);
+  const singlePdf = files.length === 1 && isPdfFile(files[0]);
+  if (!allImages && !singlePdf) {
+    res.status(400).json({ error: "Upload either one PDF statement or up to 10 image screenshots (JPEG/PNG/WebP/HEIC) — not a mix or other file types." });
+    return;
+  }
+  // Total payload guardrail on top of the 20MB per-file multer cap.
+  const totalBytes = files.reduce((s, f) => s + f.size, 0);
+  if (totalBytes > 60 * 1024 * 1024) {
+    res.status(400).json({ error: "Combined upload size exceeds 60MB. Please upload fewer or smaller files." });
+    return;
+  }
+  const firstFile = files[0];
 
   // Infer extension from the uploaded mime type; fall back to the bank
   // statement default (pdf) or screenshot (jpg) if mime is missing.
-  const mime = req.file.mimetype ?? "";
+  const mime = firstFile.mimetype ?? "";
   const isScreenshot = inputMethod === "screenshot" || mime.startsWith("image/");
   const ext = mime === "application/pdf"
     ? "pdf"
     : isScreenshot ? "jpg" : "pdf";
-  const fileName = req.file.originalname || `statement_${bankType}_${Date.now()}.${ext}`;
+  const fileName = firstFile.originalname || `statement_${bankType}_${Date.now()}.${ext}`;
   const docId = uuidv4();
 
-  // Real parser for BIBD PDFs; Baiduri and screenshot uploads still use the
-  // mock parser for now until those parsers are implemented.
+  // Real parser for BIBD PDFs; screenshots (bank SMS / notification threads)
+  // go through AI vision extraction; Baiduri PDFs still use the mock parser.
   let parsedRows: BibdParsedRow[] | ReturnType<typeof mockParseStatement> = [];
   let parseStatus: "parsed" | "failed" = "parsed";
   let parseError: string | null = null;
   if (bankType === "bibd" && mime === "application/pdf") {
     try {
-      parsedRows = await parseBibdStatement(req.file.buffer);
+      parsedRows = await parseBibdStatement(firstFile.buffer);
       if (parsedRows.length === 0) {
         parseStatus = "failed";
         parseError = "No transactions detected in the PDF";
@@ -89,6 +109,62 @@ router.post("/uploads", requireAuth, requireAccess, uploadMw.single("file"), asy
       req.log.error({ err: e }, "BIBD PDF parse failed");
       parseStatus = "failed";
       parseError = e instanceof Error ? e.message : "Failed to read PDF";
+    }
+  } else if (isScreenshot) {
+    // Real SMS-screenshot extraction: each image can contain many bank SMS
+    // messages; all uploaded screenshots merge into one review document.
+    const userCategories = await db
+      .select({ name: categoriesTable.name })
+      .from(categoriesTable)
+      .where(eq(categoriesTable.kind, "expense"));
+    const categoryNames = userCategories.map((c) => c.name);
+
+    const rows: ReturnType<typeof mockParseStatement> = [];
+    const seen = new Set<string>();
+    try {
+      // Bounded concurrency: extract at most 2 screenshots at a time to keep
+      // memory and model fan-out under control for large multi-file uploads.
+      const imageFiles = files.filter(isImageFile);
+      const results: Awaited<ReturnType<typeof extractTransactionsFromImage>>[] = [];
+      for (let i = 0; i < imageFiles.length; i += 2) {
+        const batch = await Promise.all(imageFiles.slice(i, i + 2).map((f) =>
+          extractTransactionsFromImage({
+            imageBase64: f.buffer.toString("base64"),
+            mimeType: f.mimetype,
+            categoryNames,
+          })
+        ));
+        results.push(...batch);
+      }
+      for (const result of results) {
+        for (const txn of result.transactions) {
+          // Cross-screenshot dedupe: overlapping screenshots of the same SMS
+          // thread must not produce the same transaction twice.
+          const key = `${txn.date}|${txn.amount}|${txn.type}|${txn.description.toLowerCase()}`;
+          if (seen.has(key)) continue;
+          seen.add(key);
+          rows.push({
+            rawDate: txn.date,
+            rawDescription: txn.description,
+            rawAmount: txn.amount,
+            normalizedDate: new Date(txn.date),
+            normalizedDescription: txn.description,
+            normalizedAmount: txn.amount,
+            type: txn.type,
+            categorySuggestion: txn.category ?? "",
+            confidence: "0.9000",
+          });
+        }
+      }
+      parsedRows = rows;
+      if (rows.length === 0) {
+        parseStatus = "failed";
+        parseError = "No transactions detected in the screenshot(s). Make sure the bank SMS messages are readable.";
+      }
+    } catch (e) {
+      req.log.error({ err: e }, "SMS screenshot extraction failed");
+      parseStatus = "failed";
+      parseError = "Could not read the screenshot(s). Please try again.";
     }
   } else {
     parsedRows = mockParseStatement(bankType, fileName);

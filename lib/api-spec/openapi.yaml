@@ -1526,6 +1526,12 @@ components:
         categoryId:
           type: ["string", "null"]
           description: Server-resolved category id for `category` (exact or case-insensitive name match), or null if no match.
+        uploadId:
+          type: ["string", "null"]
+          description: Set when the image was a bank SMS/notification screenshot containing multiple transactions. They were staged for review; open /upload/{uploadId}/review.
+        transactionCount:
+          type: ["number", "null"]
+          description: Number of transactions staged when uploadId is set.
 
     RequestUploadUrlBody:
       type: object
@@ -2368,9 +2374,13 @@ components:
       properties:
         bankType:
           type: string
+        inputMethod:
+          type: string
+          description: "'screenshot' for bank SMS/notification screenshots, omitted/other for PDF statements."
         file:
           type: string
           format: binary
+          description: The statement PDF or first screenshot. The `file` part may be repeated (up to 10) to send multiple screenshots in one request; all are merged into a single review document.
       required:
         - bankType
         - file

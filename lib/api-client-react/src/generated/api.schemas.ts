@@ -28,6 +28,16 @@ export interface ScanReceiptResponse {
    * @nullable
    */
   categoryId?: string | null;
+  /**
+   * Set when the image was a bank SMS/notification screenshot containing multiple transactions. They were staged for review; open /upload/{uploadId}/review.
+   * @nullable
+   */
+  uploadId?: string | null;
+  /**
+   * Number of transactions staged when uploadId is set.
+   * @nullable
+   */
+  transactionCount?: number | null;
 }
 
 export interface RequestUploadUrlBody {
@@ -540,6 +550,9 @@ export interface CategorySpend {
 
 export interface UploadStatementBody {
   bankType: string;
+  /** 'screenshot' for bank SMS/notification screenshots, omitted/other for PDF statements. */
+  inputMethod?: string;
+  /** The statement PDF or first screenshot. The `file` part may be repeated (up to 10) to send multiple screenshots in one request; all are merged into a single review document. */
   file: Blob;
 }
 
