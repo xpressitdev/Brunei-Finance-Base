@@ -94,7 +94,6 @@ import type {
   UploadedDocument,
   UpsertAssetCellBody,
   UpsertBudgetBody,
-  UserSubscription,
   VerifyEmailBody,
 } from "./api.schemas";
 
@@ -1081,7 +1080,7 @@ export const useUpdateProfile = <
 };
 
 /**
- * @summary Wipe all of the current user's financial data while keeping their account, profile, and subscription
+ * @summary Wipe all of the current user's financial data while keeping their account and profile
  */
 export const getResetUserDataUrl = () => {
   return `/api/profile/reset-data`;
@@ -1139,7 +1138,7 @@ export type ResetUserDataMutationResult = NonNullable<
 export type ResetUserDataMutationError = ErrorType<unknown>;
 
 /**
- * @summary Wipe all of the current user's financial data while keeping their account, profile, and subscription
+ * @summary Wipe all of the current user's financial data while keeping their account and profile
  */
 export const useResetUserData = <
   TError = ErrorType<unknown>,
@@ -5964,82 +5963,6 @@ export const useDeleteIncomeSource = <
 > => {
   return useMutation(getDeleteIncomeSourceMutationOptions(options));
 };
-
-/**
- * @summary Get current user subscription
- */
-export const getGetCurrentSubscriptionUrl = () => {
-  return `/api/subscription/current`;
-};
-
-export const getCurrentSubscription = async (
-  options?: RequestInit,
-): Promise<UserSubscription> => {
-  return customFetch<UserSubscription>(getGetCurrentSubscriptionUrl(), {
-    ...options,
-    method: "GET",
-  });
-};
-
-export const getGetCurrentSubscriptionQueryKey = () => {
-  return [`/api/subscription/current`] as const;
-};
-
-export const getGetCurrentSubscriptionQueryOptions = <
-  TData = Awaited<ReturnType<typeof getCurrentSubscription>>,
-  TError = ErrorType<ErrorResponse>,
->(options?: {
-  query?: UseQueryOptions<
-    Awaited<ReturnType<typeof getCurrentSubscription>>,
-    TError,
-    TData
-  >;
-  request?: SecondParameter<typeof customFetch>;
-}) => {
-  const { query: queryOptions, request: requestOptions } = options ?? {};
-
-  const queryKey =
-    queryOptions?.queryKey ?? getGetCurrentSubscriptionQueryKey();
-
-  const queryFn: QueryFunction<
-    Awaited<ReturnType<typeof getCurrentSubscription>>
-  > = ({ signal }) => getCurrentSubscription({ signal, ...requestOptions });
-
-  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-    Awaited<ReturnType<typeof getCurrentSubscription>>,
-    TError,
-    TData
-  > & { queryKey: QueryKey };
-};
-
-export type GetCurrentSubscriptionQueryResult = NonNullable<
-  Awaited<ReturnType<typeof getCurrentSubscription>>
->;
-export type GetCurrentSubscriptionQueryError = ErrorType<ErrorResponse>;
-
-/**
- * @summary Get current user subscription
- */
-
-export function useGetCurrentSubscription<
-  TData = Awaited<ReturnType<typeof getCurrentSubscription>>,
-  TError = ErrorType<ErrorResponse>,
->(options?: {
-  query?: UseQueryOptions<
-    Awaited<ReturnType<typeof getCurrentSubscription>>,
-    TError,
-    TData
-  >;
-  request?: SecondParameter<typeof customFetch>;
-}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
-  const queryOptions = getGetCurrentSubscriptionQueryOptions(options);
-
-  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
-    queryKey: QueryKey;
-  };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
 
 /**
  * @summary Scan a receipt image and extract expense data

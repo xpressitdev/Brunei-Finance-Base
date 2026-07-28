@@ -210,7 +210,7 @@ export const UpdateProfileResponse = zod.object({
 });
 
 /**
- * @summary Wipe all of the current user's financial data while keeping their account, profile, and subscription
+ * @summary Wipe all of the current user's financial data while keeping their account and profile
  */
 export const ResetUserDataResponse = zod.object({
   ok: zod.boolean(),
@@ -1367,21 +1367,6 @@ export const UpdateIncomeSourceResponse = zod.object({
  */
 export const DeleteIncomeSourceParams = zod.object({
   id: zod.coerce.string(),
-});
-
-/**
- * @summary Get current user subscription
- */
-export const GetCurrentSubscriptionResponse = zod.object({
-  id: zod.string(),
-  userId: zod.string(),
-  planId: zod.string(),
-  planName: zod.string(),
-  status: zod.string(),
-  startDate: zod.string(),
-  endDate: zod.string().nullish(),
-  createdAt: zod.string(),
-  updatedAt: zod.string(),
 });
 
 /**

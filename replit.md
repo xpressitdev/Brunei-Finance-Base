@@ -59,7 +59,6 @@ Tables in `lib/db/src/schema/`:
 - `imported_transaction_rows` — parsed rows awaiting review
 - `merchant_rules` — auto-categorization rules
 - `insights` — generated financial observations
-- `user_subscriptions` — legacy subscription records; kept only because `GET /subscription/current` still reads it for API compatibility (the app is free — `subscription_plans` and `pocket_order_id` were dropped)
 
 ## API Routes
 
@@ -76,7 +75,6 @@ All routes under `/api`:
 - `/insights` — list + generate (rules-based)
 - `/dashboard/summary`, `/dashboard/spending-by-category`, `/dashboard/recent-transactions`
 - `/uploads` — PDF upload + row review + confirm import
-- `/subscription/current` — always returns `active` (app is free); kept for API compatibility. Checkout/callback/activate-test endpoints were removed.
 - `/goals` — CRUD (list, create, update, delete)
 - `/net-worth` — monthly snapshots (list ?year=, upsert POST, delete)
 - `/expenses` — Expense Tracker home page (frontend only, uses /transactions API)
@@ -155,8 +153,7 @@ DuitPlan is being extended to serve BN/MY/ID regional subdomains with fixed per-
 ## Monetization Model
 
 - **The app is free.** In exchange, anonymised, aggregated data may be shared with the Government of Brunei Darussalam (disclaimer shown on the register and privacy pages, localized en/ms/id).
-- All trial/subscription/Pocket Pay code was removed (trial banners, expired overlays, premium page, checkout/callback endpoints, `subscription_plans` table, `pocket_order_id` column).
-- `GET /subscription/current` remains and always reports `active`; the `user_subscriptions` table is kept only to back that compatibility endpoint. If external clients are confirmed not to use it, both can be removed together.
+- All trial/subscription/Pocket Pay code was removed end-to-end: trial banners, expired overlays, premium page, all `/subscription/*` endpoints (including the last `GET /subscription/current` compatibility endpoint — confirmed unused by frontend and production logs), and the `subscription_plans` / `user_subscriptions` tables (dropped via startup migration).
 
 ## Environment Variables
 

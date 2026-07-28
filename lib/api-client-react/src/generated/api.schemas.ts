@@ -927,19 +927,6 @@ export interface UpdateGoalBody {
   notes?: string | null;
 }
 
-export interface UserSubscription {
-  id: string;
-  userId: string;
-  planId: string;
-  planName: string;
-  status: string;
-  startDate: string;
-  /** @nullable */
-  endDate?: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
 export interface IncomeSource {
   id: string;
   userId: string;

@@ -34,8 +34,6 @@ tags:
     description: Dashboard summary operations
   - name: uploads
     description: Statement upload operations
-  - name: subscription
-    description: Subscription operations
   - name: goals
     description: Financial goal operations
   - name: net-worth
@@ -307,7 +305,7 @@ paths:
     post:
       operationId: resetUserData
       tags: [profile]
-      summary: Wipe all of the current user's financial data while keeping their account, profile, and subscription
+      summary: Wipe all of the current user's financial data while keeping their account and profile
       responses:
         "200":
           description: Reset summary
@@ -1419,26 +1417,6 @@ paths:
       responses:
         "204":
           description: Deleted
-
-  # Subscription (app is free — status endpoint kept for API compatibility)
-  /subscription/current:
-    get:
-      operationId: getCurrentSubscription
-      tags: [subscription]
-      summary: Get current user subscription
-      responses:
-        "200":
-          description: Current subscription or null
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/UserSubscription"
-        "404":
-          description: No active subscription
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
 
   # Receipt scanning
   /receipt/scan:
@@ -2794,37 +2772,6 @@ components:
           format: date
         notes:
           type: ["string", "null"]
-
-    UserSubscription:
-      type: object
-      properties:
-        id:
-          type: string
-        userId:
-          type: string
-        planId:
-          type: string
-        planName:
-          type: string
-        status:
-          type: string
-        startDate:
-          type: string
-        endDate:
-          type: ["string", "null"]
-        createdAt:
-          type: string
-        updatedAt:
-          type: string
-      required:
-        - id
-        - userId
-        - planId
-        - planName
-        - status
-        - startDate
-        - createdAt
-        - updatedAt
 
     # Income Source
     IncomeSource:

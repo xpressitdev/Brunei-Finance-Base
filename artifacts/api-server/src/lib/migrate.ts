@@ -18,13 +18,10 @@ export async function runStartupMigrations(): Promise<void> {
       );
     `);
     await client.query(`ALTER TABLE accounts ADD COLUMN IF NOT EXISTS balance numeric(14,2) NOT NULL DEFAULT 0;`);
-    await client.query(`ALTER TABLE user_subscriptions ADD COLUMN IF NOT EXISTS next_billing_date timestamptz;`);
-    // App is free — Pocket Pay payments were removed. Drop the payment-only
-    // leftovers: the plans catalog table and the pocket_order_id column.
-    // user_subscriptions itself is kept because GET /subscription/current
-    // still reads it for API compatibility.
+    // App is free — all subscription/payment code was removed, including the
+    // GET /subscription/current compatibility endpoint (nothing called it).
     await client.query(`DROP TABLE IF EXISTS subscription_plans;`);
-    await client.query(`ALTER TABLE user_subscriptions DROP COLUMN IF EXISTS pocket_order_id;`);
+    await client.query(`DROP TABLE IF EXISTS user_subscriptions;`);
     await client.query(`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS region text NOT NULL DEFAULT 'BN';`);
     await client.query(`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS locale text NOT NULL DEFAULT 'en-BN';`);
     await client.query(`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS language text NOT NULL DEFAULT 'en';`);

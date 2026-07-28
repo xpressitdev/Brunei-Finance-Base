@@ -109,5 +109,4 @@ export * from "./upsertAssetCellBody";
 export * from "./upsertAssetCellBodyCategory";
 export * from "./upsertBudgetBody";
 export * from "./upsertNetWorthSnapshotBody";
-export * from "./userSubscription";
 export * from "./verifyEmailBody";
