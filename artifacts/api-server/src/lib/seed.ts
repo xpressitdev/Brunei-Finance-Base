@@ -2,7 +2,6 @@ import {
   db,
   pool,
   categoriesTable,
-  subscriptionPlansTable,
   usersTable,
   profilesTable,
   commitmentsTable,
@@ -34,24 +33,6 @@ const CATEGORIES = [
   // deposits) on the statement import review screen.
   { id: "f1000000-0000-4000-8000-000000000001", name: "Salary", kind: "income", isDefault: true },
   { id: "f1000000-0000-4000-8000-000000000002", name: "Other income", kind: "income", isDefault: true },
-];
-
-const PLANS = [
-  {
-    id: "965eca59-2f7a-415f-b9b7-2588ec9cfb2c",
-    name: "DuitPlan",
-    price: "10.00",
-    billingInterval: "monthly",
-    features: [
-      "Unlimited transactions",
-      "PDF & screenshot import",
-      "Debt scenarios & payoff simulator",
-      "AI-driven financial insights",
-      "Budget tracking & commitments",
-      "Goals & net worth tracking",
-      "Priority support",
-    ],
-  },
 ];
 
 // ── Hakem (BN region) ─────────────────────────────────────────────────────────
@@ -307,12 +288,6 @@ export async function seedIfEmpty() {
         { inserted: inserted.length, before: catCountBefore, total: CATEGORIES.length },
         catCountBefore === 0 ? "Seeded categories" : "Backfilled missing default categories",
       );
-    }
-
-    const [{ value: planCount }] = await db.select({ value: count() }).from(subscriptionPlansTable);
-    if (planCount === 0) {
-      await db.insert(subscriptionPlansTable).values(PLANS).onConflictDoNothing();
-      logger.info({ count: PLANS.length }, "Seeded subscription plans");
     }
 
     await seedHakemData();

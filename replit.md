@@ -59,8 +59,7 @@ Tables in `lib/db/src/schema/`:
 - `imported_transaction_rows` — parsed rows awaiting review
 - `merchant_rules` — auto-categorization rules
 - `insights` — generated financial observations
-- `subscription_plans` — Single "DuitPlan" plan at BND 10/month (seeded)
-- `user_subscriptions` — user subscription records (status, nextBillingDate, pocketOrderId)
+- `user_subscriptions` — legacy subscription records; kept only because `GET /subscription/current` still reads it for API compatibility (the app is free — `subscription_plans` and `pocket_order_id` were dropped)
 
 ## API Routes
 
@@ -77,10 +76,7 @@ All routes under `/api`:
 - `/insights` — list + generate (rules-based)
 - `/dashboard/summary`, `/dashboard/spending-by-category`, `/dashboard/recent-transactions`
 - `/uploads` — PDF upload + row review + confirm import
-- `/subscription/current` — unified status: trial (with daysRemaining), active, or expired
-- `/subscription/checkout` — POST: initiates Pocket Pay session (BND 10/month)
-- `/subscription/callback` — POST: Pocket Pay payment callback (updates subscription)
-- `/subscription/activate-test` — POST: dev-only endpoint to activate subscription
+- `/subscription/current` — always returns `active` (app is free); kept for API compatibility. Checkout/callback/activate-test endpoints were removed.
 - `/goals` — CRUD (list, create, update, delete)
 - `/net-worth` — monthly snapshots (list ?year=, upsert POST, delete)
 - `/expenses` — Expense Tracker home page (frontend only, uses /transactions API)
@@ -158,15 +154,9 @@ DuitPlan is being extended to serve BN/MY/ID regional subdomains with fixed per-
 
 ## Monetization Model
 
-- **45-day free trial**: All new users get full access for 45 days from account creation (derived from `users.created_at + 45 days`). No credit card required.
-- **Post-trial**: BND 10/month subscription via Pocket Pay (home.pocket.com.bn) by ThreeG Media.
-- **Subscription states**: `trial` (days remaining shown), `active` (paid), `expired` (read-only).
-- **Feature gating**: Write routes (transactions, uploads, insights, debts, budgets, commitments) return 403 with `TRIAL_EXPIRED` code when expired.
-- **Trial banner**: Persistent top banner in app layout — neutral color >14 days, amber 7–14 days, red <7 days.
-- **Expired overlay**: Full-screen overlay blocks interaction, prompts subscribe.
-- **Premium page**: Single plan page (not Basic/Premium split) with Pocket Pay checkout button.
-- **Payment callbacks**: Pocket Pay callbacks at `/api/subscription/callback` update subscription status.
-- **Pocket Pay credentials**: Set `POCKET_MERCHANT_ID`, `POCKET_TERMINAL_ID`, `POCKET_API_KEY`, `POCKET_API_BASE`, `APP_BASE_URL` as environment variables once DuitPlan merchant account is registered.
+- **The app is free.** In exchange, anonymised, aggregated data may be shared with the Government of Brunei Darussalam (disclaimer shown on the register and privacy pages, localized en/ms/id).
+- All trial/subscription/Pocket Pay code was removed (trial banners, expired overlays, premium page, checkout/callback endpoints, `subscription_plans` table, `pocket_order_id` column).
+- `GET /subscription/current` remains and always reports `active`; the `user_subscriptions` table is kept only to back that compatibility endpoint. If external clients are confirmed not to use it, both can be removed together.
 
 ## Environment Variables
 
