@@ -200,7 +200,10 @@ export default function PrivacyPage() {
             <Bullet bad>{t("privacy.noNo.sell", "Sell your data to anyone.")}</Bullet>
             <Bullet bad>{t("privacy.noNo.ads", "Show you ads inside DuitPlan.")}</Bullet>
             <Bullet bad>
-              {t("privacy.noNo.share", "Share your transactions with banks or employers.")}
+              {t(
+                "privacy.noNo.share",
+                "Share your transactions with banks or employers. Only anonymised, aggregated data is shared with the Government of Brunei Darussalam, as described above — never your individual transactions.",
+              )}
             </Bullet>
             <Bullet bad>
               {t("privacy.noNo.scrape", "Scrape your bank accounts. We never ask for your online-banking password.")}

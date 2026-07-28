@@ -1395,5 +1395,13 @@
       "update": "Update {{loanName}}",
       "dismiss": "Got it"
     }
+  },
+  "privacy": {
+    "who": {
+      "government": "The Government of Brunei Darussalam — DuitPlan is free to use, and in return anonymised, aggregated data may be shared with and used by the Government of Brunei Darussalam. This data is never tied to your name or account."
+    },
+    "noNo": {
+      "share": "Share your transactions with banks or employers. Only anonymised, aggregated data is shared with the Government of Brunei Darussalam, as described above — never your individual transactions."
+    }
   }
 }

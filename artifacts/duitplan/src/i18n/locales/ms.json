@@ -1385,5 +1385,13 @@
       "update": "Kemaskini {{loanName}}",
       "dismiss": "Faham"
     }
+  },
+  "privacy": {
+    "who": {
+      "government": "Kerajaan Brunei Darussalam — DuitPlan percuma untuk digunakan, dan sebagai balasannya, data tanpa nama yang diagregatkan boleh dikongsi dengan dan digunakan oleh Kerajaan Brunei Darussalam. Data ini tidak sekali-kali dikaitkan dengan nama atau akaun anda."
+    },
+    "noNo": {
+      "share": "Berkongsi transaksi anda dengan bank atau majikan. Hanya data tanpa nama yang diagregatkan dikongsi dengan Kerajaan Brunei Darussalam, seperti yang diterangkan di atas — bukan transaksi individu anda."
+    }
   }
 }
