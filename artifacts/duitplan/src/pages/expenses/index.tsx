@@ -66,8 +66,6 @@ import {
   Info,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { TrialExpiredPrompt } from "@/components/subscription/TrialExpiredPrompt";
-import { isTrialExpiredError } from "@/lib/trialExpired";
 import { useRegion } from "@/hooks/useRegion";
 
 function getCategoryIcon(name: string | null | undefined) {
@@ -180,11 +178,9 @@ export default function Expenses() {
   const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
   const [isScanningReceipt, setIsScanningReceipt] = useState(false);
   const [scanSuccess, setScanSuccess] = useState(false);
-  const [trialExpiredError, setTrialExpiredError] = useState(false);
   const [, setLocation] = useLocation();
 
   const [editingTx, setEditingTx] = useState<TransactionItem | null>(null);
-  const [editTrialExpiredError, setEditTrialExpiredError] = useState(false);
   // Prompt the user to set a monthly budget on the first expense for a
   // category that has none yet. We don't re-prompt within the same session
   // for categories the user already dismissed.
@@ -250,13 +246,11 @@ export default function Expenses() {
     setForm({ ...defaultForm, date: format(new Date(), "yyyy-MM-dd"), ...prefill });
     setReceiptPreview(null);
     setScanSuccess(false);
-    setTrialExpiredError(false);
     setIsAddOpen(true);
   };
 
   const openEdit = (tx: TransactionItem) => {
     setEditingTx(tx);
-    setEditTrialExpiredError(false);
     setEditData({
       date: format(new Date(tx.date), "yyyy-MM-dd"),
       amount: String(tx.amount),
@@ -271,7 +265,6 @@ export default function Expenses() {
   const handleEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingTx) return;
-    setEditTrialExpiredError(false);
     try {
       await updateMutation.mutateAsync({
         id: editingTx.id,
@@ -289,12 +282,8 @@ export default function Expenses() {
       refetch();
       queryClient.invalidateQueries({ queryKey: getListAccountsQueryKey() });
       toast({ title: "Transaction updated!" });
-    } catch (err) {
-      if (isTrialExpiredError(err)) {
-        setEditTrialExpiredError(true);
-      } else {
-        toast({ title: "Failed to update transaction", variant: "destructive" });
-      }
+    } catch {
+      toast({ title: "Failed to update transaction", variant: "destructive" });
     }
   };
 
@@ -361,7 +350,6 @@ export default function Expenses() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.amount || !form.description) return;
-    setTrialExpiredError(false);
 
     try {
       await createMutation.mutateAsync({
@@ -405,12 +393,8 @@ export default function Expenses() {
       setReceiptPreview(null);
       setForm(defaultForm);
       toast({ title: "Expense added!" });
-    } catch (err) {
-      if (isTrialExpiredError(err)) {
-        setTrialExpiredError(true);
-      } else {
-        toast({ title: "Failed to add expense", variant: "destructive" });
-      }
+    } catch {
+      toast({ title: "Failed to add expense", variant: "destructive" });
     }
   };
 
@@ -452,8 +436,8 @@ export default function Expenses() {
       await deleteMutation.mutateAsync({ id });
       refetch();
       setDeleteId(null);
-    } catch (err) {
-      if (isTrialExpiredError(err)) setLocation("/premium");
+    } catch {
+      // mutation error state is surfaced by react-query
     }
   };
 
@@ -647,9 +631,6 @@ export default function Expenses() {
           </DialogHeader>
 
           <form onSubmit={handleSubmit} className="space-y-4 mt-2">
-            {trialExpiredError && (
-              <TrialExpiredPrompt action="add expenses" />
-            )}
             {/* Receipt scan section */}
             <div className="rounded-xl border-2 border-dashed border-muted-foreground/20 p-3 text-center space-y-2">
               {isScanningReceipt ? (
@@ -810,9 +791,6 @@ export default function Expenses() {
             </DialogTitle>
           </DialogHeader>
           <form onSubmit={handleEdit} className="space-y-4 mt-2">
-            {editTrialExpiredError && (
-              <TrialExpiredPrompt action="edit transactions" />
-            )}
             <div className="flex gap-2">
               <Button
                 type="button"

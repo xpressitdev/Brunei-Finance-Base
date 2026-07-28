@@ -1370,22 +1370,6 @@ export const DeleteIncomeSourceParams = zod.object({
 });
 
 /**
- * @summary List available subscription plans
- */
-export const ListSubscriptionPlansResponseItem = zod.object({
-  id: zod.string(),
-  name: zod.string(),
-  price: zod.string(),
-  billingInterval: zod.string(),
-  features: zod.array(zod.string()),
-  createdAt: zod.string(),
-  updatedAt: zod.string(),
-});
-export const ListSubscriptionPlansResponse = zod.array(
-  ListSubscriptionPlansResponseItem,
-);
-
-/**
  * @summary Get current user subscription
  */
 export const GetCurrentSubscriptionResponse = zod.object({

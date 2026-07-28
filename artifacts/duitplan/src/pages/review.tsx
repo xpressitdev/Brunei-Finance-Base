@@ -22,15 +22,11 @@ import { Label } from "@/components/ui/label";
 import { ArrowLeft, Check, X, AlertCircle, AlertTriangle, Plus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { TrialExpiredPrompt } from "@/components/subscription/TrialExpiredPrompt";
-import { isTrialExpiredError } from "@/lib/trialExpired";
 import { useToast } from "@/hooks/use-toast";
 
 export default function ReviewImport() {
   const { id } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
-  const [trialExpiredError, setTrialExpiredError] = useState(false);
-  
   const { data: rows, isLoading } = useGetImportedRows(id!);
   const { data: categories } = useListCategories();
   const { data: debts } = useListDebts();
@@ -178,7 +174,6 @@ export default function ReviewImport() {
       skip: data.skip
     }));
 
-    setTrialExpiredError(false);
     try {
       await confirmMutation.mutateAsync({
         id: id!,
@@ -188,10 +183,8 @@ export default function ReviewImport() {
       const firstDate = rows?.find(r => r.normalizedDate)?.normalizedDate;
       const month = firstDate ? firstDate.slice(0, 7) : format(new Date(), "yyyy-MM");
       setLocation(`/transactions?month=${month}`);
-    } catch (err) {
-      if (isTrialExpiredError(err)) {
-        setTrialExpiredError(true);
-      }
+    } catch {
+      // mutation error state is surfaced by react-query
     }
   };
 
@@ -217,10 +210,6 @@ export default function ReviewImport() {
           </Button>
         </div>
       </div>
-
-      {trialExpiredError && (
-        <TrialExpiredPrompt action="confirm import" />
-      )}
 
       {errorRows.length > 0 && (
         <Card className="border-destructive/50 bg-destructive/5">

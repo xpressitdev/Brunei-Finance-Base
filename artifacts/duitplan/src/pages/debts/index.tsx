@@ -30,8 +30,6 @@ import {
   Banknote,
   TrendingDown,
 } from "lucide-react";
-import { TrialExpiredPrompt } from "@/components/subscription/TrialExpiredPrompt";
-import { isTrialExpiredError } from "@/lib/trialExpired";
 import { useRegion } from "@/hooks/useRegion";
 import { KpiCard } from "@/components/redesign/KpiCard";
 import { safeNum, fmtMonths } from "@/lib/format";
@@ -627,7 +625,6 @@ export default function Debts() {
 
   const [editingDebt, setEditingDebt] = useState<Debt | null>(null);
   const [editForm, setEditForm] = useState<FormState>(EMPTY_FORM);
-  const [trialExpiredError, setTrialExpiredError] = useState(false);
 
   const handleAdd = async (form: FormState) => {
     try {
@@ -642,8 +639,8 @@ export default function Debts() {
         },
       });
       refetch();
-    } catch (err) {
-      if (isTrialExpiredError(err)) setTrialExpiredError(true);
+    } catch {
+      // mutation error state is surfaced by react-query
     }
   };
 
@@ -677,8 +674,8 @@ export default function Debts() {
       setEditingDebt(null);
       setEditForm(EMPTY_FORM);
       refetch();
-    } catch (err) {
-      if (isTrialExpiredError(err)) setTrialExpiredError(true);
+    } catch {
+      // mutation error state is surfaced by react-query
     }
   };
 
@@ -687,8 +684,8 @@ export default function Debts() {
     try {
       await deleteMutation.mutateAsync({ id: debt.id });
       refetch();
-    } catch (err) {
-      if (isTrialExpiredError(err)) setTrialExpiredError(true);
+    } catch {
+      // mutation error state is surfaced by react-query
     }
   };
 
@@ -722,8 +719,6 @@ export default function Debts() {
           </Button>
         </Link>
       </div>
-
-      {trialExpiredError && <TrialExpiredPrompt action="manage debts" />}
 
       {/* KPI strip — Total debt / Min/mo / DTI / Info */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
@@ -797,7 +792,6 @@ export default function Debts() {
           if (!open) {
             setEditingDebt(null);
             setEditForm(EMPTY_FORM);
-            setTrialExpiredError(false);
           }
         }}
       >

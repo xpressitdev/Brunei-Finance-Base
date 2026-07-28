@@ -483,7 +483,6 @@ export default function Settings() {
                   <li>{t("settings.privacy.willKeep1", "Your account and login")}</li>
                   <li>{t("settings.privacy.willKeep2", "Your name, region, and language")}</li>
                   <li>{t("settings.privacy.willKeep3", "Your category list (shared across all users)")}</li>
-                  <li>{t("settings.privacy.willKeep4", "Your subscription, if any")}</li>
                 </ul>
               </div>
 

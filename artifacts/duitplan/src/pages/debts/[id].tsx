@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams, Link, useLocation } from "wouter";
 import { useListDebts, useDeleteDebt, useUpdateDebt } from "@workspace/api-client-react";
-import { isTrialExpiredError } from "@/lib/trialExpired";
 import { useRegion } from "@/hooks/useRegion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -130,8 +129,8 @@ export default function DebtDetail() {
       try {
         await deleteMutation.mutateAsync({ id: id! });
         setLocation("/debts");
-      } catch (err) {
-        if (isTrialExpiredError(err)) setLocation("/premium");
+      } catch {
+        // mutation error state is surfaced by react-query
       }
     }
   };

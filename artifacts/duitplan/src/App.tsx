@@ -3,7 +3,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/lib/auth";
-import { SubscriptionProvider } from "@/lib/subscription";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { DevRegionProvider } from "@/lib/devRegion";
 import { DevRegionIndicator } from "@/components/DevRegionIndicator";
@@ -35,8 +34,6 @@ import Goals from "@/pages/goals";
 import NetWorth from "@/pages/net-worth";
 import Expenses from "@/pages/expenses";
 import AccountsPage from "@/pages/accounts";
-import SubscriptionSuccess from "@/pages/subscription/success";
-import SubscriptionFailed from "@/pages/subscription/failed";
 import AgentPage from "@/pages/agent";
 import ZakatPage from "@/pages/zakat";
 import IncomeSourcesPage from "@/pages/income-sources";
@@ -58,21 +55,6 @@ function ProtectedRoute({ component: Component, ...rest }: any) {
   );
 }
 
-function SubscriptionCallbackRoute({ component: Component, path }: { component: React.ComponentType; path: string }) {
-  const { user, isLoading } = useAuth();
-
-  if (isLoading) return <div className="min-h-screen bg-background" />;
-  if (!user) return null;
-
-  return (
-    <Route path={path}>
-      <SubscriptionProvider>
-        <Component />
-      </SubscriptionProvider>
-    </Route>
-  );
-}
-
 function Router() {
   return (
     <Switch>
@@ -86,9 +68,9 @@ function Router() {
       <Route path="/onboarding" component={Onboarding} />
       <Route path="/privacy" component={PrivacyPage} />
       
-      {/* Payment return pages */}
-      <SubscriptionCallbackRoute path="/subscription/success" component={SubscriptionSuccess} />
-      <SubscriptionCallbackRoute path="/subscription/failed" component={SubscriptionFailed} />
+      {/* Old payment return pages — app is free now */}
+      <Route path="/subscription/success"><Redirect to="/dashboard" /></Route>
+      <Route path="/subscription/failed"><Redirect to="/dashboard" /></Route>
 
       {/* Protected Routes inside AppLayout */}
       <ProtectedRoute path="/dashboard" component={Dashboard} />

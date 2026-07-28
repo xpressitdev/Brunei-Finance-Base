@@ -1420,22 +1420,7 @@ paths:
         "204":
           description: Deleted
 
-  # Subscription
-  /subscription/plans:
-    get:
-      operationId: listSubscriptionPlans
-      tags: [subscription]
-      summary: List available subscription plans
-      responses:
-        "200":
-          description: List of plans
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/SubscriptionPlan"
-
+  # Subscription (app is free — status endpoint kept for API compatibility)
   /subscription/current:
     get:
       operationId: getCurrentSubscription
@@ -2485,35 +2470,6 @@ components:
       required:
         - imported
         - skipped
-
-    # Subscription
-    SubscriptionPlan:
-      type: object
-      properties:
-        id:
-          type: string
-        name:
-          type: string
-        price:
-          type: string
-        billingInterval:
-          type: string
-        features:
-          type: array
-          items:
-            type: string
-        createdAt:
-          type: string
-        updatedAt:
-          type: string
-      required:
-        - id
-        - name
-        - price
-        - billingInterval
-        - features
-        - createdAt
-        - updatedAt
 
     # Asset Entries
     AssetEntry:

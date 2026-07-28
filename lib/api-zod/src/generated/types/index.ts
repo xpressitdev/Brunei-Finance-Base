@@ -90,7 +90,6 @@ export * from "./resetPasswordBody";
 export * from "./scanReceiptBody";
 export * from "./scanReceiptResponse";
 export * from "./simpleOkResponse";
-export * from "./subscriptionPlan";
 export * from "./transaction";
 export * from "./updateAccountBody";
 export * from "./updateAssetBody";

@@ -32,8 +32,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Info } from "lucide-react";
-import { TrialExpiredPrompt } from "@/components/subscription/TrialExpiredPrompt";
-import { isTrialExpiredError } from "@/lib/trialExpired";
 import { useRegion } from "@/hooks/useRegion";
 
 type Props = {
@@ -58,10 +56,8 @@ export function AddTransactionDialog({ trigger, open: openProp, onOpenChange, on
   const setOpen = (v: boolean) => {
     if (!isControlled) setInternalOpen(v);
     onOpenChange?.(v);
-    if (!v) setTrialExpiredError(false);
   };
 
-  const [trialExpiredError, setTrialExpiredError] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     date: format(new Date(), "yyyy-MM-dd"),
@@ -83,7 +79,6 @@ export function AddTransactionDialog({ trigger, open: openProp, onOpenChange, on
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
-    setTrialExpiredError(false);
     setFormError(null);
     if (!formData.accountId) {
       setFormError("Please choose the account this transaction comes from.");
@@ -117,8 +112,8 @@ export function AddTransactionDialog({ trigger, open: openProp, onOpenChange, on
         categoryId: "",
         accountId: "",
       });
-    } catch (err) {
-      if (isTrialExpiredError(err)) setTrialExpiredError(true);
+    } catch {
+      // mutation error state is surfaced by react-query
     }
   };
 
@@ -130,7 +125,6 @@ export function AddTransactionDialog({ trigger, open: openProp, onOpenChange, on
           <DialogTitle>{t("transactions.addDialog.title")}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleAdd} className="space-y-4">
-          {trialExpiredError && <TrialExpiredPrompt action="add transactions" />}
           <div className="space-y-2">
             <Label>{t("transactions.addDialog.date")}</Label>
             <Input

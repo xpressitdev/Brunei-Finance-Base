@@ -80,7 +80,6 @@ import type {
   ScanReceiptBody,
   ScanReceiptResponse,
   SimpleOkResponse,
-  SubscriptionPlan,
   Transaction,
   UpdateAccountBody,
   UpdateAssetBody,
@@ -5965,81 +5964,6 @@ export const useDeleteIncomeSource = <
 > => {
   return useMutation(getDeleteIncomeSourceMutationOptions(options));
 };
-
-/**
- * @summary List available subscription plans
- */
-export const getListSubscriptionPlansUrl = () => {
-  return `/api/subscription/plans`;
-};
-
-export const listSubscriptionPlans = async (
-  options?: RequestInit,
-): Promise<SubscriptionPlan[]> => {
-  return customFetch<SubscriptionPlan[]>(getListSubscriptionPlansUrl(), {
-    ...options,
-    method: "GET",
-  });
-};
-
-export const getListSubscriptionPlansQueryKey = () => {
-  return [`/api/subscription/plans`] as const;
-};
-
-export const getListSubscriptionPlansQueryOptions = <
-  TData = Awaited<ReturnType<typeof listSubscriptionPlans>>,
-  TError = ErrorType<unknown>,
->(options?: {
-  query?: UseQueryOptions<
-    Awaited<ReturnType<typeof listSubscriptionPlans>>,
-    TError,
-    TData
-  >;
-  request?: SecondParameter<typeof customFetch>;
-}) => {
-  const { query: queryOptions, request: requestOptions } = options ?? {};
-
-  const queryKey = queryOptions?.queryKey ?? getListSubscriptionPlansQueryKey();
-
-  const queryFn: QueryFunction<
-    Awaited<ReturnType<typeof listSubscriptionPlans>>
-  > = ({ signal }) => listSubscriptionPlans({ signal, ...requestOptions });
-
-  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-    Awaited<ReturnType<typeof listSubscriptionPlans>>,
-    TError,
-    TData
-  > & { queryKey: QueryKey };
-};
-
-export type ListSubscriptionPlansQueryResult = NonNullable<
-  Awaited<ReturnType<typeof listSubscriptionPlans>>
->;
-export type ListSubscriptionPlansQueryError = ErrorType<unknown>;
-
-/**
- * @summary List available subscription plans
- */
-
-export function useListSubscriptionPlans<
-  TData = Awaited<ReturnType<typeof listSubscriptionPlans>>,
-  TError = ErrorType<unknown>,
->(options?: {
-  query?: UseQueryOptions<
-    Awaited<ReturnType<typeof listSubscriptionPlans>>,
-    TError,
-    TData
-  >;
-  request?: SecondParameter<typeof customFetch>;
-}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
-  const queryOptions = getListSubscriptionPlansQueryOptions(options);
-
-  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
-    queryKey: QueryKey;
-  };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
 
 /**
  * @summary Get current user subscription

@@ -39,8 +39,6 @@ import {
   Trash2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { TrialExpiredPrompt } from "@/components/subscription/TrialExpiredPrompt";
-import { isTrialExpiredError } from "@/lib/trialExpired";
 import { MoneyBag } from "@/components/redesign/MoneyBag";
 import { MinPaymentBar } from "@/components/redesign/MinPaymentBar";
 import { fmtBND } from "@/lib/format";
@@ -954,7 +952,6 @@ function AllocateView({
   refetchGoals,
   refetchCommitments,
   refetchCategories,
-  onTrialExpired,
   resetSignal,
   incomeType,
 }: {
@@ -974,7 +971,6 @@ function AllocateView({
   refetchGoals: () => void;
   refetchCommitments: () => void;
   refetchCategories: () => void;
-  onTrialExpired: () => void;
   resetSignal: number;
   incomeType: "fixed" | "variable";
 }) {
@@ -1181,8 +1177,8 @@ function AllocateView({
         data: { categoryId, month, plannedAmount: amount.toFixed(2) },
       });
       refetch();
-    } catch (err) {
-      if (isTrialExpiredError(err)) onTrialExpired();
+    } catch {
+      // mutation error state is surfaced by react-query
     }
   };
 
@@ -1194,8 +1190,8 @@ function AllocateView({
         data: { savedAmount: savedAmount.toFixed(2) },
       });
       refetchGoals();
-    } catch (err) {
-      if (isTrialExpiredError(err)) onTrialExpired();
+    } catch {
+      // mutation error state is surfaced by react-query
     }
   };
 
@@ -1207,8 +1203,8 @@ function AllocateView({
         data: { amount: amount.toFixed(2) },
       });
       refetchCommitments();
-    } catch (err) {
-      if (isTrialExpiredError(err)) onTrialExpired();
+    } catch {
+      // mutation error state is surfaced by react-query
     }
   };
 
@@ -1930,7 +1926,6 @@ export default function Budgets() {
   const [view, setView] = useState<"allocate" | "plan" | "actual" | "annual">("allocate");
   const [editing, setEditing] = useState<Record<string, string>>({});
   const [showAccountsPanel, setShowAccountsPanel] = useState(true);
-  const [trialExpiredError, setTrialExpiredError] = useState(false);
   const [resetSignal, setResetSignal] = useState(0);
   const [confirmed, setConfirmed] = useState(false);
 
@@ -1968,8 +1963,8 @@ export default function Budgets() {
       await upsert.mutateAsync({ data: { categoryId, month, plannedAmount: parseFloat(val).toFixed(2) } });
       setEditing(prev => { const n = { ...prev }; delete n[categoryId]; return n; });
       refetch();
-    } catch (err) {
-      if (isTrialExpiredError(err)) setTrialExpiredError(true);
+    } catch {
+      // mutation error state is surfaced by react-query
     }
   };
 
@@ -2014,8 +2009,6 @@ export default function Budgets() {
         </div>
       </div>
 
-      {trialExpiredError && <TrialExpiredPrompt action="set budgets" />}
-
       {/* View toggle */}
       <div className="flex gap-2 flex-wrap">
         <Button size="sm" variant={view === "allocate" ? "default" : "outline"} onClick={() => setView("allocate")} className="rounded-full gap-1.5">
@@ -2051,7 +2044,6 @@ export default function Budgets() {
           refetchGoals={refetchGoals}
           refetchCommitments={refetchCommitments}
           refetchCategories={refetchCategories}
-          onTrialExpired={() => setTrialExpiredError(true)}
           resetSignal={resetSignal}
           incomeType={(profile?.incomeType as "fixed" | "variable") ?? "fixed"}
         />

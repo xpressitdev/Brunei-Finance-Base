@@ -10,8 +10,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Upload as UploadIcon, FileText, Image, AlertCircle, CheckCircle2, X, Plus, Sparkles, Tags, Search, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { TrialExpiredPrompt } from "@/components/subscription/TrialExpiredPrompt";
-import { isTrialExpiredError } from "@/lib/trialExpired";
 
 export default function Upload() {
   const { t } = useTranslation();
@@ -20,7 +18,6 @@ export default function Upload() {
   const [screenshots, setScreenshots] = useState<File[]>([]);
   const [bankType, setBankType] = useState<string>("bibd");
   const [error, setError] = useState<string>("");
-  const [trialExpiredError, setTrialExpiredError] = useState(false);
   const [, setLocation] = useLocation();
   const screenshotInputRef = useRef<HTMLInputElement>(null);
 
@@ -53,7 +50,6 @@ export default function Upload() {
       return;
     }
 
-    setTrialExpiredError(false);
     try {
       let result: UploadedDocument;
       if (tab === "screenshot") {
@@ -76,12 +72,8 @@ export default function Upload() {
       }
       setLocation(`/upload/${result.id}/review`);
     } catch (err) {
-      if (isTrialExpiredError(err)) {
-        setTrialExpiredError(true);
-      } else {
-        const msg = (err as { error?: string } | undefined)?.error;
-        setError(msg || t("upload.errors.uploadFailed"));
-      }
+      const msg = (err as { error?: string } | undefined)?.error;
+      setError(msg || t("upload.errors.uploadFailed"));
     } finally {
       setIsUploadingScreenshots(false);
     }
@@ -123,10 +115,6 @@ export default function Upload() {
           <p className="text-xs text-muted-foreground border-t border-primary/10 pt-3 italic">{t("upload.whyFooter")}</p>
         </CardContent>
       </Card>
-
-      {trialExpiredError && (
-        <TrialExpiredPrompt action="import transactions" />
-      )}
 
       {error && (
         <Alert variant="destructive">

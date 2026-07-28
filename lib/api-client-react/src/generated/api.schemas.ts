@@ -610,16 +610,6 @@ export interface ImportConfirmResult {
   skipped: number;
 }
 
-export interface SubscriptionPlan {
-  id: string;
-  name: string;
-  price: string;
-  billingInterval: string;
-  features: string[];
-  createdAt: string;
-  updatedAt: string;
-}
-
 export type AssetEntryCategory =
   (typeof AssetEntryCategory)[keyof typeof AssetEntryCategory];
 

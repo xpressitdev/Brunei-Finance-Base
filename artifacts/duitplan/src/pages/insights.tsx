@@ -16,8 +16,6 @@ import {
   BarChart, Bar, Cell, XAxis, YAxis, Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { TrialExpiredPrompt } from "@/components/subscription/TrialExpiredPrompt";
-import { isTrialExpiredError } from "@/lib/trialExpired";
 import { useRegion } from "@/hooks/useRegion";
 
 type ComputedInsights = {
@@ -108,7 +106,6 @@ export default function Insights() {
   const { t } = useTranslation();
   const currentMonth = format(new Date(), "yyyy-MM");
   const [month, setMonth] = useState(currentMonth);
-  const [trialExpiredError, setTrialExpiredError] = useState(false);
   const { formatCurrency, formatMonthYear, formatMonthShort } = useRegion();
 
   const { data: computed, isLoading: computedLoading } = useComputedInsights(month);
@@ -116,12 +113,11 @@ export default function Insights() {
   const generateMutation = useGenerateInsights();
 
   const handleGenerate = async () => {
-    setTrialExpiredError(false);
     try {
       await generateMutation.mutateAsync({ data: { month } });
       refetchAi();
-    } catch (err) {
-      if (isTrialExpiredError(err)) setTrialExpiredError(true);
+    } catch {
+      // errors are surfaced by the query state
     }
   };
 
@@ -187,8 +183,6 @@ export default function Insights() {
           </Button>
         </div>
       </div>
-
-      {trialExpiredError && <TrialExpiredPrompt action="generate insights" />}
 
       <div>
         <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3 flex items-center gap-2">

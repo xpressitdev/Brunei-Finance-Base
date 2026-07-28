@@ -37,8 +37,6 @@ import {
 } from "@/components/ui/select";
 import { Trash2, Plus, Search, Receipt, TrendingUp, TrendingDown, Pencil, Info, ChevronLeft, ChevronRight } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RTooltip } from "recharts";
-import { TrialExpiredPrompt } from "@/components/subscription/TrialExpiredPrompt";
-import { isTrialExpiredError } from "@/lib/trialExpired";
 import { useRegion } from "@/hooks/useRegion";
 import { computeSpendingPace, formatPaceTooltip } from "@/lib/spendingPace";
 
@@ -66,8 +64,6 @@ export default function Transactions() {
   const [typeFilter, setTypeFilter] = useState("");
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingTx, setEditingTx] = useState<TransactionItem | null>(null);
-  const [trialExpiredError, setTrialExpiredError] = useState(false);
-  const [editTrialExpiredError, setEditTrialExpiredError] = useState(false);
 
   const listParams = { 
     ...(month ? { month } : {}), 
@@ -232,7 +228,6 @@ export default function Transactions() {
 
   const openEdit = (tx: TransactionItem) => {
     setEditingTx(tx);
-    setEditTrialExpiredError(false);
     setEditError(null);
     setEditData({
       date: format(new Date(tx.date), "yyyy-MM-dd"),
@@ -246,7 +241,6 @@ export default function Transactions() {
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
-    setTrialExpiredError(false);
     setFormError(null);
     if (!formData.accountId) {
       setFormError("Please choose the account this transaction comes from.");
@@ -280,17 +274,14 @@ export default function Transactions() {
         categoryId: "",
         accountId: "",
       });
-    } catch (err) {
-      if (isTrialExpiredError(err)) {
-        setTrialExpiredError(true);
-      }
+    } catch {
+      // mutation error state is surfaced by react-query
     }
   };
 
   const handleEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingTx) return;
-    setEditTrialExpiredError(false);
     setEditError(null);
     if (!editData.accountId) {
       setEditError("Please choose the account this transaction comes from.");
@@ -316,10 +307,8 @@ export default function Transactions() {
       setEditingTx(null);
       refetch();
       invalidateRelated();
-    } catch (err) {
-      if (isTrialExpiredError(err)) {
-        setEditTrialExpiredError(true);
-      }
+    } catch {
+      // mutation error state is surfaced by react-query
     }
   };
 
@@ -329,8 +318,8 @@ export default function Transactions() {
         await deleteMutation.mutateAsync({ id });
         refetch();
         invalidateRelated();
-      } catch (err) {
-        if (isTrialExpiredError(err)) setLocation("/premium");
+      } catch {
+        // mutation error state is surfaced by react-query
       }
     }
   };
@@ -343,7 +332,7 @@ export default function Transactions() {
           <p className="text-muted-foreground">{t("transactions.subtitle")}</p>
         </div>
         
-        <Dialog open={isAddOpen} onOpenChange={(open) => { setIsAddOpen(open); if (!open) setTrialExpiredError(false); }}>
+        <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
           <DialogTrigger asChild>
             <Button><Plus className="w-4 h-4 mr-2" /> {t("transactions.addDialog.title")}</Button>
           </DialogTrigger>
@@ -352,9 +341,6 @@ export default function Transactions() {
               <DialogTitle>{t("transactions.addDialog.title")}</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleAdd} className="space-y-4">
-              {trialExpiredError && (
-                <TrialExpiredPrompt action="add transactions" />
-              )}
               <div className="space-y-2">
                 <Label>{t("transactions.addDialog.date")}</Label>
                 <Input 
@@ -484,9 +470,6 @@ export default function Transactions() {
             <DialogTitle>{t("transactions.editDialog.title")}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleEdit} className="space-y-4">
-            {editTrialExpiredError && (
-              <TrialExpiredPrompt action="edit transactions" />
-            )}
             <div className="space-y-2">
               <Label>{t("transactions.editDialog.title") && t("transactions.addDialog.date")}</Label>
               <Input 

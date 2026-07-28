@@ -13,8 +13,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Trash2, Plus, CalendarDays } from "lucide-react";
-import { TrialExpiredPrompt } from "@/components/subscription/TrialExpiredPrompt";
-import { isTrialExpiredError } from "@/lib/trialExpired";
 import { useRegion } from "@/hooks/useRegion";
 
 export default function Commitments() {
@@ -26,7 +24,6 @@ export default function Commitments() {
   const deleteMutation = useDeleteCommitment();
   
   const [isAddOpen, setIsAddOpen] = useState(false);
-  const [trialExpiredError, setTrialExpiredError] = useState(false);
   const [formData, setFormData] = useState({
     label: "",
     amount: "",
@@ -47,10 +44,8 @@ export default function Commitments() {
       setIsAddOpen(false);
       refetch();
       setFormData({ label: "", amount: "", dueDay: "" });
-    } catch (err) {
-      if (isTrialExpiredError(err)) {
-        setTrialExpiredError(true);
-      }
+    } catch {
+      // mutation error state is surfaced by react-query
     }
   };
 
@@ -59,8 +54,8 @@ export default function Commitments() {
       try {
         await deleteMutation.mutateAsync({ id });
         refetch();
-      } catch (err) {
-        if (isTrialExpiredError(err)) setLocation("/premium");
+      } catch {
+        // mutation error state is surfaced by react-query
       }
     }
   };
@@ -77,7 +72,7 @@ export default function Commitments() {
           <p className="text-muted-foreground">{t("commitments.subtitle")}</p>
         </div>
         
-        <Dialog open={isAddOpen} onOpenChange={(open) => { setIsAddOpen(open); if (!open) setTrialExpiredError(false); }}>
+        <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
           <DialogTrigger asChild>
             <Button><Plus className="w-4 h-4 mr-2" /> {t("commitments.addButton")}</Button>
           </DialogTrigger>
@@ -86,9 +81,6 @@ export default function Commitments() {
               <DialogTitle>{t("commitments.addDialog.title")}</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleAdd} className="space-y-4">
-              {trialExpiredError && (
-                <TrialExpiredPrompt action="add commitments" />
-              )}
               <div className="space-y-2">
                 <Label>{t("commitments.addDialog.labelField")}</Label>
                 <Input 
