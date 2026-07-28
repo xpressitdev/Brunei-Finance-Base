@@ -721,7 +721,23 @@
       "manage": "Urus",
       "noDebts": "Tiada hutang direkod lagi.",
       "addDebt": "Tambah Hutang",
-      "totalOutstanding": "Jumlah Tertunggak"
+      "totalOutstanding": "Jumlah Tertunggak",
+      "rowActions": {
+        "menu": "Tindakan baris",
+        "rename": "Namakan semula",
+        "delete": "Padam",
+        "renameTitle": "Namakan semula tanggungan",
+        "renameDescription": "Kemas kini nama pemberi pinjam dan jenis hutang ini.",
+        "deleteTitle": "Padam tanggungan ini?",
+        "deleteDescription": "Ini akan memadam \"{{name}}\" dan semua data berkaitan secara kekal. Tindakan ini tidak boleh dibatalkan.",
+        "renamed": "Tanggungan dinamakan semula",
+        "renameFailed": "Tidak dapat menamakan semula tanggungan",
+        "deleted": "Tanggungan dipadam",
+        "deleteFailed": "Tidak dapat memadam tanggungan",
+        "save": "Simpan"
+      },
+      "lenderLabel": "Nama pemberi pinjam / pemiutang",
+      "debtTypeLabel": "Jenis"
     },
     "dialog": {
       "addTitle": "Tambah Aset",

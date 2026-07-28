@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { formatDistanceToNow } from "date-fns";
 import {
@@ -8,6 +8,8 @@ import {
   useDeleteAsset,
   useListAccounts,
   useListDebts,
+  useUpdateDebt,
+  useDeleteDebt,
   useGetNetWorthTimeline,
 } from "@workspace/api-client-react";
 import type {
@@ -32,10 +34,27 @@ import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Select,
   SelectContent,
@@ -58,10 +77,12 @@ import {
   TrendingDown,
   ArrowRight,
   Info,
+  MoreVertical,
 } from "lucide-react";
 import { Link } from "wouter";
 import { cn } from "@/lib/utils";
 import { useRegion } from "@/hooks/useRegion";
+import { useToast } from "@/hooks/use-toast";
 import { formatMonthYear as _formatMonthYear, formatMonthShort as _formatMonthShort } from "@/utils/formatting";
 import { AssetGrid } from "./AssetGrid";
 
@@ -156,10 +177,14 @@ const TimelineTooltip = ({ active, payload, label }: TooltipProps<number, string
   );
 };
 
+type DebtType = "home_loan" | "car_loan" | "personal_loan" | "credit_card" | "student_loan" | "other";
+const DEBT_TYPES: DebtType[] = ["home_loan", "car_loan", "personal_loan", "credit_card", "student_loan", "other"];
+
 export default function NetWorth() {
   const { t } = useTranslation();
   const today = currentMonth();
   const { formatCurrency, region, decimalStep } = useRegion();
+  const { toast } = useToast();
 
   const [range, setRange] = useState<RangeKey>("1y");
 
@@ -176,7 +201,7 @@ export default function NetWorth() {
   );
 
   const { data: accounts = [] } = useListAccounts();
-  const { data: debts = [] } = useListDebts();
+  const { data: debts = [], refetch: refetchDebts } = useListDebts();
 
   const { data: timelineData, refetch: refetchTimeline } = useGetNetWorthTimeline(
     { range },
@@ -186,6 +211,26 @@ export default function NetWorth() {
   const createMutation = useCreateAsset();
   const updateMutation = useUpdateAsset();
   const deleteMutation = useDeleteAsset();
+
+  // Debt rename / delete
+  const updateDebtMutation = useUpdateDebt();
+  const deleteDebtMutation = useDeleteDebt();
+  const [renameDebtTarget, setRenameDebtTarget] = useState<Debt | null>(null);
+  const [deleteDebtTarget, setDeleteDebtTarget] = useState<Debt | null>(null);
+  const [debtRenameForm, setDebtRenameForm] = useState<{ lender: string; debtType: DebtType }>({
+    lender: "",
+    debtType: "other",
+  });
+
+  // Reset rename form when a new target is selected
+  useEffect(() => {
+    if (renameDebtTarget) {
+      setDebtRenameForm({
+        lender: renameDebtTarget.lender,
+        debtType: (renameDebtTarget.debtType as DebtType) ?? "other",
+      });
+    }
+  }, [renameDebtTarget]);
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -297,6 +342,28 @@ export default function NetWorth() {
     await deleteMutation.mutateAsync({ id });
     refetchCurrent();
     refetchTimeline();
+  };
+
+  const handleDebtRename = async () => {
+    if (!renameDebtTarget) return;
+    const trimmed = debtRenameForm.lender.trim();
+    if (!trimmed) return;
+    try {
+      await updateDebtMutation.mutateAsync({
+        id: renameDebtTarget.id,
+        data: { lender: trimmed, debtType: debtRenameForm.debtType },
+      });
+      setRenameDebtTarget(null);
+      refetchDebts();
+      refetchTimeline();
+      toast({ title: t("netWorth.liabilities.rowActions.renamed") });
+    } catch (err) {
+      toast({
+        title: t("netWorth.liabilities.rowActions.renameFailed"),
+        description: err instanceof Error ? err.message : String(err),
+        variant: "destructive",
+      });
+    }
   };
 
   const isSaving = createMutation.isPending || updateMutation.isPending;
@@ -762,16 +829,45 @@ export default function NetWorth() {
           ) : (
             <>
               {(debts as Debt[]).map((d) => (
-                <div key={d.id} className="flex items-center justify-between px-5 py-3 border-b last:border-0">
-                  <div>
+                <div key={d.id} className="flex items-center justify-between px-5 py-3 border-b last:border-0 group">
+                  <div className="flex-1 min-w-0">
                     <span className="text-sm font-medium text-foreground">{d.lender}</span>
                     <span className="text-xs text-muted-foreground ml-2">
                       {t(`netWorth.debtTypes.${d.debtType}`) ?? d.debtType}
                     </span>
                   </div>
-                  <span className="text-sm font-semibold text-red-700">
-                    {formatCurrency(parseFloat(d.outstandingBalance ?? "0"))}
-                  </span>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="text-sm font-semibold text-red-700">
+                      {formatCurrency(parseFloat(d.outstandingBalance ?? "0"))}
+                    </span>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity focus:opacity-100"
+                          disabled={updateDebtMutation.isPending || deleteDebtMutation.isPending}
+                          aria-label={t("netWorth.liabilities.rowActions.menu")}
+                        >
+                          <MoreVertical className="w-3.5 h-3.5" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-[140px]">
+                        <DropdownMenuItem onSelect={() => setRenameDebtTarget(d)}>
+                          <Pencil className="w-3.5 h-3.5 mr-2" />
+                          {t("netWorth.liabilities.rowActions.rename")}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className="text-destructive focus:text-destructive"
+                          onSelect={() => setDeleteDebtTarget(d)}
+                        >
+                          <Trash2 className="w-3.5 h-3.5 mr-2" />
+                          {t("netWorth.liabilities.rowActions.delete")}
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
                 </div>
               ))}
               <div className="bg-red-50 px-5 py-2 flex justify-between items-center">
@@ -782,6 +878,95 @@ export default function NetWorth() {
           )}
         </div>
       </div>
+
+      {/* Liability rename dialog */}
+      <Dialog open={renameDebtTarget != null} onOpenChange={(open) => { if (!open) setRenameDebtTarget(null); }}>
+        <DialogContent className="sm:max-w-[420px]">
+          <DialogHeader>
+            <DialogTitle>{t("netWorth.liabilities.rowActions.renameTitle")}</DialogTitle>
+            <DialogDescription>{t("netWorth.liabilities.rowActions.renameDescription")}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="rename-debt-lender" className="text-xs">{t("netWorth.liabilities.lenderLabel")}</Label>
+              <Input
+                id="rename-debt-lender"
+                value={debtRenameForm.lender}
+                onChange={(e) => setDebtRenameForm((f) => ({ ...f, lender: e.target.value }))}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleDebtRename();
+                  }
+                }}
+                disabled={updateDebtMutation.isPending}
+                autoFocus
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">{t("netWorth.liabilities.debtTypeLabel")}</Label>
+              <Select
+                value={debtRenameForm.debtType}
+                onValueChange={(v) => setDebtRenameForm((f) => ({ ...f, debtType: v as DebtType }))}
+                disabled={updateDebtMutation.isPending}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {DEBT_TYPES.map((dt) => (
+                    <SelectItem key={dt} value={dt}>{t(`netWorth.debtTypes.${dt}`)}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="ghost" onClick={() => setRenameDebtTarget(null)} disabled={updateDebtMutation.isPending}>
+              {t("common.cancel")}
+            </Button>
+            <Button type="button" onClick={handleDebtRename} disabled={updateDebtMutation.isPending || !debtRenameForm.lender.trim()}>
+              {t("netWorth.liabilities.rowActions.save")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Liability delete confirmation */}
+      <AlertDialog open={deleteDebtTarget != null} onOpenChange={(open) => { if (!open) setDeleteDebtTarget(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("netWorth.liabilities.rowActions.deleteTitle")}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("netWorth.liabilities.rowActions.deleteDescription", { name: deleteDebtTarget?.lender ?? "" })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteDebtMutation.isPending}>{t("common.cancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={deleteDebtMutation.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={async (e) => {
+                e.preventDefault();
+                if (!deleteDebtTarget) return;
+                try {
+                  await deleteDebtMutation.mutateAsync({ id: deleteDebtTarget.id });
+                  setDeleteDebtTarget(null);
+                  refetchDebts();
+                  refetchTimeline();
+                  toast({ title: t("netWorth.liabilities.rowActions.deleted") });
+                } catch (err) {
+                  toast({
+                    title: t("netWorth.liabilities.rowActions.deleteFailed"),
+                    description: err instanceof Error ? err.message : String(err),
+                    variant: "destructive",
+                  });
+                }
+              }}
+            >
+              {t("netWorth.liabilities.rowActions.delete")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Asset dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>

@@ -728,7 +728,23 @@
       "manage": "Manage",
       "noDebts": "No debts recorded yet.",
       "addDebt": "Add Debt",
-      "totalOutstanding": "Total Outstanding"
+      "totalOutstanding": "Total Outstanding",
+      "rowActions": {
+        "menu": "Row actions",
+        "rename": "Rename",
+        "delete": "Delete",
+        "renameTitle": "Rename liability",
+        "renameDescription": "Update the lender name and type for this debt.",
+        "deleteTitle": "Delete this liability?",
+        "deleteDescription": "This will permanently remove \"{{name}}\" and all related data. This can't be undone.",
+        "renamed": "Liability renamed",
+        "renameFailed": "Couldn't rename liability",
+        "deleted": "Liability deleted",
+        "deleteFailed": "Couldn't delete liability",
+        "save": "Save"
+      },
+      "lenderLabel": "Lender / creditor name",
+      "debtTypeLabel": "Type"
     },
     "dialog": {
       "addTitle": "Add Asset",

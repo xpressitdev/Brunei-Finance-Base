@@ -721,7 +721,23 @@
       "manage": "Kelola",
       "noDebts": "Belum ada utang tercatat.",
       "addDebt": "Tambah Utang",
-      "totalOutstanding": "Total Tunggakan"
+      "totalOutstanding": "Total Tunggakan",
+      "rowActions": {
+        "menu": "Tindakan baris",
+        "rename": "Ganti nama",
+        "delete": "Hapus",
+        "renameTitle": "Ganti nama kewajiban",
+        "renameDescription": "Perbarui nama pemberi pinjam dan jenis utang ini.",
+        "deleteTitle": "Hapus kewajiban ini?",
+        "deleteDescription": "Ini akan menghapus \"{{name}}\" dan semua data terkait secara permanen. Tindakan ini tidak dapat dibatalkan.",
+        "renamed": "Kewajiban diganti namanya",
+        "renameFailed": "Tidak dapat mengganti nama kewajiban",
+        "deleted": "Kewajiban dihapus",
+        "deleteFailed": "Tidak dapat menghapus kewajiban",
+        "save": "Simpan"
+      },
+      "lenderLabel": "Nama pemberi pinjam / kreditur",
+      "debtTypeLabel": "Jenis"
     },
     "dialog": {
       "addTitle": "Tambah Aset",
