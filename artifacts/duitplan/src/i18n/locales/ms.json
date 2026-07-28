@@ -979,6 +979,7 @@
       "hasAccount": "Sudah ada akaun?",
       "signIn": "Log masuk",
       "privacyNote": "Data anda disulitkan dan tidak pernah dijual.",
+      "govDisclaimer": "DuitPlan percuma untuk digunakan. Dengan mencipta akaun, anda mengakui bahawa data tanpa nama boleh dikongsi dan digunakan oleh Kerajaan Brunei Darussalam.",
       "privacyLink": "Privasi & Kepercayaan"
     },
     "errors": {
@@ -999,7 +1000,7 @@
       "ctaStart": "Mula Rancang Percuma",
       "ctaSignIn": "Log Masuk",
       "ctaImport": "Import penyata",
-      "trustFree": "Percuma semasa beta",
+      "trustFree": "Percuma untuk semua",
       "trustNoBank": "Tanpa sambungan bank diperlukan"
     },
     "features": {

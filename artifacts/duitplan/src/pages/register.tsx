@@ -144,6 +144,10 @@ export default function Register() {
         </div>
 
         <p className="mt-6 text-center text-xs text-muted-foreground">
+          {t("auth.register.govDisclaimer", "DuitPlan is free to use. By creating an account, you acknowledge that anonymised data may be shared with and used by the Government of Brunei Darussalam.")}
+        </p>
+
+        <p className="mt-3 text-center text-xs text-muted-foreground">
           {t("auth.register.privacyNote", "Your data is encrypted and never sold.")}{" "}
           <Link href="/privacy">
             <span className="text-emerald-700 font-medium hover:underline cursor-pointer">

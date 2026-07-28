@@ -986,7 +986,8 @@
       "hasAccount": "Already have an account?",
       "signIn": "Sign in",
       "privacyNote": "Your data is encrypted and never sold.",
-      "privacyLink": "Privacy & Trust"
+      "privacyLink": "Privacy & Trust",
+      "govDisclaimer": "DuitPlan is free to use. By creating an account, you acknowledge that anonymised data may be shared with and used by the Government of Brunei Darussalam."
     },
     "errors": {
       "invalidCredentials": "Invalid email or password",
@@ -1006,7 +1007,7 @@
       "ctaStart": "Start Planning Free",
       "ctaSignIn": "Sign In",
       "ctaImport": "Import a statement",
-      "trustFree": "Free while in beta",
+      "trustFree": "Free for everyone",
       "trustNoBank": "No bank connection needed"
     },
     "features": {

@@ -117,6 +117,12 @@ export default function PrivacyPage() {
                 "Our support team — only if you ask us for help with a specific issue and explicitly grant access. We do not browse individual accounts.",
               )}
             </Bullet>
+            <Bullet>
+              {t(
+                "privacy.who.government",
+                "The Government of Brunei Darussalam — DuitPlan is free to use, and in return anonymised, aggregated data may be shared with and used by the Government of Brunei Darussalam. This data is never tied to your name or account.",
+              )}
+            </Bullet>
             <Bullet bad>
               {t("privacy.who.advertisers", "Advertisers, data brokers, employers, banks, anyone else.")}
             </Bullet>
@@ -194,7 +200,7 @@ export default function PrivacyPage() {
             <Bullet bad>{t("privacy.noNo.sell", "Sell your data to anyone.")}</Bullet>
             <Bullet bad>{t("privacy.noNo.ads", "Show you ads inside DuitPlan.")}</Bullet>
             <Bullet bad>
-              {t("privacy.noNo.share", "Share your transactions with banks, employers, or government agencies.")}
+              {t("privacy.noNo.share", "Share your transactions with banks or employers.")}
             </Bullet>
             <Bullet bad>
               {t("privacy.noNo.scrape", "Scrape your bank accounts. We never ask for your online-banking password.")}
